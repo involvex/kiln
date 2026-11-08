@@ -6,8 +6,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
+import dev.involvex.kiln.core.model.DebugLogController
+import dev.involvex.kiln.core.model.DevPreferences
+import dev.involvex.kiln.core.model.InstallerPreferences
 import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
+import dev.involvex.kiln.core.model.PreferredInstaller
+import dev.involvex.kiln.core.model.PrivilegeCapability
+import dev.involvex.kiln.core.model.PrivilegedExecutor
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +25,10 @@ import kotlinx.coroutines.launch
 class SettingsViewModel @Inject constructor(
     private val preferences: BackgroundUpdatePreferences,
     private val appearancePreferences: AppearancePreferences,
+    private val installerPreferences: InstallerPreferences,
+    private val devPreferences: DevPreferences,
+    private val debugLogController: DebugLogController,
+    private val privilegedExecutor: PrivilegedExecutor,
     private val scheduler: BackgroundUpdateScheduler,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -34,6 +44,26 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             appearancePreferences.observe().collect { prefs ->
                 _uiState.update { it.copy(appearance = prefs) }
+            }
+        }
+        viewModelScope.launch {
+            installerPreferences.observe().collect { preferred ->
+                _uiState.update { it.copy(preferredInstaller = preferred) }
+            }
+        }
+        viewModelScope.launch {
+            devPreferences.observe().collect { prefs ->
+                _uiState.update { it.copy(devPrefs = prefs) }
+                debugLogController.apply(prefs.debugLogEnabled)
+            }
+        }
+        viewModelScope.launch {
+            privilegedExecutor.observeStatus().collect { status ->
+                _uiState.update {
+                    it.copy(
+                        shizukuSilentAvailable = PrivilegeCapability.SILENT_INSTALL in status.capabilities,
+                    )
+                }
             }
         }
     }
@@ -64,6 +94,14 @@ class SettingsViewModel @Inject constructor(
 
     fun setLanguage(language: KilnLanguage) {
         viewModelScope.launch { appearancePreferences.setLanguage(language) }
+    }
+
+    fun setPreferredInstaller(preferred: PreferredInstaller) {
+        viewModelScope.launch { installerPreferences.setPreferred(preferred) }
+    }
+
+    fun setDebugLogEnabled(enabled: Boolean) {
+        viewModelScope.launch { devPreferences.setDebugLogEnabled(enabled) }
     }
 
     fun checkNow() {

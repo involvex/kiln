@@ -17,10 +17,13 @@ import dev.involvex.kiln.core.common.Result as KilnResult
 import dev.involvex.kiln.core.database.InstallJobDao
 import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.InstallJobStatus
+import dev.involvex.kiln.core.model.InstallerPreferences
+import dev.involvex.kiln.core.model.PreferredInstaller
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
 import dev.involvex.kiln.core.network.KilnHttpClient
 import dev.involvex.kiln.feature.installer.DefaultInstallQueue
+import dev.involvex.kiln.feature.installer.InstallCommitPolicy
 import dev.involvex.kiln.feature.installer.R
 import dev.involvex.kiln.feature.installer.session.PackageInstallerSessionRunner
 import dev.involvex.kiln.feature.installer.verify.ApkHashVerifier
@@ -38,6 +41,7 @@ class InstallWorker @AssistedInject constructor(
     private val sessionRunner: PackageInstallerSessionRunner,
     private val privilegedExecutor: PrivilegedExecutor,
     private val rollbackCache: ApkRollbackCache,
+    private val installerPreferences: InstallerPreferences,
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
         val jobId = inputData.getString(KEY_JOB_ID) ?: return Result.failure()
@@ -91,7 +95,12 @@ class InstallWorker @AssistedInject constructor(
         }
 
         mark(jobId, InstallJobStatus.INSTALLING, 95, null, apkFile.absolutePath)
-        val canSilent = PrivilegeCapability.SILENT_INSTALL in privilegedExecutor.currentStatus().capabilities
+        val preferred = installerPreferences.current()
+        val canSilent = InstallCommitPolicy.useSilentInstall(
+            preferred = preferred,
+            hasSilentCapability = PrivilegeCapability.SILENT_INSTALL in
+                privilegedExecutor.currentStatus().capabilities,
+        )
         if (canSilent) {
             return when (val silent = privilegedExecutor.installApk(apkFile.absolutePath)) {
                 is KilnResult.Failure -> {
@@ -110,6 +119,9 @@ class InstallWorker @AssistedInject constructor(
                     Result.success()
                 }
             }
+        }
+        if (preferred == PreferredInstaller.SHIZUKU) {
+            Timber.d("Shizuku preferred but SILENT_INSTALL unavailable; using PackageInstaller")
         }
         return commitWithPackageInstaller(jobId, job.packageName, apkFile)
     }

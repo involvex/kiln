@@ -35,8 +35,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.model.AppearancePrefs
 import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
+import dev.involvex.kiln.core.model.DevPrefs
 import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
+import dev.involvex.kiln.core.model.PreferredInstaller
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
@@ -79,6 +81,8 @@ fun SettingsRoute(
         onCooldownDaysChange = viewModel::setUpdateCooldownDays,
         onThemeChange = viewModel::setTheme,
         onLanguageChange = viewModel::setLanguage,
+        onPreferredInstallerChange = viewModel::setPreferredInstaller,
+        onDebugLogChange = viewModel::setDebugLogEnabled,
         onCheckNow = viewModel::checkNow,
         onConsumeCheckNow = viewModel::consumeCheckNowQueued,
         modifier = modifier,
@@ -96,6 +100,8 @@ fun SettingsScreen(
     onCooldownDaysChange: (Int) -> Unit,
     onThemeChange: (KilnThemeStyle) -> Unit,
     onLanguageChange: (KilnLanguage) -> Unit,
+    onPreferredInstallerChange: (PreferredInstaller) -> Unit,
+    onDebugLogChange: (Boolean) -> Unit,
     onCheckNow: () -> Unit,
     onConsumeCheckNow: () -> Unit,
     modifier: Modifier = Modifier,
@@ -133,41 +139,128 @@ fun SettingsScreen(
                 onLanguageChange = onLanguageChange,
             )
             HorizontalDivider()
-            Text(
-                text = stringResource(R.string.settings_background_updates_section),
-                style = MaterialTheme.typography.titleMedium,
+            InstallerSection(
+                preferred = state.preferredInstaller,
+                shizukuSilentAvailable = state.shizukuSilentAvailable,
+                onPreferredChange = onPreferredInstallerChange,
             )
-            Text(
-                text = stringResource(R.string.settings_background_updates_explain),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            HorizontalDivider()
+            DevSection(
+                prefs = state.devPrefs,
+                onDebugLogChange = onDebugLogChange,
             )
-            BackgroundUpdateToggles(
+            HorizontalDivider()
+            BackgroundUpdatesBlock(
                 prefs = state.backgroundUpdates,
+                checkNowQueued = state.checkNowQueued,
                 onEnabledChange = onBackgroundEnabledChange,
                 onUnmeteredOnlyChange = onUnmeteredOnlyChange,
                 onAutoInstallChange = onAutoInstallChange,
                 onCooldownDaysChange = onCooldownDaysChange,
+                onCheckNow = onCheckNow,
+                onConsumeCheckNow = onConsumeCheckNow,
             )
-            OutlinedButton(
-                onClick = onCheckNow,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = true,
-            ) {
-                Text(stringResource(R.string.settings_check_now))
-            }
-            if (state.checkNowQueued) {
-                Text(
-                    text = stringResource(R.string.settings_check_now_queued),
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                LaunchedEffect(state.checkNowQueued) {
-                    delay(2_000)
-                    onConsumeCheckNow()
-                }
-            }
         }
     }
+}
+
+@Composable
+private fun BackgroundUpdatesBlock(
+    prefs: BackgroundUpdatePrefs,
+    checkNowQueued: Boolean,
+    onEnabledChange: (Boolean) -> Unit,
+    onUnmeteredOnlyChange: (Boolean) -> Unit,
+    onAutoInstallChange: (Boolean) -> Unit,
+    onCooldownDaysChange: (Int) -> Unit,
+    onCheckNow: () -> Unit,
+    onConsumeCheckNow: () -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.settings_background_updates_section),
+        style = MaterialTheme.typography.titleMedium,
+    )
+    Text(
+        text = stringResource(R.string.settings_background_updates_explain),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    BackgroundUpdateToggles(
+        prefs = prefs,
+        onEnabledChange = onEnabledChange,
+        onUnmeteredOnlyChange = onUnmeteredOnlyChange,
+        onAutoInstallChange = onAutoInstallChange,
+        onCooldownDaysChange = onCooldownDaysChange,
+    )
+    OutlinedButton(onClick = onCheckNow, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.settings_check_now))
+    }
+    if (checkNowQueued) {
+        Text(
+            text = stringResource(R.string.settings_check_now_queued),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        LaunchedEffect(checkNowQueued) {
+            delay(2_000)
+            onConsumeCheckNow()
+        }
+    }
+}
+
+@Composable
+private fun InstallerSection(
+    preferred: PreferredInstaller,
+    shizukuSilentAvailable: Boolean,
+    onPreferredChange: (PreferredInstaller) -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.settings_installer_section),
+        style = MaterialTheme.typography.titleMedium,
+    )
+    Text(
+        text = stringResource(R.string.settings_installer_explain),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        FilterChip(
+            selected = preferred == PreferredInstaller.SYSTEM,
+            onClick = { onPreferredChange(PreferredInstaller.SYSTEM) },
+            label = { Text(stringResource(R.string.settings_installer_system)) },
+        )
+        FilterChip(
+            selected = preferred == PreferredInstaller.SHIZUKU,
+            onClick = { onPreferredChange(PreferredInstaller.SHIZUKU) },
+            label = { Text(stringResource(R.string.settings_installer_shizuku)) },
+        )
+    }
+    if (preferred == PreferredInstaller.SHIZUKU && !shizukuSilentAvailable) {
+        Text(
+            text = stringResource(R.string.settings_installer_shizuku_unavailable),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
+}
+
+@Composable
+private fun DevSection(prefs: DevPrefs, onDebugLogChange: (Boolean) -> Unit) {
+    Text(
+        text = stringResource(R.string.settings_dev_section),
+        style = MaterialTheme.typography.titleMedium,
+    )
+    SettingsSwitchRow(
+        title = stringResource(R.string.settings_dev_debug_log),
+        checked = prefs.debugLogEnabled,
+        onCheckedChange = onDebugLogChange,
+    )
+    Text(
+        text = stringResource(R.string.settings_dev_debug_log_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @Composable

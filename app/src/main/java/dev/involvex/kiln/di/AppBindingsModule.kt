@@ -9,17 +9,23 @@ import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
+import dev.involvex.kiln.core.model.DebugLogController
+import dev.involvex.kiln.core.model.DevPreferences
 import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.InstalledAppsReader
+import dev.involvex.kiln.core.model.InstallerPreferences
 import dev.involvex.kiln.core.model.UpdateObservationStore
 import dev.involvex.kiln.feature.apps.data.DefaultInstalledAppsReader
 import dev.involvex.kiln.feature.installer.DefaultInstallQueue
 import dev.involvex.kiln.feature.installer.rollback.FileApkRollbackCache
 import dev.involvex.kiln.feature.settings.data.DataStoreAppearancePreferences
 import dev.involvex.kiln.feature.settings.data.DataStoreBackgroundUpdatePreferences
+import dev.involvex.kiln.feature.settings.data.DataStoreDevPreferences
+import dev.involvex.kiln.feature.settings.data.DataStoreInstallerPreferences
 import dev.involvex.kiln.feature.sources.DefaultAppUpdateRepository
 import dev.involvex.kiln.feature.sources.updatecheck.DefaultBackgroundUpdateScheduler
 import dev.involvex.kiln.feature.sources.updatecheck.PrefsUpdateObservationStore
+import dev.involvex.kiln.logging.TimberDebugLogController
 import javax.inject.Singleton
 
 /**
@@ -60,4 +66,16 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindAppearancePreferences(impl: DataStoreAppearancePreferences): AppearancePreferences
+
+    @Binds
+    @Singleton
+    abstract fun bindInstallerPreferences(impl: DataStoreInstallerPreferences): InstallerPreferences
+
+    @Binds
+    @Singleton
+    abstract fun bindDevPreferences(impl: DataStoreDevPreferences): DevPreferences
+
+    @Binds
+    @Singleton
+    abstract fun bindDebugLogController(impl: TimberDebugLogController): DebugLogController
 }
