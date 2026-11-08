@@ -1,5 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_backup_title">Backup</string>
-    <string name="feature_backup_description">App backup and restore will live here (M7).</string>
+    <string name="feature_backup_description">APK backup and restore with honest privilege tiers.</string>
+    <string name="backup_tier_line">Active tier: %1$s</string>
+    <string name="backup_tier_none">NONE (APK only)</string>
+    <string name="backup_tier_shizuku">SHIZUKU (APK; Android/data later)</string>
+    <string name="backup_tier_root">ROOT (full data later)</string>
+    <string name="backup_honesty_apk_only">This milestone backs up APK files (+ splits) into a .kilnbackup.zip with metadata.json. App private data under /data/data is not included without Root.</string>
+    <string name="backup_honesty_none">No Shizuku/Root: APK-only archives. Restore installs the base APK via PackageInstaller (system confirm) or silent install when Shizuku is ready.</string>
+    <string name="backup_honesty_shizuku">Shizuku is ready. Android/data + OBB packaging is not wired yet — archives stay APK-only so we never claim data we did not copy.</string>
+    <string name="backup_honesty_root">Root capability seen. Full /data/data backup/restore is not wired yet — archives stay APK-only for now.</string>
+    <string name="backup_action_backup">Backup APK</string>
+    <string name="backup_action_restore">Restore archive</string>
+    <string name="backup_refresh">Refresh</string>
+    <string name="backup_search">Search apps</string>
+    <string name="backup_app_meta">%1$s · %2$s %3$s</string>
+    <string name="backup_has_splits">(splits; restore uses base APK)</string>
+    <string name="backup_msg_ok">Backup saved for %1$s</string>
+    <string name="backup_msg_restore_queued">Restore queued — confirm the system install dialog if shown</string>
+    <string name="backup_restore_confirm_title">Restore APK from archive?</string>
+    <string name="backup_restore_confirm_body">Kiln will extract the base APK from a .kilnbackup.zip and queue an install. Splits and app data are not restored in this milestone. A system confirm may appear.</string>
+    <string name="backup_restore_confirm_action">Choose archive</string>
+    <string name="backup_cancel">Cancel</string>
+    <string name="backup_err_package_not_found">Package not found</string>
+    <string name="backup_err_apk">APK missing or unreadable</string>
+    <string name="backup_err_metadata">Archive has no metadata.json</string>
+    <string name="backup_err_saf">Could not open the selected file</string>
 </resources>

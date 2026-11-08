@@ -2,11 +2,11 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M5 merged (#12). M6 on branch `m6-debloat` (denylist, snapshot, disable/restore via Shizuku). Shizuku+ self-test on device: uid=2000 shell, DEBLOAT available. M3 HyperOS E2E still open.
+**Current status:** M6 merged (#13). M7 on branch `m7-backup` (Tier NONE APK `.kilnbackup.zip` round-trip; data tiers deferred with honest UI). Shizuku+ self-test on device: uid=2000 shell. M3 HyperOS E2E still open.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
-**First useful release target:** M0–M5. Debloat (M6) can run in parallel with Storage (M5) after Privilege (M4).
+**First useful release target:** M0–M5. M6–M7 stretch after Privilege (M4).
 
 ---
 
@@ -20,8 +20,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M3** | Installer (no privilege) | Done | PLAN §4.3 · `m3-installer` | F-Droid + GitHub update E2E |
 | **M4** | Privilege layer + Shizuku setup | Done | PLAN §4.9 / §5 · [#11](https://github.com/involvex/kiln/pull/11) | Guided setup A→D; silent install; clean Tier NONE fallback |
 | **M5** | Storage analyzer / cleaner | Done | PLAN §4.5 · [#12](https://github.com/involvex/kiln/pull/12) | Numbers plausible vs system storage UI |
-| **M6** | Debloat mode | In progress | PLAN §4.10 · `m6-debloat` | Snapshot, denylist, deactivate/restore on ≥3 safe packages |
-| **M7** | Backup / restore | Planned | PLAN §4.6 | Round-trip with Root/Shizuku tier |
+| **M6** | Debloat mode | Done | PLAN §4.10 · [#13](https://github.com/involvex/kiln/pull/13) | Snapshot, denylist, deactivate/restore on ≥3 safe packages |
+| **M7** | Backup / restore | In progress | PLAN §4.6 · `m7-backup` | APK `.kilnbackup.zip` SAF round-trip; honest NONE/SHIZUKU/ROOT copy |
 | **M8** | Background auto-update | Planned | PLAN §8 | WorkManager + constraints + notifications |
 | **M9** | Termux integration | Planned | PLAN §4.7 | Feature-flagged hooks |
 | **M10** | Polish & release | Planned | PLAN §8 | F-Droid/GitHub Releases, screenshots, a11y |
@@ -45,7 +45,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; splits deferred | NONE / SHIZUKU |
 | Storage / cleaner | ✅ Usage-access gate; App/Data/Cache list; clear via Shizuku or app-info deep-link | NONE / SHIZUKU |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
-| Backup (app data) | — | NONE (APK only) … ROOT |
+| Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
 
 ---
 
@@ -63,9 +63,24 @@ Code for M2 is on `main` (post-#9). Tick on device after install (network requir
 
 ---
 
+## M7 manual acceptance (HyperOS)
+
+Code on `m7-backup`. Tier NONE is enough for APK round-trip; Shizuku optional for silent restore:
+
+- [ ] Backup tab lists user apps; search and select work
+- [ ] Honesty banner: APK-only; no claim of `/data/data` without Root; Shizuku Android/data marked deferred
+- [ ] Backup APK writes `.kilnbackup.zip` via SAF; archive contains APK(s) + `metadata.json`
+- [ ] Restore confirms, then queues install; system PackageInstaller dialog (or silent when Shizuku ready)
+- [ ] Split app: archive includes splits; restore installs base APK only (documented in UI)
+- [ ] Destructive restore always confirms before SAF picker
+
+Deferred: Android/data + OBB (SHIZUKU), full `/data/data` (ROOT), encryption, cloud targets.
+
+---
+
 ## M6 manual acceptance (HyperOS)
 
-Code on `m6-debloat`. Needs Shizuku/Shizuku+ with DEBLOAT (shell uid 2000 verified on device):
+Code merged via [#13](https://github.com/involvex/kiln/pull/13). Needs Shizuku/Shizuku+ with DEBLOAT (shell uid 2000 verified on device):
 
 - [ ] Settings → Debloat opens; without privilege shows setup CTA
 - [ ] Hard denylist blocks Kiln, Shizuku+, SystemUI, Settings, launcher/IME/dialer/SMS

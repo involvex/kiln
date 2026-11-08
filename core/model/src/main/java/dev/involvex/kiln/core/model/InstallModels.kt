@@ -33,5 +33,17 @@ interface InstallQueue {
 
     suspend fun enqueue(update: AppUpdateInfo): Result<String>
 
+    /** Install a local APK file (backup restore). Skips network download. */
+    suspend fun enqueueLocal(request: LocalInstallRequest): Result<String>
+
     suspend fun cancel(jobId: String)
 }
+
+/** Local APK path for restore / sideload without a download URL. */
+data class LocalInstallRequest(
+    val packageName: String,
+    val versionName: String,
+    val versionCode: Long,
+    val apkAbsolutePath: String,
+    val expectedSha256: String? = null,
+)
