@@ -37,4 +37,10 @@
     <string name="sources_msg_sync_fail">Sync für %1$s Repo(s) fehlgeschlagen: %2$s</string>
     <string name="sources_msg_sync_partial">%1$s ok, %2$s fehlgeschlagen. Erster Fehler: %3$s</string>
     <string name="sources_msg_index_oom">Repo-Index zu groß für den Speicher. Kiln behält nur installierte/importierte Pakete — App aktualisieren und erneut synchronisieren.</string>
+    <string name="update_check_notification_channel">Update-Prüfungen</string>
+    <string name="update_check_notification_title">Updates verfügbar</string>
+    <plurals name="update_check_notification_body">
+        <item quantity="one">%1$d App-Update in Kiln bereit</item>
+        <item quantity="other">%1$d App-Updates in Kiln bereit</item>
+    </plurals>
 </resources>

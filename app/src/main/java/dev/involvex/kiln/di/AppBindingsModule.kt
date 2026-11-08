@@ -5,11 +5,15 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.involvex.kiln.core.model.AppUpdateRepository
+import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
+import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.feature.apps.data.DefaultInstalledAppsReader
 import dev.involvex.kiln.feature.installer.DefaultInstallQueue
+import dev.involvex.kiln.feature.settings.data.DataStoreBackgroundUpdatePreferences
 import dev.involvex.kiln.feature.sources.DefaultAppUpdateRepository
+import dev.involvex.kiln.feature.sources.updatecheck.DefaultBackgroundUpdateScheduler
 import javax.inject.Singleton
 
 /**
@@ -30,4 +34,12 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindInstallQueue(impl: DefaultInstallQueue): InstallQueue
+
+    @Binds
+    @Singleton
+    abstract fun bindBackgroundUpdatePreferences(impl: DataStoreBackgroundUpdatePreferences): BackgroundUpdatePreferences
+
+    @Binds
+    @Singleton
+    abstract fun bindBackgroundUpdateScheduler(impl: DefaultBackgroundUpdateScheduler): BackgroundUpdateScheduler
 }
