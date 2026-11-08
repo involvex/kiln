@@ -29,33 +29,54 @@ Eine App, die diese Dinge ersetzt:
 - Shizuku `UserService` läuft in einem eigenen Prozess und braucht AIDL — das ist nativ am saubersten.
 - Expo-Go ist ausgeschlossen, Dev-Builds nötig → kein Vorteil beim Iterieren.
 
+**Lizenz:** Apache-2.0. Referenz-Apps nur als Verhaltensvorlage lesen; kein Code, keine Strings, kein Layout aus GPL-Quellen übernehmen (siehe §9 und [`reference.md`](./reference.md)). Status der Meilensteine: [`ROADMAP.md`](./ROADMAP.md).
+
 **Stack**
 
-- Kotlin (aktuell stabil), Gradle Kotlin DSL, Version Catalog (`libs.versions.toml`), immer die jeweils aktuell stabilen Versionen verwenden
+- Kotlin (aktuell stabil), Gradle Kotlin DSL, Version Catalog (`libs.versions.toml`), immer die jeweils aktuell stabilen Versionen verwenden (Baseline und Re-Check-Regel: §2.1)
 - Name: **Kiln** · `applicationId` / Package: `dev.involvex.kiln` (Root-Package im Code ebenfalls `dev.involvex.kiln`, Module darunter z. B. `dev.involvex.kiln.feature.apps`)
-- minSdk 26, targetSdk = aktuelles Stable
-- UI: Jetpack Compose + Material 3 (Expressive wenn verfügbar), Navigation Compose (type-safe Routes), Dynamic Color + AMOLED-Dark-Option
-- DI: Hilt (oder Koin, einmal festlegen)
-- Persistenz: Room (Repo-Index-Cache, Backups, Update-State), DataStore (Settings)
-- Netzwerk: OkHttp + kotlinx.serialization (Ktor optional)
-- Hintergrund: WorkManager (Update-Checks) + Foreground Service (Downloads/Backups/Scans)
-- Bilder: Coil
-- Privileged: `dev.rikka.shizuku:api` + `provider`, optional `libsu` (Root)
-- APK-Handling: `com.android.tools.build:apksig` (Signaturen), `zip4j` oder `commons-compress` (Bundles)
+- minSdk 26, compileSdk/targetSdk = aktuelles Stable (Android 17 / API 37 Stand 2026-11)
+- UI: Jetpack Compose + Material 3 (stabil; **kein** Material 3 Expressive, solange es nicht im stabilen Compose BOM liegt), **Navigation 3** (`androidx.navigation3`, type-safe `@Serializable`-NavKeys), Dynamic Color + AMOLED-Dark-Option
+- DI: **Hilt** (KSP; kein Koin, keine kapt)
+- Persistenz: Room (Repo-Index-Cache, Backups, Update-State; ab M2), DataStore (Settings; wenn Settings-Persistenz nötig)
+- Netzwerk: OkHttp + kotlinx.serialization (Ktor optional; ab M2)
+- Hintergrund: WorkManager (Update-Checks, Batch-Export ab M1) + Foreground Service (Downloads/Backups/Scans)
+- Bilder: Coil (ab M1)
+- Privileged: `dev.rikka.shizuku:api` + `provider`, optional `libsu` (Root; ab M4)
+- APK-Handling: Export in M1 über `java.util.zip` (STORED); `com.android.tools.build:apksig` erst wenn Signatur-Verify für fremde Dateien nötig wird; **kein** zip4j / commons-compress in M0/M1
 - Tests: JUnit5, MockK, Turbine; Compose UI Tests für Kernscreens
+
+### 2.1 Toolchain-Baseline (Stand 2026-11-08)
+
+Vor dem Start von M0 Patch-Versionen an offiziellen Quellen neu prüfen. Bei Abweichung: stoppen und nachfragen, nicht raten.
+
+| Komponente | Baseline |
+| --- | --- |
+| JDK | 21 (AGP-Minimum 17) |
+| AGP | 9.5.1 |
+| Gradle | 9.6.0 |
+| Kotlin | 2.4.21 — AGP 9 hat **Built-in Kotlin**; `org.jetbrains.kotlin.android` **nicht** anwenden. Compose- und Serialization-Plugins weiter explizit. |
+| Compose BOM | 2026.09.00 · activity-compose 1.13.0 |
+| Navigation 3 | 1.2.1 |
+| Hilt | 2.60.1 · androidx.hilt 1.4.0 · KSP (neueste stabile, die Kotlin 2.4.21 unterstützt; zuletzt geprüft: 2.3.13) |
+| Coil / WorkManager | 3.6.3 / 2.12.0 — **erst M1** |
+
+API 37: keine feste `screenOrientation` setzen (Large-Screen-Resizing ist erzwungen).
 
 ## 3. Architektur
 
 Multi-Module, Clean-ish, unidirektionaler Datenfluss (ViewModel + `StateFlow`).
 
+Navigation: **Navigation 3** in `:app` (`NavDisplay`, Bottom Bar mit einem Back-Stack pro Tab laut offiziellem Recipe). Feature-Module exportieren nur Screen-Composables; NavKeys liegen in `:app`. Adaptive List-Detail-Scenes erst später; Phone-Flow in M0/M1 ist Liste → Detail pushen. **Kein** `androidx.navigation:navigation-compose` (Navigation 2).
+
 ```
-:app                      // Navigation, DI-Root, Theme
+:app                      // Navigation 3, DI-Root, Theme
 :core:common              // Result-Typen, Dispatcher, Utils
 :core:model               // reine Datenklassen
-:core:database            // Room
-:core:network             // OkHttp, Serializer
+:core:database            // Room (ab M2)
+:core:network             // OkHttp, Serializer (ab M2)
 :core:designsystem        // Compose-Komponenten
-:core:privilege           // PrivilegedExecutor + Implementierungen (siehe §5)
+:core:privilege           // PrivilegedExecutor + Implementierungen (siehe §5; ab M4)
 :feature:apps             // installierte Apps, Details, Extract, Uninstall
 :feature:sources          // F-Droid-/GitHub-Repos, Browse, Update-Check
 :feature:installer        // Download, Verify, Install-Sessions, Queue
@@ -91,10 +112,20 @@ Die UI fragt nie „ist Shizuku da?", sondern `capabilities: Set<Capability>` au
 
 ### 4.1 Installierte Apps (`feature:apps`)
 
-- Liste mit Icon, Name, Version, Größe (App/Daten/Cache), Installer-of-Record, Update verfügbar (Badge), System/User-Filter, Suche, Sortierung
-- Detail: Paketname, Version/Code, Signatur-SHA256, Zielsdk, Berechtigungen, Komponenten (Activities/Services…), Installationsdatum
-- Aktionen: App-Info (System-Intent), Starten, Deinstallieren, APK extrahieren, Cache leeren, Backup
+**M1 liefert (Tier NONE):**
+
+- Liste mit Icon, Name, Version, **APK-Dateigröße** (Summe Base + Splits), System/User-Filter, Suche, Sortierung, Mehrfachauswahl für Batch-Export
+- Detail: Paketname, Version/Code, Signatur-SHA-256, Min-/Target-SDK, Installer-of-Record, Installations-/Update-Datum, APK-Pfade, Berechtigungen (gewährt/nicht)
+- Aktionen: App-Info (System-Intent), Starten (wenn Launch-Intent), Deinstallieren (System-Dialog; System-Apps deaktiviert mit Hinweis auf späteren Debloat), APK exportieren (siehe §4.4)
+- Datenmodell gesplittet: `InstalledAppSummary` für die Liste, `InstalledAppDetail` lazy beim Öffnen/Export — siehe [`prompts/M1-installed-apps.md`](./prompts/M1-installed-apps.md)
 - Braucht `QUERY_ALL_PACKAGES` (Sideload-Distribution, kein Play Store)
+
+**Später (nicht M1):**
+
+- Daten-/Cache-Größe → M5 (`PACKAGE_USAGE_STATS` / `StorageStatsManager`)
+- Update-Badge → M2
+- Komponentenliste (Activities/Services/…) → Backlog / spätere Meilensteine
+- Cache leeren → M5; Backup → M7
 
 ### 4.2 Sources & Updates (`feature:sources`)
 
@@ -114,11 +145,14 @@ Die UI fragt nie „ist Shizuku da?", sondern `capabilities: Set<Capability>` au
 
 ### 4.4 APK-Extraktion
 
-- `ApplicationInfo.sourceDir` + `splitSourceDirs` kopieren
-- Export-Formate: einzelne `.apk`, `.apks` (Zip aller Splits), `.xapk` (mit `manifest.json`)
-- Ziel via SAF (`ACTION_CREATE_DOCUMENT`/Ordner-Picker); Teilen per Share-Intent
-- Batch-Export (mehrere Apps → Ordner)
-- Optional: einfacher APK-Inspector (Manifest, Berechtigungen, Signatur) für Dateien außerhalb installierter Apps
+- Quelle: lesbare Pfade aus `ApplicationInfo.sourceDir` + `splitSourceDirs` (kein Root/Shizuku)
+- Formate (Details und XAPK-Felder: [`prompts/M1-installed-apps.md`](./prompts/M1-installed-apps.md)):
+  - `.apk` — Einzel-APK; bei Splits nur Base + Warnung
+  - `.apks` — ZIP aller APKs, Originalnamen, Kompression **STORED** via `java.util.zip`; **kein** bundletool-`toc.pb`, kein zip4j
+  - `.xapk` — gleiches ZIP plus `manifest.json` (`xapk_version` 2, …); kein OBB in M1
+- Ziel: SAF (`ACTION_CREATE_DOCUMENT` / `ACTION_OPEN_DOCUMENT_TREE`); Teilen per `FileProvider` + `ACTION_SEND`
+- Batch-Export: WorkManager Long-Running Worker + Foreground (`dataSync`), Fortschritt/Abbrechen/Zusammenfassung
+- Optional später: APK-Inspector für Dateien außerhalb installierter Apps
 
 ### 4.5 Storage (`feature:storage`)
 
@@ -297,38 +331,38 @@ Prinzip: **Permissions erst anfragen, wenn das Feature benutzt wird**, mit Erkl�
 
 ## 8. Roadmap (Meilensteine mit Akzeptanzkriterien)
 
-**M0 — Setup**: Multi-Module-Projekt, Version Catalog, CI (GitHub Actions: build + lint + unit tests), Theme, Navigation-Shell mit Bottom Bar (Apps / Sources / Storage / Backup / Settings).
+**Lebender Status, Capability-Matrix und Reihenfolge:** [`ROADMAP.md`](./ROADMAP.md). Agent-Prompts: [`prompts/`](./prompts/).
 
-**M1 — Installierte Apps + APK-Export** _(Tier NONE)_: Liste, Suche, Detail, Einzel- und Batch-APK-Export (Split-Apps als `.apks`/`.xapk`), Deinstall via System-Dialog. ✅ wenn alle Apps des Geräts korrekt gelistet und exportierte APKs auf einem zweiten Gerät installierbar sind.
+Kurzfassung (Details und Akzeptanzkriterien in ROADMAP + Prompts / Feature-Kapiteln):
 
-**M2 — Sources, Update-Check & Auto-Match**: F-Droid-Repo-Parser (v2) inkl. Signaturprüfung, IzzyOnDroid vorkonfiguriert, GitHub-Source mit Asset-Regex, Update-Badge in der App-Liste. **Danach Auto-Match (§4.8)**: Signatur-Einlesen, Matching-Engine mit Konfidenzstufen, Onboarding-Screen „Apps übernehmen", `ManagedApp` in Room. ✅ wenn (a) Updates für mind. 5 reale Apps aus beiden Quellen korrekt erkannt werden und (b) Auto-Match auf dem Testgerät die Apps korrekt in HOCH/MITTEL/WARNUNG/KEINE einteilt, insbesondere eine App mit abweichender F-Droid-Signatur als WARNUNG.
+| ID | Inhalt |
+| --- | --- |
+| **M0** | Multi-Module, Catalog, Convention Plugins, AGP-9-Built-in-Kotlin, CI, Design System, Navigation-3-Shell, `LICENSE`, Android-`.gitignore` |
+| **M1** | Installierte Apps + APK-Export (Tier NONE); Summary/Detail; `.apk` / `.apks` STORED / `.xapk` |
+| **M2** | Sources, Update-Check, Auto-Match (§4.2 / §4.8) |
+| **M3** | Installer ohne Privilegien (§4.3) |
+| **M4** | Privilege-Layer + Shizuku-Setup (§4.9 / §5) |
+| **M5** | Storage Analyzer / Cleaner (§4.5) |
+| **M6** | Debloat (§4.10) |
+| **M7** | Backup/Restore (§4.6) |
+| **M8** | Auto-Update im Hintergrund |
+| **M9** | Termux-Integration (§4.7) |
+| **M10** | Polish & Release |
 
-**M3 — Installer (ohne Privilegien)**: Download-Queue, Hash/Signatur-Check, `PackageInstaller`-Session, Split-Bundles, Fehler-Mapping. ✅ wenn Update einer F-Droid-App und einer GitHub-App end-to-end klappt.
-
-**M4 — Privilege-Layer & Shizuku-Setup-Assistent**: Executor-Interface, Shizuku-`UserService`, stille Installation/Deinstallation, Cache-Clear. **Setup-Assistent (§4.9)** mit Zustandsmaschine A–D, Startmethoden, Selbsttest, Capability-Matrix, „Diagnose kopieren". ShizukuPlus-Evaluierung dokumentieren. ✅ wenn ein Nutzer ohne Vorwissen von „Shizuku nicht installiert" bis „bereit" geführt wird, stille Updates funktionieren und ohne Shizuku sauber auf System-Dialoge zurückgefallen wird.
-
-**M5 — Storage**: StorageStats-Analyzer, Treemap, Cache-Cleaner, APK-Reste/Duplikate/große Dateien mit Vorschau. ✅ wenn Zahlen mit dem Systemdialog plausibel übereinstimmen.
-
-**M6 — Debloat-Modus**: Paketdatenbank, Snapshot, Sperrliste (statisch + dynamisch), Deaktivieren/Entfernen/Wiederherstellen, Dry-Run, Expertenmodus (§4.10). ✅ siehe Akzeptanzkriterien in §4.10.
-
-**M7 — Backup/Restore**: Tier-abhängig (siehe §4.6), Verschlüsselung optional, Restore-Test auf Testgerät. ✅ wenn Round-Trip (Backup → Deinstall → Restore) für Test-App funktioniert (mit Root/Shizuku-Tier).
-
-**M8 — Auto-Update im Hintergrund**: WorkManager-Zeitplan, Constraints (WLAN, Akku), Benachrichtigungen, Pro-App-Regeln, Release-Notes-Anzeige.
-
-**M9 — Termux-Integration**: Feature-Flag, konfigurierbarer Paketname, Hooks, Script-Runner.
-
-**M10 — Polish & Release**: i18n (DE/EN), Onboarding-Feinschliff, Accessibility, Self-Update, eigenes F-Droid-Repo / GitHub Releases, README, Screenshots.
-
-> Kernpfad für eine nutzbare erste Version: **M0–M5**. M6 (Debloat) baut direkt auf M4 auf und kann parallel zu M5 laufen, falls gewünscht.
+> Kernpfad für eine nutzbare erste Version: **M0–M5**. M6 kann parallel zu M5 laufen, sobald M4 steht.
 
 ## 9. Referenzprojekte (lesen, Ideen holen, Lizenzen beachten)
 
+Lokale Checkouts und SPDX-IDs: [`reference.md`](./reference.md) (früher Repo-Root).
+
+**Lizenzgrenze (Apache-2.0):** Referenz-Repos nur für Verhalten, UX-Ideen und API-Hinweise lesen. **Kein** Code, keine Kommentare, keine String-Tabellen, keine Dateistrukturen aus GPL-Projekten (App Manager, Termux) in Kiln übernehmen. Shizuku-/ShizukuPlus-Samples (Apache-2.0) dürfen ab M4 mit Attribution genutzt werden, wenn die konkrete Dateilizenz passt.
+
 - **Obtainium** — GitHub/Multi-Source-Updates (Konfigurationsmodell)
 - **Droid-ify / Neo Store** — F-Droid-Client-Architektur
-- **App Manager (MuntashirAkon)** — sehr ähnlicher Scope (APK-Tools, Backup, Shizuku/Root); prüfen, was man davon nicht neu erfinden muss
+- **App Manager (MuntashirAkon)** — Scope-Referenz (APK-Tools, Backup, Shizuku/Root); **GPL-3.0-or-later → nur lesen**
 - **SD Maid SE** — Storage-Cleaner-Konzepte
 - **Neo Backup** — Backup-Formate und Restore-Logik
-- **Shizuku-Samples** (`RikkaApps/Shizuku-API`) — UserService-Beispiel
+- **Shizuku-Samples** (`RikkaApps/Shizuku-API`) — UserService-Beispiel (Apache-2.0; ab M4)
 
 > Ehrlicher Hinweis: Obtainium + App Manager + SD Maid decken viel davon ab. Der Mehrwert von Kiln ist **die vereinheitlichte UX und ein gemeinsames Capability-Modell**, nicht die Einzelfunktionen. Bei Zeitdruck lieber M1–M5 sehr gut machen als alles halb.
 
@@ -343,6 +377,8 @@ Prinzip: **Permissions erst anfragen, wenn das Feature benutzt wird**, mit Erkl�
 - Debloat: falsche Entfernung kann Funktionen oder den Bootvorgang beeinträchtigen → Sperrliste, Snapshot und Standard „Deaktivieren" sind Pflicht; Lizenz der Paketdatenbank-Quelle klären
 - Shizuku-Assistent: Verhalten von Wireless Debugging und Autostart unterscheidet sich je Android-Version und ROM (HyperOS gesondert testen)
 - Namenskonflikte für „Kiln" (GitHub, F-Droid, Play) vor dem ersten Release prüfen; Package-ID `dev.involvex.kiln` ist gesetzt
+- KSP ↔ Kotlin-Kompatibilität bei AGP-9-Built-in-Kotlin / KSP-2.3.x vor dem ersten M0-Build verifizieren
+- Navigation 3 vs. ältere Tutorials: keine Navigation-2-APIs einführen
 
 ## 11. Regeln für Cursor / AI-Agents
 
@@ -353,7 +389,9 @@ Prinzip: **Permissions erst anfragen, wenn das Feature benutzt wird**, mit Erkl�
 - Jedes destruktive Feature: Unit-Test + Bestätigungsdialog
 - UI-Strings nur in `strings.xml` (DE + EN)
 - Bei Unsicherheit über eine Android-API: Verhalten pro API-Level im Code kommentieren und mit Gerät testen, nicht raten
-- Nach jedem Meilenstein: `README`-Abschnitt + Capability-Tabelle aktualisieren
+- Nach jedem Meilenstein: `README`-Abschnitt + [`ROADMAP.md`](./ROADMAP.md) (Capability-Matrix / Status) aktualisieren
+- Navigation: nur Navigation 3; Feature-Module ohne NavHost
+- Lizenz: Apache-2.0; GPL-Referenzen (App Manager, Termux) nie kopieren
 
 ## 12. Backlog / Erweiterungen (Vorschläge, noch nicht fest eingeplant)
 

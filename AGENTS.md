@@ -3,29 +3,33 @@
 Kiln ist eine Android-App (reines Kotlin + Jetpack Compose), die Package-Manager (F-Droid, GitHub Releases), APK-Tools, App-Backup, Storage-Management und einen Debloat-Modus in einer App vereint. Privilegierte Funktionen laufen optional über Shizuku/ShizukuPlus oder Root.
 
 - **Package / applicationId:** `dev.involvex.kiln`
-- **Quelle der Wahrheit für Scope, Architektur und Roadmap:** [`PLAN.md`](./PLAN.md). Vor jeder größeren Aufgabe das relevante Kapitel lesen. Bei Widersprüchen gewinnt `PLAN.md`; Abweichungen vorher mit dem Nutzer klären.
-- **Prompts pro Meilenstein:** `docs/prompts/`
+- **Lizenz:** Apache-2.0
+- **Quelle der Wahrheit für Scope und Architektur:** [`docs/PLAN.md`](./docs/PLAN.md). Bei Widersprüchen gewinnt `PLAN.md`; Abweichungen vorher mit dem Nutzer klären.
+- **Roadmap / Status:** [`docs/ROADMAP.md`](./docs/ROADMAP.md) (Capability-Matrix, Meilenstein-Status)
+- **Prompts pro Meilenstein:** [`docs/prompts/`](./docs/prompts/) (`M0-setup.md`, `M1-installed-apps.md`, …)
+- **Referenzen:** [`docs/reference.md`](./docs/reference.md) — Ideen lesen, GPL-Code nicht kopieren
 
 ## Arbeitsweise
 
-1. **Erst erkunden, dann planen, dann bauen.** Repo und `PLAN.md` lesen, offene Fragen und Annahmen auflisten, kurzen Umsetzungsplan vorschlagen, erst danach Code schreiben.
+1. **Erst erkunden, dann planen, dann bauen.** Repo, `docs/PLAN.md` und `docs/ROADMAP.md` lesen, offene Fragen und Annahmen auflisten, kurzen Umsetzungsplan vorschlagen, erst danach Code schreiben.
 2. **Ein Meilenstein pro Branch/PR** (`m1-installed-apps`, …), kleine Commits, Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`).
 3. **Nicht über den Meilenstein hinaus bauen.** Backlog-Ideen aus `PLAN.md` §12 nicht „nebenbei" umsetzen.
 4. **Bei Unsicherheit fragen statt raten**, vor allem bei: Android-API-Verhalten pro Version, Herstellerabweichungen (HyperOS), Lizenzen, Sicherheitsentscheidungen.
-5. Nach jedem Meilenstein: `README` und Capability-Tabelle in `PLAN.md` aktualisieren, Akzeptanzkriterien einzeln abhaken.
+5. Nach jedem Meilenstein: `README` und Capability-Matrix in `docs/ROADMAP.md` aktualisieren, Akzeptanzkriterien einzeln abhaken.
 
 ## Stack (Kurzfassung)
 
 - Kotlin (aktuell stabil), Gradle Kotlin DSL, **Version Catalog** (`gradle/libs.versions.toml`), Convention Plugins in `build-logic/`
-- minSdk 26, targetSdk = aktuelles Stable
-- Jetpack Compose, Material 3, Navigation Compose (type-safe Routes)
-- DI: **Hilt** (KSP)
-- Persistenz: Room, DataStore
+- AGP 9+: **Built-in Kotlin** — `org.jetbrains.kotlin.android` nicht anwenden; Compose- und Serialization-Plugins explizit
+- minSdk 26, compileSdk/targetSdk = aktuelles Stable (Baseline: API 37)
+- Jetpack Compose, Material 3 (stabiles BOM; kein Expressive solange nicht stabil), **Navigation 3** (type-safe `@Serializable`-NavKeys in `:app`)
+- DI: **Hilt** (KSP, kein kapt)
+- Persistenz: Room, DataStore (ab den Meilensteinen, die sie brauchen)
 - Netzwerk: OkHttp + kotlinx.serialization
 - Hintergrund: WorkManager, Foreground Services
 - Bilder: Coil
 - Tests: JUnit5, MockK, Turbine
-- Versionen immer die aktuellen stabilen aus offizieller Dokumentation prüfen, **nie aus dem Gedächtnis raten**
+- Versionen immer die aktuellen stabilen aus offizieller Dokumentation prüfen, **nie aus dem Gedächtnis raten** (Baseline: `docs/PLAN.md` §2.1)
 
 ## Modulstruktur
 
@@ -36,11 +40,11 @@ Kiln ist eine Android-App (reines Kotlin + Jetpack Compose), die Package-Manager
 :feature:backup  :feature:onboarding  :feature:debloat  :feature:termux  :feature:settings
 ```
 
-Module werden erst angelegt, wenn der Meilenstein sie braucht (siehe `PLAN.md` §3 und §8). Feature-Module hängen nie voneinander ab, nur von `:core:*`. Navigation läuft über `:app`.
+Module werden erst angelegt, wenn der Meilenstein sie braucht (siehe `docs/PLAN.md` §3 und `docs/ROADMAP.md`). Feature-Module hängen nie voneinander ab, nur von `:core:*`. Navigation (Navigation 3) läuft ausschließlich über `:app`; Features exportieren nur Screen-Composables.
 
 ## Befehle
 
-Werden in M0 eingerichtet; bis dahin gilt nur Standard-Gradle. Ziel-Befehle:
+Ziel-Befehle:
 
 ```bash
 ./gradlew assembleDebug            # Debug-Build
@@ -77,7 +81,7 @@ Vor jedem Commit müssen Build, Unit-Tests, Lint und Format-Check grün sein.
 - Tokens (z. B. GitHub-PAT) nur im Android Keystore / verschlüsselt, nie im Klartext, nie im Log, nie im Repo.
 - Die Liste installierter Apps verlässt das Gerät nicht.
 - **Destruktive Aktionen** (Deinstallieren, Löschen, Restore, Debloat) immer mit Bestätigung; Batch-Aktionen mit Zusammenfassung; wo möglich Vorschau/Papierkorb/Rückgängig. Pro destruktivem Feature mindestens ein Unit-Test.
-- Debloat: keine Paket-Ratings „aus dem Gedächtnis" erzeugen. Daten nur aus geprüften Quellen mit geklärter Lizenz (siehe `PLAN.md` §4.10).
+- Debloat: keine Paket-Ratings „aus dem Gedächtnis" erzeugen. Daten nur aus geprüften Quellen mit geklärter Lizenz (siehe `docs/PLAN.md` §4.10).
 
 ## Dependencies
 
@@ -88,16 +92,18 @@ Vor jedem Commit müssen Build, Unit-Tests, Lint und Format-Check grün sein.
 
 - Reine Logik (Parser, Matching, Sortierung/Filter, Manifest-Builder) mit Unit-Tests abdecken.
 - Android-abhängiger Code hinter Interfaces kapseln, damit er in Unit-Tests ersetzbar ist.
-- Akzeptanzkriterien aus `PLAN.md` §8 sind die Definition of Done des Meilensteins; manuelle Geräte-Checks als Checkliste im PR dokumentieren.
+- Akzeptanzkriterien aus `docs/ROADMAP.md` + Meilenstein-Prompt sind die Definition of Done; manuelle Geräte-Checks als Checkliste im PR dokumentieren.
 - Testgerät des Nutzers: Xiaomi mit HyperOS (Android-Herstellerabweichungen beachten, z. B. bei Cache-Clear, Autostart, Berechtigungs-Dialogen).
 
 ## Nicht tun
 
-- Keine Expo-/React-Native-/Flutter-Teile; die Entscheidung für reines Kotlin ist getroffen (`PLAN.md` §2).
+- Keine Expo-/React-Native-/Flutter-Teile; die Entscheidung für reines Kotlin ist getroffen (`docs/PLAN.md` §2).
 - Keine Root-/Shizuku-Pflicht für Basisfunktionen (Tier NONE muss nützlich bleiben).
 - Keine stille Datenlöschung, keine automatischen destruktiven Aktionen ohne Bestätigung.
 - Keine Secrets, Keystores oder `local.properties` committen.
 - Keine großen Refactorings oder Umbenennungen außerhalb des aktuellen Meilensteins.
+- Kein Code, keine Strings, keine Layouts aus GPL-Referenz-Apps (App Manager, Termux) übernehmen — nur Verhalten beobachten (`docs/reference.md`).
+- Kein Navigation Compose 2 (`androidx.navigation:navigation-compose`); Kiln nutzt Navigation 3.
 
 ## Definition of Done (pro PR)
 
@@ -105,5 +111,5 @@ Vor jedem Commit müssen Build, Unit-Tests, Lint und Format-Check grün sein.
 - [ ] Akzeptanzkriterien des Meilensteins erfüllt und im PR einzeln benannt
 - [ ] Neue UI-Texte in DE + EN
 - [ ] Keine neuen Permissions ohne Begründung im PR
-- [ ] `README`/`PLAN.md` (Capability-Tabelle, Status) aktualisiert
+- [ ] `README` / `docs/ROADMAP.md` (Capability-Matrix, Status) aktualisiert
 - [ ] Bekannte Einschränkungen und offene Punkte im PR-Text aufgelistet
