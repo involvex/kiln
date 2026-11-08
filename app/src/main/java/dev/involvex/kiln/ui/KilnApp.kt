@@ -25,11 +25,13 @@ import dev.involvex.kiln.R
 import dev.involvex.kiln.feature.apps.AppDetailRoute
 import dev.involvex.kiln.feature.apps.AppsRoute
 import dev.involvex.kiln.feature.backup.BackupRoute
+import dev.involvex.kiln.feature.onboarding.AutoMatchRoute
 import dev.involvex.kiln.feature.settings.SettingsRoute
 import dev.involvex.kiln.feature.sources.SourcesRoute
 import dev.involvex.kiln.feature.storage.StorageRoute
 import dev.involvex.kiln.navigation.AppDetailKey
 import dev.involvex.kiln.navigation.AppsKey
+import dev.involvex.kiln.navigation.AutoMatchKey
 import dev.involvex.kiln.navigation.BackupKey
 import dev.involvex.kiln.navigation.SettingsKey
 import dev.involvex.kiln.navigation.SourcesKey
@@ -92,7 +94,14 @@ fun KilnApp(modifier: Modifier = Modifier) {
                         onBack = { topLevelBackStack.removeLast() },
                     )
                 }
-                entry<SourcesKey> { SourcesRoute() }
+                entry<SourcesKey> {
+                    SourcesRoute(
+                        onOpenAutoMatch = { topLevelBackStack.add(AutoMatchKey) },
+                    )
+                }
+                entry<AutoMatchKey> {
+                    AutoMatchRoute(onBack = { topLevelBackStack.removeLast() })
+                }
                 entry<StorageKey> { StorageRoute() }
                 entry<BackupKey> { BackupRoute() }
                 entry<SettingsKey> { SettingsRoute() }

@@ -12,6 +12,9 @@ data class AppDetailKey(val packageName: String)
 data object SourcesKey
 
 @Serializable
+data object AutoMatchKey
+
+@Serializable
 data object StorageKey
 
 @Serializable

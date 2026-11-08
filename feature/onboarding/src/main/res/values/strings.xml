@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_back">Back</string>
+    <string name="onboarding_auto_match_title">Match installed apps</string>
+    <string name="onboarding_auto_match_body">Safe matches (package + signer) are selected by default. Signature mismatches cannot be accepted without a later manual override. Matching stays on-device.</string>
+    <string name="onboarding_accept_all_safe">Accept all safe</string>
+    <string name="onboarding_accept_selected">Accept selected</string>
+    <string name="onboarding_refresh">Refresh</string>
+    <string name="onboarding_group_high">High confidence</string>
+    <string name="onboarding_group_medium">Review</string>
+    <string name="onboarding_group_warning">Signature warning</string>
+    <string name="onboarding_group_none">Not found</string>
+</resources>

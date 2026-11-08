@@ -25,6 +25,8 @@ data class AppsUiState(
     val batchSummary: String? = null,
     val showNotificationPermissionRationale: Boolean = false,
     val pendingBatchAfterPermission: Boolean = false,
+    /** packageName → available version label for update badge */
+    val updateBadges: Map<String, String> = emptyMap(),
 )
 
 data class ExportDialogState(

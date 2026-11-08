@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M1 Done on `main` (installed apps list, detail, APK/APKS/XAPK export; lifecycle + Dependabot follow-ups). Next: M2 sources / update check.
+**Current status:** M2 Done on `m2-sources` (awaiting merge). M1 Done on `main`. Install CTA stubbed until M3.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -16,7 +16,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | --- | --- | --- | --- | --- |
 | **M0** | Project setup | Done | [`prompts/M0-setup.md`](./prompts/M0-setup.md) · `m0-setup` | `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green; 5-tab Nav3 shell on device |
 | **M1** | Installed apps + APK export (Tier NONE) | Done | [`prompts/M1-installed-apps.md`](./prompts/M1-installed-apps.md) · `m1-installed-apps` | List matches `pm list packages -3`; exports install via `adb` / second device |
-| **M2** | Sources, update check, auto-match | Planned | PLAN §4.2 / §4.8 | Updates for ≥5 real apps; auto-match confidence tiers correct |
+| **M2** | Sources, update check, auto-match | Done | PLAN §4.2 / §4.8 · `m2-sources` | Updates for ≥5 real apps; auto-match confidence tiers correct |
 | **M3** | Installer (no privilege) | Planned | PLAN §4.3 | F-Droid + GitHub update E2E |
 | **M4** | Privilege layer + Shizuku setup | Planned | PLAN §4.9 / §5 | Guided setup A→D; silent install; clean Tier NONE fallback |
 | **M5** | Storage analyzer / cleaner | Planned | PLAN §4.5 | Numbers plausible vs system storage UI |
@@ -32,18 +32,33 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 Update after each milestone. Tier = active `PrivilegedExecutor`.
 
-| Feature | Now (M1 on `main`) | Needs tier |
+| Feature | Now (after M2) | Needs tier |
 | --- | --- | --- |
 | Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
-| List installed apps | ✅ Summary list, search, User/System/All, sort | NONE |
+| List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
 | App detail | ✅ Version, installer, SHA-256, paths, permissions | NONE |
 | APK export (single / batch) | ✅ `.apk` / `.apks` STORED / `.xapk`; SAF + share + WorkManager batch | NONE |
 | Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
-| Sources / updates | — | NONE (+ network) |
+| Sources / updates | ✅ F-Droid/Izzy index-v2 + entry.jar verify; GitHub releases; Obtainium import; Room cache | NONE (+ network) |
+| Auto-match | ✅ Confidence tiers HOCH/MITTEL/WARNUNG/KEINE; ManagedApp persistence | NONE |
 | Installer | — | NONE / SHIZUKU |
 | Storage / cleaner | — | NONE / SHIZUKU |
 | Debloat | — | ≥ SHIZUKU |
 | Backup (app data) | — | NONE (APK only) … ROOT |
+
+---
+
+## M2 manual acceptance (HyperOS)
+
+Code for M2 is on `m2-sources`. Tick on device after install (network required):
+
+- [ ] Sources tab lists preconfigured F-Droid + IzzyOnDroid; sync succeeds; last sync time updates
+- [ ] Failed fingerprint / bad `entry.jar` does not poison cache (re-sync after fixing still works)
+- [ ] Auto-match groups HOCH / MITTEL / WARNUNG / KEINE; accept-all-safe only takes HOCH (+ optional MITTEL if UI allows)
+- [ ] Apps list shows update badges for ≥5 real packages vs live indexes and/or GitHub map
+- [ ] Detail / Sources show signature WARNUNG copy when certs differ; install CTA disabled until M3
+- [ ] Obtainium JSON import creates managed GitHub apps; PAT optional (rate-limit string visible without PAT)
+- [ ] Installed-app list never leaves the device (no bulk upload); only mapped/managed apps hit GitHub
 
 ---
 
