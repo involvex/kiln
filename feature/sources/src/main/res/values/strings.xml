@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_sources_title">Sources</string>
-    <string name="feature_sources_description">F-Droid and GitHub release sources will live here (M2).</string>
+    <string name="feature_sources_description">Sync F-Droid-format repos, manage GitHub PAT, and import Obtainium exports. Updates are shown in Apps; install arrives in M3.</string>
+    <string name="sources_sync_all">Sync all repos</string>
+    <string name="sources_open_auto_match">Match installed apps</string>
+    <string name="sources_repo_fingerprint">Fingerprint: %1$s</string>
+    <string name="sources_repo_last_sync">Last sync: %1$s</string>
+    <string name="sources_never_synced">Never</string>
+    <string name="sources_add_repo">Add F-Droid-format repo</string>
+    <string name="sources_repo_name">Name</string>
+    <string name="sources_repo_url">HTTPS address</string>
+    <string name="sources_repo_fp">SHA-256 fingerprint</string>
+    <string name="sources_add_repo_action">Add repo</string>
+    <string name="sources_github_pat">GitHub personal access token</string>
+    <string name="sources_github_pat_hint">Optional. Without a token GitHub allows about 60 requests/hour.</string>
+    <string name="sources_github_pat_set">A token is stored encrypted on this device.</string>
+    <string name="sources_github_pat_label">Token</string>
+    <string name="sources_github_pat_save">Save token</string>
+    <string name="sources_github_pat_clear">Clear token</string>
+    <string name="sources_obtainium">Import Obtainium export</string>
+    <string name="sources_obtainium_paste">Paste Obtainium JSON</string>
+    <string name="sources_obtainium_import">Import</string>
+    <string name="sources_dismiss">Dismiss</string>
 </resources>

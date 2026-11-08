@@ -4,7 +4,7 @@ All-in-one package, APK, and storage manager for Android.
 
 - **Package:** `dev.involvex.kiln`
 - **License:** [Apache-2.0](./LICENSE)
-- **Status:** M1 — installed apps list/detail + APK/APKS/XAPK export (see [docs/ROADMAP.md](./docs/ROADMAP.md))
+- **Status:** M2 Done — sources, update check, auto-match (see [docs/ROADMAP.md](./docs/ROADMAP.md)); installer is M3
 
 Kiln unifies F-Droid/GitHub sources, APK tools, app backup, storage cleanup, and an optional debloat mode. Privileged actions run through Shizuku/ShizukuPlus or Root when available; Tier NONE stays useful without them.
 
@@ -32,15 +32,18 @@ Install the debug APK:
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Modules (M1)
+## Modules (M2)
 
 ```
 :app                      Navigation 3 shell, Hilt root, theme, FileProvider
-:core:common              Result type, qualified dispatchers
-:core:model               InstalledAppSummary / InstalledAppDetail
+:core:common              Result type, qualified dispatchers, fingerprints
+:core:model               Installed + source/update domain types
+:core:network             OkHttp HTTPS client
+:core:database            Room (repos, index cache, ManagedApp)
 :core:designsystem        Material 3 theme + base components
-:feature:apps             List, detail, APK/APKS/XAPK export, batch WorkManager
-:feature:sources          Placeholder (M2)
+:feature:apps             List, detail, export, update badges
+:feature:sources          F-Droid/Izzy sync, GitHub, Obtainium import
+:feature:onboarding       Auto-match installed apps to sources
 :feature:storage          Placeholder (M5)
 :feature:backup           Placeholder (M7)
 :feature:settings         Placeholder
@@ -58,7 +61,7 @@ Feature modules depend only on `:core:*`. NavKeys live in `:app`.
 | [docs/prompts/](./docs/prompts/) | Per-milestone agent prompts |
 | [docs/reference.md](./docs/reference.md) | Reference apps (read-only; no GPL copy) |
 
-## Toolchain (M1)
+## Toolchain (M2)
 
 | Component | Version |
 | --- | --- |
@@ -71,6 +74,8 @@ Feature modules depend only on `:core:*`. NavKeys live in `:app`.
 | Hilt | 2.60.1 |
 | Coil | 3.6.3 |
 | WorkManager | 2.12.0 |
+| Room | 2.8.5 |
+| OkHttp | 5.5.1 |
 
 ## License
 

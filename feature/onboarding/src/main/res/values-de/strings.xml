@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_back">Zurück</string>
+    <string name="onboarding_auto_match_title">Installierte Apps zuordnen</string>
+    <string name="onboarding_auto_match_body">Sichere Treffer (Paket + Signer) sind vorausgewählt. Signaturabweichungen können hier nicht übernommen werden. Der Abgleich bleibt auf dem Gerät.</string>
+    <string name="onboarding_accept_all_safe">Alle sicheren übernehmen</string>
+    <string name="onboarding_accept_selected">Auswahl übernehmen</string>
+    <string name="onboarding_refresh">Aktualisieren</string>
+    <string name="onboarding_group_high">Hohe Konfidenz</string>
+    <string name="onboarding_group_medium">Prüfen</string>
+    <string name="onboarding_group_warning">Signatur-Warnung</string>
+    <string name="onboarding_group_none">Nicht gefunden</string>
+</resources>

@@ -10,6 +10,7 @@ import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.AppListFilter
 import dev.involvex.kiln.core.model.AppSortField
+import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.InstalledAppSummary
 import dev.involvex.kiln.core.model.SortDirection
@@ -33,6 +34,7 @@ class AppsViewModel @Inject constructor(
     private val repository: InstalledAppsRepository,
     private val batchExportScheduler: BatchExportScheduler,
     private val apkExporter: ApkExporter,
+    private val appUpdateRepository: AppUpdateRepository,
 ) : ViewModel() {
     private val query = MutableStateFlow("")
     private val filter = MutableStateFlow(AppListFilter.USER)
@@ -79,12 +81,15 @@ class AppsViewModel @Inject constructor(
         RepoControls(apps, loading, error)
     }
 
+    private val updateBadges = MutableStateFlow<Map<String, String>>(emptyMap())
+
     val uiState: StateFlow<AppsUiState> = combine(
         repoControls,
         listControls,
         selectionControls,
         batchControls,
-    ) { repo, list, selection, batch ->
+        updateBadges,
+    ) { repo, list, selection, batch, badges ->
         val visible = filterAndSortApps(
             apps = repo.apps,
             query = list.query,
@@ -110,6 +115,7 @@ class AppsViewModel @Inject constructor(
             batchProgressTotal = batch.total,
             batchSummary = batch.summary,
             showNotificationPermissionRationale = batch.rationale,
+            updateBadges = badges,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -122,6 +128,16 @@ class AppsViewModel @Inject constructor(
         viewModelScope.launch {
             batchExportScheduler.observeWork().collect { infos ->
                 handleWorkInfos(infos)
+            }
+        }
+        viewModelScope.launch {
+            appUpdateRepository.updates().collect { map ->
+                updateBadges.value = map.mapValues { (_, info) ->
+                    buildString {
+                        append(info.availableVersionName)
+                        if (!info.signatureMatches) append(" !")
+                    }
+                }
             }
         }
     }

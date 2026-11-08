@@ -6,3 +6,7 @@ plugins {
 android {
     namespace = "dev.involvex.kiln.core.model"
 }
+
+dependencies {
+    implementation(libs.kotlinx.coroutines.core)
+}

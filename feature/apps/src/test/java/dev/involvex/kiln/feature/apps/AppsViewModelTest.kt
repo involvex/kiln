@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.AppListFilter
+import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.InstalledAppSummary
 import dev.involvex.kiln.feature.apps.data.InstalledAppsRepository
@@ -13,10 +14,12 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -51,7 +54,7 @@ class AppsViewModelTest {
                 summary("com.sys", "System App", isSystem = true),
             ),
         )
-        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter())
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), FakeUpdates())
 
         viewModel.uiState.test {
             var state = awaitItem()
@@ -75,7 +78,7 @@ class AppsViewModelTest {
     @Test
     fun `selection mode toggles and opens export dialog`() = runTest {
         val repo = FakeRepository(listOf(summary("com.user", "User App", isSystem = false)))
-        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter())
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), FakeUpdates())
         advanceUntilIdle()
 
         viewModel.onEvent(AppsEvent.LongPressed("com.user"))
@@ -126,5 +129,11 @@ class AppsViewModelTest {
         override suspend fun detail(packageName: String): Result<InstalledAppDetail> = Result.failure("unused")
 
         override fun isInstalled(packageName: String): Boolean = true
+    }
+
+    private class FakeUpdates : AppUpdateRepository {
+        override fun updates(): Flow<Map<String, dev.involvex.kiln.core.model.AppUpdateInfo>> = flowOf(emptyMap())
+
+        override suspend fun refreshUpdates() = Unit
     }
 }

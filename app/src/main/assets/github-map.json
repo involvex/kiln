@@ -1,0 +1,17 @@
+[
+  {
+    "packageName": "org.fdroid.fdroid",
+    "ownerRepo": "f-droid/fdroidclient",
+    "assetRegex": ".*\\.apk$"
+  },
+  {
+    "packageName": "moe.shizuku.privileged.api",
+    "ownerRepo": "RikkaApps/Shizuku",
+    "assetRegex": ".*\\.apk$"
+  },
+  {
+    "packageName": "com.android.vending",
+    "ownerRepo": "example/never-matched",
+    "assetRegex": ".*\\.apk$"
+  }
+]

@@ -20,9 +20,12 @@ android {
 dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:model"))
+    implementation(project(":core:network"))
+    implementation(project(":core:database"))
     implementation(project(":core:designsystem"))
     implementation(project(":feature:apps"))
     implementation(project(":feature:sources"))
+    implementation(project(":feature:onboarding"))
     implementation(project(":feature:storage"))
     implementation(project(":feature:backup"))
     implementation(project(":feature:settings"))
