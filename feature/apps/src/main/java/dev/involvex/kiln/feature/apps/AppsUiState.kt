@@ -6,6 +6,8 @@ import dev.involvex.kiln.core.model.AppSortField
 import dev.involvex.kiln.core.model.InstalledAppSummary
 import dev.involvex.kiln.core.model.SortDirection
 
+data class UpdateBadgeUi(val versionLabel: String, val signatureWarning: Boolean)
+
 data class AppsUiState(
     val isLoading: Boolean = true,
     val apps: List<InstalledAppSummary> = emptyList(),
@@ -25,8 +27,10 @@ data class AppsUiState(
     val batchSummary: String? = null,
     val showNotificationPermissionRationale: Boolean = false,
     val pendingBatchAfterPermission: Boolean = false,
-    /** packageName → available version label for update badge */
-    val updateBadges: Map<String, String> = emptyMap(),
+    /** packageName → badge for available update */
+    val updateBadges: Map<String, UpdateBadgeUi> = emptyMap(),
+    val isCheckingUpdates: Boolean = false,
+    val updateCheckMessage: String? = null,
 )
 
 data class ExportDialogState(

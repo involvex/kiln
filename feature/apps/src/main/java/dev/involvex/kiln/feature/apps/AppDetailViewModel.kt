@@ -40,6 +40,11 @@ class AppDetailViewModel @AssistedInject constructor(
                 _uiState.update { it.copy(installJob = jobs[packageName]) }
             }
         }
+        viewModelScope.launch {
+            appUpdateRepository.observeIgnoreUpdates(packageName).collect { ignore ->
+                _uiState.update { it.copy(ignoreUpdates = ignore) }
+            }
+        }
     }
 
     fun refresh() {
@@ -87,6 +92,21 @@ class AppDetailViewModel @AssistedInject constructor(
             AppDetailEvent.ClearSnackbar -> _uiState.update { it.copy(snackbarMessage = null) }
 
             AppDetailEvent.InstallUpdate -> enqueueUpdate()
+
+            is AppDetailEvent.IgnoreUpdatesChanged -> {
+                // Switch ON = check for updates = ignoreUpdates false
+                viewModelScope.launch {
+                    when (
+                        val result = appUpdateRepository.setIgnoreUpdates(
+                            packageName,
+                            ignoreUpdates = !event.checkForUpdates,
+                        )
+                    ) {
+                        is Result.Success -> Unit
+                        is Result.Failure -> showMessage(result.message)
+                    }
+                }
+            }
 
             AppDetailEvent.OpenUnknownSourcesSettings,
             AppDetailEvent.Launch,

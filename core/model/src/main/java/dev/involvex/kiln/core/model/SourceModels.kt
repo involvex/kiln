@@ -1,5 +1,7 @@
 package dev.involvex.kiln.core.model
 
+import dev.involvex.kiln.core.common.Result
+
 enum class MatchConfidence {
     HIGH,
     MEDIUM,
@@ -85,6 +87,8 @@ data class InstalledAppMatchInput(
     val signerSha256: List<String>,
 )
 
+data class UpdateCheckResult(val reposSynced: Int, val reposFailed: Int, val updatesFound: Int)
+
 /**
  * Available updates for managed / matched packages.
  * Implemented in `:feature:sources`, consumed by `:feature:apps`.
@@ -92,5 +96,21 @@ data class InstalledAppMatchInput(
 interface AppUpdateRepository {
     fun updates(): kotlinx.coroutines.flow.Flow<Map<String, AppUpdateInfo>>
 
+    /** Recompute update map from the local index + GitHub (no repo download). */
     suspend fun refreshUpdates()
+
+    /**
+     * Sync enabled F-Droid-format repos, then [refreshUpdates].
+     * Use from the Apps “Check for updates” action.
+     */
+    suspend fun checkForUpdates(): Result<UpdateCheckResult>
+
+    /** `null` if the package is not a managed app yet. */
+    fun observeIgnoreUpdates(packageName: String): kotlinx.coroutines.flow.Flow<Boolean?>
+
+    /**
+     * Persist [ignoreUpdates] for [packageName]. Creates a minimal managed row when missing
+     * (source from current update info or `"manual"`).
+     */
+    suspend fun setIgnoreUpdates(packageName: String, ignoreUpdates: Boolean): Result<Unit>
 }

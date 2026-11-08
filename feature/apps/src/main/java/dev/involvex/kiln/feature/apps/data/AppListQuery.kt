@@ -14,6 +14,7 @@ fun filterAndSortApps(
     filter: AppListFilter,
     sortField: AppSortField,
     sortDirection: SortDirection,
+    updatePackageNames: Set<String> = emptySet(),
 ): List<InstalledAppSummary> {
     val normalizedQuery = query.trim()
     val filtered = apps.asSequence()
@@ -22,6 +23,7 @@ fun filterAndSortApps(
                 AppListFilter.USER -> !app.isSystem
                 AppListFilter.SYSTEM -> app.isSystem
                 AppListFilter.ALL -> true
+                AppListFilter.UPDATES -> app.packageName in updatePackageNames
             }
         }
         .filter { app ->

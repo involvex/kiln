@@ -71,6 +71,9 @@ enum class AppListFilter {
     USER,
     SYSTEM,
     ALL,
+
+    /** Only apps with a known available update (managed + not ignored). */
+    UPDATES,
 }
 
 enum class AppSortField {

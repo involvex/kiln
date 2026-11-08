@@ -5,6 +5,14 @@
     <string name="feature_apps_filter_user">User</string>
     <string name="feature_apps_filter_system">System</string>
     <string name="feature_apps_filter_all">All</string>
+    <string name="feature_apps_filter_updates">Updates</string>
+    <string name="feature_apps_check_updates">Check for updates</string>
+    <string name="feature_apps_checking_updates">Checking updates…</string>
+    <string name="feature_apps_update_check_ok">Found %1$d update(s). Repos synced: %2$d, failed: %3$d.</string>
+    <string name="feature_apps_update_check_error">Update check failed: %1$s</string>
+    <string name="feature_apps_ignore_updates">Check for updates for this app</string>
+    <string name="feature_apps_ignore_updates_hint">When off, Kiln skips this app during update checks.</string>
+    <string name="feature_apps_dismiss">Dismiss</string>
     <string name="feature_apps_sort_name">Name</string>
     <string name="feature_apps_sort_size">Size</string>
     <string name="feature_apps_sort_install">Installed</string>
@@ -62,8 +70,9 @@
     <string name="feature_apps_action_update">Download &amp; install</string>
     <string name="feature_apps_update_section">Update</string>
     <string name="feature_apps_update_available">Version %1$s available from %2$s</string>
-    <string name="feature_apps_update_signature_warning">Signature does not match the installed app. Install is blocked.</string>
+    <string name="feature_apps_update_signature_warning">Signature does not match the installed app. Install is blocked. This often happens when F-Droid signs a rebuild of an app you installed from GitHub or Play.</string>
     <string name="feature_apps_update_badge">Update %1$s</string>
+    <string name="feature_apps_update_badge_warning">Signature warning · %1$s</string>
     <string name="feature_apps_install_status">Install: %1$s (%2$d%%)</string>
     <string name="feature_apps_install_error">Install error: %1$s</string>
     <string name="feature_apps_open_unknown_sources">Allow installs from Kiln</string>

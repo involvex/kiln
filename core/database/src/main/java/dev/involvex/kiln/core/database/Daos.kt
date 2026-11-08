@@ -90,6 +90,9 @@ interface ManagedAppDao {
     @Query("SELECT * FROM managed_apps WHERE packageName = :packageName LIMIT 1")
     suspend fun get(packageName: String): ManagedAppEntity?
 
+    @Query("SELECT * FROM managed_apps WHERE packageName = :packageName LIMIT 1")
+    fun observe(packageName: String): Flow<ManagedAppEntity?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(app: ManagedAppEntity)
 

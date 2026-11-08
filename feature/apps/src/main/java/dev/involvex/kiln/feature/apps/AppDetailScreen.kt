@@ -165,6 +165,8 @@ fun AppDetailScreen(
                     onExport = { onEvent(AppDetailEvent.Export) },
                     availableUpdate = state.availableUpdate,
                     installJob = state.installJob,
+                    ignoreUpdates = state.ignoreUpdates,
+                    onIgnoreUpdatesChanged = { onEvent(AppDetailEvent.IgnoreUpdatesChanged(it)) },
                     onInstallUpdate = { onEvent(AppDetailEvent.InstallUpdate) },
                     onOpenUnknownSources = {
                         val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {

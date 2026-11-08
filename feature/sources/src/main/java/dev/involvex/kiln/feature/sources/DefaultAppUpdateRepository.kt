@@ -4,17 +4,21 @@ import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.common.fingerprintsEqual
 import dev.involvex.kiln.core.database.IndexDao
 import dev.involvex.kiln.core.database.ManagedAppDao
+import dev.involvex.kiln.core.database.ManagedAppEntity
 import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.MatchConfidence
+import dev.involvex.kiln.core.model.UpdateCheckResult
+import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.github.GitHubReleasesClient
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 @Singleton
@@ -24,6 +28,7 @@ class DefaultAppUpdateRepository @Inject constructor(
     private val repoDao: RepoDao,
     private val installedAppsReader: InstalledAppsReader,
     private val gitHubReleasesClient: GitHubReleasesClient,
+    private val fdroidRepoSync: FDroidRepoSync,
 ) : AppUpdateRepository {
     private val updatesState = MutableStateFlow<Map<String, AppUpdateInfo>>(emptyMap())
 
@@ -64,6 +69,49 @@ class DefaultAppUpdateRepository @Inject constructor(
         updatesState.value = out
     }
 
+    override suspend fun checkForUpdates(): Result<UpdateCheckResult> {
+        val repos = repoDao.getAll().filter { it.enabled }
+        var ok = 0
+        var fail = 0
+        for (repo in repos) {
+            when (fdroidRepoSync.sync(repo)) {
+                is Result.Success -> ok++
+                is Result.Failure -> fail++
+            }
+        }
+        refreshUpdates()
+        return Result.success(
+            UpdateCheckResult(
+                reposSynced = ok,
+                reposFailed = fail,
+                updatesFound = updatesState.value.size,
+            ),
+        )
+    }
+
+    override fun observeIgnoreUpdates(packageName: String): Flow<Boolean?> = managedAppDao.observe(packageName).map { it?.ignoreUpdates }
+
+    override suspend fun setIgnoreUpdates(packageName: String, ignoreUpdates: Boolean): Result<Unit> {
+        val existing = managedAppDao.get(packageName)
+        val update = updatesState.value[packageName]
+        val entity = existing?.copy(ignoreUpdates = ignoreUpdates)
+            ?: ManagedAppEntity(
+                packageName = packageName,
+                sourceId = update?.sourceId ?: "manual",
+                confidence = (update?.confidence ?: MatchConfidence.NONE).name,
+                pinned = false,
+                ignoreUpdates = ignoreUpdates,
+                githubOwnerRepo = update?.sourceId
+                    ?.takeIf { it.startsWith("github:") }
+                    ?.removePrefix("github:"),
+                githubAssetRegex = ".*\\.apk$",
+                includePreReleases = false,
+            )
+        managedAppDao.upsert(entity)
+        refreshUpdates()
+        return Result.success(Unit)
+    }
+
     private suspend fun findFdroidUpdate(
         packageName: String,
         preferredSourceId: String,
@@ -92,9 +140,6 @@ class DefaultAppUpdateRepository @Inject constructor(
             matches && indexSigners.isNotEmpty() -> MatchConfidence.HIGH
             indexSigners.isEmpty() -> MatchConfidence.MEDIUM
             else -> MatchConfidence.WARNING
-        }
-        if (!matches) {
-            // Still surface as WARNING so the UI can explain signature mismatch.
         }
         val repoAddress = repos[latest.repoId]?.address
         val downloadUrl = repoAddress?.let { FdroidApkUrl.build(it, latest.apkName) }

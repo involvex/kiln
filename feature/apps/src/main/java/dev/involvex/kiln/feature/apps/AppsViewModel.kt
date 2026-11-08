@@ -49,6 +49,8 @@ class AppsViewModel @Inject constructor(
     private val batchProgressTotal = MutableStateFlow(0)
     private val batchSummary = MutableStateFlow<String?>(null)
     private val showNotificationRationale = MutableStateFlow(false)
+    private val isCheckingUpdates = MutableStateFlow(false)
+    private val updateCheckMessage = MutableStateFlow<String?>(null)
 
     private val listControls = combine(query, filter, sortField, sortDirection) { q, f, sf, sd ->
         ListControls(q, f, sf, sd)
@@ -81,21 +83,26 @@ class AppsViewModel @Inject constructor(
         RepoControls(apps, loading, error)
     }
 
-    private val updateBadges = MutableStateFlow<Map<String, String>>(emptyMap())
+    private val updateBadges = MutableStateFlow<Map<String, UpdateBadgeUi>>(emptyMap())
+
+    private val updateControls = combine(updateBadges, isCheckingUpdates, updateCheckMessage) { badges, checking, message ->
+        UpdateControls(badges, checking, message)
+    }
 
     val uiState: StateFlow<AppsUiState> = combine(
         repoControls,
         listControls,
         selectionControls,
         batchControls,
-        updateBadges,
-    ) { repo, list, selection, batch, badges ->
+        updateControls,
+    ) { repo, list, selection, batch, updates ->
         val visible = filterAndSortApps(
             apps = repo.apps,
             query = list.query,
             filter = list.filter,
             sortField = list.sortField,
             sortDirection = list.sortDirection,
+            updatePackageNames = updates.badges.keys,
         )
         AppsUiState(
             isLoading = repo.loading && repo.apps.isEmpty(),
@@ -115,7 +122,9 @@ class AppsViewModel @Inject constructor(
             batchProgressTotal = batch.total,
             batchSummary = batch.summary,
             showNotificationPermissionRationale = batch.rationale,
-            updateBadges = badges,
+            updateBadges = updates.badges,
+            isCheckingUpdates = updates.checking,
+            updateCheckMessage = updates.message,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -133,12 +142,15 @@ class AppsViewModel @Inject constructor(
         viewModelScope.launch {
             appUpdateRepository.updates().collect { map ->
                 updateBadges.value = map.mapValues { (_, info) ->
-                    buildString {
-                        append(info.availableVersionName)
-                        if (!info.signatureMatches) append(" !")
-                    }
+                    UpdateBadgeUi(
+                        versionLabel = info.availableVersionName,
+                        signatureWarning = !info.signatureMatches,
+                    )
                 }
             }
+        }
+        viewModelScope.launch {
+            appUpdateRepository.refreshUpdates()
         }
     }
 
@@ -149,6 +161,8 @@ class AppsViewModel @Inject constructor(
             is AppsEvent.SortFieldChanged,
             AppsEvent.SortDirectionToggled,
             AppsEvent.Refresh,
+            AppsEvent.CheckUpdates,
+            AppsEvent.DismissUpdateCheckMessage,
             -> handleListEvent(event)
 
             is AppsEvent.LongPressed,
@@ -183,9 +197,37 @@ class AppsViewModel @Inject constructor(
                 }
             }
 
-            AppsEvent.Refresh -> repository.refresh()
+            AppsEvent.Refresh -> {
+                repository.refresh()
+                viewModelScope.launch { appUpdateRepository.refreshUpdates() }
+            }
+
+            AppsEvent.CheckUpdates -> checkUpdates()
+
+            AppsEvent.DismissUpdateCheckMessage -> updateCheckMessage.value = null
 
             else -> Unit
+        }
+    }
+
+    private fun checkUpdates() {
+        if (isCheckingUpdates.value) return
+        viewModelScope.launch {
+            isCheckingUpdates.value = true
+            updateCheckMessage.value = null
+            repository.refresh()
+            when (val result = appUpdateRepository.checkForUpdates()) {
+                is Result.Success -> {
+                    val summary = result.value
+                    updateCheckMessage.value =
+                        "updates:${summary.updatesFound}:${summary.reposSynced}:${summary.reposFailed}"
+                }
+
+                is Result.Failure -> {
+                    updateCheckMessage.value = "updates_error:${result.message}"
+                }
+            }
+            isCheckingUpdates.value = false
         }
     }
 
@@ -321,4 +363,6 @@ class AppsViewModel @Inject constructor(
     private data class BatchControls(val running: Boolean, val current: Int, val total: Int, val summary: String?, val rationale: Boolean)
 
     private data class RepoControls(val apps: List<InstalledAppSummary>, val loading: Boolean, val error: String?)
+
+    private data class UpdateControls(val badges: Map<String, UpdateBadgeUi>, val checking: Boolean, val message: String?)
 }

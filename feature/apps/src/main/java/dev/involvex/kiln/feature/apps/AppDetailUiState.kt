@@ -15,6 +15,8 @@ data class AppDetailUiState(
     val snackbarMessage: String? = null,
     val availableUpdate: AppUpdateInfo? = null,
     val installJob: InstallJobState? = null,
+    /** null = not managed yet; true = skipping update checks; false = checking updates */
+    val ignoreUpdates: Boolean? = null,
 )
 
 sealed interface AppDetailEvent {
@@ -28,4 +30,5 @@ sealed interface AppDetailEvent {
     data object ClearSnackbar : AppDetailEvent
     data object InstallUpdate : AppDetailEvent
     data object OpenUnknownSourcesSettings : AppDetailEvent
+    data class IgnoreUpdatesChanged(val checkForUpdates: Boolean) : AppDetailEvent
 }
