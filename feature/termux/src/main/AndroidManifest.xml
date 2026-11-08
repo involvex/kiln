@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Official Termux; forks with a different applicationId declare their own
+         `{packageId}.permission.RUN_COMMAND` — request that via App Info if needed. -->
+    <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
+
+    <application>
+        <receiver
+            android:name=".TermuxResultReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

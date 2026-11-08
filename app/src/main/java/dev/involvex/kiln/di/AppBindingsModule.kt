@@ -14,6 +14,7 @@ import dev.involvex.kiln.core.model.DevPreferences
 import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.InstallerPreferences
+import dev.involvex.kiln.core.model.TermuxPreferences
 import dev.involvex.kiln.core.model.UpdateObservationStore
 import dev.involvex.kiln.feature.apps.data.DefaultInstalledAppsReader
 import dev.involvex.kiln.feature.installer.DefaultInstallQueue
@@ -25,6 +26,7 @@ import dev.involvex.kiln.feature.settings.data.DataStoreInstallerPreferences
 import dev.involvex.kiln.feature.sources.DefaultAppUpdateRepository
 import dev.involvex.kiln.feature.sources.updatecheck.DefaultBackgroundUpdateScheduler
 import dev.involvex.kiln.feature.sources.updatecheck.PrefsUpdateObservationStore
+import dev.involvex.kiln.feature.termux.data.DataStoreTermuxPreferences
 import dev.involvex.kiln.logging.TimberDebugLogController
 import javax.inject.Singleton
 
@@ -74,6 +76,10 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindDevPreferences(impl: DataStoreDevPreferences): DevPreferences
+
+    @Binds
+    @Singleton
+    abstract fun bindTermuxPreferences(impl: DataStoreTermuxPreferences): TermuxPreferences
 
     @Binds
     @Singleton

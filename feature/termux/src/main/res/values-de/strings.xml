@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_termux_title">Termux</string>
+    <string name="feature_termux_description">Optionale RUN_COMMAND-Integration. Kiln kann Skripte in Termux starten und das Ergebnis per PendingIntent lesen. Standardmäßig aus.</string>
+    <string name="termux_note_no_pm">Termux läuft unter eigener App-UID und kann kein pm install/uninstall. Es ersetzt Shizuku nicht.</string>
+    <string name="termux_enable">Termux-Integration aktivieren</string>
+    <string name="termux_enable_hint">Feature-Flag. Wenn aus, startet Kiln keine Termux-Befehle.</string>
+    <string name="termux_package_id">Termux-Paket-ID</string>
+    <string name="termux_package_id_hint">Offizielles Termux ist com.termux. Für einen eigenen Fork ändern.</string>
+    <string name="termux_save_package_id">Paket-ID speichern</string>
+    <string name="termux_setup_section">Einrichtungs-Checkliste</string>
+    <string name="termux_check_installed_ok">Installiert: %1$s</string>
+    <string name="termux_check_installed_missing">Nicht installiert: %1$s</string>
+    <string name="termux_check_permission_ok">RUN_COMMAND-Berechtigung erteilt</string>
+    <string name="termux_check_permission_missing">RUN_COMMAND unter App-Info → Berechtigungen → Zusätzliche Berechtigungen erteilen</string>
+    <string name="termux_check_allow_external">In Termux allow-external-apps=true in ~/.termux/termux.properties setzen</string>
+    <string name="termux_refresh_checks">Checks aktualisieren</string>
+    <string name="termux_run_echo">Echo-Smoke-Test starten</string>
+    <string name="termux_running">Warte auf Termux-Ergebnis…</string>
+    <string name="termux_status_disabled">Zuerst die Termux-Integration aktivieren.</string>
+    <string name="termux_status_not_installed">Termux (oder das konfigurierte Paket) ist nicht installiert.</string>
+    <string name="termux_status_permission">RUN_COMMAND-Berechtigung fehlt. In den Systemeinstellungen erteilen.</string>
+    <string name="termux_status_start_failed">Termux konnte nicht gestartet werden: %1$s</string>
+    <string name="termux_result_section">Letztes Ergebnis</string>
+    <string name="termux_result_summary">exitCode=%1$s · err=%2$s</string>
+    <string name="termux_result_stdout">stdout: %1$s</string>
+    <string name="termux_result_stderr">stderr: %1$s</string>
+    <string name="termux_result_errmsg">errmsg: %1$s</string>
+    <string name="termux_back">Zurück</string>
+</resources>

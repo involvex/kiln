@@ -4,6 +4,7 @@
     <string name="feature_settings_description">App-Einstellungen. Privilege richtet Shizuku für stille Installation und spätere privilegierte Funktionen ein.</string>
     <string name="settings_privilege_setup">Privilege / Shizuku-Einrichtung</string>
     <string name="settings_debloat">Debloat</string>
+    <string name="settings_termux">Termux</string>
     <string name="settings_background_updates_section">Hintergrund-Updates</string>
     <string name="settings_background_updates_explain">Kiln kann Quellen alle 12 Stunden im Hintergrund synchronisieren und benachrichtigen, wenn passende Updates vorliegen. Auto-Install ist optional und nur für signaturgleiche APKs.</string>
     <string name="settings_background_enabled">Im Hintergrund nach Updates suchen</string>

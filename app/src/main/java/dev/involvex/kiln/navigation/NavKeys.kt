@@ -28,3 +28,6 @@ data object PrivilegeSetupKey
 
 @Serializable
 data object DebloatKey
+
+@Serializable
+data object TermuxKey
