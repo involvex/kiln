@@ -69,4 +69,20 @@ class ShellAllowlistTest {
     fun unknown_command_rejected() {
         assertNull(ShellAllowlist.buildArgv("rm", listOf("-rf", "/")))
     }
+
+    @Test
+    fun pm_clear_cache_and_trim() {
+        val pkg = "com.example.app"
+        assertEquals(
+            listOf("pm", "clear", "--cache-only", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_CLEAR_CACHE, listOf(pkg)),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_CLEAR_CACHE, listOf("bad;pkg")))
+        assertEquals(
+            listOf("pm", "trim-caches", "999999999999"),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_TRIM_CACHES, listOf("999999999999")),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_TRIM_CACHES, listOf("-1")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_TRIM_CACHES, listOf("999G")))
+    }
 }

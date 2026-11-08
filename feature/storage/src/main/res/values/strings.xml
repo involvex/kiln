@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_storage_title">Storage</string>
-    <string name="feature_storage_description">Storage analysis and cleaner tools will live here (M5).</string>
+    <string name="feature_storage_description">Per-app application, data, and cache sizes plus cache cleaning.</string>
+    <string name="storage_usage_required_title">Usage access needed</string>
+    <string name="storage_usage_required_body">Kiln needs “Usage access” to read per-app storage via StorageStatsManager. Nothing leaves the device. Open settings, find Kiln, and allow access.</string>
+    <string name="storage_open_usage_access">Open usage access settings</string>
+    <string name="storage_privilege_hint">Without Shizuku, cache clear opens the system app info screen. Set up Privilege for silent cache trim.</string>
+    <string name="storage_filter_user">User apps</string>
+    <string name="storage_filter_all">Include system</string>
+    <string name="storage_refresh">Refresh</string>
+    <string name="storage_search">Search apps</string>
+    <string name="storage_total_line">Total measured: %1$s</string>
+    <string name="storage_breakdown_line">App %1$s · Data %2$s · Cache %3$s</string>
+    <string name="storage_app_breakdown">%1$s — App %2$s · Data %3$s · Cache %4$s</string>
+    <string name="storage_clear_cache">Clear cache</string>
+    <string name="storage_open_app_info">App info</string>
+    <string name="storage_clear_all_caches">Clear all caches (%1$s)</string>
+    <string name="storage_confirm_title">Confirm</string>
+    <string name="storage_confirm_clear_app">Clear cache for %1$s (%2$s)? This cannot be undone.</string>
+    <string name="storage_confirm_clear_all">Trim caches across apps (measured cache ~%1$s)? ROMs may free less than shown. Cannot be undone.</string>
+    <string name="storage_confirm_open_settings">Open system settings for %1$s so you can clear cache there?</string>
+    <string name="storage_confirm_action">Continue</string>
+    <string name="storage_cancel">Cancel</string>
 </resources>

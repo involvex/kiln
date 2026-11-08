@@ -82,6 +82,9 @@ interface PrivilegedExecutor {
     /** Silent uninstall when [PrivilegeCapability.SILENT_UNINSTALL] is present. */
     suspend fun uninstall(packageName: String, keepData: Boolean): Result<Unit>
 
-    /** Cache clear (M5 wiring). Returns failure until implemented. */
+    /**
+     * Clear cache for [packageName], or trim all caches when null.
+     * Requires [PrivilegeCapability.CLEAR_CACHE].
+     */
     suspend fun clearCache(packageName: String?): Result<Long>
 }

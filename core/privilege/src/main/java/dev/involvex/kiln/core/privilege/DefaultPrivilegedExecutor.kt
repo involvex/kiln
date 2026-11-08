@@ -159,7 +159,36 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
-    override suspend fun clearCache(packageName: String?): Result<Long> = Result.failure("not_implemented_m5")
+    override suspend fun clearCache(packageName: String?): Result<Long> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.CLEAR_CACHE !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:CLEAR_CACHE")
+        }
+        val commandId: String
+        val args: List<String>
+        if (packageName == null) {
+            // Large free-space target so the system trims as much cache as it will allow.
+            commandId = ShellAllowlist.PM_TRIM_CACHES
+            args = listOf(TRIM_ALL_DESIRED_BYTES)
+        } else {
+            if (!ShellAllowlist.isSafePackageName(packageName)) {
+                return@withContext Result.failure("invalid_package")
+            }
+            commandId = ShellAllowlist.PM_CLEAR_CACHE
+            args = listOf(packageName)
+        }
+        when (val out = invokeAllowlisted(commandId, args)) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    // pm does not report freed bytes reliably; 0 means “command succeeded”.
+                    Result.success(0L)
+                }
+            }
+        }
+    }
 
     private suspend fun invokeAllowlisted(commandId: String, args: List<String>): Result<String> {
         val service = ensureUserService()
@@ -286,5 +315,10 @@ class DefaultPrivilegedExecutor @Inject constructor(
         val uid = Regex("""uid=(\d+)""").find(raw)?.groupValues?.get(1)?.toIntOrNull() ?: -1
         val ctx = Regex("""context=([^\s]+)""").find(raw)?.groupValues?.get(1)
         return IdParse(uid, ctx)
+    }
+
+    companion object {
+        /** ~931 GiB — high enough that trim-caches clears as much as the ROM allows. */
+        private const val TRIM_ALL_DESIRED_BYTES = "999999999999"
     }
 }
