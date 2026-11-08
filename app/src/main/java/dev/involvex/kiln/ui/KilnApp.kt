@@ -22,11 +22,13 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import dev.involvex.kiln.R
+import dev.involvex.kiln.feature.apps.AppDetailRoute
 import dev.involvex.kiln.feature.apps.AppsRoute
 import dev.involvex.kiln.feature.backup.BackupRoute
 import dev.involvex.kiln.feature.settings.SettingsRoute
 import dev.involvex.kiln.feature.sources.SourcesRoute
 import dev.involvex.kiln.feature.storage.StorageRoute
+import dev.involvex.kiln.navigation.AppDetailKey
 import dev.involvex.kiln.navigation.AppsKey
 import dev.involvex.kiln.navigation.BackupKey
 import dev.involvex.kiln.navigation.SettingsKey
@@ -77,7 +79,19 @@ fun KilnApp(modifier: Modifier = Modifier) {
                 rememberViewModelStoreNavEntryDecorator(),
             ),
             entryProvider = entryProvider {
-                entry<AppsKey> { AppsRoute() }
+                entry<AppsKey> {
+                    AppsRoute(
+                        onOpenDetail = { packageName ->
+                            topLevelBackStack.add(AppDetailKey(packageName))
+                        },
+                    )
+                }
+                entry<AppDetailKey> { key ->
+                    AppDetailRoute(
+                        packageName = key.packageName,
+                        onBack = { topLevelBackStack.removeLast() },
+                    )
+                }
                 entry<SourcesKey> { SourcesRoute() }
                 entry<StorageKey> { StorageRoute() }
                 entry<BackupKey> { BackupRoute() }

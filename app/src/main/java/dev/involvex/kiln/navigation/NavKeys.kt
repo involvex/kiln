@@ -6,6 +6,9 @@ import kotlinx.serialization.Serializable
 data object AppsKey
 
 @Serializable
+data class AppDetailKey(val packageName: String)
+
+@Serializable
 data object SourcesKey
 
 @Serializable

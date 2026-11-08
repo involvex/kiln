@@ -14,6 +14,8 @@ sealed class Result<out T> {
 
     fun exceptionOrNull(): Throwable? = (this as? Failure)?.cause
 
+    fun errorMessageOrNull(): String? = (this as? Failure)?.message
+
     inline fun <R> map(transform: (T) -> R): Result<R> = when (this) {
         is Success -> Success(transform(value))
         is Failure -> this

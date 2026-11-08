@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M0 complete on branch `m0-setup` (Nav3 shell, design system, CI, debug APK installed on HyperOS). Not yet released.
+**Current status:** M1 in progress on branch `m1-installed-apps` (installed apps list, detail, APK/APKS/XAPK export). M0 complete on `main`.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -14,8 +14,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 | ID | Name | Status | Branch / Prompt | Done when |
 | --- | --- | --- | --- | --- |
-| **M0** | Project setup | Done (local) | [`prompts/M0-setup.md`](./prompts/M0-setup.md) · `m0-setup` | `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green; 5-tab Nav3 shell on device |
-| **M1** | Installed apps + APK export (Tier NONE) | Planned | [`prompts/M1-installed-apps.md`](./prompts/M1-installed-apps.md) · `m1-installed-apps` | List matches `pm list packages -3`; exports install via `adb` / second device |
+| **M0** | Project setup | Done | [`prompts/M0-setup.md`](./prompts/M0-setup.md) · `m0-setup` | `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green; 5-tab Nav3 shell on device |
+| **M1** | Installed apps + APK export (Tier NONE) | In progress | [`prompts/M1-installed-apps.md`](./prompts/M1-installed-apps.md) · `m1-installed-apps` | List matches `pm list packages -3`; exports install via `adb` / second device |
 | **M2** | Sources, update check, auto-match | Planned | PLAN §4.2 / §4.8 | Updates for ≥5 real apps; auto-match confidence tiers correct |
 | **M3** | Installer (no privilege) | Planned | PLAN §4.3 | F-Droid + GitHub update E2E |
 | **M4** | Privilege layer + Shizuku setup | Planned | PLAN §4.9 / §5 | Guided setup A→D; silent install; clean Tier NONE fallback |
@@ -32,17 +32,18 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 Update after each milestone. Tier = active `PrivilegedExecutor`.
 
-| Feature | Now (M0) | M1 | Needs tier |
-| --- | --- | --- | --- |
-| Navigation shell / theme | ✅ Placeholder tabs (Nav3, bottom bar, design system) | — | NONE |
-| List installed apps | — | yes | NONE |
-| APK export (single / batch) | — | yes | NONE |
-| Uninstall (system dialog) | — | yes | NONE |
-| Sources / updates | — | — | NONE (+ network) |
-| Installer | — | — | NONE / SHIZUKU |
-| Storage / cleaner | — | — | NONE / SHIZUKU |
-| Debloat | — | — | ≥ SHIZUKU |
-| Backup (app data) | — | — | NONE (APK only) … ROOT |
+| Feature | Now (M1 branch) | Needs tier |
+| --- | --- | --- |
+| Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
+| List installed apps | ✅ Summary list, search, User/System/All, sort | NONE |
+| App detail | ✅ Version, installer, SHA-256, paths, permissions | NONE |
+| APK export (single / batch) | ✅ `.apk` / `.apks` STORED / `.xapk`; SAF + share + WorkManager batch | NONE |
+| Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
+| Sources / updates | — | NONE (+ network) |
+| Installer | — | NONE / SHIZUKU |
+| Storage / cleaner | — | NONE / SHIZUKU |
+| Debloat | — | ≥ SHIZUKU |
+| Backup (app data) | — | NONE (APK only) … ROOT |
 
 ---
 
