@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - GitHub Pages docs site (Actions → `involvex.github.io/kiln`)
 - Supporting / funding docs (`docs/SUPPORTING.md`, Sponsor links from FUNDING.yml)
+- Settings → About: Support this project link (DE/EN)
+
+### Changed
+
+- Removed Bing Rewards URL from `.github/FUNDING.yml` Sponsor menu
 
 ## [0.1.0] — 2026-11-08
 
