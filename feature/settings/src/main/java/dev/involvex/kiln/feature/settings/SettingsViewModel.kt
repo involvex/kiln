@@ -1,8 +1,12 @@
 package dev.involvex.kiln.feature.settings
 
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
@@ -23,6 +27,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val preferences: BackgroundUpdatePreferences,
     private val appearancePreferences: AppearancePreferences,
     private val installerPreferences: InstallerPreferences,
@@ -35,6 +40,7 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     init {
+        _uiState.update { it.copy(appVersionName = readVersionName(), appVersionCode = readVersionCode()) }
         viewModelScope.launch {
             preferences.observe().collect { prefs ->
                 _uiState.update { it.copy(backgroundUpdates = prefs) }
@@ -111,5 +117,42 @@ class SettingsViewModel @Inject constructor(
 
     fun consumeCheckNowQueued() {
         _uiState.update { it.copy(checkNowQueued = false) }
+    }
+
+    private fun readVersionName(): String = try {
+        val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // API 33+: typed flags overload; PackageInfoFlags required.
+            context.packageManager.getPackageInfo(
+                context.packageName,
+                PackageManager.PackageInfoFlags.of(0),
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(context.packageName, 0)
+        }
+        info.versionName.orEmpty()
+    } catch (_: PackageManager.NameNotFoundException) {
+        ""
+    }
+
+    private fun readVersionCode(): Long = try {
+        val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.packageManager.getPackageInfo(
+                context.packageName,
+                PackageManager.PackageInfoFlags.of(0),
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(context.packageName, 0)
+        }
+        // API 28+: longVersionCode; older devices use deprecated versionCode.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            info.longVersionCode
+        } else {
+            @Suppress("DEPRECATION")
+            info.versionCode.toLong()
+        }
+    } catch (_: PackageManager.NameNotFoundException) {
+        0L
     }
 }

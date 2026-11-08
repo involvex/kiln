@@ -14,4 +14,6 @@ data class SettingsUiState(
     val shizukuSilentAvailable: Boolean = false,
     val devPrefs: DevPrefs = DevPrefs(),
     val checkNowQueued: Boolean = false,
+    val appVersionName: String = "",
+    val appVersionCode: Long = 0L,
 )

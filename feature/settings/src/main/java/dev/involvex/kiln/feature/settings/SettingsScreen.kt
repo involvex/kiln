@@ -1,7 +1,9 @@
 package dev.involvex.kiln.feature.settings
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -169,9 +173,76 @@ fun SettingsScreen(
                 onCheckNow = onCheckNow,
                 onConsumeCheckNow = onConsumeCheckNow,
             )
+            HorizontalDivider()
+            AboutSection(
+                versionName = state.appVersionName,
+                versionCode = state.appVersionCode,
+            )
         }
     }
 }
+
+@Composable
+private fun AboutSection(versionName: String, versionCode: Long) {
+    val context = LocalContext.current
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = stringResource(R.string.settings_about_section),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Text(
+            text = stringResource(
+                R.string.settings_about_version,
+                versionName.ifBlank { "—" },
+                versionCode,
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Text(
+            text = stringResource(R.string.settings_about_license),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        val sourceLabel = stringResource(R.string.settings_about_source)
+        OutlinedButton(
+            onClick = { openHttps(context, URL_SOURCE) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = sourceLabel },
+        ) {
+            Text(sourceLabel)
+        }
+        val privacyLabel = stringResource(R.string.settings_about_privacy)
+        OutlinedButton(
+            onClick = { openHttps(context, URL_PRIVACY) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = privacyLabel },
+        ) {
+            Text(privacyLabel)
+        }
+        val licenseLabel = stringResource(R.string.settings_about_license_link)
+        OutlinedButton(
+            onClick = { openHttps(context, URL_LICENSE) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = licenseLabel },
+        ) {
+            Text(licenseLabel)
+        }
+    }
+}
+
+private fun openHttps(context: android.content.Context, url: String) {
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    runCatching { context.startActivity(intent) }
+}
+
+private const val URL_SOURCE: String = "https://github.com/involvex/kiln"
+private const val URL_PRIVACY: String =
+    "https://github.com/involvex/kiln/blob/main/docs/PRIVACY.md"
+private const val URL_LICENSE: String =
+    "https://github.com/involvex/kiln/blob/main/LICENSE"
 
 @Composable
 private fun BackgroundUpdatesBlock(
