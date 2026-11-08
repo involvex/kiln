@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M11 App Discovery on [#22](https://github.com/involvex/kiln/pull/22). M9 Termux merged (#20). M10 polish on main (#21). Publishing deferred. M3 HyperOS E2E still open.
+**Current status:** M12 GitHub browse in Discover (`m12-github-browse`). M11 Discovery merged (#22). M9 Termux (#20) + M10 polish (#21) on main. Publishing deferred. M3 HyperOS E2E still open.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -25,7 +25,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M8** | Background auto-update | Done | PLAN §8 · [#15](https://github.com/involvex/kiln/pull/15) | WorkManager + constraints + notifications |
 | **M9** | Termux integration | Done | [`prompts/M9-termux.md`](./prompts/M9-termux.md) · [#20](https://github.com/involvex/kiln/pull/20) | Feature-flagged RUN_COMMAND + PendingIntent |
 | **M10** | Polish & release | Done | [`prompts/M10-polish-release.md`](./prompts/M10-polish-release.md) · [#21](https://github.com/involvex/kiln/pull/21) | About, privacy, fastlane, GitHub Release workflow |
-| **M11** | App Discovery | In review | PLAN §4.2 browse · [#22](https://github.com/involvex/kiln/pull/22) | Search + categories + catalog sync + install enqueue |
+| **M11** | App Discovery | Done | PLAN §4.2 browse · [#22](https://github.com/involvex/kiln/pull/22) | Search + categories + catalog sync + install enqueue |
+| **M12** | GitHub browse | In progress | [`prompts/M12-github-browse.md`](./prompts/M12-github-browse.md) · `m12-github-browse` | Discover GitHub tab: lookup + saved sources + install queue |
 
 ---
 
@@ -50,7 +51,8 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg) | NONE (+ network; silent install/downgrade if SHIZUKU) |
 | Termux RUN_COMMAND | ✅ feature flag, configurable packageId, echo smoke test + PendingIntent | NONE (Termux + permission + allow-external-apps) |
 | Release / store prep | ✅ version `0.1.0` (code 2); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow | — |
-| App Discovery | 🚧 Sources → Discover; catalog refresh; search/categories; install queue | NONE (+ network) |
+| App Discovery | ✅ Sources → Discover; catalog refresh; search/categories; install queue | NONE (+ network) |
+| GitHub browse (Discover) | 🚧 F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
 
 ---
 
@@ -211,6 +213,7 @@ flowchart LR
   M8 --> M9[M9 Termux]
   M9 --> M10[M10 Release]
   M10 --> M11[M11 Discovery]
+  M11 --> M12[M12 GitHub browse]
 ```
 
 1. Finish **M0** → merge → install debug APK on HyperOS phone.

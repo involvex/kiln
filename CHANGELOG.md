@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- GitHub browse in Discover (M12): F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue
 - App Discovery (M11): Sources → Discover; full F-Droid catalog sync with categories; search + install queue
 - Release polish (M10): About section, privacy policy, F-Droid fastlane metadata, tagged release workflow
 

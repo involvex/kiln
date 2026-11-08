@@ -3,6 +3,8 @@ package dev.involvex.kiln.feature.sources.discovery
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.database.IndexDao
 import dev.involvex.kiln.core.database.IndexedPackageEntity
+import dev.involvex.kiln.core.database.ManagedAppDao
+import dev.involvex.kiln.core.database.ManagedAppEntity
 import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.database.RepoEntity
 import dev.involvex.kiln.core.model.AppUpdateInfo
@@ -11,6 +13,9 @@ import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.SourceKind
 import dev.involvex.kiln.feature.sources.FdroidApkUrl
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
+import dev.involvex.kiln.feature.sources.github.GitHubOwnerRepo
+import dev.involvex.kiln.feature.sources.github.GitHubReleasesClient
+import dev.involvex.kiln.feature.sources.github.GitHubVersionCode
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,8 +34,10 @@ data class DiscoveryAppRow(
 class DiscoveryRepository @Inject constructor(
     private val indexDao: IndexDao,
     private val repoDao: RepoDao,
+    private val managedAppDao: ManagedAppDao,
     private val sync: FDroidRepoSync,
     private val installQueue: InstallQueue,
+    private val gitHubReleasesClient: GitHubReleasesClient,
 ) {
     suspend fun packageCount(): Int = indexDao.packageCount()
 
@@ -88,6 +95,89 @@ class DiscoveryRepository @Inject constructor(
         return installQueue.enqueue(update)
     }
 
+    suspend fun savedGithubSources(): List<DiscoveryGithubRow> {
+        return managedAppDao.getAll()
+            .mapNotNull { app ->
+                val ownerRepo = app.githubOwnerRepo?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                DiscoveryGithubRow(
+                    ownerRepo = ownerRepo,
+                    packageName = app.packageName,
+                    displayName = ownerRepo,
+                    tagName = null,
+                    assetName = null,
+                    sizeBytes = null,
+                    downloadUrl = null,
+                    saved = true,
+                )
+            }
+            .sortedBy { it.ownerRepo.lowercase() }
+    }
+
+    suspend fun lookupGithub(raw: String): Result<DiscoveryGithubRow> {
+        val ownerRepo = GitHubOwnerRepo.parse(raw) ?: return Result.failure("github_query_invalid")
+        val existing = managedAppDao.getAll()
+            .firstOrNull { it.githubOwnerRepo.equals(ownerRepo, ignoreCase = true) }
+        val packageName = existing?.packageName ?: GitHubOwnerRepo.provisionalPackageName(ownerRepo)
+        val regex = runCatching {
+            Regex(existing?.githubAssetRegex ?: DEFAULT_APK_REGEX)
+        }.getOrElse { Regex(DEFAULT_APK_REGEX) }
+        val includePre = existing?.includePreReleases == true
+        return when (
+            val result = gitHubReleasesClient.latestMatchingRelease(ownerRepo, regex, includePre)
+        ) {
+            is Result.Failure -> result
+
+            is Result.Success -> {
+                val pick = result.value
+                if (existing == null) {
+                    managedAppDao.upsert(
+                        ManagedAppEntity(
+                            packageName = packageName,
+                            sourceId = "github:$ownerRepo",
+                            confidence = MatchConfidence.MEDIUM.name,
+                            pinned = false,
+                            ignoreUpdates = false,
+                            githubOwnerRepo = ownerRepo,
+                            githubAssetRegex = DEFAULT_APK_REGEX,
+                            includePreReleases = false,
+                        ),
+                    )
+                }
+                Result.success(
+                    DiscoveryGithubRow(
+                        ownerRepo = ownerRepo,
+                        packageName = packageName,
+                        displayName = ownerRepo,
+                        tagName = pick.tagName,
+                        assetName = pick.assetName,
+                        sizeBytes = pick.sizeBytes,
+                        downloadUrl = pick.downloadUrl,
+                        saved = true,
+                    ),
+                )
+            }
+        }
+    }
+
+    suspend fun installGithub(row: DiscoveryGithubRow): Result<String> {
+        val url = row.downloadUrl ?: return Result.failure("github_release_missing")
+        val tag = row.tagName ?: return Result.failure("github_release_missing")
+        val update = AppUpdateInfo(
+            packageName = row.packageName,
+            availableVersionName = tag,
+            availableVersionCode = GitHubVersionCode.parse(tag),
+            sourceId = "github:${row.ownerRepo}",
+            sourceLabel = "GitHub ${row.ownerRepo}",
+            confidence = MatchConfidence.MEDIUM,
+            // First-time GitHub APK: signature checked at install time against device state.
+            signatureMatches = false,
+            downloadUrl = url,
+            apkSha256 = null,
+            sizeBytes = row.sizeBytes,
+        )
+        return installQueue.enqueue(update)
+    }
+
     private fun IndexedPackageEntity.toRow(repo: RepoEntity?) = DiscoveryAppRow(
         packageName = packageName,
         name = name,
@@ -98,4 +188,8 @@ class DiscoveryRepository @Inject constructor(
         versionName = suggestedVersionName,
         versionCode = suggestedVersionCode,
     )
+
+    private companion object {
+        const val DEFAULT_APK_REGEX = ".*\\.apk$"
+    }
 }
