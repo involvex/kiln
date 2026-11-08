@@ -23,6 +23,7 @@ dependencies {
     implementation(project(":core:network"))
     implementation(project(":core:database"))
     implementation(project(":core:designsystem"))
+    implementation(project(":core:privilege"))
     implementation(project(":feature:apps"))
     implementation(project(":feature:sources"))
     implementation(project(":feature:installer"))

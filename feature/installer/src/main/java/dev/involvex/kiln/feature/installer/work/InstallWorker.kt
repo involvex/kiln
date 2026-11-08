@@ -16,6 +16,8 @@ import dagger.assisted.AssistedInject
 import dev.involvex.kiln.core.common.Result as KilnResult
 import dev.involvex.kiln.core.database.InstallJobDao
 import dev.involvex.kiln.core.model.InstallJobStatus
+import dev.involvex.kiln.core.model.PrivilegeCapability
+import dev.involvex.kiln.core.model.PrivilegedExecutor
 import dev.involvex.kiln.core.network.KilnHttpClient
 import dev.involvex.kiln.feature.installer.R
 import dev.involvex.kiln.feature.installer.session.PackageInstallerSessionRunner
@@ -31,6 +33,7 @@ class InstallWorker @AssistedInject constructor(
     private val installJobDao: InstallJobDao,
     private val http: KilnHttpClient,
     private val sessionRunner: PackageInstallerSessionRunner,
+    private val privilegedExecutor: PrivilegedExecutor,
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
         val jobId = inputData.getString(KEY_JOB_ID) ?: return Result.failure()
@@ -69,13 +72,30 @@ class InstallWorker @AssistedInject constructor(
             is KilnResult.Success -> Unit
         }
 
+        mark(jobId, InstallJobStatus.INSTALLING, 95, null, apkFile.absolutePath)
+        val canSilent = PrivilegeCapability.SILENT_INSTALL in privilegedExecutor.currentStatus().capabilities
+        if (canSilent) {
+            return when (val silent = privilegedExecutor.installApk(apkFile.absolutePath)) {
+                is KilnResult.Failure -> {
+                    Timber.w("Silent install failed (%s); falling back to PackageInstaller", silent.message)
+                    commitWithPackageInstaller(jobId, job.packageName, apkFile)
+                }
+
+                is KilnResult.Success -> {
+                    mark(jobId, InstallJobStatus.SUCCEEDED, 100, null, apkFile.absolutePath)
+                    Result.success()
+                }
+            }
+        }
+        return commitWithPackageInstaller(jobId, job.packageName, apkFile)
+    }
+
+    private suspend fun commitWithPackageInstaller(jobId: String, packageName: String, apkFile: File): Result {
         if (!appContext.packageManager.canRequestPackageInstalls()) {
             mark(jobId, InstallJobStatus.FAILED, 100, "install_permission_required", apkFile.absolutePath)
             return Result.failure(workDataOf(KEY_ERROR to "install_permission_required"))
         }
-
-        mark(jobId, InstallJobStatus.INSTALLING, 95, null, apkFile.absolutePath)
-        return when (val commit = sessionRunner.commitApk(appContext, jobId, job.packageName, apkFile)) {
+        return when (val commit = sessionRunner.commitApk(appContext, jobId, packageName, apkFile)) {
             is KilnResult.Failure -> {
                 mark(jobId, InstallJobStatus.FAILED, 100, commit.message, apkFile.absolutePath)
                 Result.failure(workDataOf(KEY_ERROR to commit.message))

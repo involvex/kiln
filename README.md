@@ -4,7 +4,7 @@ All-in-one package, APK, and storage manager for Android.
 
 - **Package:** `dev.involvex.kiln`
 - **License:** [Apache-2.0](./LICENSE)
-- **Status:** M3 Done — single-APK download + PackageInstaller (see [docs/ROADMAP.md](./docs/ROADMAP.md)); splits / silent install later
+- **Status:** M4 in progress — Privilege layer + Shizuku setup (see [docs/ROADMAP.md](./docs/ROADMAP.md)); silent install when Shizuku ready
 
 Kiln unifies F-Droid/GitHub sources, APK tools, app backup, storage cleanup, and an optional debloat mode. Privileged actions run through Shizuku/ShizukuPlus or Root when available; Tier NONE stays useful without them.
 
@@ -32,22 +32,23 @@ Install the debug APK:
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Modules (M3)
+## Modules (M4)
 
 ```
 :app                      Navigation 3 shell, Hilt root, theme, FileProvider, AppBindingsModule
 :core:common              Result type, qualified dispatchers, fingerprints
-:core:model               Installed + source/update + install queue types
+:core:model               Installed + source/update + install + privilege types
 :core:network             OkHttp HTTPS client (+ resumable download)
 :core:database            Room (repos, index cache, ManagedApp, install jobs)
 :core:designsystem        Material 3 theme + base components
+:core:privilege           PrivilegedExecutor (Noop/Shizuku UserService allowlist)
 :feature:apps             List, detail, export, update badges + install CTA
 :feature:sources          F-Droid/Izzy sync, GitHub, Obtainium import
-:feature:installer        Download queue, hash/signature gates, PackageInstaller
-:feature:onboarding       Auto-match installed apps to sources
+:feature:installer        Download queue; PackageInstaller or silent pm via privilege
+:feature:onboarding       Auto-match + Shizuku setup assistant (A→D)
 :feature:storage          Placeholder (M5)
 :feature:backup           Placeholder (M7)
-:feature:settings         Placeholder
+:feature:settings         Privilege setup entry
 ```
 
 Feature modules depend only on `:core:*`. Cross-feature binds live in `:app`. NavKeys live in `:app`.
@@ -62,7 +63,7 @@ Feature modules depend only on `:core:*`. Cross-feature binds live in `:app`. Na
 | [docs/prompts/](./docs/prompts/) | Per-milestone agent prompts |
 | [docs/reference.md](./docs/reference.md) | Reference apps (read-only; no GPL copy) |
 
-## Toolchain (M3)
+## Toolchain (M4)
 
 | Component | Version |
 | --- | --- |
@@ -77,6 +78,7 @@ Feature modules depend only on `:core:*`. Cross-feature binds live in `:app`. Na
 | WorkManager | 2.12.0 |
 | Room | 2.8.5 |
 | OkHttp | 5.5.1 |
+| Shizuku API | 13.1.5 |
 
 ## License
 
