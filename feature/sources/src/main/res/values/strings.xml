@@ -37,4 +37,10 @@
     <string name="sources_msg_sync_fail">Sync failed for %1$s repo(s): %2$s</string>
     <string name="sources_msg_sync_partial">Synced %1$s, failed %2$s. First error: %3$s</string>
     <string name="sources_msg_index_oom">Repo index too large for memory. Kiln only keeps packages you already have installed or imported — update the app and sync again.</string>
+    <string name="update_check_notification_channel">Update checks</string>
+    <string name="update_check_notification_title">Updates available</string>
+    <plurals name="update_check_notification_body">
+        <item quantity="one">%1$d app update ready in Kiln</item>
+        <item quantity="other">%1$d app updates ready in Kiln</item>
+    </plurals>
 </resources>

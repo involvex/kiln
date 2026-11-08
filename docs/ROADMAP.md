@@ -2,11 +2,11 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M6 merged (#13). M7 on branch `m7-backup` (Tier NONE APK `.kilnbackup.zip` round-trip; data tiers deferred with honest UI). Shizuku+ self-test on device: uid=2000 shell. M3 HyperOS E2E still open.
+**Current status:** M7 merged (#14). M8 on branch `m8-auto-update` (background update checks via WorkManager + notifications). Shizuku+ self-test on device: uid=2000 shell. M3 HyperOS E2E still open.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
-**First useful release target:** M0–M5. M6–M7 stretch after Privilege (M4).
+**First useful release target:** M0–M5. M6–M8 stretch after Privilege (M4).
 
 ---
 
@@ -21,8 +21,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M4** | Privilege layer + Shizuku setup | Done | PLAN §4.9 / §5 · [#11](https://github.com/involvex/kiln/pull/11) | Guided setup A→D; silent install; clean Tier NONE fallback |
 | **M5** | Storage analyzer / cleaner | Done | PLAN §4.5 · [#12](https://github.com/involvex/kiln/pull/12) | Numbers plausible vs system storage UI |
 | **M6** | Debloat mode | Done | PLAN §4.10 · [#13](https://github.com/involvex/kiln/pull/13) | Snapshot, denylist, deactivate/restore on ≥3 safe packages |
-| **M7** | Backup / restore | In progress | PLAN §4.6 · `m7-backup` | APK `.kilnbackup.zip` SAF round-trip; honest NONE/SHIZUKU/ROOT copy |
-| **M8** | Background auto-update | Planned | PLAN §8 | WorkManager + constraints + notifications |
+| **M7** | Backup / restore | Done | PLAN §4.6 · [#14](https://github.com/involvex/kiln/pull/14) | APK `.kilnbackup.zip` SAF round-trip; honest NONE/SHIZUKU/ROOT copy |
+| **M8** | Background auto-update | In progress | PLAN §8 · `m8-auto-update` | WorkManager + constraints + notifications |
 | **M9** | Termux integration | Planned | PLAN §4.7 | Feature-flagged hooks |
 | **M10** | Polish & release | Planned | PLAN §8 | F-Droid/GitHub Releases, screenshots, a11y |
 
@@ -46,6 +46,20 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Storage / cleaner | ✅ Usage-access gate; App/Data/Cache list; clear via Shizuku or app-info deep-link | NONE / SHIZUKU |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
+| Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches only | NONE (+ network; silent install if SHIZUKU) |
+
+---
+
+## M8 manual acceptance (HyperOS)
+
+Code on `m8-auto-update`:
+
+- [ ] Settings → enable background checks; grant notifications when prompted
+- [ ] “Check now” posts a notification when updates exist (or no-op message when none)
+- [ ] Auto-install off: no InstallQueue jobs from background/check-now
+- [ ] Auto-install on: only signature-matching updates enqueue; WARNUNG never auto
+- [ ] Disable background checks cancels periodic work
+- [ ] Wi‑Fi only toggle maps to UNMETERED vs CONNECTED constraints
 
 ---
 

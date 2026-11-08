@@ -8,9 +8,15 @@ import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import dagger.hilt.android.HiltAndroidApp
+import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
+import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.feature.apps.icon.PackageIconFetcher
 import dev.involvex.kiln.feature.apps.icon.PackageIconKeyer
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @HiltAndroidApp
@@ -21,12 +27,23 @@ class KilnApplication :
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    @Inject
+    lateinit var backgroundUpdatePreferences: BackgroundUpdatePreferences
+
+    @Inject
+    lateinit var backgroundUpdateScheduler: BackgroundUpdateScheduler
+
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     override fun onCreate() {
         super.onCreate()
         // FLAG_DEBUGGABLE avoids BuildConfig (disabled by default in modern AGP).
         val isDebuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
         if (isDebuggable) {
             Timber.plant(Timber.DebugTree())
+        }
+        applicationScope.launch {
+            backgroundUpdateScheduler.apply(backgroundUpdatePreferences.current())
         }
     }
 
