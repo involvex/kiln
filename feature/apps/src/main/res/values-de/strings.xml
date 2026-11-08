@@ -59,6 +59,14 @@
     <string name="feature_apps_action_info">App-Info</string>
     <string name="feature_apps_action_uninstall">Deinstallieren</string>
     <string name="feature_apps_action_export">APK exportieren</string>
+    <string name="feature_apps_action_update">Herunterladen &amp; installieren</string>
+    <string name="feature_apps_update_section">Update</string>
+    <string name="feature_apps_update_available">Version %1$s verfügbar von %2$s</string>
+    <string name="feature_apps_update_signature_warning">Signatur stimmt nicht mit der installierten App überein. Installation gesperrt.</string>
+    <string name="feature_apps_update_badge">Update %1$s</string>
+    <string name="feature_apps_install_status">Installation: %1$s (%2$d%%)</string>
+    <string name="feature_apps_install_error">Installationsfehler: %1$s</string>
+    <string name="feature_apps_open_unknown_sources">Installationen von Kiln erlauben</string>
     <string name="feature_apps_uninstall_disabled">System-Apps können hier nicht deinstalliert werden. Später Debloat nutzen.</string>
     <string name="feature_apps_size_unknown">Größe unbekannt</string>
     <string name="feature_apps_back">Zurück</string>

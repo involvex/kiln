@@ -1,6 +1,8 @@
 package dev.involvex.kiln.feature.apps
 
 import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -161,6 +163,15 @@ fun AppDetailScreen(
                     installerLabel = state.installerLabel,
                     onCopied = { showMessage(copiedText) },
                     onExport = { onEvent(AppDetailEvent.Export) },
+                    availableUpdate = state.availableUpdate,
+                    installJob = state.installJob,
+                    onInstallUpdate = { onEvent(AppDetailEvent.InstallUpdate) },
+                    onOpenUnknownSources = {
+                        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                            data = Uri.parse("package:${context.packageName}")
+                        }
+                        context.startActivity(intent)
+                    },
                     modifier = Modifier.padding(padding),
                 )
             }

@@ -99,3 +99,39 @@ interface ManagedAppDao {
     @Query("DELETE FROM managed_apps WHERE packageName = :packageName")
     suspend fun delete(packageName: String)
 }
+
+@Dao
+interface InstallJobDao {
+    @Query("SELECT * FROM install_jobs ORDER BY createdAtEpochMs DESC")
+    fun observeAll(): Flow<List<InstallJobEntity>>
+
+    @Query("SELECT * FROM install_jobs WHERE jobId = :jobId LIMIT 1")
+    suspend fun get(jobId: String): InstallJobEntity?
+
+    @Query("SELECT * FROM install_jobs WHERE packageName = :packageName ORDER BY createdAtEpochMs DESC LIMIT 1")
+    suspend fun latestForPackage(packageName: String): InstallJobEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(job: InstallJobEntity)
+
+    @Query(
+        """
+        UPDATE install_jobs
+        SET status = :status, progressPercent = :progressPercent,
+            errorMessage = :errorMessage, localApkPath = :localApkPath,
+            updatedAtEpochMs = :updatedAtEpochMs
+        WHERE jobId = :jobId
+        """,
+    )
+    suspend fun updateProgress(
+        jobId: String,
+        status: String,
+        progressPercent: Int,
+        errorMessage: String?,
+        localApkPath: String?,
+        updatedAtEpochMs: Long,
+    )
+
+    @Query("DELETE FROM install_jobs WHERE jobId = :jobId")
+    suspend fun delete(jobId: String)
+}

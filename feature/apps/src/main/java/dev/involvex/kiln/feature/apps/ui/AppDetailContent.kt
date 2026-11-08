@@ -26,6 +26,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import dev.involvex.kiln.core.model.AppUpdateInfo
+import dev.involvex.kiln.core.model.InstallJobState
+import dev.involvex.kiln.core.model.InstallJobStatus
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.feature.apps.R
 import dev.involvex.kiln.feature.apps.icon.PackageIconModel
@@ -39,6 +42,10 @@ fun AppDetailContent(
     installerLabel: String?,
     onCopied: () -> Unit,
     onExport: () -> Unit,
+    availableUpdate: AppUpdateInfo? = null,
+    installJob: InstallJobState? = null,
+    onInstallUpdate: () -> Unit = {},
+    onOpenUnknownSources: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -80,11 +87,72 @@ fun AppDetailContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        UpdateSection(
+            availableUpdate = availableUpdate,
+            installJob = installJob,
+            onInstallUpdate = onInstallUpdate,
+            onOpenUnknownSources = onOpenUnknownSources,
+        )
         ActionButtons(
             detail = detail,
             context = context,
             onExport = onExport,
         )
+    }
+}
+
+@Composable
+private fun UpdateSection(
+    availableUpdate: AppUpdateInfo?,
+    installJob: InstallJobState?,
+    onInstallUpdate: () -> Unit,
+    onOpenUnknownSources: () -> Unit,
+) {
+    if (availableUpdate == null && installJob == null) return
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.feature_apps_update_section), style = MaterialTheme.typography.titleMedium)
+        if (availableUpdate != null) {
+            Text(
+                stringResource(
+                    R.string.feature_apps_update_available,
+                    availableUpdate.availableVersionName,
+                    availableUpdate.sourceLabel,
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            if (!availableUpdate.signatureMatches) {
+                Text(
+                    stringResource(R.string.feature_apps_update_signature_warning),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+            val canInstall = availableUpdate.signatureMatches &&
+                !availableUpdate.downloadUrl.isNullOrBlank() &&
+                installJob?.status != InstallJobStatus.DOWNLOADING &&
+                installJob?.status != InstallJobStatus.INSTALLING &&
+                installJob?.status != InstallJobStatus.VERIFYING
+            Button(onClick = onInstallUpdate, enabled = canInstall) {
+                Text(stringResource(R.string.feature_apps_action_update))
+            }
+        }
+        installJob?.let { job ->
+            Text(
+                stringResource(R.string.feature_apps_install_status, job.status.name, job.progressPercent),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (job.errorMessage == "install_permission_required") {
+                TextButton(onClick = onOpenUnknownSources) {
+                    Text(stringResource(R.string.feature_apps_open_unknown_sources))
+                }
+            } else if (job.errorMessage != null) {
+                Text(
+                    stringResource(R.string.feature_apps_install_error, job.errorMessage.orEmpty()),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
     }
 }
 

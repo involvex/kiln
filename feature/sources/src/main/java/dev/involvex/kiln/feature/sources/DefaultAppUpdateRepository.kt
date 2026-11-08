@@ -96,6 +96,8 @@ class DefaultAppUpdateRepository @Inject constructor(
         if (!matches) {
             // Still surface as WARNING so the UI can explain signature mismatch.
         }
+        val repoAddress = repos[latest.repoId]?.address
+        val downloadUrl = repoAddress?.let { FdroidApkUrl.build(it, latest.apkName) }
         return AppUpdateInfo(
             packageName = packageName,
             availableVersionName = latest.versionName,
@@ -104,6 +106,9 @@ class DefaultAppUpdateRepository @Inject constructor(
             sourceLabel = repos[latest.repoId]?.name ?: latest.repoId,
             confidence = confidence,
             signatureMatches = matches,
+            downloadUrl = downloadUrl,
+            apkSha256 = latest.apkSha256,
+            sizeBytes = latest.sizeBytes,
         )
     }
 
@@ -137,6 +142,9 @@ class DefaultAppUpdateRepository @Inject constructor(
                         sourceLabel = "GitHub $ownerRepo",
                         confidence = MatchConfidence.MEDIUM,
                         signatureMatches = false,
+                        downloadUrl = pick.downloadUrl,
+                        apkSha256 = null,
+                        sizeBytes = pick.sizeBytes,
                     )
                 }
             }

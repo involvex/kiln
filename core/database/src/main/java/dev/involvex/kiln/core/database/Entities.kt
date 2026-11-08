@@ -59,3 +59,23 @@ data class ManagedAppEntity(
     val githubAssetRegex: String?,
     val includePreReleases: Boolean,
 )
+
+@Entity(
+    tableName = "install_jobs",
+    indices = [Index(value = ["packageName"]), Index(value = ["status"])],
+)
+data class InstallJobEntity(
+    @PrimaryKey val jobId: String,
+    val packageName: String,
+    val versionName: String,
+    val versionCode: Long,
+    val downloadUrl: String,
+    val expectedSha256: String?,
+    val sizeBytes: Long?,
+    val status: String,
+    val progressPercent: Int = 0,
+    val errorMessage: String? = null,
+    val localApkPath: String? = null,
+    val createdAtEpochMs: Long,
+    val updatedAtEpochMs: Long,
+)

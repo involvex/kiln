@@ -1,6 +1,8 @@
 package dev.involvex.kiln.feature.apps
 
 import dev.involvex.kiln.core.model.ApkExportFormat
+import dev.involvex.kiln.core.model.AppUpdateInfo
+import dev.involvex.kiln.core.model.InstallJobState
 import dev.involvex.kiln.core.model.InstalledAppDetail
 
 data class AppDetailUiState(
@@ -11,6 +13,8 @@ data class AppDetailUiState(
     val exportDialog: ExportDialogState? = null,
     val exportInProgress: Boolean = false,
     val snackbarMessage: String? = null,
+    val availableUpdate: AppUpdateInfo? = null,
+    val installJob: InstallJobState? = null,
 )
 
 sealed interface AppDetailEvent {
@@ -22,4 +26,6 @@ sealed interface AppDetailEvent {
     data class FormatSelected(val format: ApkExportFormat) : AppDetailEvent
     data object DismissExport : AppDetailEvent
     data object ClearSnackbar : AppDetailEvent
+    data object InstallUpdate : AppDetailEvent
+    data object OpenUnknownSourcesSettings : AppDetailEvent
 }
