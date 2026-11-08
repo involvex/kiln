@@ -94,6 +94,7 @@ Vor jedem Commit müssen Build, Unit-Tests, Lint und Format-Check grün sein.
 - Android-abhängiger Code hinter Interfaces kapseln, damit er in Unit-Tests ersetzbar ist.
 - Akzeptanzkriterien aus `docs/ROADMAP.md` + Meilenstein-Prompt sind die Definition of Done; manuelle Geräte-Checks als Checkliste im PR dokumentieren.
 - Testgerät des Nutzers: Xiaomi mit HyperOS (Android-Herstellerabweichungen beachten, z. B. bei Cache-Clear, Autostart, Berechtigungs-Dialogen).
+- **Gerät/Emulator:** APK bauen und Install-/Launch-Befehle (`adb install`, `am start`) nur dokumentieren. **Nicht** selbst auf dem physischen Gerät installieren oder die App starten, außer der Nutzer fordert das ausdrücklich.
 
 ## Nicht tun
 
@@ -104,6 +105,7 @@ Vor jedem Commit müssen Build, Unit-Tests, Lint und Format-Check grün sein.
 - Keine großen Refactorings oder Umbenennungen außerhalb des aktuellen Meilensteins.
 - Kein Code, keine Strings, keine Layouts aus GPL-Referenz-Apps (App Manager, Termux) übernehmen — nur Verhalten beobachten (`docs/reference.md`).
 - Kein Navigation Compose 2 (`androidx.navigation:navigation-compose`); Kiln nutzt Navigation 3.
+- Kein `adb install` / App-Launch auf dem Nutzergerät ohne ausdrückliche Aufforderung.
 
 ## Definition of Done (pro PR)
 
