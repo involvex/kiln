@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - GitHub Pages docs site (Actions → `involvex.github.io/kiln`)
+- Supporting / funding docs (`docs/SUPPORTING.md`, Sponsor links from FUNDING.yml)
 
 ## [0.1.0] — 2026-11-08
 

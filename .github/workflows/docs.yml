@@ -31,7 +31,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp docs/index.md docs/ROADMAP.md docs/PRIVACY.md docs/RELEASE.md docs/reference.md _site/
+          cp docs/index.md docs/ROADMAP.md docs/PRIVACY.md docs/RELEASE.md docs/reference.md docs/SUPPORTING.md _site/
           cp README.md CHANGELOG.md LICENSE _site/
           # Landing page: GitHub-flavoured markdown via CDN (no Jekyll gems)
           cat > _site/index.html <<'EOF'
@@ -54,10 +54,12 @@ jobs:
               <a href="./">Home</a>
               <a href="./ROADMAP.md">Roadmap</a>
               <a href="./PRIVACY.md">Privacy</a>
+              <a href="./SUPPORTING.md">Support</a>
               <a href="./RELEASE.md">Release</a>
               <a href="./CHANGELOG.md">Changelog</a>
               <a href="https://github.com/involvex/kiln">GitHub</a>
               <a href="https://github.com/involvex/kiln/releases">Releases</a>
+              <a href="https://github.com/involvex/kiln?sponsor=1">Sponsor</a>
             </nav>
             <article id="content" class="markdown-body"></article>
             <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
