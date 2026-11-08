@@ -84,6 +84,15 @@ fun AutoMatchScreen(
             item {
                 Text(stringResource(R.string.onboarding_auto_match_body), style = MaterialTheme.typography.bodyMedium)
             }
+            if (state.indexEmpty) {
+                item {
+                    Text(
+                        text = stringResource(R.string.onboarding_index_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = onAcceptAllSafe) {

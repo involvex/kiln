@@ -1,5 +1,8 @@
 package dev.involvex.kiln.feature.sources
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -35,6 +38,7 @@ fun SourcesRoute(onOpenAutoMatch: () -> Unit, modifier: Modifier = Modifier, vie
         onAddRepo = viewModel::addRepo,
         onObtainiumTextChange = viewModel::onObtainiumTextChange,
         onImportObtainium = viewModel::importObtainium,
+        onImportObtainiumUri = viewModel::importObtainiumFromUri,
         onGithubTokenInputChange = viewModel::onGithubTokenInputChange,
         onSaveGithubToken = viewModel::saveGithubToken,
         onClearGithubToken = viewModel::clearGithubToken,
@@ -52,6 +56,7 @@ fun SourcesScreen(
     onAddRepo: () -> Unit,
     onObtainiumTextChange: (String) -> Unit,
     onImportObtainium: () -> Unit,
+    onImportObtainiumUri: (Uri) -> Unit,
     onGithubTokenInputChange: (String) -> Unit,
     onSaveGithubToken: () -> Unit,
     onClearGithubToken: () -> Unit,
@@ -71,15 +76,80 @@ fun SourcesScreen(
             sourcesRepoList(state.repos)
             item { AddRepoSection(state, onAddFieldsChange, onAddRepo) }
             item { GithubPatSection(state, onGithubTokenInputChange, onSaveGithubToken, onClearGithubToken) }
-            item { ObtainiumSection(state.obtainiumText, onObtainiumTextChange, onImportObtainium) }
+            item {
+                ObtainiumSection(
+                    obtainiumText = state.obtainiumText,
+                    onObtainiumTextChange = onObtainiumTextChange,
+                    onImportObtainium = onImportObtainium,
+                    onImportObtainiumUri = onImportObtainiumUri,
+                )
+            }
             state.message?.let { msg ->
                 item {
-                    Text(msg, color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        text = formatSourcesMessage(msg),
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                     TextButton(onClick = onClearMessage) { Text(stringResource(R.string.sources_dismiss)) }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun formatSourcesMessage(code: String): String {
+    exactMessageRes(code)?.let { return stringResource(it) }
+    return formatPrefixedMessage(code) ?: code
+}
+
+private fun exactMessageRes(code: String): Int? = when (code) {
+    "invalid_repo" -> R.string.sources_msg_invalid_repo
+    "repo_added" -> R.string.sources_msg_repo_added
+    "token_saved" -> R.string.sources_msg_token_saved
+    "token_cleared" -> R.string.sources_msg_token_cleared
+    "obtainium_empty" -> R.string.sources_msg_obtainium_empty
+    "obtainium_too_short" -> R.string.sources_msg_obtainium_too_short
+    "obtainium_no_apps" -> R.string.sources_msg_obtainium_no_apps
+    "obtainium_file_read_failed" -> R.string.sources_msg_obtainium_file_read_failed
+    "index_oom" -> R.string.sources_msg_index_oom
+    else -> null
+}
+
+@Composable
+private fun formatPrefixedMessage(code: String): String? = when {
+    code.startsWith("obtainium:") ->
+        stringResource(R.string.sources_msg_obtainium_imported, code.substringAfter(':'))
+
+    code.startsWith("sync_ok:") ->
+        stringResource(R.string.sources_msg_sync_ok, code.substringAfter(':'))
+
+    code.startsWith("sync_fail:") -> {
+        val parts = code.split(':', limit = 3)
+        stringResource(
+            R.string.sources_msg_sync_fail,
+            parts.getOrNull(1) ?: "?",
+            humanizeSyncDetail(parts.getOrNull(2).orEmpty()),
+        )
+    }
+
+    code.startsWith("sync_partial:") -> {
+        val parts = code.split(':', limit = 4)
+        stringResource(
+            R.string.sources_msg_sync_partial,
+            parts.getOrNull(1) ?: "?",
+            parts.getOrNull(2) ?: "?",
+            humanizeSyncDetail(parts.getOrNull(3).orEmpty()),
+        )
+    }
+
+    else -> null
+}
+
+@Composable
+private fun humanizeSyncDetail(detail: String): String = when {
+    detail.contains("index_oom") -> stringResource(R.string.sources_msg_index_oom)
+    else -> detail
 }
 
 private fun LazyListScope.sourcesHeader(isSyncing: Boolean, onSyncAll: () -> Unit, onOpenAutoMatch: () -> Unit) {
@@ -197,9 +267,27 @@ private fun GithubPatSection(
 }
 
 @Composable
-private fun ObtainiumSection(obtainiumText: String, onObtainiumTextChange: (String) -> Unit, onImportObtainium: () -> Unit) {
+private fun ObtainiumSection(
+    obtainiumText: String,
+    onObtainiumTextChange: (String) -> Unit,
+    onImportObtainium: () -> Unit,
+    onImportObtainiumUri: (Uri) -> Unit,
+) {
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) onImportObtainiumUri(uri)
+    }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.sources_obtainium), style = MaterialTheme.typography.titleMedium)
+        Text(
+            stringResource(R.string.sources_obtainium_hint),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Button(
+            onClick = { picker.launch(arrayOf("application/json", "text/*", "*/*")) },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.sources_obtainium_pick_file))
+        }
         OutlinedTextField(
             value = obtainiumText,
             onValueChange = onObtainiumTextChange,

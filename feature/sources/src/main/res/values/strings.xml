@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_sources_title">Sources</string>
-    <string name="feature_sources_description">Sync F-Droid-format repos, manage GitHub PAT, and import Obtainium exports. Updates are shown in Apps; install arrives in M3.</string>
+    <string name="feature_sources_description">Sync F-Droid-format repos, manage GitHub PAT, and import Obtainium/Discoverium exports. Updates are shown in Apps.</string>
     <string name="sources_sync_all">Sync all repos</string>
     <string name="sources_open_auto_match">Match installed apps</string>
     <string name="sources_repo_fingerprint">Fingerprint: %1$s</string>
@@ -18,8 +18,23 @@
     <string name="sources_github_pat_label">Token</string>
     <string name="sources_github_pat_save">Save token</string>
     <string name="sources_github_pat_clear">Clear token</string>
-    <string name="sources_obtainium">Import Obtainium export</string>
-    <string name="sources_obtainium_paste">Paste Obtainium JSON</string>
-    <string name="sources_obtainium_import">Import</string>
+    <string name="sources_obtainium">Import Obtainium / Discoverium export</string>
+    <string name="sources_obtainium_hint">Large exports: pick the JSON file. Pasting often truncates on Android.</string>
+    <string name="sources_obtainium_pick_file">Pick JSON file</string>
+    <string name="sources_obtainium_paste">Paste JSON (small exports only)</string>
+    <string name="sources_obtainium_import">Import pasted JSON</string>
     <string name="sources_dismiss">Dismiss</string>
+    <string name="sources_msg_invalid_repo">Name, HTTPS URL, and a full SHA-256 fingerprint are required.</string>
+    <string name="sources_msg_repo_added">Repository added.</string>
+    <string name="sources_msg_token_saved">Token saved.</string>
+    <string name="sources_msg_token_cleared">Token cleared.</string>
+    <string name="sources_msg_obtainium_empty">Paste JSON or pick an export file.</string>
+    <string name="sources_msg_obtainium_too_short">JSON looks truncated (too few characters). Prefer “Pick JSON file”.</string>
+    <string name="sources_msg_obtainium_no_apps">JSON parsed, but no apps were found. Check it is an Obtainium/Discoverium export.</string>
+    <string name="sources_msg_obtainium_file_read_failed">Could not read the selected file.</string>
+    <string name="sources_msg_obtainium_imported">Imported %1$s apps from export.</string>
+    <string name="sources_msg_sync_ok">Synced %1$s repo(s).</string>
+    <string name="sources_msg_sync_fail">Sync failed for %1$s repo(s): %2$s</string>
+    <string name="sources_msg_sync_partial">Synced %1$s, failed %2$s. First error: %3$s</string>
+    <string name="sources_msg_index_oom">Repo index too large for memory. Kiln only keeps packages you already have installed or imported — update the app and sync again.</string>
 </resources>

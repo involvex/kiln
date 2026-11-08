@@ -1,8 +1,11 @@
 package dev.involvex.kiln.feature.sources
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.common.IoDispatcher
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.common.normalizeFingerprint
@@ -11,6 +14,7 @@ import dev.involvex.kiln.core.database.ManagedAppEntity
 import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.database.RepoEntity
 import dev.involvex.kiln.core.model.AppUpdateRepository
+import dev.involvex.kiln.core.model.ManagedApp
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.obtainium.ObtainiumImport
@@ -24,9 +28,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @HiltViewModel
 class SourcesViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val repoDao: RepoDao,
     private val managedAppDao: ManagedAppDao,
     private val sync: FDroidRepoSync,
@@ -105,15 +111,26 @@ class SourcesViewModel @Inject constructor(
             val repos = withContext(ioDispatcher) { repoDao.getAll().filter { it.enabled } }
             var ok = 0
             var fail = 0
+            val errors = mutableListOf<String>()
             for (repo in repos) {
-                when (withContext(ioDispatcher) { sync.sync(repo) }) {
+                when (val result = withContext(ioDispatcher) { sync.sync(repo) }) {
                     is Result.Success -> ok++
-                    is Result.Failure -> fail++
+
+                    is Result.Failure -> {
+                        fail++
+                        errors += "${repo.name}: ${result.message}"
+                        Timber.w("Sync failed for %s: %s", repo.id, result.message)
+                    }
                 }
             }
             withContext(ioDispatcher) { appUpdateRepository.refreshUpdates() }
+            val detail = when {
+                fail == 0 -> "sync_ok:$ok"
+                ok == 0 -> "sync_fail:$fail:${errors.firstOrNull().orEmpty()}"
+                else -> "sync_partial:$ok:$fail:${errors.firstOrNull().orEmpty()}"
+            }
             _uiState.update {
-                it.copy(isSyncing = false, message = "sync:$ok:$fail")
+                it.copy(isSyncing = false, message = detail)
             }
         }
     }
@@ -136,9 +153,31 @@ class SourcesViewModel @Inject constructor(
     }
 
     fun importObtainium() {
-        val text = _uiState.value.obtainiumText
+        applyObtainiumParse(ObtainiumImport.parse(_uiState.value.obtainiumText))
+    }
+
+    fun importObtainiumFromUri(uri: Uri) {
         viewModelScope.launch {
-            when (val parsed = ObtainiumImport.parse(text)) {
+            val text = withContext(ioDispatcher) {
+                runCatching {
+                    appContext.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)
+                        ?.use { it.readText() }
+                }.getOrElse { error ->
+                    Timber.w(error, "Failed reading Obtainium export")
+                    null
+                }
+            }
+            if (text.isNullOrBlank()) {
+                _uiState.update { it.copy(message = "obtainium_file_read_failed") }
+                return@launch
+            }
+            applyObtainiumParse(ObtainiumImport.parse(text))
+        }
+    }
+
+    private fun applyObtainiumParse(parsed: Result<List<ManagedApp>>) {
+        viewModelScope.launch {
+            when (parsed) {
                 is Result.Failure -> _uiState.update { it.copy(message = parsed.message) }
 
                 is Result.Success -> {
