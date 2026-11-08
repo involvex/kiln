@@ -1,0 +1,1 @@
+First public 0.1.0 polish release: About & privacy links, F-Droid metadata scaffold, GitHub tagged release workflow. Core features through background updates and optional Termux integration.
