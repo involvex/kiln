@@ -45,6 +45,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { preferences.setAutoInstallMatching(autoInstall) }
     }
 
+    fun setUpdateCooldownDays(days: Int) {
+        viewModelScope.launch { preferences.setUpdateCooldownDays(days) }
+    }
+
     fun checkNow() {
         scheduler.enqueueImmediate()
         _uiState.update { it.copy(checkNowQueued = true) }

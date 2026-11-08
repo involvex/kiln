@@ -76,8 +76,11 @@ interface PrivilegedExecutor {
 
     suspend fun runSelfTest(): Result<SelfTestReport>
 
-    /** Silent install via allowlisted `pm install -r` when [PrivilegeCapability.SILENT_INSTALL] is present. */
-    suspend fun installApk(apkAbsolutePath: String): Result<Unit>
+    /**
+     * Silent install via allowlisted `pm install -r` when [PrivilegeCapability.SILENT_INSTALL] is present.
+     * When [allowDowngrade] is true, uses `pm install -r -d` (rollback to a lower versionCode).
+     */
+    suspend fun installApk(apkAbsolutePath: String, allowDowngrade: Boolean = false): Result<Unit>
 
     /** Silent uninstall when [PrivilegeCapability.SILENT_UNINSTALL] is present. */
     suspend fun uninstall(packageName: String, keepData: Boolean): Result<Unit>

@@ -7,6 +7,7 @@ package dev.involvex.kiln.core.privilege.shell
 object ShellAllowlist {
     const val ID = "id"
     const val PM_INSTALL = "pm_install"
+    const val PM_INSTALL_DOWNGRADE = "pm_install_downgrade"
     const val PM_UNINSTALL = "pm_uninstall"
     const val PM_CLEAR_CACHE = "pm_clear_cache"
     const val PM_TRIM_CACHES = "pm_trim_caches"
@@ -31,6 +32,12 @@ object ShellAllowlist {
         PM_INSTALL -> {
             val path = args.singleOrNull() ?: return null
             if (!isSafeApkPath(path)) null else listOf("pm", "install", "-r", "--user", "0", path)
+        }
+
+        PM_INSTALL_DOWNGRADE -> {
+            val path = args.singleOrNull() ?: return null
+            // -d allows installing an older versionCode over a newer one (rollback).
+            if (!isSafeApkPath(path)) null else listOf("pm", "install", "-r", "-d", "--user", "0", path)
         }
 
         PM_UNINSTALL -> {

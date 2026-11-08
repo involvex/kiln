@@ -9,9 +9,12 @@
     <string name="sources_never_synced">Nie</string>
     <string name="sources_add_repo">F-Droid-Repo hinzufügen</string>
     <string name="sources_repo_name">Name</string>
-    <string name="sources_repo_url">HTTPS-Adresse</string>
+    <string name="sources_repo_url">Adresse oder fdroidrepos:// / https://…?fingerprint=</string>
     <string name="sources_repo_fp">SHA-256-Fingerprint</string>
     <string name="sources_add_repo_action">Repo hinzufügen</string>
+    <string name="sources_msg_repo_uri_filled">Repo-Felder aus Link übernommen — prüfen und hinzufügen.</string>
+    <string name="sources_msg_repo_http_warn">HTTP-Repos werden nicht synchronisiert (nur HTTPS). Wenn möglich auf HTTPS umstellen.</string>
+    <string name="sources_msg_package_page">Paketseite für %1$s — unter Apps danach suchen. Das ist keine Repository-URL.</string>
     <string name="sources_github_pat">GitHub Personal Access Token</string>
     <string name="sources_github_pat_hint">Optional. Ohne Token erlaubt GitHub etwa 60 Anfragen/Stunde.</string>
     <string name="sources_github_pat_set">Ein Token ist verschlüsselt auf diesem Gerät gespeichert.</string>

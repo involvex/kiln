@@ -118,14 +118,19 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
-    override suspend fun installApk(apkAbsolutePath: String): Result<Unit> = withContext(ioDispatcher) {
+    override suspend fun installApk(apkAbsolutePath: String, allowDowngrade: Boolean): Result<Unit> = withContext(ioDispatcher) {
         if (PrivilegeCapability.SILENT_INSTALL !in currentStatus().capabilities) {
             return@withContext Result.failure("capability_missing:SILENT_INSTALL")
         }
         if (!ShellAllowlist.isSafeApkPath(apkAbsolutePath)) {
             return@withContext Result.failure("invalid_apk_path")
         }
-        when (val out = invokeAllowlisted(ShellAllowlist.PM_INSTALL, listOf(apkAbsolutePath))) {
+        val commandId = if (allowDowngrade) {
+            ShellAllowlist.PM_INSTALL_DOWNGRADE
+        } else {
+            ShellAllowlist.PM_INSTALL
+        }
+        when (val out = invokeAllowlisted(commandId, listOf(apkAbsolutePath))) {
             is Result.Failure -> out
 
             is Result.Success -> {

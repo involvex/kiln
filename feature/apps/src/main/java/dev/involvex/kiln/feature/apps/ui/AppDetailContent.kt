@@ -31,6 +31,7 @@ import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.InstallJobState
 import dev.involvex.kiln.core.model.InstallJobStatus
 import dev.involvex.kiln.core.model.InstalledAppDetail
+import dev.involvex.kiln.core.model.RollbackApkEntry
 import dev.involvex.kiln.feature.apps.R
 import dev.involvex.kiln.feature.apps.icon.PackageIconModel
 import dev.involvex.kiln.feature.apps.util.formatApkSize
@@ -49,6 +50,10 @@ fun AppDetailContent(
     onIgnoreUpdatesChanged: (checkForUpdates: Boolean) -> Unit = {},
     onInstallUpdate: () -> Unit = {},
     onOpenUnknownSources: () -> Unit = {},
+    rollbackEntries: List<RollbackApkEntry> = emptyList(),
+    canSilentDowngrade: Boolean = false,
+    rollbackInProgress: Boolean = false,
+    onRequestRollback: (RollbackApkEntry) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -100,11 +105,60 @@ fun AppDetailContent(
             onInstallUpdate = onInstallUpdate,
             onOpenUnknownSources = onOpenUnknownSources,
         )
+        RollbackSection(
+            entries = rollbackEntries,
+            canSilentDowngrade = canSilentDowngrade,
+            rollbackInProgress = rollbackInProgress,
+            onRequestRollback = onRequestRollback,
+        )
         ActionButtons(
             detail = detail,
             context = context,
             onExport = onExport,
         )
+    }
+}
+
+@Composable
+private fun RollbackSection(
+    entries: List<RollbackApkEntry>,
+    canSilentDowngrade: Boolean,
+    rollbackInProgress: Boolean,
+    onRequestRollback: (RollbackApkEntry) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.feature_apps_rollback_section), style = MaterialTheme.typography.titleMedium)
+        Text(
+            stringResource(R.string.feature_apps_rollback_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (rollbackInProgress) {
+            Text(stringResource(R.string.feature_apps_rollback_busy))
+        }
+        if (entries.isEmpty()) {
+            Text(
+                stringResource(R.string.feature_apps_rollback_empty),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            entries.forEach { entry ->
+                OutlinedButton(
+                    onClick = { onRequestRollback(entry) },
+                    enabled = canSilentDowngrade && !rollbackInProgress,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        stringResource(
+                            R.string.feature_apps_rollback_action,
+                            entry.versionName,
+                            entry.versionCode,
+                        ),
+                    )
+                }
+            }
+        }
     }
 }
 

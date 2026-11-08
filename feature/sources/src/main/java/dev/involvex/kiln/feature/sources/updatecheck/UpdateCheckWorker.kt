@@ -10,6 +10,9 @@ import dev.involvex.kiln.core.common.Result as KilnResult
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.InstallQueue
+import dev.involvex.kiln.core.model.InstalledAppsReader
+import dev.involvex.kiln.core.model.UpdateObservationKey
+import dev.involvex.kiln.core.model.UpdateObservationStore
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
 
@@ -21,6 +24,8 @@ class UpdateCheckWorker @AssistedInject constructor(
     private val preferences: BackgroundUpdatePreferences,
     private val installQueue: InstallQueue,
     private val notifier: UpdateCheckNotifier,
+    private val installedAppsReader: InstalledAppsReader,
+    private val observationStore: UpdateObservationStore,
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
         val prefs = preferences.current()
@@ -40,9 +45,22 @@ class UpdateCheckWorker @AssistedInject constructor(
                 if (count > 0) {
                     notifier.notifyUpdatesFound(count)
                 }
+                val now = System.currentTimeMillis()
+                val firstSeen = observationStore.ensureFirstSeen(
+                    keys = updates.values.map {
+                        UpdateObservationKey(it.packageName, it.availableVersionCode)
+                    },
+                    nowEpochMs = now,
+                )
+                val installedNames = installedAppsReader.userApps()
+                    .associate { it.packageName to it.versionName }
                 val toInstall = AutoInstallPolicy.selectForEnqueue(
                     updates = updates.values,
                     autoInstallMatching = prefs.autoInstallMatching,
+                    installedVersionNames = installedNames,
+                    firstSeenEpochMs = firstSeen,
+                    cooldownDays = prefs.updateCooldownDays,
+                    nowEpochMs = now,
                 )
                 for (update in toInstall) {
                     when (val enqueued = installQueue.enqueue(update)) {

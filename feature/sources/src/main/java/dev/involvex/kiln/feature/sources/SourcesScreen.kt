@@ -106,6 +106,8 @@ private fun formatSourcesMessage(code: String): String {
 private fun exactMessageRes(code: String): Int? = when (code) {
     "invalid_repo" -> R.string.sources_msg_invalid_repo
     "repo_added" -> R.string.sources_msg_repo_added
+    "repo_uri_filled" -> R.string.sources_msg_repo_uri_filled
+    "repo_http_warn" -> R.string.sources_msg_repo_http_warn
     "token_saved" -> R.string.sources_msg_token_saved
     "token_cleared" -> R.string.sources_msg_token_cleared
     "obtainium_empty" -> R.string.sources_msg_obtainium_empty
@@ -118,6 +120,9 @@ private fun exactMessageRes(code: String): Int? = when (code) {
 
 @Composable
 private fun formatPrefixedMessage(code: String): String? = when {
+    code.startsWith("package_page:") ->
+        stringResource(R.string.sources_msg_package_page, code.removePrefix("package_page:"))
+
     code.startsWith("obtainium:") ->
         stringResource(R.string.sources_msg_obtainium_imported, code.substringAfter(':'))
 
