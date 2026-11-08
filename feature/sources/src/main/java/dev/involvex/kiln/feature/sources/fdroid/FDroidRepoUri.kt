@@ -95,7 +95,8 @@ object FDroidRepoUri {
             .map { it.split('=', limit = 2) }
             .firstOrNull { it.firstOrNull() == name }
             ?.getOrNull(1)
-            ?.let { java.net.URLDecoder.decode(it, Charsets.UTF_8) }
+            // String charset name: Charset overload needs API 33; minSdk is 26.
+            ?.let { java.net.URLDecoder.decode(it, "UTF-8") }
     }
 
     private fun suggestedName(host: String): String = when {
