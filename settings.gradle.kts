@@ -21,6 +21,9 @@ dependencyResolutionManagement {
     }
 }
 
+// Pin vulnerable AGP/plugin classpath transitives (Dependabot → settings.gradle.kts).
+apply(from = file("gradle/kiln.security-pins.settings.gradle.kts"))
+
 rootProject.name = "Kiln"
 
 include(":app")
