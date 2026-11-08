@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M4 merged (#11). M5 on branch `m5-storage` (StorageStats analyzer + cache clear). M3 HyperOS E2E checklist still open on device.
+**Current status:** M5 merged (#12). M6 on branch `m6-debloat` (denylist, snapshot, disable/restore via Shizuku). Shizuku+ self-test on device: uid=2000 shell, DEBLOAT available. M3 HyperOS E2E still open.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -19,8 +19,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M2** | Sources, update check, auto-match | Done | PLAN §4.2 / §4.8 · `m2-sources` | Updates for ≥5 real apps; auto-match confidence tiers correct |
 | **M3** | Installer (no privilege) | Done | PLAN §4.3 · `m3-installer` | F-Droid + GitHub update E2E |
 | **M4** | Privilege layer + Shizuku setup | Done | PLAN §4.9 / §5 · [#11](https://github.com/involvex/kiln/pull/11) | Guided setup A→D; silent install; clean Tier NONE fallback |
-| **M5** | Storage analyzer / cleaner | In progress | PLAN §4.5 · `m5-storage` | Numbers plausible vs system storage UI |
-| **M6** | Debloat mode | Planned | PLAN §4.10 | Snapshot, denylist, deactivate/restore on ≥3 safe packages |
+| **M5** | Storage analyzer / cleaner | Done | PLAN §4.5 · [#12](https://github.com/involvex/kiln/pull/12) | Numbers plausible vs system storage UI |
+| **M6** | Debloat mode | In progress | PLAN §4.10 · `m6-debloat` | Snapshot, denylist, deactivate/restore on ≥3 safe packages |
 | **M7** | Backup / restore | Planned | PLAN §4.6 | Round-trip with Root/Shizuku tier |
 | **M8** | Background auto-update | Planned | PLAN §8 | WorkManager + constraints + notifications |
 | **M9** | Termux integration | Planned | PLAN §4.7 | Feature-flagged hooks |
@@ -44,7 +44,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; splits deferred | NONE / SHIZUKU |
 | Storage / cleaner | ✅ Usage-access gate; App/Data/Cache list; clear via Shizuku or app-info deep-link | NONE / SHIZUKU |
-| Debloat | — | ≥ SHIZUKU |
+| Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (app data) | — | NONE (APK only) … ROOT |
 
 ---
@@ -60,6 +60,20 @@ Code for M2 is on `main` (post-#9). Tick on device after install (network requir
 - [x] Detail / list show signature WARNUNG copy when certs differ (#10)
 - [x] Obtainium/Discoverium JSON file import creates managed GitHub apps; PAT optional (rate-limit string visible without PAT)
 - [ ] Installed-app list never leaves the device (no bulk upload); only mapped/managed apps hit GitHub
+
+---
+
+## M6 manual acceptance (HyperOS)
+
+Code on `m6-debloat`. Needs Shizuku/Shizuku+ with DEBLOAT (shell uid 2000 verified on device):
+
+- [ ] Settings → Debloat opens; without privilege shows setup CTA
+- [ ] Hard denylist blocks Kiln, Shizuku+, SystemUI, Settings, launcher/IME/dialer/SMS
+- [ ] Snapshot save before first change; restore returns prior enabled/disabled/uninstalled states
+- [ ] Disable ≥3 harmless test packages, re-enable them; per-package failures do not abort the batch
+- [ ] UNKNOWN packages require expert mode + typed `I UNDERSTAND` / `ICH VERSTEHE`
+- [ ] Default action is disable, not uninstall-for-user
+- [ ] No invented package ratings in `debloat-db.json` (empty curated list for now)
 
 ---
 

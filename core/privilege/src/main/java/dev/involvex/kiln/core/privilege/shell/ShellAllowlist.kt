@@ -10,6 +10,9 @@ object ShellAllowlist {
     const val PM_UNINSTALL = "pm_uninstall"
     const val PM_CLEAR_CACHE = "pm_clear_cache"
     const val PM_TRIM_CACHES = "pm_trim_caches"
+    const val PM_DISABLE_USER = "pm_disable_user"
+    const val PM_ENABLE = "pm_enable"
+    const val PM_INSTALL_EXISTING = "pm_install_existing"
 
     private val PACKAGE_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
     private val APK_PATH = Regex("^/[\\w./\\-+]+\\.apk$", RegexOption.IGNORE_CASE)
@@ -55,6 +58,33 @@ object ShellAllowlist {
         PM_TRIM_CACHES -> {
             val desired = args.singleOrNull() ?: return null
             if (!TRIM_BYTES.matches(desired)) null else listOf("pm", "trim-caches", desired)
+        }
+
+        PM_DISABLE_USER -> {
+            val packageName = args.singleOrNull() ?: return null
+            if (!isSafePackageName(packageName)) {
+                null
+            } else {
+                listOf("pm", "disable-user", "--user", "0", packageName)
+            }
+        }
+
+        PM_ENABLE -> {
+            val packageName = args.singleOrNull() ?: return null
+            if (!isSafePackageName(packageName)) {
+                null
+            } else {
+                listOf("pm", "enable", "--user", "0", packageName)
+            }
+        }
+
+        PM_INSTALL_EXISTING -> {
+            val packageName = args.singleOrNull() ?: return null
+            if (!isSafePackageName(packageName)) {
+                null
+            } else {
+                listOf("pm", "install-existing", "--user", "0", packageName)
+            }
         }
 
         else -> null

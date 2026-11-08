@@ -25,3 +25,6 @@ data object SettingsKey
 
 @Serializable
 data object PrivilegeSetupKey
+
+@Serializable
+data object DebloatKey

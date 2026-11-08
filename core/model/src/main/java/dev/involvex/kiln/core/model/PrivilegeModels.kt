@@ -87,4 +87,13 @@ interface PrivilegedExecutor {
      * Requires [PrivilegeCapability.CLEAR_CACHE].
      */
     suspend fun clearCache(packageName: String?): Result<Long>
+
+    /** `pm disable-user --user 0` — reversible. Requires [PrivilegeCapability.DEBLOAT]. */
+    suspend fun disableUserPackage(packageName: String): Result<Unit>
+
+    /** `pm enable --user 0`. Requires [PrivilegeCapability.DEBLOAT]. */
+    suspend fun enablePackage(packageName: String): Result<Unit>
+
+    /** `pm install-existing --user 0` after user uninstall. Requires [PrivilegeCapability.DEBLOAT]. */
+    suspend fun installExistingPackage(packageName: String): Result<Unit>
 }

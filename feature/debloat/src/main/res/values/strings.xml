@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="debloat_title">Debloat</string>
+    <string name="debloat_intro">Default action is disable (reversible). Ratings are not invented — empty catalog means UNKNOWN; enable expert mode to act. Snapshot is saved before the first change.</string>
+    <string name="debloat_need_shizuku_title">Shizuku required</string>
+    <string name="debloat_need_shizuku_body">Debloat needs the DEBLOAT capability (Shizuku shell). You can still open Privilege setup. Read-only catalog browsing without actions is limited until curated ratings land.</string>
+    <string name="debloat_open_privilege">Open Privilege setup</string>
+    <string name="debloat_back">Back</string>
+    <string name="debloat_no_snapshot">No snapshot yet — create one before changing packages.</string>
+    <string name="debloat_snapshot_present">Snapshot on disk (restore available).</string>
+    <string name="debloat_snapshot">Save snapshot</string>
+    <string name="debloat_restore">Restore snapshot</string>
+    <string name="debloat_refresh">Refresh</string>
+    <string name="debloat_system_only">System apps only</string>
+    <string name="debloat_expert_mode">Expert mode</string>
+    <string name="debloat_expert_hint">UNKNOWN packages need expert mode. Type I UNDERSTAND (or ICH VERSTEHE) when confirming risky batches.</string>
+    <string name="debloat_action_disable">Disable</string>
+    <string name="debloat_action_uninstall">Remove for user</string>
+    <string name="debloat_action_restore_pkg">Re-enable / restore</string>
+    <string name="debloat_filter_all">All states</string>
+    <string name="debloat_filter_enabled">Enabled</string>
+    <string name="debloat_filter_disabled">Disabled</string>
+    <string name="debloat_search">Search packages</string>
+    <string name="debloat_apply">Apply to %1$d selected</string>
+    <string name="debloat_row_meta">%1$s · %2$s</string>
+    <string name="debloat_denylisted">Protected: %1$s</string>
+    <string name="debloat_state_enabled">Enabled</string>
+    <string name="debloat_state_disabled">Disabled</string>
+    <string name="debloat_state_uninstalled">Removed for user</string>
+    <string name="debloat_rating_recommended">Recommended</string>
+    <string name="debloat_rating_advanced">Advanced</string>
+    <string name="debloat_rating_expert">Expert</string>
+    <string name="debloat_rating_unsafe">Unsafe</string>
+    <string name="debloat_rating_unknown">Unknown</string>
+    <string name="debloat_confirm_title">Confirm debloat</string>
+    <string name="debloat_confirm_body">Apply %2$s to %1$d package(s)? Failures are reported per package. Restart and test after large batches.</string>
+    <string name="debloat_confirm_more">…and %1$d more</string>
+    <string name="debloat_type_confirm_hint">Type I UNDERSTAND or ICH VERSTEHE</string>
+    <string name="debloat_confirm_action">Confirm</string>
+    <string name="debloat_cancel">Cancel</string>
+</resources>
