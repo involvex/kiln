@@ -14,7 +14,9 @@ import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.InstallJobState
 import dev.involvex.kiln.core.model.InstallJobStatus
 import dev.involvex.kiln.core.model.InstallQueue
+import dev.involvex.kiln.core.model.LocalInstallRequest
 import dev.involvex.kiln.feature.installer.work.InstallWorker
+import java.io.File
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -39,21 +41,57 @@ class DefaultInstallQueue @Inject constructor(@ApplicationContext private val co
         if (!update.signatureMatches) {
             return Result.failure("signature_mismatch")
         }
+        return enqueueJob(
+            packageName = update.packageName,
+            versionName = update.availableVersionName,
+            versionCode = update.availableVersionCode,
+            downloadUrl = url,
+            expectedSha256 = update.apkSha256,
+            sizeBytes = update.sizeBytes,
+            localApkPath = null,
+        )
+    }
+
+    override suspend fun enqueueLocal(request: LocalInstallRequest): Result<String> {
+        val apk = File(request.apkAbsolutePath)
+        if (!apk.isFile || !apk.canRead()) {
+            return Result.failure("apk_missing")
+        }
+        return enqueueJob(
+            packageName = request.packageName,
+            versionName = request.versionName,
+            versionCode = request.versionCode,
+            downloadUrl = LOCAL_URL_PREFIX,
+            expectedSha256 = request.expectedSha256,
+            sizeBytes = apk.length(),
+            localApkPath = apk.absolutePath,
+        )
+    }
+
+    private suspend fun enqueueJob(
+        packageName: String,
+        versionName: String,
+        versionCode: Long,
+        downloadUrl: String,
+        expectedSha256: String?,
+        sizeBytes: Long?,
+        localApkPath: String?,
+    ): Result<String> {
         val now = System.currentTimeMillis()
         val jobId = UUID.randomUUID().toString()
         installJobDao.upsert(
             InstallJobEntity(
                 jobId = jobId,
-                packageName = update.packageName,
-                versionName = update.availableVersionName,
-                versionCode = update.availableVersionCode,
-                downloadUrl = url,
-                expectedSha256 = update.apkSha256,
-                sizeBytes = update.sizeBytes,
+                packageName = packageName,
+                versionName = versionName,
+                versionCode = versionCode,
+                downloadUrl = downloadUrl,
+                expectedSha256 = expectedSha256,
+                sizeBytes = sizeBytes,
                 status = InstallJobStatus.QUEUED.name,
                 progressPercent = 0,
                 errorMessage = null,
-                localApkPath = null,
+                localApkPath = localApkPath,
                 createdAtEpochMs = now,
                 updatedAtEpochMs = now,
             ),
@@ -63,11 +101,15 @@ class DefaultInstallQueue @Inject constructor(@ApplicationContext private val co
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
         WorkManager.getInstance(context).enqueueUniqueWork(
-            workName(update.packageName),
+            workName(packageName),
             ExistingWorkPolicy.REPLACE,
             request,
         )
         return Result.success(jobId)
+    }
+
+    companion object {
+        const val LOCAL_URL_PREFIX = "local:"
     }
 
     override suspend fun cancel(jobId: String) {

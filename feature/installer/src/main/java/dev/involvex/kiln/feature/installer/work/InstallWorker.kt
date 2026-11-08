@@ -19,11 +19,13 @@ import dev.involvex.kiln.core.model.InstallJobStatus
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
 import dev.involvex.kiln.core.network.KilnHttpClient
+import dev.involvex.kiln.feature.installer.DefaultInstallQueue
 import dev.involvex.kiln.feature.installer.R
 import dev.involvex.kiln.feature.installer.session.PackageInstallerSessionRunner
 import dev.involvex.kiln.feature.installer.verify.ApkHashVerifier
 import dev.involvex.kiln.feature.installer.verify.ApkSignatureGate
 import java.io.File
+import java.io.IOException
 import timber.log.Timber
 
 @HiltWorker
@@ -43,13 +45,27 @@ class InstallWorker @AssistedInject constructor(
 
         mark(jobId, InstallJobStatus.DOWNLOADING, 0, null, job.localApkPath)
         val apkFile = File(File(appContext.cacheDir, DOWNLOAD_DIR).apply { mkdirs() }, "$jobId.apk")
-        when (val download = http.downloadToFile(job.downloadUrl, apkFile)) {
-            is KilnResult.Failure -> {
-                mark(jobId, InstallJobStatus.FAILED, 100, download.message, null)
-                return Result.failure(workDataOf(KEY_ERROR to download.message))
+        if (job.downloadUrl.startsWith(DefaultInstallQueue.LOCAL_URL_PREFIX)) {
+            val source = job.localApkPath?.let { File(it) }
+            if (source == null || !source.isFile) {
+                mark(jobId, InstallJobStatus.FAILED, 100, "apk_missing", null)
+                return Result.failure(workDataOf(KEY_ERROR to "apk_missing"))
             }
+            try {
+                source.copyTo(apkFile, overwrite = true)
+            } catch (e: IOException) {
+                mark(jobId, InstallJobStatus.FAILED, 100, e.message ?: "copy_failed", null)
+                return Result.failure(workDataOf(KEY_ERROR to (e.message ?: "copy_failed")))
+            }
+        } else {
+            when (val download = http.downloadToFile(job.downloadUrl, apkFile)) {
+                is KilnResult.Failure -> {
+                    mark(jobId, InstallJobStatus.FAILED, 100, download.message, null)
+                    return Result.failure(workDataOf(KEY_ERROR to download.message))
+                }
 
-            is KilnResult.Success -> Unit
+                is KilnResult.Success -> Unit
+            }
         }
 
         mark(jobId, InstallJobStatus.VERIFYING, 92, null, apkFile.absolutePath)
