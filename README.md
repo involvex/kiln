@@ -4,7 +4,7 @@ All-in-one package, APK, and storage manager for Android.
 
 - **Package:** `dev.involvex.kiln`
 - **License:** [Apache-2.0](./LICENSE)
-- **Status:** M0 — project skeleton, design system, Navigation 3 shell (see [docs/ROADMAP.md](./docs/ROADMAP.md))
+- **Status:** M1 — installed apps list/detail + APK/APKS/XAPK export (see [docs/ROADMAP.md](./docs/ROADMAP.md))
 
 Kiln unifies F-Droid/GitHub sources, APK tools, app backup, storage cleanup, and an optional debloat mode. Privileged actions run through Shizuku/ShizukuPlus or Root when available; Tier NONE stays useful without them.
 
@@ -32,14 +32,14 @@ Install the debug APK:
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Modules (M0)
+## Modules (M1)
 
 ```
-:app                      Navigation 3 shell, Hilt root, theme
+:app                      Navigation 3 shell, Hilt root, theme, FileProvider
 :core:common              Result type, qualified dispatchers
-:core:model               Shared domain primitives (seeded)
+:core:model               InstalledAppSummary / InstalledAppDetail
 :core:designsystem        Material 3 theme + base components
-:feature:apps             Placeholder (M1)
+:feature:apps             List, detail, APK/APKS/XAPK export, batch WorkManager
 :feature:sources          Placeholder (M2)
 :feature:storage          Placeholder (M5)
 :feature:backup           Placeholder (M7)
@@ -58,7 +58,7 @@ Feature modules depend only on `:core:*`. NavKeys live in `:app`.
 | [docs/prompts/](./docs/prompts/) | Per-milestone agent prompts |
 | [docs/reference.md](./docs/reference.md) | Reference apps (read-only; no GPL copy) |
 
-## Toolchain (M0)
+## Toolchain (M1)
 
 | Component | Version |
 | --- | --- |
@@ -69,6 +69,8 @@ Feature modules depend only on `:core:*`. NavKeys live in `:app`.
 | Compose BOM | 2026.09.00 |
 | Navigation 3 | 1.2.1 |
 | Hilt | 2.60.1 |
+| Coil | 3.6.3 |
+| WorkManager | 2.12.0 |
 
 ## License
 
