@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M8 merged (#15). Sources reliability + Update Safety on `sources-repos-uris` (default repos/Izzy FP, `fdroidrepo(s):` URIs, rollback cache, auto-install cooldown/major gate). Shizuku+ self-test on device: uid=2000 shell. M3 HyperOS E2E still open.
+**Current status:** M9 in progress (`m9-termux`) — feature-flagged Termux RUN_COMMAND. M8 merged (#15). Settings polish / installer preference / debug log on main. Shizuku+ self-test on device: uid=2000 shell. M3 HyperOS E2E still open.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -23,7 +23,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M6** | Debloat mode | Done | PLAN §4.10 · [#13](https://github.com/involvex/kiln/pull/13) | Snapshot, denylist, deactivate/restore on ≥3 safe packages |
 | **M7** | Backup / restore | Done | PLAN §4.6 · [#14](https://github.com/involvex/kiln/pull/14) | APK `.kilnbackup.zip` SAF round-trip; honest NONE/SHIZUKU/ROOT copy |
 | **M8** | Background auto-update | Done | PLAN §8 · [#15](https://github.com/involvex/kiln/pull/15) | WorkManager + constraints + notifications |
-| **M9** | Termux integration | Planned | PLAN §4.7 | Feature-flagged hooks |
+| **M9** | Termux integration | In progress | [`prompts/M9-termux.md`](./prompts/M9-termux.md) · `m9-termux` | Feature-flagged RUN_COMMAND + PendingIntent result |
 | **M10** | Polish & release | Planned | PLAN §8 | F-Droid/GitHub Releases, screenshots, a11y |
 
 ---
@@ -47,6 +47,21 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
 | Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg) | NONE (+ network; silent install/downgrade if SHIZUKU) |
+| Termux RUN_COMMAND | 🚧 Settings → Termux; feature flag off by default; configurable packageId; echo smoke test + PendingIntent result | NONE (Termux installed + permission + allow-external-apps) |
+
+---
+
+## M9 manual acceptance (HyperOS)
+
+Code on `m9-termux`:
+
+- [ ] Settings → Termux opens the feature screen
+- [ ] Enable flag off: smoke-test button refuses to start a command
+- [ ] Package ID field accepts a fork id and updates path checks
+- [ ] With Termux installed: checklist shows installed; grant `RUN_COMMAND` under Additional permissions
+- [ ] In Termux: `allow-external-apps=true` in `~/.termux/termux.properties`
+- [ ] Echo smoke test returns stdout containing `kiln-termux-ok` (background)
+- [ ] Confirm Termux cannot replace Shizuku (copy visible on screen)
 
 ---
 

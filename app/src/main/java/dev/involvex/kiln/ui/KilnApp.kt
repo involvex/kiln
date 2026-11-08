@@ -33,6 +33,7 @@ import dev.involvex.kiln.feature.onboarding.privilege.PrivilegeSetupRoute
 import dev.involvex.kiln.feature.settings.SettingsRoute
 import dev.involvex.kiln.feature.sources.SourcesRoute
 import dev.involvex.kiln.feature.storage.StorageRoute
+import dev.involvex.kiln.feature.termux.TermuxRoute
 import dev.involvex.kiln.navigation.AppDetailKey
 import dev.involvex.kiln.navigation.AppsKey
 import dev.involvex.kiln.navigation.AutoMatchKey
@@ -42,6 +43,7 @@ import dev.involvex.kiln.navigation.PrivilegeSetupKey
 import dev.involvex.kiln.navigation.SettingsKey
 import dev.involvex.kiln.navigation.SourcesKey
 import dev.involvex.kiln.navigation.StorageKey
+import dev.involvex.kiln.navigation.TermuxKey
 import dev.involvex.kiln.navigation.TopLevelBackStack
 
 private data class TopLevelDestination(val key: Any, val labelRes: Int, val icon: ImageVector)
@@ -121,6 +123,7 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
         SettingsRoute(
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
             onOpenDebloat = { topLevelBackStack.add(DebloatKey) },
+            onOpenTermux = { topLevelBackStack.add(TermuxKey) },
         )
     }
     entry<PrivilegeSetupKey> {
@@ -131,5 +134,8 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
             onBack = { topLevelBackStack.removeLast() },
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
         )
+    }
+    entry<TermuxKey> {
+        TermuxRoute(onBack = { topLevelBackStack.removeLast() })
     }
 }

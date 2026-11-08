@@ -46,6 +46,7 @@ import kotlinx.coroutines.delay
 fun SettingsRoute(
     onOpenPrivilegeSetup: () -> Unit,
     onOpenDebloat: () -> Unit,
+    onOpenTermux: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -64,6 +65,7 @@ fun SettingsRoute(
         state = state,
         onOpenPrivilegeSetup = onOpenPrivilegeSetup,
         onOpenDebloat = onOpenDebloat,
+        onOpenTermux = onOpenTermux,
         onBackgroundEnabledChange = { enabled ->
             viewModel.setBackgroundUpdatesEnabled(enabled)
             if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -94,6 +96,7 @@ fun SettingsScreen(
     state: SettingsUiState,
     onOpenPrivilegeSetup: () -> Unit,
     onOpenDebloat: () -> Unit,
+    onOpenTermux: () -> Unit,
     onBackgroundEnabledChange: (Boolean) -> Unit,
     onUnmeteredOnlyChange: (Boolean) -> Unit,
     onAutoInstallChange: (Boolean) -> Unit,
@@ -131,6 +134,12 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.settings_debloat))
+            }
+            OutlinedButton(
+                onClick = onOpenTermux,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.settings_termux))
             }
             HorizontalDivider()
             AppearanceSection(

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_termux_title">Termux</string>
+    <string name="feature_termux_description">Optional RUN_COMMAND integration. Kiln can start scripts in Termux and read the result via PendingIntent. Off by default.</string>
+    <string name="termux_note_no_pm">Termux runs as its own app UID and cannot run pm install/uninstall. It does not replace Shizuku.</string>
+    <string name="termux_enable">Enable Termux integration</string>
+    <string name="termux_enable_hint">Feature flag. When off, Kiln never starts Termux commands.</string>
+    <string name="termux_package_id">Termux package ID</string>
+    <string name="termux_package_id_hint">Official Termux is com.termux. Change this for a custom fork.</string>
+    <string name="termux_save_package_id">Save package ID</string>
+    <string name="termux_setup_section">Setup checklist</string>
+    <string name="termux_check_installed_ok">Installed: %1$s</string>
+    <string name="termux_check_installed_missing">Not installed: %1$s</string>
+    <string name="termux_check_permission_ok">RUN_COMMAND permission granted</string>
+    <string name="termux_check_permission_missing">Grant RUN_COMMAND under App info → Permissions → Additional permissions</string>
+    <string name="termux_check_allow_external">In Termux, set allow-external-apps=true in ~/.termux/termux.properties</string>
+    <string name="termux_refresh_checks">Refresh checks</string>
+    <string name="termux_run_echo">Run echo smoke test</string>
+    <string name="termux_running">Waiting for Termux result…</string>
+    <string name="termux_status_disabled">Enable Termux integration first.</string>
+    <string name="termux_status_not_installed">Termux (or the configured package) is not installed.</string>
+    <string name="termux_status_permission">RUN_COMMAND permission is missing. Grant it in system settings.</string>
+    <string name="termux_status_start_failed">Could not start Termux: %1$s</string>
+    <string name="termux_result_section">Last result</string>
+    <string name="termux_result_summary">exitCode=%1$s · err=%2$s</string>
+    <string name="termux_result_stdout">stdout: %1$s</string>
+    <string name="termux_result_stderr">stderr: %1$s</string>
+    <string name="termux_result_errmsg">errmsg: %1$s</string>
+    <string name="termux_back">Back</string>
+</resources>
