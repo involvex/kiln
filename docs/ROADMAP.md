@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M2 Done on `m2-sources` (awaiting merge). M1 Done on `main`. Install CTA stubbed until M3.
+**Current status:** M3 Done on `m3-installer` (stacked on M2). M2 Hilt fix on `m2-sources`. M1 Done on `main`.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -17,7 +17,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M0** | Project setup | Done | [`prompts/M0-setup.md`](./prompts/M0-setup.md) · `m0-setup` | `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green; 5-tab Nav3 shell on device |
 | **M1** | Installed apps + APK export (Tier NONE) | Done | [`prompts/M1-installed-apps.md`](./prompts/M1-installed-apps.md) · `m1-installed-apps` | List matches `pm list packages -3`; exports install via `adb` / second device |
 | **M2** | Sources, update check, auto-match | Done | PLAN §4.2 / §4.8 · `m2-sources` | Updates for ≥5 real apps; auto-match confidence tiers correct |
-| **M3** | Installer (no privilege) | Planned | PLAN §4.3 | F-Droid + GitHub update E2E |
+| **M3** | Installer (no privilege) | Done | PLAN §4.3 · `m3-installer` | F-Droid + GitHub update E2E |
 | **M4** | Privilege layer + Shizuku setup | Planned | PLAN §4.9 / §5 | Guided setup A→D; silent install; clean Tier NONE fallback |
 | **M5** | Storage analyzer / cleaner | Planned | PLAN §4.5 | Numbers plausible vs system storage UI |
 | **M6** | Debloat mode | Planned | PLAN §4.10 | Snapshot, denylist, deactivate/restore on ≥3 safe packages |
@@ -32,7 +32,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 Update after each milestone. Tier = active `PrivilegedExecutor`.
 
-| Feature | Now (after M2) | Needs tier |
+| Feature | Now (after M3) | Needs tier |
 | --- | --- | --- |
 | Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
 | List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
@@ -41,7 +41,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
 | Sources / updates | ✅ F-Droid/Izzy index-v2 + entry.jar verify; GitHub releases; Obtainium import; Room cache | NONE (+ network) |
 | Auto-match | ✅ Confidence tiers HOCH/MITTEL/WARNUNG/KEINE; ManagedApp persistence | NONE |
-| Installer | — | NONE / SHIZUKU |
+| Installer | ✅ Single-APK download + SHA-256 + PackageInstaller (system confirm); splits deferred | NONE / SHIZUKU |
 | Storage / cleaner | — | NONE / SHIZUKU |
 | Debloat | — | ≥ SHIZUKU |
 | Backup (app data) | — | NONE (APK only) … ROOT |
@@ -56,9 +56,23 @@ Code for M2 is on `m2-sources`. Tick on device after install (network required):
 - [ ] Failed fingerprint / bad `entry.jar` does not poison cache (re-sync after fixing still works)
 - [ ] Auto-match groups HOCH / MITTEL / WARNUNG / KEINE; accept-all-safe only takes HOCH (+ optional MITTEL if UI allows)
 - [ ] Apps list shows update badges for ≥5 real packages vs live indexes and/or GitHub map
-- [ ] Detail / Sources show signature WARNUNG copy when certs differ; install CTA disabled until M3
+- [ ] Detail / Sources show signature WARNUNG copy when certs differ
 - [ ] Obtainium JSON import creates managed GitHub apps; PAT optional (rate-limit string visible without PAT)
 - [ ] Installed-app list never leaves the device (no bulk upload); only mapped/managed apps hit GitHub
+
+---
+
+## M3 manual acceptance (HyperOS)
+
+Code for M3 is on `m3-installer` (needs M2 merged or stacked install). Network + unknown-sources permission:
+
+- [ ] Allow “Install unknown apps” for Kiln when prompted
+- [ ] Sync Sources; open an app with a signature-matching update; Download & install runs FGS notification
+- [ ] System confirm dialog appears; after confirm, version updates in Kiln list
+- [ ] F-Droid-sourced APK with wrong SHA-256 fails closed (no install)
+- [ ] Signature WARNUNG update keeps Install button disabled
+- [ ] GitHub-mapped app with matching flow can install (PAT optional)
+- [ ] Split bundles not required for M3 (single APK only)
 
 ---
 

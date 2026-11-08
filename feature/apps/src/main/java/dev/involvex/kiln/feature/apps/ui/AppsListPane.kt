@@ -186,6 +186,7 @@ private fun AppsListBody(
                 items(items = state.visibleApps, key = { it.packageName }) { app ->
                     AppListItem(
                         app = app,
+                        updateBadge = state.updateBadges[app.packageName],
                         selected = app.packageName in state.selectedPackages,
                         selectionMode = state.selectionMode,
                         onClick = {
@@ -207,6 +208,7 @@ private fun AppsListBody(
 @Composable
 private fun AppListItem(
     app: InstalledAppSummary,
+    updateBadge: String?,
     selected: Boolean,
     selectionMode: Boolean,
     onClick: () -> Unit,
@@ -256,6 +258,13 @@ private fun AppListItem(
                         text = stringResource(R.string.feature_apps_badge_split),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
+                if (updateBadge != null) {
+                    Text(
+                        text = stringResource(R.string.feature_apps_update_badge, updateBadge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
                     )
                 }
             }

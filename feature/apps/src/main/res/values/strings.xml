@@ -59,6 +59,14 @@
     <string name="feature_apps_action_info">App info</string>
     <string name="feature_apps_action_uninstall">Uninstall</string>
     <string name="feature_apps_action_export">Export APK</string>
+    <string name="feature_apps_action_update">Download &amp; install</string>
+    <string name="feature_apps_update_section">Update</string>
+    <string name="feature_apps_update_available">Version %1$s available from %2$s</string>
+    <string name="feature_apps_update_signature_warning">Signature does not match the installed app. Install is blocked.</string>
+    <string name="feature_apps_update_badge">Update %1$s</string>
+    <string name="feature_apps_install_status">Install: %1$s (%2$d%%)</string>
+    <string name="feature_apps_install_error">Install error: %1$s</string>
+    <string name="feature_apps_open_unknown_sources">Allow installs from Kiln</string>
     <string name="feature_apps_uninstall_disabled">System apps cannot be uninstalled here. Use Debloat later.</string>
     <string name="feature_apps_size_unknown">Size unknown</string>
     <string name="feature_apps_back">Back</string>

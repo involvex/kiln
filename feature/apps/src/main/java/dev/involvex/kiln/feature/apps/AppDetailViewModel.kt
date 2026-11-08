@@ -8,6 +8,8 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ApkExportFormat
+import dev.involvex.kiln.core.model.AppUpdateRepository
+import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.feature.apps.data.InstalledAppsRepository
 import dev.involvex.kiln.feature.apps.data.InstallerLabels
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,12 +22,24 @@ import kotlinx.coroutines.launch
 class AppDetailViewModel @AssistedInject constructor(
     @Assisted private val packageName: String,
     private val repository: InstalledAppsRepository,
+    private val appUpdateRepository: AppUpdateRepository,
+    private val installQueue: InstallQueue,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppDetailUiState())
     val uiState: StateFlow<AppDetailUiState> = _uiState.asStateFlow()
 
     init {
         refresh()
+        viewModelScope.launch {
+            appUpdateRepository.updates().collect { map ->
+                _uiState.update { it.copy(availableUpdate = map[packageName]) }
+            }
+        }
+        viewModelScope.launch {
+            installQueue.jobs().collect { jobs ->
+                _uiState.update { it.copy(installJob = jobs[packageName]) }
+            }
+        }
     }
 
     fun refresh() {
@@ -72,6 +86,9 @@ class AppDetailViewModel @AssistedInject constructor(
 
             AppDetailEvent.ClearSnackbar -> _uiState.update { it.copy(snackbarMessage = null) }
 
+            AppDetailEvent.InstallUpdate -> enqueueUpdate()
+
+            AppDetailEvent.OpenUnknownSourcesSettings,
             AppDetailEvent.Launch,
             AppDetailEvent.OpenAppInfo,
             AppDetailEvent.Uninstall,
@@ -85,6 +102,16 @@ class AppDetailViewModel @AssistedInject constructor(
 
     fun showMessage(message: String) {
         _uiState.update { it.copy(snackbarMessage = message) }
+    }
+
+    private fun enqueueUpdate() {
+        val update = _uiState.value.availableUpdate ?: return
+        viewModelScope.launch {
+            when (val result = installQueue.enqueue(update)) {
+                is Result.Success -> Unit
+                is Result.Failure -> showMessage(result.message)
+            }
+        }
     }
 
     private fun openExport() {

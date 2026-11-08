@@ -9,6 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.involvex.kiln.core.common.normalizeFingerprint
 import dev.involvex.kiln.core.database.IndexDao
+import dev.involvex.kiln.core.database.InstallJobDao
 import dev.involvex.kiln.core.database.KilnDatabase
 import dev.involvex.kiln.core.database.ManagedAppDao
 import dev.involvex.kiln.core.database.RepoDao
@@ -41,6 +42,9 @@ object DatabaseModule {
 
     @Provides
     fun provideManagedAppDao(db: KilnDatabase): ManagedAppDao = db.managedAppDao()
+
+    @Provides
+    fun provideInstallJobDao(db: KilnDatabase): InstallJobDao = db.installJobDao()
 }
 
 internal suspend fun seedDefaultRepos(repoDao: RepoDao) {

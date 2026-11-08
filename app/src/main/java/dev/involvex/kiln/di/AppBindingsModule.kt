@@ -5,8 +5,10 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.involvex.kiln.core.model.AppUpdateRepository
+import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.feature.apps.data.DefaultInstalledAppsReader
+import dev.involvex.kiln.feature.installer.DefaultInstallQueue
 import dev.involvex.kiln.feature.sources.DefaultAppUpdateRepository
 import javax.inject.Singleton
 
@@ -24,4 +26,8 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindAppUpdateRepository(impl: DefaultAppUpdateRepository): AppUpdateRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindInstallQueue(impl: DefaultInstallQueue): InstallQueue
 }

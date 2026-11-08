@@ -9,8 +9,9 @@ import androidx.room.RoomDatabase
         IndexedPackageEntity::class,
         IndexedReleaseEntity::class,
         ManagedAppEntity::class,
+        InstallJobEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class KilnDatabase : RoomDatabase() {
@@ -19,4 +20,6 @@ abstract class KilnDatabase : RoomDatabase() {
     abstract fun indexDao(): IndexDao
 
     abstract fun managedAppDao(): ManagedAppDao
+
+    abstract fun installJobDao(): InstallJobDao
 }

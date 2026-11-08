@@ -25,6 +25,7 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":feature:apps"))
     implementation(project(":feature:sources"))
+    implementation(project(":feature:installer"))
     implementation(project(":feature:onboarding"))
     implementation(project(":feature:storage"))
     implementation(project(":feature:backup"))

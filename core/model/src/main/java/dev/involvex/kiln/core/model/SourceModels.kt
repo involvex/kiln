@@ -63,6 +63,10 @@ data class AppUpdateInfo(
     val sourceLabel: String,
     val confidence: MatchConfidence,
     val signatureMatches: Boolean,
+    /** HTTPS URL for the single APK (null = cannot install yet). */
+    val downloadUrl: String? = null,
+    val apkSha256: String? = null,
+    val sizeBytes: Long? = null,
 )
 
 /**
