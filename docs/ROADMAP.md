@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M11 App Discovery on `m11-discovery` (PR pending). M10 polish merged (#21). M9 Termux (#20) conflict-resolved against main. Publishing deferred. M3 HyperOS E2E still open.
+**Current status:** M11 App Discovery on [#22](https://github.com/involvex/kiln/pull/22). M9 Termux merged (#20). M10 polish on main (#21). Publishing deferred. M3 HyperOS E2E still open.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -23,9 +23,9 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M6** | Debloat mode | Done | PLAN §4.10 · [#13](https://github.com/involvex/kiln/pull/13) | Snapshot, denylist, deactivate/restore on ≥3 safe packages |
 | **M7** | Backup / restore | Done | PLAN §4.6 · [#14](https://github.com/involvex/kiln/pull/14) | APK `.kilnbackup.zip` SAF round-trip; honest NONE/SHIZUKU/ROOT copy |
 | **M8** | Background auto-update | Done | PLAN §8 · [#15](https://github.com/involvex/kiln/pull/15) | WorkManager + constraints + notifications |
-| **M9** | Termux integration | In review | [`prompts/M9-termux.md`](./prompts/M9-termux.md) · [#20](https://github.com/involvex/kiln/pull/20) | Feature-flagged RUN_COMMAND + PendingIntent |
+| **M9** | Termux integration | Done | [`prompts/M9-termux.md`](./prompts/M9-termux.md) · [#20](https://github.com/involvex/kiln/pull/20) | Feature-flagged RUN_COMMAND + PendingIntent |
 | **M10** | Polish & release | Done | [`prompts/M10-polish-release.md`](./prompts/M10-polish-release.md) · [#21](https://github.com/involvex/kiln/pull/21) | About, privacy, fastlane, GitHub Release workflow |
-| **M11** | App Discovery | In progress | PLAN §4.2 browse · `m11-discovery` | Search + categories + catalog sync + install enqueue |
+| **M11** | App Discovery | In review | PLAN §4.2 browse · [#22](https://github.com/involvex/kiln/pull/22) | Search + categories + catalog sync + install enqueue |
 
 ---
 
@@ -48,7 +48,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
 | Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg) | NONE (+ network; silent install/downgrade if SHIZUKU) |
-| Termux RUN_COMMAND | 🚧 on #20 — feature flag, configurable packageId, echo smoke test + PendingIntent | NONE (Termux + permission + allow-external-apps) |
+| Termux RUN_COMMAND | ✅ feature flag, configurable packageId, echo smoke test + PendingIntent | NONE (Termux + permission + allow-external-apps) |
 | Release / store prep | ✅ version `0.1.0` (code 2); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow | — |
 | App Discovery | 🚧 Sources → Discover; catalog refresh; search/categories; install queue | NONE (+ network) |
 

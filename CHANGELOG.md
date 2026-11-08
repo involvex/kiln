@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - APK backup / restore (`.kilnbackup.zip`)
 - Background update checks (WorkManager) with cooldown / major-bump gate
 - Settings: theme, language, Wi‑Fi-only updates, installer preference, debug log
-- Optional Termux `RUN_COMMAND` integration (feature-flagged; see M9 when merged)
+- Optional Termux `RUN_COMMAND` integration (feature-flagged)
 
 ### Security
 
