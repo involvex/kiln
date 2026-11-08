@@ -17,6 +17,14 @@ class IndexV2ParserTest {
     }
 
     @Test
+    fun `strips leading slash from index name`() {
+        val json = """{"index":{"name":"/index-v2.json","sha256":"abc","size":12}}"""
+        val result = IndexV2Parser.parseEntryPointer(json.toByteArray())
+        assertTrue(result is Result.Success)
+        assertEquals("index-v2.json", (result as Result.Success).value.name)
+    }
+
+    @Test
     fun `parses package and release`() {
         val index = """
             {

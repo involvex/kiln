@@ -3,15 +3,18 @@ package dev.involvex.kiln.feature.sources.fdroid
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.common.fingerprintsEqual
 import dev.involvex.kiln.core.common.sha256CertificateFingerprint
-import java.io.ByteArrayInputStream
 import java.io.IOException
+import java.nio.file.Files
 import java.security.cert.Certificate
-import java.util.jar.JarEntry
-import java.util.jar.JarInputStream
+import java.util.jar.JarFile
 
 /**
  * Verifies that [entryJarBytes] is a signed JAR whose signer certificate SHA-256
  * matches [expectedFingerprint] (colons optional). Fail closed.
+ *
+ * Uses [JarFile] with verification enabled. [java.util.jar.JarInputStream] does
+ * not populate [java.util.jar.JarEntry.getCertificates] for F-Droid `entry.jar`
+ * on Android/OpenJDK, so stream-based checks always fail closed incorrectly.
  */
 object EntryJarVerifier {
     fun verify(entryJarBytes: ByteArray, expectedFingerprint: String): Result<ByteArray> {
@@ -30,34 +33,33 @@ object EntryJarVerifier {
     }
 
     private fun readVerifiedEntryJson(entryJarBytes: ByteArray, expectedFingerprint: String): Result<ByteArray> {
-        JarInputStream(ByteArrayInputStream(entryJarBytes)).use { jar ->
-            var entryJson: ByteArray? = null
-            var matchedSigner = false
-            var entry = jar.nextJarEntry
-            while (entry != null) {
-                val bytes = jar.readBytes()
-                if (entry.name.equals("entry.json", ignoreCase = true)) {
-                    entryJson = bytes
+        val tmp = Files.createTempFile("kiln-entry-", ".jar").toFile()
+        try {
+            tmp.writeBytes(entryJarBytes)
+            // verify=true: signature checked while entries are read
+            JarFile(tmp, true).use { jar ->
+                val entry = jar.getJarEntry(ENTRY_JSON)
+                    ?: jar.getJarEntry(ENTRY_JSON_ALT)
+                    ?: return Result.failure("entry_json_missing")
+                val entryJson = jar.getInputStream(entry).use { it.readBytes() }
+                // Certificates are only available after the entry stream is fully consumed.
+                if (!certificatesMatch(entry.certificates, expectedFingerprint)) {
+                    return Result.failure("entry_jar_signature_mismatch")
                 }
-                if (certificatesMatch(entry, expectedFingerprint)) {
-                    matchedSigner = true
-                }
-                jar.closeEntry()
-                entry = jar.nextJarEntry
+                return Result.success(entryJson)
             }
-            if (!matchedSigner) {
-                return Result.failure("entry_jar_signature_mismatch")
-            }
-            val json = entryJson ?: return Result.failure("entry_json_missing")
-            return Result.success(json)
+        } finally {
+            tmp.delete()
         }
     }
 
-    private fun certificatesMatch(entry: JarEntry, expectedFingerprint: String): Boolean {
-        val certs: Array<out Certificate>? = entry.certificates
-        if (certs == null) return false
+    private fun certificatesMatch(certs: Array<out Certificate>?, expectedFingerprint: String): Boolean {
+        if (certs.isNullOrEmpty()) return false
         return certs.any { cert ->
             fingerprintsEqual(sha256CertificateFingerprint(cert.encoded), expectedFingerprint)
         }
     }
+
+    private const val ENTRY_JSON = "entry.json"
+    private const val ENTRY_JSON_ALT = "ENTRY.JSON"
 }

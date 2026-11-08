@@ -55,7 +55,8 @@ object IndexV2Parser {
 
             else -> Result.success(
                 EntryIndexPointer(
-                    name = name,
+                    // F-Droid publishes "/index-v2.json"; strip so URL join stays clean.
+                    name = name.trimStart('/'),
                     sha256 = sha256,
                     size = index["size"]?.jsonPrimitive?.longOrNull,
                 ),
@@ -83,6 +84,15 @@ object IndexV2Parser {
         } catch (error: IllegalArgumentException) {
             Result.failure(error.message ?: "index_parse_failed", error)
         }
+    }
+
+    /** Parses a single package object JSON (the value under `packages.<id>`). */
+    fun parsePackageJson(packageName: String, packageJson: String): ParsedIndexPackage? = try {
+        parsePackage(packageName, json.parseToJsonElement(packageJson).jsonObject)
+    } catch (_: SerializationException) {
+        null
+    } catch (_: IllegalArgumentException) {
+        null
     }
 
     private fun parsePackage(packageName: String, pkg: JsonObject): ParsedIndexPackage {

@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M3 Done on `m3-installer` (stacked on M2). M2 Hilt fix on `m2-sources`. M1 Done on `main`.
+**Current status:** M3 + M2 on `main`. Hotfix branch `fix/sources-sync-import`: entry.jar verify via `JarFile` (was always failing → “Letzte Sync: Nie”), Obtainium/Discoverium file import, empty-index auto-match hint.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 

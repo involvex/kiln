@@ -30,6 +30,7 @@ data class AutoMatchUiState(
     val warning: List<MatchCandidate> = emptyList(),
     val none: List<MatchCandidate> = emptyList(),
     val selected: Set<String> = emptySet(),
+    val indexEmpty: Boolean = false,
     val message: String? = null,
 )
 
@@ -53,17 +54,18 @@ class AutoMatchViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val result = withContext(ioDispatcher) {
+            val (result, indexEmpty) = withContext(ioDispatcher) {
                 val installed = installedAppsReader.userApps()
                 val indexed = indexDao.allPackages()
                 val repos = repoDao.getAll()
-                AutoMatchEngine.match(
+                val matches = AutoMatchEngine.match(
                     installed = installed,
                     indexed = indexed,
                     repoPriority = repos.associate { it.id to it.priority },
                     repoNames = repos.associate { it.id to it.name },
                     githubMap = githubMap,
                 )
+                matches to indexed.isEmpty()
             }
             val high = result.filter { it.confidence == MatchConfidence.HIGH }
             _uiState.update {
@@ -74,6 +76,7 @@ class AutoMatchViewModel @Inject constructor(
                     warning = result.filter { c -> c.confidence == MatchConfidence.WARNING },
                     none = result.filter { c -> c.confidence == MatchConfidence.NONE },
                     selected = high.map { c -> c.packageName }.toSet(),
+                    indexEmpty = indexEmpty,
                 )
             }
         }

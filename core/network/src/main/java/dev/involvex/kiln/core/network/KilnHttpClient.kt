@@ -150,8 +150,10 @@ class KilnHttpClient @Inject constructor(private val okHttpClient: OkHttpClient)
 
 object NetworkDefaults {
     private const val CONNECT_TIMEOUT_SECONDS = 30L
-    private const val READ_TIMEOUT_SECONDS = 120L
-    private const val CALL_TIMEOUT_SECONDS = 180L
+
+    // F-Droid index-v2.json is ~70MB; allow slow mobile links to finish.
+    private const val READ_TIMEOUT_SECONDS = 300L
+    private const val CALL_TIMEOUT_SECONDS = 600L
 
     fun okHttpClient(): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)

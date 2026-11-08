@@ -10,4 +10,5 @@
     <string name="onboarding_group_medium">Prüfen</string>
     <string name="onboarding_group_warning">Signatur-Warnung</string>
     <string name="onboarding_group_none">Nicht gefunden</string>
+    <string name="onboarding_index_empty">Noch kein F-Droid-Index. Zuerst unter Quellen synchronisieren — sichere Treffer (HOCH) brauchen Paket + Signer aus einem Sync. Bis dahin erscheinen nur GitHub-Map-Vorschläge unter Prüfen.</string>
 </resources>

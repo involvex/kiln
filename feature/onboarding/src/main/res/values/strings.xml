@@ -10,4 +10,5 @@
     <string name="onboarding_group_medium">Review</string>
     <string name="onboarding_group_warning">Signature warning</string>
     <string name="onboarding_group_none">Not found</string>
+    <string name="onboarding_index_empty">No F-Droid index cached yet. Sync Sources first — safe (HIGH) matches need package + signer from a synced repo. Until then only GitHub-map suggestions appear under Review.</string>
 </resources>
