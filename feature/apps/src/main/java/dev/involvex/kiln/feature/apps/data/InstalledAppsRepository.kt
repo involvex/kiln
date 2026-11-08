@@ -10,6 +10,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.common.IoDispatcher
+import dev.involvex.kiln.core.common.MainDispatcher
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.InstalledAppSummary
@@ -53,6 +54,7 @@ class DefaultInstalledAppsRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val packageInfoSource: PackageInfoSource,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
 ) : InstalledAppsRepository {
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
     private val manualRefresh = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -89,6 +91,8 @@ class DefaultInstalledAppsRepository @Inject constructor(
         }
     }
 
+    // LifecycleRegistry.addObserver/removeObserver require the main thread.
+    // Outer refreshTicks.flowOn(io) would otherwise collect this callbackFlow on IO.
     private val foregroundEvents: Flow<Unit> = callbackFlow {
         val observer = object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
@@ -99,7 +103,7 @@ class DefaultInstalledAppsRepository @Inject constructor(
         awaitClose {
             ProcessLifecycleOwner.get().lifecycle.removeObserver(observer)
         }
-    }
+    }.flowOn(mainDispatcher)
 
     private val refreshTicks = combine(
         packageEvents.onStart { emit(Unit) },
