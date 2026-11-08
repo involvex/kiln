@@ -29,7 +29,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 
 @Composable
-fun SourcesRoute(onOpenAutoMatch: () -> Unit, modifier: Modifier = Modifier, viewModel: SourcesViewModel = hiltViewModel()) {
+fun SourcesRoute(
+    onOpenAutoMatch: () -> Unit,
+    onOpenDiscovery: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: SourcesViewModel = hiltViewModel(),
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     SourcesScreen(
         state = state,
@@ -43,6 +48,7 @@ fun SourcesRoute(onOpenAutoMatch: () -> Unit, modifier: Modifier = Modifier, vie
         onSaveGithubToken = viewModel::saveGithubToken,
         onClearGithubToken = viewModel::clearGithubToken,
         onOpenAutoMatch = onOpenAutoMatch,
+        onOpenDiscovery = onOpenDiscovery,
         onClearMessage = viewModel::clearMessage,
         modifier = modifier,
     )
@@ -61,6 +67,7 @@ fun SourcesScreen(
     onSaveGithubToken: () -> Unit,
     onClearGithubToken: () -> Unit,
     onOpenAutoMatch: () -> Unit,
+    onOpenDiscovery: () -> Unit,
     onClearMessage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -72,7 +79,7 @@ fun SourcesScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            sourcesHeader(state.isSyncing, onSyncAll, onOpenAutoMatch)
+            sourcesHeader(state.isSyncing, onSyncAll, onOpenAutoMatch, onOpenDiscovery)
             sourcesRepoList(state.repos)
             item { AddRepoSection(state, onAddFieldsChange, onAddRepo) }
             item { GithubPatSection(state, onGithubTokenInputChange, onSaveGithubToken, onClearGithubToken) }
@@ -164,7 +171,12 @@ private fun humanizeSyncDetail(detail: String): String = when {
     else -> detail
 }
 
-private fun LazyListScope.sourcesHeader(isSyncing: Boolean, onSyncAll: () -> Unit, onOpenAutoMatch: () -> Unit) {
+private fun LazyListScope.sourcesHeader(
+    isSyncing: Boolean,
+    onSyncAll: () -> Unit,
+    onOpenAutoMatch: () -> Unit,
+    onOpenDiscovery: () -> Unit,
+) {
     item {
         Text(
             text = stringResource(R.string.feature_sources_description),
@@ -183,6 +195,11 @@ private fun LazyListScope.sourcesHeader(isSyncing: Boolean, onSyncAll: () -> Uni
     item {
         Button(onClick = onOpenAutoMatch, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.sources_open_auto_match))
+        }
+    }
+    item {
+        Button(onClick = onOpenDiscovery, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.sources_open_discovery))
         }
     }
 }

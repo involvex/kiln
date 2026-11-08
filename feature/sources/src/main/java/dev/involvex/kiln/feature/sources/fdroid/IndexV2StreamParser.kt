@@ -8,8 +8,8 @@ import java.nio.charset.StandardCharsets
 import timber.log.Timber
 
 /**
- * Streams F-Droid index-v2.json and materializes only [wantedPackages].
- * Avoids the OOM from loading the full ~70MB document as a String/Json tree.
+ * Streams F-Droid index-v2.json and materializes packages without loading the full
+ * ~70MB document as a String/Json tree.
  */
 object IndexV2StreamParser {
     fun parseWantedPackages(input: InputStream, wantedPackages: Set<String>): Result<List<ParsedIndexPackage>> {
@@ -29,6 +29,24 @@ object IndexV2StreamParser {
             // Prefer a sync error over an uncaught crash after a huge index allocation.
             Result.failure("index_oom", error)
         }
+    }
+
+    /**
+     * Streams every package and invokes [onPackage] for each.
+     * Caller should keep only the suggested release to bound memory.
+     */
+    fun parseAllPackages(input: InputStream, onPackage: (ParsedIndexPackage) -> Unit): Result<Int> = try {
+        BufferedReader(InputStreamReader(input, StandardCharsets.UTF_8), BUFFER_SIZE).use { reader ->
+            val count = scanAllPackages(JsonValueScanner(reader), onPackage)
+            Timber.i("index stream: catalog materialization kept %d packages", count)
+            Result.success(count)
+        }
+    } catch (error: IllegalArgumentException) {
+        Result.failure(error.message ?: "index_parse_failed", error)
+    } catch (error: IllegalStateException) {
+        Result.failure(error.message ?: "index_parse_failed", error)
+    } catch (error: OutOfMemoryError) {
+        Result.failure("index_oom", error)
     }
 
     private fun scanPackages(scanner: JsonValueScanner, wanted: Set<String>): List<ParsedIndexPackage> {
@@ -51,6 +69,27 @@ object IndexV2StreamParser {
         }
         Timber.i("index stream: kept %d of %d wanted packages", out.size, wanted.size)
         return out
+    }
+
+    private fun scanAllPackages(scanner: JsonValueScanner, onPackage: (ParsedIndexPackage) -> Unit): Int {
+        scanner.expect('{')
+        var count = 0
+        var first = true
+        while (!scanner.tryConsume('}')) {
+            if (!first) {
+                scanner.expect(',')
+            }
+            first = false
+            if (scanner.tryConsume('}')) break
+            val key = scanner.readString()
+            scanner.expect(':')
+            if (key == "packages") {
+                count = readAllPackagesObject(scanner, onPackage)
+            } else {
+                scanner.skipValue()
+            }
+        }
+        return count
     }
 
     private fun readPackagesObject(scanner: JsonValueScanner, wanted: Set<String>, out: MutableList<ParsedIndexPackage>) {
@@ -79,6 +118,31 @@ object IndexV2StreamParser {
                 return
             }
         }
+    }
+
+    private fun readAllPackagesObject(scanner: JsonValueScanner, onPackage: (ParsedIndexPackage) -> Unit): Int {
+        scanner.expect('{')
+        var count = 0
+        var first = true
+        while (!scanner.tryConsume('}')) {
+            if (!first) {
+                scanner.expect(',')
+            }
+            first = false
+            if (scanner.tryConsume('}')) {
+                return count
+            }
+            val packageName = scanner.readString()
+            scanner.expect(':')
+            val raw = scanner.readValueAsString()
+            val parsed = IndexV2Parser.parsePackageJson(packageName, raw)
+            if (parsed != null) {
+                // Bound memory: discovery only needs the newest APK metadata.
+                onPackage(parsed.copy(releases = parsed.releases.take(1)))
+                count++
+            }
+        }
+        return count
     }
 
     private fun drainRemainingObjectEntries(scanner: JsonValueScanner) {

@@ -18,6 +18,8 @@ data class ParsedIndexPackage(
     val name: String,
     val summary: String?,
     val sourceCodeUrl: String?,
+    /** F-Droid index-v2 `metadata.categories` (e.g. Internet, System). */
+    val categories: List<String> = emptyList(),
     val signerSha256: List<String>,
     val suggestedVersionCode: Long?,
     val suggestedVersionName: String?,
@@ -100,6 +102,7 @@ object IndexV2Parser {
         val name = localized(metadata?.get("name")) ?: packageName
         val summary = localized(metadata?.get("summary"))
         val sourceCode = metadata?.get("sourceCode")?.jsonPrimitive?.contentOrNull
+        val categories = parseCategories(metadata?.get("categories"))
         val versions = pkg["versions"]?.jsonObject.orEmpty()
         val releases = versions.values.mapNotNull { parseRelease(it) }
             .sortedByDescending { it.versionCode }
@@ -108,11 +111,21 @@ object IndexV2Parser {
             name = name,
             summary = summary,
             sourceCodeUrl = sourceCode,
+            categories = categories,
             signerSha256 = releases.firstOrNull()?.signerSha256.orEmpty(),
             suggestedVersionCode = releases.firstOrNull()?.versionCode,
             suggestedVersionName = releases.firstOrNull()?.versionName,
             releases = releases,
         )
+    }
+
+    private fun parseCategories(element: JsonElement?): List<String> {
+        if (element == null) return emptyList()
+        return when (element) {
+            is JsonArray -> element.mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.takeIf { c -> c.isNotBlank() } }
+            is JsonPrimitive -> element.contentOrNull?.takeIf { it.isNotBlank() }?.let { listOf(it) }.orEmpty()
+            else -> emptyList()
+        }
     }
 
     private fun parseRelease(element: JsonElement): ParsedIndexRelease? {
@@ -151,8 +164,6 @@ object IndexV2Parser {
             }
 
             is JsonArray -> element.firstOrNull()?.let { localized(it) }
-
-            else -> null
         }
     }
 }

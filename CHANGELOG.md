@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- App Discovery (M11): Sources → Discover; full F-Droid catalog sync with categories; search + install queue
 - Release polish (M10): About section, privacy policy, F-Droid fastlane metadata, tagged release workflow
 
 ## [0.1.0] — 2026-11-08

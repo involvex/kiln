@@ -4,10 +4,10 @@ All-in-one package, APK, and storage manager for Android.
 
 - **Package:** `dev.involvex.kiln`
 - **License:** [Apache-2.0](./LICENSE)
-- **Status:** M9 Termux ready to merge; M10 polish on main (see [docs/ROADMAP.md](./docs/ROADMAP.md))
+- **Status:** M11 App Discovery in progress; M10 polish on main (see [docs/ROADMAP.md](./docs/ROADMAP.md))
 - **Version:** `0.1.0` (versionCode 2)
 
-Kiln unifies F-Droid/GitHub sources, APK tools, app backup, storage cleanup, optional debloat, and optional Termux hooks. Privileged actions run through Shizuku/ShizukuPlus or Root when available; Tier NONE stays useful without them.
+Kiln unifies F-Droid/GitHub sources, APK tools, app backup, storage cleanup, optional debloat, optional Termux hooks, and F-Droid catalog discovery. Privileged actions run through Shizuku/ShizukuPlus or Root when available; Tier NONE stays useful without them.
 
 ## Requirements
 
@@ -44,7 +44,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 :core:designsystem        Material 3 theme + base components
 :core:privilege           PrivilegedExecutor (Shizuku UserService allowlist)
 :feature:apps             List, detail, export, update badges + install CTA
-:feature:sources          F-Droid/Izzy sync, GitHub, Obtainium import; UpdateCheckWorker
+:feature:sources          F-Droid/Izzy sync, GitHub, Obtainium import, Discover catalog; UpdateCheckWorker
 :feature:installer        Download queue; PackageInstaller or silent pm; local APK enqueue
 :feature:onboarding       Auto-match + Shizuku setup assistant (A→D)
 :feature:storage          StorageStats analyzer + cache clear (usage access)

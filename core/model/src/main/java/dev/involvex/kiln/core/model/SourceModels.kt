@@ -30,6 +30,7 @@ data class IndexedPackage(
     val summary: String?,
     val sourceCodeUrl: String?,
     val repoId: String,
+    val categories: List<String> = emptyList(),
     val signerSha256: List<String>,
     val suggestedVersionCode: Long?,
     val suggestedVersionName: String?,

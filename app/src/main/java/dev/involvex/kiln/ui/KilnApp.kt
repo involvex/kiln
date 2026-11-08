@@ -32,6 +32,7 @@ import dev.involvex.kiln.feature.onboarding.AutoMatchRoute
 import dev.involvex.kiln.feature.onboarding.privilege.PrivilegeSetupRoute
 import dev.involvex.kiln.feature.settings.SettingsRoute
 import dev.involvex.kiln.feature.sources.SourcesRoute
+import dev.involvex.kiln.feature.sources.discovery.DiscoveryRoute
 import dev.involvex.kiln.feature.storage.StorageRoute
 import dev.involvex.kiln.feature.termux.TermuxRoute
 import dev.involvex.kiln.navigation.AppDetailKey
@@ -39,6 +40,7 @@ import dev.involvex.kiln.navigation.AppsKey
 import dev.involvex.kiln.navigation.AutoMatchKey
 import dev.involvex.kiln.navigation.BackupKey
 import dev.involvex.kiln.navigation.DebloatKey
+import dev.involvex.kiln.navigation.DiscoveryKey
 import dev.involvex.kiln.navigation.PrivilegeSetupKey
 import dev.involvex.kiln.navigation.SettingsKey
 import dev.involvex.kiln.navigation.SourcesKey
@@ -112,10 +114,14 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
     entry<SourcesKey> {
         SourcesRoute(
             onOpenAutoMatch = { topLevelBackStack.add(AutoMatchKey) },
+            onOpenDiscovery = { topLevelBackStack.add(DiscoveryKey) },
         )
     }
     entry<AutoMatchKey> {
         AutoMatchRoute(onBack = { topLevelBackStack.removeLast() })
+    }
+    entry<DiscoveryKey> {
+        DiscoveryRoute(onBack = { topLevelBackStack.removeLast() })
     }
     entry<StorageKey> { StorageRoute() }
     entry<BackupKey> { BackupRoute() }
