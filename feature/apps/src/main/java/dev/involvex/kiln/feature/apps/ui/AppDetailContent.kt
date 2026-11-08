@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -44,6 +45,8 @@ fun AppDetailContent(
     onExport: () -> Unit,
     availableUpdate: AppUpdateInfo? = null,
     installJob: InstallJobState? = null,
+    ignoreUpdates: Boolean? = null,
+    onIgnoreUpdatesChanged: (checkForUpdates: Boolean) -> Unit = {},
     onInstallUpdate: () -> Unit = {},
     onOpenUnknownSources: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -79,6 +82,10 @@ fun AppDetailContent(
             ),
         )
         SignatureSection(detail = detail, onCopied = onCopied)
+        UpdatePrefsSection(
+            ignoreUpdates = ignoreUpdates,
+            onIgnoreUpdatesChanged = onIgnoreUpdatesChanged,
+        )
         PathsSection(detail = detail)
         PermissionsSection(detail = detail)
         if (!detail.canUninstall) {
@@ -97,6 +104,30 @@ fun AppDetailContent(
             detail = detail,
             context = context,
             onExport = onExport,
+        )
+    }
+}
+
+@Composable
+private fun UpdatePrefsSection(ignoreUpdates: Boolean?, onIgnoreUpdatesChanged: (Boolean) -> Unit) {
+    // Switch ON means "check for updates" (ignoreUpdates == false or not yet managed).
+    val checking = ignoreUpdates != true
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.feature_apps_ignore_updates))
+            Text(
+                stringResource(R.string.feature_apps_ignore_updates_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(
+            checked = checking,
+            onCheckedChange = onIgnoreUpdatesChanged,
         )
     }
 }

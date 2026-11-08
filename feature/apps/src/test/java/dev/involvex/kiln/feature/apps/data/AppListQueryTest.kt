@@ -62,6 +62,19 @@ class AppListQueryTest {
         assertEquals(listOf("com.c", "com.a", "com.b"), result.map { it.packageName })
     }
 
+    @Test
+    fun `updates filter keeps only packages with known updates`() {
+        val result = filterAndSortApps(
+            apps = apps,
+            query = "",
+            filter = AppListFilter.UPDATES,
+            sortField = AppSortField.NAME,
+            sortDirection = SortDirection.ASCENDING,
+            updatePackageNames = setOf("com.b", "com.c"),
+        )
+        assertEquals(listOf("com.b", "com.c"), result.map { it.packageName })
+    }
+
     private fun summary(packageName: String, label: String, isSystem: Boolean, size: Long, install: Long, update: Long) =
         InstalledAppSummary(
             packageName = packageName,

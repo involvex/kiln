@@ -34,6 +34,7 @@ import dev.involvex.kiln.core.model.AppSortField
 import dev.involvex.kiln.core.model.InstalledAppSummary
 import dev.involvex.kiln.feature.apps.AppsUiState
 import dev.involvex.kiln.feature.apps.R
+import dev.involvex.kiln.feature.apps.UpdateBadgeUi
 import dev.involvex.kiln.feature.apps.icon.PackageIconModel
 import dev.involvex.kiln.feature.apps.util.formatApkSize
 
@@ -45,6 +46,8 @@ fun AppsListPane(
     onFilterChange: (AppListFilter) -> Unit,
     onSortFieldChange: (AppSortField) -> Unit,
     onRefresh: () -> Unit,
+    onCheckUpdates: () -> Unit,
+    onDismissUpdateCheckMessage: () -> Unit,
     onCancelBatch: () -> Unit,
     onOpenDetail: (String) -> Unit,
     onLongPress: (String) -> Unit,
@@ -68,10 +71,34 @@ fun AppsListPane(
             singleLine = true,
             placeholder = { Text(stringResource(R.string.feature_apps_search_hint)) },
         )
+        TextButton(
+            onClick = onCheckUpdates,
+            enabled = !state.isCheckingUpdates,
+            modifier = Modifier.padding(horizontal = 12.dp),
+        ) {
+            Text(
+                if (state.isCheckingUpdates) {
+                    stringResource(R.string.feature_apps_checking_updates)
+                } else {
+                    stringResource(R.string.feature_apps_check_updates)
+                },
+            )
+        }
+        state.updateCheckMessage?.let { code ->
+            Text(
+                text = formatUpdateCheckMessage(code),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            )
+            TextButton(onClick = onDismissUpdateCheckMessage, modifier = Modifier.padding(horizontal = 8.dp)) {
+                Text(stringResource(R.string.feature_apps_dismiss))
+            }
+        }
         FilterRow(filter = state.filter, onFilterChange = onFilterChange)
         SortRow(sortField = state.sortField, onSortFieldChange = onSortFieldChange)
         PullToRefreshBox(
-            isRefreshing = state.isLoading,
+            isRefreshing = state.isLoading || state.isCheckingUpdates,
             onRefresh = onRefresh,
             modifier = Modifier.fillMaxSize(),
         ) {
@@ -125,7 +152,30 @@ private fun FilterRow(filter: AppListFilter, onFilterChange: (AppListFilter) -> 
             onClick = { onFilterChange(AppListFilter.ALL) },
             label = { Text(stringResource(R.string.feature_apps_filter_all)) },
         )
+        FilterChip(
+            selected = filter == AppListFilter.UPDATES,
+            onClick = { onFilterChange(AppListFilter.UPDATES) },
+            label = { Text(stringResource(R.string.feature_apps_filter_updates)) },
+        )
     }
+}
+
+@Composable
+private fun formatUpdateCheckMessage(code: String): String = when {
+    code.startsWith("updates_error:") ->
+        stringResource(R.string.feature_apps_update_check_error, code.removePrefix("updates_error:"))
+
+    code.startsWith("updates:") -> {
+        val parts = code.split(':')
+        stringResource(
+            R.string.feature_apps_update_check_ok,
+            parts.getOrNull(1) ?: "0",
+            parts.getOrNull(2) ?: "0",
+            parts.getOrNull(3) ?: "0",
+        )
+    }
+
+    else -> code
 }
 
 @Composable
@@ -208,7 +258,7 @@ private fun AppsListBody(
 @Composable
 private fun AppListItem(
     app: InstalledAppSummary,
-    updateBadge: String?,
+    updateBadge: UpdateBadgeUi?,
     selected: Boolean,
     selectionMode: Boolean,
     onClick: () -> Unit,
@@ -262,9 +312,17 @@ private fun AppListItem(
                 }
                 if (updateBadge != null) {
                     Text(
-                        text = stringResource(R.string.feature_apps_update_badge, updateBadge),
+                        text = if (updateBadge.signatureWarning) {
+                            stringResource(R.string.feature_apps_update_badge_warning, updateBadge.versionLabel)
+                        } else {
+                            stringResource(R.string.feature_apps_update_badge, updateBadge.versionLabel)
+                        },
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = if (updateBadge.signatureWarning) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.secondary
+                        },
                     )
                 }
             }

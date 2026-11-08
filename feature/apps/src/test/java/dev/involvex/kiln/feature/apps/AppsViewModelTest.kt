@@ -4,9 +4,12 @@ import app.cash.turbine.test
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.AppListFilter
+import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.InstalledAppSummary
+import dev.involvex.kiln.core.model.MatchConfidence
+import dev.involvex.kiln.core.model.UpdateCheckResult
 import dev.involvex.kiln.feature.apps.data.InstalledAppsRepository
 import dev.involvex.kiln.feature.apps.export.ApkExporter
 import dev.involvex.kiln.feature.apps.export.BatchExportScheduler
@@ -76,6 +79,37 @@ class AppsViewModelTest {
     }
 
     @Test
+    fun `updates filter shows only apps with badges`() = runTest {
+        val repo = FakeRepository(
+            listOf(
+                summary("com.user", "User App", isSystem = false),
+                summary("com.other", "Other", isSystem = false),
+            ),
+        )
+        val updates = FakeUpdates(
+            mapOf(
+                "com.user" to AppUpdateInfo(
+                    packageName = "com.user",
+                    availableVersionName = "2.0",
+                    availableVersionCode = 2,
+                    sourceId = "fdroid",
+                    sourceLabel = "F-Droid",
+                    confidence = MatchConfidence.HIGH,
+                    signatureMatches = true,
+                ),
+            ),
+        )
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), updates)
+        advanceUntilIdle()
+
+        viewModel.onEvent(AppsEvent.FilterChanged(AppListFilter.UPDATES))
+        advanceUntilIdle()
+        assertEquals(listOf("com.user"), viewModel.uiState.value.visibleApps.map { it.packageName })
+        assertTrue(viewModel.uiState.value.updateBadges.containsKey("com.user"))
+        assertFalse(viewModel.uiState.value.updateBadges["com.user"]!!.signatureWarning)
+    }
+
+    @Test
     fun `selection mode toggles and opens export dialog`() = runTest {
         val repo = FakeRepository(listOf(summary("com.user", "User App", isSystem = false)))
         val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), FakeUpdates())
@@ -131,9 +165,17 @@ class AppsViewModelTest {
         override fun isInstalled(packageName: String): Boolean = true
     }
 
-    private class FakeUpdates : AppUpdateRepository {
-        override fun updates(): Flow<Map<String, dev.involvex.kiln.core.model.AppUpdateInfo>> = flowOf(emptyMap())
+    private class FakeUpdates(private val initial: Map<String, AppUpdateInfo> = emptyMap()) : AppUpdateRepository {
+        private val state = MutableStateFlow(initial)
+
+        override fun updates(): Flow<Map<String, AppUpdateInfo>> = state.asStateFlow()
 
         override suspend fun refreshUpdates() = Unit
+
+        override suspend fun checkForUpdates(): Result<UpdateCheckResult> = Result.success(UpdateCheckResult(1, 0, state.value.size))
+
+        override fun observeIgnoreUpdates(packageName: String): Flow<Boolean?> = flowOf(false)
+
+        override suspend fun setIgnoreUpdates(packageName: String, ignoreUpdates: Boolean): Result<Unit> = Result.success(Unit)
     }
 }

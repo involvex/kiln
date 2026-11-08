@@ -11,6 +11,8 @@ sealed interface AppsEvent {
     data class SortFieldChanged(val value: AppSortField) : AppsEvent
     data object SortDirectionToggled : AppsEvent
     data object Refresh : AppsEvent
+    data object CheckUpdates : AppsEvent
+    data object DismissUpdateCheckMessage : AppsEvent
     data class LongPressed(val packageName: String) : AppsEvent
     data class SelectionToggled(val packageName: String) : AppsEvent
     data object ClearSelection : AppsEvent

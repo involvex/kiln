@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M3 + M2 on `main` (incl. [#9](https://github.com/involvex/kiln/pull/9): entry.jar `JarFile` verify, streamed index-v2, Obtainium/Discoverium file import). HyperOS: F-Droid sync + auto-match + Discoverium import verified.
+**Current status:** M3 + M2 on `main` (incl. [#9](https://github.com/involvex/kiln/pull/9)). In progress: `fix/m2-update-management` — Check for updates, Updates filter, ignoreUpdates toggle, clearer signature WARNUNG badges.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -55,8 +55,8 @@ Code for M2 is on `main` (post-#9). Tick on device after install (network requir
 - [x] Sources tab lists preconfigured F-Droid + IzzyOnDroid; sync succeeds; last sync time updates
 - [ ] Failed fingerprint / bad `entry.jar` does not poison cache (re-sync after fixing still works)
 - [x] Auto-match groups HOCH / MITTEL / WARNUNG / KEINE; accept-all-safe only takes HOCH (+ optional MITTEL if UI allows)
-- [ ] Apps list shows update badges for ≥5 real packages vs live indexes and/or GitHub map
-- [ ] Detail / Sources show signature WARNUNG copy when certs differ
+- [ ] Apps list shows update badges for ≥5 real packages vs live indexes and/or GitHub map (needs device re-check after update-management UX)
+- [ ] Detail / Sources show signature WARNUNG copy when certs differ (list badge + detail copy landed in `fix/m2-update-management`)
 - [x] Obtainium/Discoverium JSON file import creates managed GitHub apps; PAT optional (rate-limit string visible without PAT)
 - [ ] Installed-app list never leaves the device (no bulk upload); only mapped/managed apps hit GitHub
 
