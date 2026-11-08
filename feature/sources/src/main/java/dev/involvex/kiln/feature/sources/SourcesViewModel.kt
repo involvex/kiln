@@ -17,6 +17,7 @@ import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.ManagedApp
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoUri
+import dev.involvex.kiln.feature.sources.github.GitHubOwnerRepo
 import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.obtainium.ObtainiumImport
 import java.text.DateFormat
@@ -135,7 +136,7 @@ class SourcesViewModel @Inject constructor(
                 if (existing != null) {
                     return@withContext "github_exists:$ownerRepo"
                 }
-                val packageName = provisionalGithubPackageName(ownerRepo)
+                val packageName = GitHubOwnerRepo.provisionalPackageName(ownerRepo)
                 managedAppDao.upsert(
                     ManagedAppEntity(
                         packageName = packageName,
@@ -153,13 +154,6 @@ class SourcesViewModel @Inject constructor(
             _uiState.update { it.copy(message = message) }
             withContext(ioDispatcher) { appUpdateRepository.refreshUpdates() }
         }
-    }
-
-    private fun provisionalGithubPackageName(ownerRepo: String): String {
-        val sanitized = ownerRepo.lowercase()
-            .replace('/', '.')
-            .filter { it.isLetterOrDigit() || it == '.' || it == '_' }
-        return "github.$sanitized"
     }
 
     fun onObtainiumTextChange(text: String) {

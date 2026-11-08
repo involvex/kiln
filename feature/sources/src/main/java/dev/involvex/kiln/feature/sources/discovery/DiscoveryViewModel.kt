@@ -22,6 +22,14 @@ class DiscoveryViewModel @Inject constructor(private val repository: DiscoveryRe
 
     init {
         refreshLocal()
+        refreshSavedGithub()
+    }
+
+    fun setSourceTab(tab: DiscoverySourceTab) {
+        _uiState.update { it.copy(sourceTab = tab, message = null) }
+        if (tab == DiscoverySourceTab.GITHUB) {
+            refreshSavedGithub()
+        }
     }
 
     fun setQuery(query: String) {
@@ -32,6 +40,10 @@ class DiscoveryViewModel @Inject constructor(private val repository: DiscoveryRe
     fun setCategory(category: String) {
         _uiState.update { it.copy(selectedCategory = category) }
         scheduleSearch()
+    }
+
+    fun setGithubQuery(query: String) {
+        _uiState.update { it.copy(githubQuery = query) }
     }
 
     fun refreshCatalog() {
@@ -62,6 +74,42 @@ class DiscoveryViewModel @Inject constructor(private val repository: DiscoveryRe
         }
     }
 
+    fun lookupGithub() {
+        val query = _uiState.value.githubQuery
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLookingUpGithub = true, message = null) }
+            when (val result = repository.lookupGithub(query)) {
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLookingUpGithub = false,
+                            githubResults = listOf(result.value),
+                            message = "github_lookup_ok:${result.value.ownerRepo}",
+                            messageIsError = false,
+                        )
+                    }
+                    refreshSavedGithub()
+                }
+
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isLookingUpGithub = false,
+                            githubResults = emptyList(),
+                            message = result.message,
+                            messageIsError = true,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun lookupSavedGithub(row: DiscoveryGithubRow) {
+        _uiState.update { it.copy(githubQuery = row.ownerRepo) }
+        lookupGithub()
+    }
+
     fun install(row: DiscoveryAppRow) {
         viewModelScope.launch {
             when (val result = repository.install(row)) {
@@ -74,6 +122,43 @@ class DiscoveryViewModel @Inject constructor(private val repository: DiscoveryRe
                 is Result.Failure -> {
                     _uiState.update {
                         it.copy(message = result.message, messageIsError = true)
+                    }
+                }
+            }
+        }
+    }
+
+    fun installGithub(row: DiscoveryGithubRow) {
+        viewModelScope.launch {
+            val ready = if (row.downloadUrl != null) {
+                Result.success(row)
+            } else {
+                repository.lookupGithub(row.ownerRepo)
+            }
+            when (ready) {
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(message = ready.message, messageIsError = true)
+                    }
+                }
+
+                is Result.Success -> {
+                    when (val result = repository.installGithub(ready.value)) {
+                        is Result.Success -> {
+                            _uiState.update {
+                                it.copy(
+                                    githubResults = listOf(ready.value),
+                                    message = "install_queued:${ready.value.ownerRepo}",
+                                    messageIsError = false,
+                                )
+                            }
+                        }
+
+                        is Result.Failure -> {
+                            _uiState.update {
+                                it.copy(message = result.message, messageIsError = true)
+                            }
+                        }
                     }
                 }
             }
@@ -98,6 +183,13 @@ class DiscoveryViewModel @Inject constructor(private val repository: DiscoveryRe
             val categories = repository.categories()
             _uiState.update { it.copy(packageCount = count, categories = categories) }
             runSearch()
+        }
+    }
+
+    private fun refreshSavedGithub() {
+        viewModelScope.launch {
+            val saved = repository.savedGithubSources()
+            _uiState.update { it.copy(savedGithub = saved) }
         }
     }
 

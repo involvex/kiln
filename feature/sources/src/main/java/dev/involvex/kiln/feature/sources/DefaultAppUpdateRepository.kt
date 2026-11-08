@@ -13,6 +13,7 @@ import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.UpdateCheckResult
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.github.GitHubReleasesClient
+import dev.involvex.kiln.feature.sources.github.GitHubVersionCode
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -175,7 +176,7 @@ class DefaultAppUpdateRepository @Inject constructor(
 
             is Result.Success -> {
                 val pick = result.value
-                val remoteCode = parseVersionCodeFromTag(pick.tagName)
+                val remoteCode = GitHubVersionCode.parse(pick.tagName)
                 if (!isRemoteNewer(local.versionCode, local.versionName, remoteCode, pick.tagName)) {
                     null
                 } else {
@@ -194,16 +195,5 @@ class DefaultAppUpdateRepository @Inject constructor(
                 }
             }
         }
-    }
-
-    private fun parseVersionCodeFromTag(tag: String): Long {
-        val digits = Regex("""\d+""").findAll(tag.trimStart('v', 'V')).mapNotNull { it.value.toLongOrNull() }.toList()
-        if (digits.isEmpty()) return 0L
-        return digits.fold(0L) { acc, n -> acc * VERSION_SEGMENT_BASE + n.coerceAtMost(VERSION_SEGMENT_MAX) }
-    }
-
-    private companion object {
-        const val VERSION_SEGMENT_BASE = 1000L
-        const val VERSION_SEGMENT_MAX = 999L
     }
 }

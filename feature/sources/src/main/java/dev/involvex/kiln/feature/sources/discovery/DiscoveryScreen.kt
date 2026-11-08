@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
@@ -36,24 +37,34 @@ fun DiscoveryRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel:
     DiscoveryScreen(
         state = state,
         onBack = onBack,
+        onSourceTab = viewModel::setSourceTab,
         onQueryChange = viewModel::setQuery,
         onCategory = viewModel::setCategory,
         onRefreshCatalog = viewModel::refreshCatalog,
         onInstall = viewModel::install,
+        onGithubQueryChange = viewModel::setGithubQuery,
+        onLookupGithub = viewModel::lookupGithub,
+        onLookupSavedGithub = viewModel::lookupSavedGithub,
+        onInstallGithub = viewModel::installGithub,
         onClearMessage = viewModel::clearMessage,
         modifier = modifier,
     )
 }
 
 @Composable
-@Suppress("LongMethod")
+@Suppress("LongMethod", "LongParameterList")
 fun DiscoveryScreen(
     state: DiscoveryUiState,
     onBack: () -> Unit,
+    onSourceTab: (DiscoverySourceTab) -> Unit,
     onQueryChange: (String) -> Unit,
     onCategory: (String) -> Unit,
     onRefreshCatalog: () -> Unit,
     onInstall: (DiscoveryAppRow) -> Unit,
+    onGithubQueryChange: (String) -> Unit,
+    onLookupGithub: () -> Unit,
+    onLookupSavedGithub: (DiscoveryGithubRow) -> Unit,
+    onInstallGithub: (DiscoveryGithubRow) -> Unit,
     onClearMessage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -71,53 +82,7 @@ fun DiscoveryScreen(
                 }
             }
             item {
-                Text(
-                    text = stringResource(R.string.discovery_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-            item {
-                Text(
-                    text = stringResource(R.string.discovery_catalog_count, state.packageCount),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            item {
-                Button(
-                    onClick = onRefreshCatalog,
-                    enabled = !state.isRefreshing,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.discovery_refresh_catalog))
-                }
-            }
-            if (state.isRefreshing) {
-                item {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        CircularProgressIndicator()
-                        Text(stringResource(R.string.discovery_refreshing))
-                    }
-                }
-            }
-            item {
-                OutlinedTextField(
-                    value = state.query,
-                    onValueChange = onQueryChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.discovery_search)) },
-                )
-            }
-            item {
-                CategoryChips(
-                    categories = state.categories,
-                    selected = state.selectedCategory,
-                    onSelect = onCategory,
-                )
+                SourceTabs(selected = state.sourceTab, onSelect = onSourceTab)
             }
             state.message?.let { msg ->
                 item {
@@ -134,21 +99,190 @@ fun DiscoveryScreen(
                     }
                 }
             }
-            if (state.isSearching && state.results.isEmpty()) {
-                item { CircularProgressIndicator() }
-            }
-            items(state.results, key = { "${it.repoId}:${it.packageName}" }) { row ->
-                DiscoveryAppCard(row = row, onInstall = { onInstall(row) })
-            }
-            if (!state.isSearching && state.results.isEmpty() && state.packageCount == 0) {
-                item {
-                    Text(
-                        text = stringResource(R.string.discovery_empty_catalog),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
+            when (state.sourceTab) {
+                DiscoverySourceTab.FDROID -> fdroidItems(
+                    state = state,
+                    onQueryChange = onQueryChange,
+                    onCategory = onCategory,
+                    onRefreshCatalog = onRefreshCatalog,
+                    onInstall = onInstall,
+                )
+
+                DiscoverySourceTab.GITHUB -> githubItems(
+                    state = state,
+                    onGithubQueryChange = onGithubQueryChange,
+                    onLookupGithub = onLookupGithub,
+                    onLookupSavedGithub = onLookupSavedGithub,
+                    onInstallGithub = onInstallGithub,
+                )
             }
         }
+    }
+}
+
+private fun LazyListScope.fdroidItems(
+    state: DiscoveryUiState,
+    onQueryChange: (String) -> Unit,
+    onCategory: (String) -> Unit,
+    onRefreshCatalog: () -> Unit,
+    onInstall: (DiscoveryAppRow) -> Unit,
+) {
+    item {
+        Text(
+            text = stringResource(R.string.discovery_description),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+    item {
+        Text(
+            text = stringResource(R.string.discovery_catalog_count, state.packageCount),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    item {
+        Button(
+            onClick = onRefreshCatalog,
+            enabled = !state.isRefreshing,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.discovery_refresh_catalog))
+        }
+    }
+    if (state.isRefreshing) {
+        item {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                CircularProgressIndicator()
+                Text(stringResource(R.string.discovery_refreshing))
+            }
+        }
+    }
+    item {
+        OutlinedTextField(
+            value = state.query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text(stringResource(R.string.discovery_search)) },
+        )
+    }
+    item {
+        CategoryChips(
+            categories = state.categories,
+            selected = state.selectedCategory,
+            onSelect = onCategory,
+        )
+    }
+    if (state.isSearching && state.results.isEmpty()) {
+        item { CircularProgressIndicator() }
+    }
+    items(state.results, key = { "${it.repoId}:${it.packageName}" }) { row ->
+        DiscoveryAppCard(row = row, onInstall = { onInstall(row) })
+    }
+    if (!state.isSearching && state.results.isEmpty() && state.packageCount == 0) {
+        item {
+            Text(
+                text = stringResource(R.string.discovery_empty_catalog),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}
+
+private fun LazyListScope.githubItems(
+    state: DiscoveryUiState,
+    onGithubQueryChange: (String) -> Unit,
+    onLookupGithub: () -> Unit,
+    onLookupSavedGithub: (DiscoveryGithubRow) -> Unit,
+    onInstallGithub: (DiscoveryGithubRow) -> Unit,
+) {
+    item {
+        Text(
+            text = stringResource(R.string.discovery_github_description),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+    item {
+        OutlinedTextField(
+            value = state.githubQuery,
+            onValueChange = onGithubQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text(stringResource(R.string.discovery_github_query)) },
+        )
+    }
+    item {
+        Button(
+            onClick = onLookupGithub,
+            enabled = !state.isLookingUpGithub && state.githubQuery.isNotBlank(),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.discovery_github_lookup))
+        }
+    }
+    if (state.isLookingUpGithub) {
+        item {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                CircularProgressIndicator()
+                Text(stringResource(R.string.discovery_github_looking_up))
+            }
+        }
+    }
+    items(state.githubResults, key = { "result:${it.ownerRepo}" }) { row ->
+        GithubAppCard(
+            row = row,
+            onInstall = { onInstallGithub(row) },
+            onLookup = null,
+        )
+    }
+    if (state.savedGithub.isNotEmpty()) {
+        item {
+            Text(
+                text = stringResource(R.string.discovery_github_saved),
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
+        items(state.savedGithub, key = { "saved:${it.ownerRepo}:${it.packageName}" }) { row ->
+            GithubAppCard(
+                row = row,
+                onInstall = { onInstallGithub(row) },
+                onLookup = { onLookupSavedGithub(row) },
+            )
+        }
+    } else if (!state.isLookingUpGithub && state.githubResults.isEmpty()) {
+        item {
+            Text(
+                text = stringResource(R.string.discovery_github_empty),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SourceTabs(selected: DiscoverySourceTab, onSelect: (DiscoverySourceTab) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        FilterChip(
+            selected = selected == DiscoverySourceTab.FDROID,
+            onClick = { onSelect(DiscoverySourceTab.FDROID) },
+            label = { Text(stringResource(R.string.discovery_tab_fdroid)) },
+        )
+        FilterChip(
+            selected = selected == DiscoverySourceTab.GITHUB,
+            onClick = { onSelect(DiscoverySourceTab.GITHUB) },
+            label = { Text(stringResource(R.string.discovery_tab_github)) },
+        )
     }
 }
 
@@ -208,12 +342,52 @@ private fun DiscoveryAppCard(row: DiscoveryAppRow, onInstall: () -> Unit) {
 }
 
 @Composable
+private fun GithubAppCard(row: DiscoveryGithubRow, onInstall: () -> Unit, onLookup: (() -> Unit)?) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(text = row.displayName, style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = row.packageName,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        val placeholder = stringResource(R.string.discovery_placeholder)
+        Text(
+            text = stringResource(
+                R.string.discovery_github_meta,
+                row.tagName ?: placeholder,
+                row.assetName ?: placeholder,
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (onLookup != null && row.downloadUrl == null) {
+            OutlinedButton(onClick = onLookup, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.discovery_github_lookup))
+            }
+        }
+        OutlinedButton(
+            onClick = onInstall,
+            enabled = row.downloadUrl != null || onLookup != null,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.discovery_install))
+        }
+    }
+}
+
+@Composable
 private fun formatDiscoveryMessage(code: String): String = when {
     code.startsWith("catalog_ok:") ->
         stringResource(R.string.discovery_msg_catalog_ok, code.substringAfter(':'))
 
     code.startsWith("install_queued:") ->
         stringResource(R.string.discovery_msg_install_queued, code.substringAfter(':'))
+
+    code.startsWith("github_lookup_ok:") ->
+        stringResource(R.string.discovery_msg_github_lookup_ok, code.substringAfter(':'))
 
     code == "no_fdroid_repos" -> stringResource(R.string.discovery_msg_no_repos)
 
@@ -222,6 +396,12 @@ private fun formatDiscoveryMessage(code: String): String = when {
     code == "release_missing" -> stringResource(R.string.discovery_msg_release_missing)
 
     code == "apk_url_invalid" -> stringResource(R.string.discovery_msg_apk_url)
+
+    code == "github_query_invalid" -> stringResource(R.string.discovery_msg_github_query_invalid)
+
+    code == "github_release_missing" -> stringResource(R.string.discovery_msg_github_release_missing)
+
+    code == "no_matching_github_asset" -> stringResource(R.string.discovery_msg_github_no_apk)
 
     code == "index_oom" -> stringResource(R.string.sources_msg_index_oom)
 
