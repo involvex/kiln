@@ -38,7 +38,11 @@ import dev.involvex.kiln.core.model.BackupAppCandidate
 import dev.involvex.kiln.core.model.BackupContentTier
 
 @Composable
-fun BackupRoute(modifier: Modifier = Modifier, viewModel: BackupViewModel = hiltViewModel()) {
+fun BackupRoute(
+    modifier: Modifier = Modifier,
+    showTopBar: Boolean = true,
+    viewModel: BackupViewModel = hiltViewModel(),
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val createDoc = rememberLauncherForActivityResult(
@@ -76,6 +80,7 @@ fun BackupRoute(modifier: Modifier = Modifier, viewModel: BackupViewModel = hilt
             openDoc.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
         },
         onDismissRestore = viewModel::dismissRestore,
+        showTopBar = showTopBar,
         modifier = modifier,
     )
 }
@@ -91,8 +96,13 @@ fun BackupScreen(
     onConfirmRestore: () -> Unit,
     onDismissRestore: () -> Unit,
     modifier: Modifier = Modifier,
+    showTopBar: Boolean = true,
 ) {
-    KilnScaffold(title = stringResource(R.string.feature_backup_title), modifier = modifier) { padding ->
+    KilnScaffold(
+        title = stringResource(R.string.feature_backup_title),
+        modifier = modifier,
+        showTopBar = showTopBar,
+    ) { padding ->
         if (state.isLoading && state.apps.isEmpty()) {
             BackupLoading(Modifier.padding(padding))
             return@KilnScaffold

@@ -31,7 +31,6 @@ import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 @Composable
 fun SourcesRoute(
     onOpenAutoMatch: () -> Unit,
-    onOpenDiscovery: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SourcesViewModel = hiltViewModel(),
 ) {
@@ -48,7 +47,6 @@ fun SourcesRoute(
         onSaveGithubToken = viewModel::saveGithubToken,
         onClearGithubToken = viewModel::clearGithubToken,
         onOpenAutoMatch = onOpenAutoMatch,
-        onOpenDiscovery = onOpenDiscovery,
         onClearMessage = viewModel::clearMessage,
         modifier = modifier,
     )
@@ -67,7 +65,6 @@ fun SourcesScreen(
     onSaveGithubToken: () -> Unit,
     onClearGithubToken: () -> Unit,
     onOpenAutoMatch: () -> Unit,
-    onOpenDiscovery: () -> Unit,
     onClearMessage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -79,7 +76,7 @@ fun SourcesScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            sourcesHeader(state.isSyncing, onSyncAll, onOpenAutoMatch, onOpenDiscovery)
+            sourcesHeader(state.isSyncing, onSyncAll, onOpenAutoMatch)
             sourcesRepoList(state.repos)
             item { AddRepoSection(state, onAddFieldsChange, onAddRepo) }
             item { GithubPatSection(state, onGithubTokenInputChange, onSaveGithubToken, onClearGithubToken) }
@@ -175,7 +172,6 @@ private fun LazyListScope.sourcesHeader(
     isSyncing: Boolean,
     onSyncAll: () -> Unit,
     onOpenAutoMatch: () -> Unit,
-    onOpenDiscovery: () -> Unit,
 ) {
     item {
         Text(
@@ -195,11 +191,6 @@ private fun LazyListScope.sourcesHeader(
     item {
         Button(onClick = onOpenAutoMatch, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.sources_open_auto_match))
-        }
-    }
-    item {
-        Button(onClick = onOpenDiscovery, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.sources_open_discovery))
         }
     }
 }

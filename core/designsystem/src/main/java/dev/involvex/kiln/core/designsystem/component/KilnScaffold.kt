@@ -13,12 +13,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dev.involvex.kiln.core.designsystem.theme.KilnTheme
+import dev.involvex.kiln.core.model.KilnThemeStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KilnScaffold(
     title: String,
     modifier: Modifier = Modifier,
+    showTopBar: Boolean = true,
     bottomBar: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -26,13 +28,15 @@ fun KilnScaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
-            TopAppBar(
-                title = { Text(text = title) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-            )
+            if (showTopBar) {
+                TopAppBar(
+                    title = { Text(text = title) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+                )
+            }
         },
         bottomBar = bottomBar,
         content = content,
@@ -42,7 +46,7 @@ fun KilnScaffold(
 @Preview(showBackground = true)
 @Composable
 private fun KilnScaffoldPreview() {
-    KilnTheme {
+    KilnTheme(themeStyle = KilnThemeStyle.DARK) {
         KilnScaffold(title = "Kiln") { }
     }
 }
