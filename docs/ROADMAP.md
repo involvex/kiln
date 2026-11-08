@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M4 on branch `m4-privilege` (Privilege layer + Shizuku setup A→D + silent install path). M3 HyperOS E2E checklist still open on device.
+**Current status:** M4 merged (#11). M5 on branch `m5-storage` (StorageStats analyzer + cache clear). M3 HyperOS E2E checklist still open on device.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -18,8 +18,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M1** | Installed apps + APK export (Tier NONE) | Done | [`prompts/M1-installed-apps.md`](./prompts/M1-installed-apps.md) · `m1-installed-apps` | List matches `pm list packages -3`; exports install via `adb` / second device |
 | **M2** | Sources, update check, auto-match | Done | PLAN §4.2 / §4.8 · `m2-sources` | Updates for ≥5 real apps; auto-match confidence tiers correct |
 | **M3** | Installer (no privilege) | Done | PLAN §4.3 · `m3-installer` | F-Droid + GitHub update E2E |
-| **M4** | Privilege layer + Shizuku setup | In progress | PLAN §4.9 / §5 · `m4-privilege` | Guided setup A→D; silent install; clean Tier NONE fallback |
-| **M5** | Storage analyzer / cleaner | Planned | PLAN §4.5 | Numbers plausible vs system storage UI |
+| **M4** | Privilege layer + Shizuku setup | Done | PLAN §4.9 / §5 · [#11](https://github.com/involvex/kiln/pull/11) | Guided setup A→D; silent install; clean Tier NONE fallback |
+| **M5** | Storage analyzer / cleaner | In progress | PLAN §4.5 · `m5-storage` | Numbers plausible vs system storage UI |
 | **M6** | Debloat mode | Planned | PLAN §4.10 | Snapshot, denylist, deactivate/restore on ≥3 safe packages |
 | **M7** | Backup / restore | Planned | PLAN §4.6 | Round-trip with Root/Shizuku tier |
 | **M8** | Background auto-update | Planned | PLAN §8 | WorkManager + constraints + notifications |
@@ -43,7 +43,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Auto-match | ✅ Confidence tiers HOCH/MITTEL/WARNUNG/KEINE; ManagedApp persistence | NONE |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; splits deferred | NONE / SHIZUKU |
-| Storage / cleaner | — | NONE / SHIZUKU |
+| Storage / cleaner | ✅ Usage-access gate; App/Data/Cache list; clear via Shizuku or app-info deep-link | NONE / SHIZUKU |
 | Debloat | — | ≥ SHIZUKU |
 | Backup (app data) | — | NONE (APK only) … ROOT |
 
@@ -60,6 +60,21 @@ Code for M2 is on `main` (post-#9). Tick on device after install (network requir
 - [x] Detail / list show signature WARNUNG copy when certs differ (#10)
 - [x] Obtainium/Discoverium JSON file import creates managed GitHub apps; PAT optional (rate-limit string visible without PAT)
 - [ ] Installed-app list never leaves the device (no bulk upload); only mapped/managed apps hit GitHub
+
+---
+
+## M5 manual acceptance (HyperOS)
+
+Code on `m5-storage`. Usage access + optional Shizuku:
+
+- [ ] Storage tab shows usage-access explain screen; after grant, list loads without crash
+- [ ] Totals and top apps look plausible vs system Settings → Storage (same order of magnitude)
+- [ ] User / Include-system filter and search work
+- [ ] Without Shizuku: Clear/App info opens system app details (confirmation first)
+- [ ] With Shizuku + CLEAR_CACHE: per-app cache clear and trim-all confirm, then sizes refresh (HyperOS may free less than shown)
+- [ ] No silent delete; destructive actions always confirm
+
+Deferred in this PR: treemap, orphaned `Android/data`, APK leftover scanner.
 
 ---
 

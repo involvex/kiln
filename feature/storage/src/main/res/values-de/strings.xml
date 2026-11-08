@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_storage_title">Speicher</string>
-    <string name="feature_storage_description">Speicheranalyse und Cleaner kommen hierher (M5).</string>
+    <string name="feature_storage_description">App-/Daten-/Cache-Größen und Cache-Bereinigung.</string>
+    <string name="storage_usage_required_title">Nutzungszugriff nötig</string>
+    <string name="storage_usage_required_body">Kiln braucht „Nutzungszugriff“, um Speicher pro App über StorageStatsManager zu lesen. Nichts verlässt das Gerät. Einstellungen öffnen, Kiln finden und Zugriff erlauben.</string>
+    <string name="storage_open_usage_access">Nutzungszugriff öffnen</string>
+    <string name="storage_privilege_hint">Ohne Shizuku öffnet Cache leeren die System-App-Info. Privilege einrichten für stilles Cache-Trimmen.</string>
+    <string name="storage_filter_user">Nutzer-Apps</string>
+    <string name="storage_filter_all">System einschließen</string>
+    <string name="storage_refresh">Aktualisieren</string>
+    <string name="storage_search">Apps suchen</string>
+    <string name="storage_total_line">Gemessen gesamt: %1$s</string>
+    <string name="storage_breakdown_line">App %1$s · Daten %2$s · Cache %3$s</string>
+    <string name="storage_app_breakdown">%1$s — App %2$s · Daten %3$s · Cache %4$s</string>
+    <string name="storage_clear_cache">Cache leeren</string>
+    <string name="storage_open_app_info">App-Info</string>
+    <string name="storage_clear_all_caches">Alle Caches leeren (%1$s)</string>
+    <string name="storage_confirm_title">Bestätigen</string>
+    <string name="storage_confirm_clear_app">Cache von %1$s (%2$s) leeren? Nicht rückgängig machbar.</string>
+    <string name="storage_confirm_clear_all">Caches systemweit trimmen (gemessen ~%1$s)? ROMs geben oft weniger frei. Nicht rückgängig machbar.</string>
+    <string name="storage_confirm_open_settings">Systemeinstellungen für %1$s öffnen, um den Cache dort zu leeren?</string>
+    <string name="storage_confirm_action">Weiter</string>
+    <string name="storage_cancel">Abbrechen</string>
 </resources>

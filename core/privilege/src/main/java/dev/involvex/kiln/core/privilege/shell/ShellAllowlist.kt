@@ -8,9 +8,14 @@ object ShellAllowlist {
     const val ID = "id"
     const val PM_INSTALL = "pm_install"
     const val PM_UNINSTALL = "pm_uninstall"
+    const val PM_CLEAR_CACHE = "pm_clear_cache"
+    const val PM_TRIM_CACHES = "pm_trim_caches"
 
     private val PACKAGE_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
     private val APK_PATH = Regex("^/[\\w./\\-+]+\\.apk$", RegexOption.IGNORE_CASE)
+
+    /** Desired free-space argument for `pm trim-caches` (digits only, capped length). */
+    private val TRIM_BYTES = Regex("^[1-9][0-9]{0,18}$")
 
     /**
      * Builds argv for [ProcessBuilder], or null if [commandId]/[args] are rejected.
@@ -35,6 +40,21 @@ object ShellAllowlist {
             } else {
                 listOf("pm", "uninstall", "--user", "0", packageName)
             }
+        }
+
+        PM_CLEAR_CACHE -> {
+            val packageName = args.singleOrNull() ?: return null
+            // API 26+: --cache-only; HyperOS/MIUI may still reject — caller falls back to settings.
+            if (!isSafePackageName(packageName)) {
+                null
+            } else {
+                listOf("pm", "clear", "--cache-only", packageName)
+            }
+        }
+
+        PM_TRIM_CACHES -> {
+            val desired = args.singleOrNull() ?: return null
+            if (!TRIM_BYTES.matches(desired)) null else listOf("pm", "trim-caches", desired)
         }
 
         else -> null
