@@ -117,7 +117,49 @@ class SourcesViewModel @Inject constructor(
         val pkg = FDroidRepoUri.parsePackagePage(raw)
         if (pkg != null) {
             _uiState.update { it.copy(message = "package_page:${pkg.packageName}") }
+            return
         }
+        val ownerRepo = ObtainiumImport.githubOwnerRepoFromUrl(raw)
+        if (ownerRepo != null) {
+            addGithubSource(ownerRepo)
+            return
+        }
+        _uiState.update { it.copy(message = "share_unrecognized") }
+    }
+
+    fun addGithubSource(ownerRepo: String) {
+        viewModelScope.launch {
+            val message = withContext(ioDispatcher) {
+                val existing = managedAppDao.getAll()
+                    .firstOrNull { it.githubOwnerRepo.equals(ownerRepo, ignoreCase = true) }
+                if (existing != null) {
+                    return@withContext "github_exists:$ownerRepo"
+                }
+                val packageName = provisionalGithubPackageName(ownerRepo)
+                managedAppDao.upsert(
+                    ManagedAppEntity(
+                        packageName = packageName,
+                        sourceId = "github:$ownerRepo",
+                        confidence = "MEDIUM",
+                        pinned = false,
+                        ignoreUpdates = false,
+                        githubOwnerRepo = ownerRepo,
+                        githubAssetRegex = ".*\\.apk$",
+                        includePreReleases = false,
+                    ),
+                )
+                "github_added:$ownerRepo"
+            }
+            _uiState.update { it.copy(message = message) }
+            withContext(ioDispatcher) { appUpdateRepository.refreshUpdates() }
+        }
+    }
+
+    private fun provisionalGithubPackageName(ownerRepo: String): String {
+        val sanitized = ownerRepo.lowercase()
+            .replace('/', '.')
+            .filter { it.isLetterOrDigit() || it == '.' || it == '_' }
+        return "github.$sanitized"
     }
 
     fun onObtainiumTextChange(text: String) {

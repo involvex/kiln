@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -32,7 +33,10 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.model.AppearancePrefs
 import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
+import dev.involvex.kiln.core.model.KilnLanguage
+import dev.involvex.kiln.core.model.KilnThemeStyle
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
@@ -73,6 +77,8 @@ fun SettingsRoute(
         onUnmeteredOnlyChange = viewModel::setUnmeteredOnly,
         onAutoInstallChange = viewModel::setAutoInstallMatching,
         onCooldownDaysChange = viewModel::setUpdateCooldownDays,
+        onThemeChange = viewModel::setTheme,
+        onLanguageChange = viewModel::setLanguage,
         onCheckNow = viewModel::checkNow,
         onConsumeCheckNow = viewModel::consumeCheckNowQueued,
         modifier = modifier,
@@ -88,6 +94,8 @@ fun SettingsScreen(
     onUnmeteredOnlyChange: (Boolean) -> Unit,
     onAutoInstallChange: (Boolean) -> Unit,
     onCooldownDaysChange: (Int) -> Unit,
+    onThemeChange: (KilnThemeStyle) -> Unit,
+    onLanguageChange: (KilnLanguage) -> Unit,
     onCheckNow: () -> Unit,
     onConsumeCheckNow: () -> Unit,
     modifier: Modifier = Modifier,
@@ -118,6 +126,12 @@ fun SettingsScreen(
             ) {
                 Text(stringResource(R.string.settings_debloat))
             }
+            HorizontalDivider()
+            AppearanceSection(
+                prefs = state.appearance,
+                onThemeChange = onThemeChange,
+                onLanguageChange = onLanguageChange,
+            )
             HorizontalDivider()
             Text(
                 text = stringResource(R.string.settings_background_updates_section),
@@ -157,6 +171,62 @@ fun SettingsScreen(
 }
 
 @Composable
+private fun AppearanceSection(prefs: AppearancePrefs, onThemeChange: (KilnThemeStyle) -> Unit, onLanguageChange: (KilnLanguage) -> Unit) {
+    Text(
+        text = stringResource(R.string.settings_appearance_section),
+        style = MaterialTheme.typography.titleMedium,
+    )
+    Text(
+        text = stringResource(R.string.settings_theme),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ThemeChip(KilnThemeStyle.LIGHT, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_light))
+        ThemeChip(KilnThemeStyle.DARK, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_dark))
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ThemeChip(KilnThemeStyle.AMOLED, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_amoled))
+        ThemeChip(KilnThemeStyle.MONOKAI, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_monokai))
+    }
+    Text(
+        text = stringResource(R.string.settings_language),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        LanguageChip(KilnLanguage.SYSTEM, prefs.language, onLanguageChange, stringResource(R.string.settings_language_system))
+        LanguageChip(KilnLanguage.ENGLISH, prefs.language, onLanguageChange, stringResource(R.string.settings_language_english))
+        LanguageChip(KilnLanguage.GERMAN, prefs.language, onLanguageChange, stringResource(R.string.settings_language_german))
+    }
+}
+
+@Composable
+private fun ThemeChip(value: KilnThemeStyle, selected: KilnThemeStyle, onChange: (KilnThemeStyle) -> Unit, label: String) {
+    FilterChip(
+        selected = selected == value,
+        onClick = { onChange(value) },
+        label = { Text(label) },
+    )
+}
+
+@Composable
+private fun LanguageChip(value: KilnLanguage, selected: KilnLanguage, onChange: (KilnLanguage) -> Unit, label: String) {
+    FilterChip(
+        selected = selected == value,
+        onClick = { onChange(value) },
+        label = { Text(label) },
+    )
+}
+
+@Composable
 private fun BackgroundUpdateToggles(
     prefs: BackgroundUpdatePrefs,
     onEnabledChange: (Boolean) -> Unit,
@@ -169,11 +239,11 @@ private fun BackgroundUpdateToggles(
         checked = prefs.enabled,
         onCheckedChange = onEnabledChange,
     )
+    // Always interactive: configure network constraint before enabling checks.
     SettingsSwitchRow(
         title = stringResource(R.string.settings_unmetered_only),
         checked = prefs.unmeteredOnly,
         onCheckedChange = onUnmeteredOnlyChange,
-        enabled = prefs.enabled,
     )
     SettingsSwitchRow(
         title = stringResource(R.string.settings_auto_install_matching),

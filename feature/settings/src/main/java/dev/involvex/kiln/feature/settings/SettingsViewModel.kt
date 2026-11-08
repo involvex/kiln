@@ -3,8 +3,11 @@ package dev.involvex.kiln.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
+import dev.involvex.kiln.core.model.KilnLanguage
+import dev.involvex.kiln.core.model.KilnThemeStyle
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +18,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val preferences: BackgroundUpdatePreferences,
+    private val appearancePreferences: AppearancePreferences,
     private val scheduler: BackgroundUpdateScheduler,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -25,6 +29,11 @@ class SettingsViewModel @Inject constructor(
             preferences.observe().collect { prefs ->
                 _uiState.update { it.copy(backgroundUpdates = prefs) }
                 scheduler.apply(prefs)
+            }
+        }
+        viewModelScope.launch {
+            appearancePreferences.observe().collect { prefs ->
+                _uiState.update { it.copy(appearance = prefs) }
             }
         }
     }
@@ -47,6 +56,14 @@ class SettingsViewModel @Inject constructor(
 
     fun setUpdateCooldownDays(days: Int) {
         viewModelScope.launch { preferences.setUpdateCooldownDays(days) }
+    }
+
+    fun setTheme(theme: KilnThemeStyle) {
+        viewModelScope.launch { appearancePreferences.setTheme(theme) }
+    }
+
+    fun setLanguage(language: KilnLanguage) {
+        viewModelScope.launch { appearancePreferences.setLanguage(language) }
     }
 
     fun checkNow() {
