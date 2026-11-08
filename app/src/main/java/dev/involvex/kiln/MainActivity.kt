@@ -2,9 +2,9 @@ package dev.involvex.kiln
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +15,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.involvex.kiln.core.designsystem.theme.KilnTheme
 import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.AppearancePrefs
+import dev.involvex.kiln.core.model.KilnFontStyle
 import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
 import dev.involvex.kiln.feature.sources.IncomingRepoLinkStore
@@ -22,7 +23,7 @@ import dev.involvex.kiln.ui.KilnApp
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var incomingRepoLinkStore: IncomingRepoLinkStore
 
@@ -38,7 +39,7 @@ class MainActivity : ComponentActivity() {
                 initialValue = AppearancePrefs(),
             )
             ApplyLanguage(appearance.language)
-            KilnRoot(themeStyle = appearance.theme)
+            KilnRoot(themeStyle = appearance.theme, fontStyle = appearance.fontStyle)
         }
     }
 
@@ -70,28 +71,32 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-private fun ApplyLanguage(language: KilnLanguage) {
-    LaunchedEffect(language) {
-        val tags = when (language) {
-            KilnLanguage.SYSTEM -> ""
-            KilnLanguage.ENGLISH -> "en"
-            KilnLanguage.GERMAN -> "de"
-        }
-        val desired = if (tags.isEmpty()) {
-            LocaleListCompat.getEmptyLocaleList()
-        } else {
-            LocaleListCompat.forLanguageTags(tags)
-        }
-        if (AppCompatDelegate.getApplicationLocales() != desired) {
-            AppCompatDelegate.setApplicationLocales(desired)
-        }
+internal fun applyKilnLanguage(language: KilnLanguage) {
+    val tags = when (language) {
+        KilnLanguage.SYSTEM -> ""
+        KilnLanguage.ENGLISH -> "en"
+        KilnLanguage.GERMAN -> "de"
+    }
+    val desired = if (tags.isEmpty()) {
+        LocaleListCompat.getEmptyLocaleList()
+    } else {
+        LocaleListCompat.forLanguageTags(tags)
+    }
+    if (AppCompatDelegate.getApplicationLocales() != desired) {
+        AppCompatDelegate.setApplicationLocales(desired)
     }
 }
 
 @Composable
-private fun KilnRoot(themeStyle: KilnThemeStyle) {
-    KilnTheme(themeStyle = themeStyle) {
+private fun ApplyLanguage(language: KilnLanguage) {
+    LaunchedEffect(language) {
+        applyKilnLanguage(language)
+    }
+}
+
+@Composable
+private fun KilnRoot(themeStyle: KilnThemeStyle, fontStyle: KilnFontStyle) {
+    KilnTheme(themeStyle = themeStyle, fontStyle = fontStyle) {
         KilnApp()
     }
 }

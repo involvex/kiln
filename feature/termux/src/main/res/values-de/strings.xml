@@ -13,6 +13,8 @@
     <string name="termux_check_installed_missing">Nicht installiert: %1$s</string>
     <string name="termux_check_permission_ok">RUN_COMMAND-Berechtigung erteilt</string>
     <string name="termux_check_permission_missing">RUN_COMMAND unter App-Info → Berechtigungen → Zusätzliche Berechtigungen erteilen</string>
+    <string name="termux_request_permission">RUN_COMMAND-Berechtigung anfragen</string>
+    <string name="termux_fork_permission_note">Kiln deklariert nur com.termux.permission.RUN_COMMAND im Manifest. Forks mit anderer Package-ID können Kiln diese Berechtigung meist nicht erteilen.</string>
     <string name="termux_check_allow_external">In Termux allow-external-apps=true in ~/.termux/termux.properties setzen</string>
     <string name="termux_refresh_checks">Checks aktualisieren</string>
     <string name="termux_run_echo">Echo-Smoke-Test starten</string>

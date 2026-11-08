@@ -42,13 +42,10 @@ class DefaultBackgroundUpdateScheduler @Inject constructor(@ApplicationContext p
     }
 
     override fun enqueueImmediate() {
-        // Check-now should run on cellular too so QA is not blocked by Wi‑Fi-only.
-        val constraints = UpdateCheckConstraints.from(
-            BackgroundUpdatePrefs(enabled = true, unmeteredOnly = false),
-        )
+        // Check-now: network-only constraints (expedited forbids batteryNotLow).
         val request = OneTimeWorkRequestBuilder<UpdateCheckWorker>()
             .setInputData(workDataOf(UpdateCheckWorker.KEY_FORCE to true))
-            .setConstraints(constraints)
+            .setConstraints(UpdateCheckConstraints.forExpeditedImmediate(unmeteredOnly = false))
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .addTag(UpdateCheckWorker.WORK_NAME_ONESHOT)
             .build()

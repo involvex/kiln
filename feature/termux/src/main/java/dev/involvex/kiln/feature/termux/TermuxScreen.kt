@@ -1,5 +1,7 @@
 package dev.involvex.kiln.feature.termux
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,7 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.model.TermuxPrefs
 import dev.involvex.kiln.feature.termux.run.TermuxCommandResult
+import dev.involvex.kiln.feature.termux.run.TermuxRunCommandApi
 
 @Composable
 fun TermuxRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: TermuxViewModel = hiltViewModel()) {
@@ -34,6 +38,11 @@ fun TermuxRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: Te
         viewModel.onScreenShown(title)
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) {
+        viewModel.refreshEnvironment()
+    }
     TermuxScreen(
         state = state,
         onBack = onBack,
@@ -41,6 +50,10 @@ fun TermuxRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: Te
         onPackageIdChange = viewModel::setPackageIdDraft,
         onSavePackageId = viewModel::savePackageId,
         onRefresh = viewModel::refreshEnvironment,
+        onRequestPermission = {
+            val packageId = state.prefs.packageId.ifBlank { TermuxPrefs.DEFAULT_TERMUX_PACKAGE_ID }
+            permissionLauncher.launch(TermuxRunCommandApi.permission(packageId))
+        },
         onRunSmokeTest = viewModel::runEchoSmokeTest,
         modifier = modifier,
     )
@@ -54,6 +67,7 @@ fun TermuxScreen(
     onPackageIdChange: (String) -> Unit,
     onSavePackageId: () -> Unit,
     onRefresh: () -> Unit,
+    onRequestPermission: () -> Unit,
     onRunSmokeTest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -140,6 +154,22 @@ fun TermuxScreen(
                     },
                 ),
             )
+            if (!state.permissionGranted) {
+                Button(
+                    onClick = onRequestPermission,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.termux_request_permission))
+                }
+            }
+            val packageId = state.prefs.packageId.ifBlank { TermuxPrefs.DEFAULT_TERMUX_PACKAGE_ID }
+            if (packageId != TermuxPrefs.DEFAULT_TERMUX_PACKAGE_ID) {
+                Text(
+                    text = stringResource(R.string.termux_fork_permission_note),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
             Text(
                 text = stringResource(R.string.termux_check_allow_external),
                 style = MaterialTheme.typography.bodyMedium,

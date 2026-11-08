@@ -1,26 +1,27 @@
 package dev.involvex.kiln.feature.sources.updatecheck
 
 import androidx.work.NetworkType
-import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class UpdateCheckConstraintsTest {
     @Test
-    fun unmetered_only_uses_unmetered_network() {
-        val constraints = UpdateCheckConstraints.from(
-            BackgroundUpdatePrefs(enabled = true, unmeteredOnly = true),
+    fun periodic_requires_battery_not_low() {
+        val prefs = dev.involvex.kiln.core.model.BackgroundUpdatePrefs(
+            enabled = true,
+            unmeteredOnly = false,
         )
-        assertEquals(NetworkType.UNMETERED, constraints.requiredNetworkType)
-        assertTrue(constraints.requiresBatteryNotLow())
+        val c = UpdateCheckConstraints.from(prefs)
+        assertTrue(c.requiresBatteryNotLow())
+        assertEquals(NetworkType.CONNECTED, c.requiredNetworkType)
     }
 
     @Test
-    fun unmetered_off_uses_connected() {
-        val constraints = UpdateCheckConstraints.from(
-            BackgroundUpdatePrefs(enabled = true, unmeteredOnly = false),
-        )
-        assertEquals(NetworkType.CONNECTED, constraints.requiredNetworkType)
+    fun expedited_immediate_has_no_battery_constraint() {
+        val c = UpdateCheckConstraints.forExpeditedImmediate(unmeteredOnly = false)
+        assertFalse(c.requiresBatteryNotLow())
+        assertEquals(NetworkType.CONNECTED, c.requiredNetworkType)
     }
 }
