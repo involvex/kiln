@@ -67,9 +67,20 @@ Feature modules depend only on `:core:*`. Cross-feature binds live in `:app`. Na
 | [docs/reference.md](./docs/reference.md) | Reference apps (read-only; no GPL copy) |
 | [CHANGELOG.md](./CHANGELOG.md) | User-facing changes |
 | [docs/PRIVACY.md](./docs/PRIVACY.md) | Privacy policy |
+| [docs/SUPPORTING.md](./docs/SUPPORTING.md) | Supporting the project (Sponsors, Coffee, PayPal) |
 | [docs/RELEASE.md](./docs/RELEASE.md) | Tagging, signing, F-Droid |
 | [GitHub Pages](https://involvex.github.io/kiln/) | Published docs site |
 | [fastlane/metadata/android/](./fastlane/metadata/android/) | Store listing copy (en/de) |
+
+## Supporting this project
+
+If Kiln is useful, you can sponsor or tip via [.github/FUNDING.yml](./.github/FUNDING.yml):
+
+- [GitHub Sponsors](https://github.com/sponsors/involvex) / [Sponsor this repo](https://github.com/involvex/kiln?sponsor=1)
+- [Buy Me a Coffee](https://buymeacoffee.com/involvex)
+- [PayPal](https://paypal.me/involvex)
+
+Details: [docs/SUPPORTING.md](./docs/SUPPORTING.md).
 
 ## Toolchain (M4)
 
