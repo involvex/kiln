@@ -1,29 +1,31 @@
 # Reference Apps
 
-Lokale Checkouts zum Lesen von Verhalten, UX und API-Hinweisen.
+Public projects used only to observe behaviour, UX, and API hints.
 
-**Regel:** Kiln ist **Apache-2.0**. Ideen und Beobachtungen sind erlaubt. **Kein** Code, keine Kommentare, keine String-Tabellen und keine Dateistrukturen aus GPL-Projekten in Kiln übernehmen. Apache-2.0-Samples (z. B. Shizuku) erst ab dem Meilenstein, der sie braucht, und nur mit Attribution / geprüfter Dateilizenz.
+**Rule:** Kiln is **Apache-2.0**. Ideas and observations are allowed. **Do not** copy code, comments, string tables, or layouts from GPL projects into Kiln. Apache-2.0 samples (e.g. Shizuku) only when a milestone needs them, with attribution / checked file licence.
 
-## Shizuku Plus
+Keep reference checkouts **outside** this repository. Do not commit machine-local paths.
 
-- Pfad: `I:\dev\ShizukuPlus`
-- Upstream: ggf. Fork von Shizuku; vor M4 API-Unterschiede zu Standard-Shizuku prüfen
-- SPDX: **Apache-2.0** (`LICENSE` im Checkout)
+## Shizuku / Shizuku Plus
 
-## Termux App
+- Upstream: [RikkaApps/Shizuku](https://github.com/RikkaApps/Shizuku) (and forks branded “Shizuku Plus”)
+- SPDX: **Apache-2.0** — confirm `LICENSE` in the checkout you use
+- Before privileged features: compare API differences vs stock Shizuku
 
-- Pfad: `I:\dev\termux-app` (InVxTermux-Fork)
-- Upstream-Basis: `termux/termux-app`
-- SPDX: **GPL-3.0-only** (laut `LICENSE.md`; Teilbibliotheken können Ausnahmen haben — vor Übernahme prüfen). Für Kiln: **nur lesen**.
+## Termux
+
+- Upstream: [termux/termux-app](https://github.com/termux/termux-app)
+- SPDX: **GPL-3.0-only** (sub-libraries may differ — check before any reuse)
+- For Kiln: **read behaviour only** (e.g. `RUN_COMMAND`); never copy Termux source
 
 ## App Manager
 
-- Pfad: `I:\dev\AppManager`
-- Upstream: <https://github.com/MuntashirAkon/AppManager>
-- SPDX: **GPL-3.0-or-later** (`COPYING`). Für Kiln: **nur lesen**.
+- Upstream: [MuntashirAkon/AppManager](https://github.com/MuntashirAkon/AppManager)
+- SPDX: **GPL-3.0-or-later**
+- For Kiln: **read behaviour only**
 
-## Weitere öffentliche Referenzen (keine lokalen Checkouts)
+## Other public references
 
-- APK Explorer & Editor: <https://github.com/apk-editor/APK-Explorer-Editor>
-- SmartPack Package Manager: <https://github.com/SmartPack/PackageManager/>
-- Vor Nutzung von Code/Assets jeweilige Lizenz prüfen.
+- [APK Explorer & Editor](https://github.com/apk-editor/APK-Explorer-Editor)
+- [SmartPack Package Manager](https://github.com/SmartPack/PackageManager/)
+- Check each project’s licence before using any code or assets
