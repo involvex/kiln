@@ -33,7 +33,8 @@ class IndexV2ParserTest {
                   "metadata": {
                     "name": {"en-US": "Example"},
                     "summary": {"en-US": "Demo"},
-                    "sourceCode": "https://github.com/example/app"
+                    "sourceCode": "https://github.com/example/app",
+                    "categories": ["Internet", "Security"]
                   },
                   "versions": {
                     "deadbeef": {
@@ -54,6 +55,7 @@ class IndexV2ParserTest {
         val pkg = (result as Result.Success).value.single()
         assertEquals("com.example.app", pkg.packageName)
         assertEquals("Example", pkg.name)
+        assertEquals(listOf("Internet", "Security"), pkg.categories)
         assertEquals(123L, pkg.suggestedVersionCode)
         assertEquals("AA:BB", pkg.releases.single().signerSha256.single())
     }

@@ -31,3 +31,6 @@ data object DebloatKey
 
 @Serializable
 data object TermuxKey
+
+@Serializable
+data object DiscoveryKey

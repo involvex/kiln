@@ -32,6 +32,7 @@ interface RepoDao {
 }
 
 @Dao
+@Suppress("TooManyFunctions") // Room index queries + catalog search/upsert stay on one DAO.
 interface IndexDao {
     @Query("DELETE FROM indexed_packages WHERE repoId = :repoId")
     suspend fun clearPackages(repoId: String)
@@ -58,6 +59,51 @@ interface IndexDao {
 
     @Query("SELECT * FROM indexed_packages")
     suspend fun allPackages(): List<IndexedPackageEntity>
+
+    @Query("SELECT COUNT(*) FROM indexed_packages")
+    suspend fun packageCount(): Int
+
+    @Query("SELECT DISTINCT categoriesCsv FROM indexed_packages WHERE categoriesCsv != ''")
+    suspend fun categoryCsvRows(): List<String>
+
+    @Query(
+        """
+        SELECT * FROM indexed_packages
+        WHERE (:query = '' OR name LIKE '%' || :query || '%'
+            OR packageName LIKE '%' || :query || '%'
+            OR IFNULL(summary, '') LIKE '%' || :query || '%')
+          AND (:category = '' OR categoriesCsv LIKE '%' || :category || '%')
+        ORDER BY name COLLATE NOCASE ASC
+        LIMIT :limit
+        """,
+    )
+    suspend fun searchPackages(query: String, category: String, limit: Int): List<IndexedPackageEntity>
+
+    @Query(
+        """
+        DELETE FROM indexed_packages
+        WHERE repoId = :repoId AND packageName IN (:packageNames)
+        """,
+    )
+    suspend fun deletePackages(repoId: String, packageNames: List<String>)
+
+    @Query(
+        """
+        DELETE FROM indexed_releases
+        WHERE repoId = :repoId AND packageName IN (:packageNames)
+        """,
+    )
+    suspend fun deleteReleases(repoId: String, packageNames: List<String>)
+
+    @Transaction
+    suspend fun upsertPackagesForRepo(repoId: String, packages: List<IndexedPackageEntity>, releases: List<IndexedReleaseEntity>) {
+        if (packages.isEmpty()) return
+        val names = packages.map { it.packageName }
+        deletePackages(repoId, names)
+        deleteReleases(repoId, names)
+        insertPackages(packages)
+        if (releases.isNotEmpty()) insertReleases(releases)
+    }
 
     @Query(
         """

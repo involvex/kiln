@@ -24,6 +24,7 @@ class FDroidRepoSync @Inject constructor(
     private val managedAppDao: ManagedAppDao,
     private val installedAppsReader: InstalledAppsReader,
 ) {
+    /** Updates index rows for installed/managed packages without wiping the catalog. */
     suspend fun sync(repo: RepoEntity): Result<Unit> {
         val base = repo.address.trimEnd('/')
         val wanted = wantedPackageNames()
@@ -37,15 +38,28 @@ class FDroidRepoSync @Inject constructor(
                 verified
             }
             .flatMap { entryJson -> IndexV2Parser.parseEntryPointer(entryJson) }
-            .flatMap { pointer -> loadAndParseIndex(base, pointer, wanted) }
+            .flatMap { pointer -> loadAndParseWanted(base, pointer, wanted) }
         return when (parsedResult) {
             is Result.Failure -> parsedResult
 
             is Result.Success -> {
-                persistIndex(repo, parsedResult.value)
+                persistUpsert(repo, parsedResult.value)
                 Result.success(Unit)
             }
         }
+    }
+
+    /**
+     * Full catalog sync for Discovery: streams every package, keeps only the newest release,
+     * and replaces this repo's indexed rows.
+     */
+    suspend fun syncCatalog(repo: RepoEntity): Result<Int> {
+        val base = repo.address.trimEnd('/')
+        Timber.i("Catalog sync for repo %s", repo.id)
+        return http.getBytes("$base/entry.jar")
+            .flatMap { entryBytes -> EntryJarVerifier.verify(entryBytes, repo.fingerprint) }
+            .flatMap { entryJson -> IndexV2Parser.parseEntryPointer(entryJson) }
+            .flatMap { pointer -> loadAndPersistCatalog(base, pointer, repo) }
     }
 
     private suspend fun wantedPackageNames(): Set<String> {
@@ -54,20 +68,53 @@ class FDroidRepoSync @Inject constructor(
         return installed.apply { addAll(managed) }
     }
 
-    private suspend fun loadAndParseIndex(
+    private suspend fun loadAndParseWanted(
         base: String,
         pointer: EntryIndexPointer,
         wanted: Set<String>,
     ): Result<List<ParsedIndexPackage>> {
-        // entry.json uses names like "/index-v2.json"; join without duplicating slashes.
         val indexPath = pointer.name.trimStart('/')
         val tmp = Files.createTempFile("kiln-index-", ".json").toFile()
         return try {
             http.downloadToFile("$base/$indexPath", tmp).flatMap { file ->
                 verifyIndexShaFile(file, pointer.sha256).flatMap {
-                    // Stream + filter: never readText() the full ~70MB index into heap.
                     file.inputStream().use { input ->
                         IndexV2StreamParser.parseWantedPackages(input, wanted)
+                    }
+                }
+            }
+        } catch (error: OutOfMemoryError) {
+            Result.failure("index_oom", error)
+        } finally {
+            tmp.delete()
+        }
+    }
+
+    private suspend fun loadAndPersistCatalog(base: String, pointer: EntryIndexPointer, repo: RepoEntity): Result<Int> {
+        val indexPath = pointer.name.trimStart('/')
+        val tmp = Files.createTempFile("kiln-catalog-", ".json").toFile()
+        return try {
+            http.downloadToFile("$base/$indexPath", tmp).flatMap { file ->
+                verifyIndexShaFile(file, pointer.sha256).flatMap {
+                    val packages = ArrayList<IndexedPackageEntity>(4_096)
+                    val releases = ArrayList<IndexedReleaseEntity>(4_096)
+                    val parseResult = file.inputStream().use { input ->
+                        IndexV2StreamParser.parseAllPackages(input) { pkg ->
+                            packages += toPackageEntity(repo.id, pkg)
+                            pkg.releases.firstOrNull()?.let { rel ->
+                                releases += toReleaseEntity(repo.id, pkg.packageName, rel)
+                            }
+                        }
+                    }
+                    when (parseResult) {
+                        is Result.Failure -> parseResult
+
+                        is Result.Success -> {
+                            indexDao.replaceRepoIndex(repo.id, packages, releases)
+                            repoDao.updateLastSynced(repo.id, System.currentTimeMillis())
+                            Timber.i("Catalog sync repo %s: %d packages", repo.id, packages.size)
+                            Result.success(packages.size)
+                        }
                     }
                 }
             }
@@ -91,37 +138,38 @@ class FDroidRepoSync @Inject constructor(
         }
     }
 
-    private suspend fun persistIndex(repo: RepoEntity, parsed: List<ParsedIndexPackage>) {
-        val packages = parsed.map { pkg ->
-            IndexedPackageEntity(
-                packageName = pkg.packageName,
-                repoId = repo.id,
-                name = pkg.name,
-                summary = pkg.summary,
-                sourceCodeUrl = pkg.sourceCodeUrl,
-                signerSha256Csv = pkg.signerSha256.joinToString(","),
-                suggestedVersionCode = pkg.suggestedVersionCode,
-                suggestedVersionName = pkg.suggestedVersionName,
-            )
-        }
+    private suspend fun persistUpsert(repo: RepoEntity, parsed: List<ParsedIndexPackage>) {
+        val packages = parsed.map { toPackageEntity(repo.id, it) }
         val releases = parsed.flatMap { pkg ->
-            pkg.releases.map { rel ->
-                IndexedReleaseEntity(
-                    packageName = pkg.packageName,
-                    repoId = repo.id,
-                    versionName = rel.versionName,
-                    versionCode = rel.versionCode,
-                    apkName = rel.apkName,
-                    apkSha256 = rel.apkSha256,
-                    sizeBytes = rel.sizeBytes,
-                    signerSha256Csv = rel.signerSha256.joinToString(","),
-                )
-            }
+            pkg.releases.map { rel -> toReleaseEntity(repo.id, pkg.packageName, rel) }
         }
-        indexDao.replaceRepoIndex(repo.id, packages, releases)
+        indexDao.upsertPackagesForRepo(repo.id, packages, releases)
         repoDao.updateLastSynced(repo.id, System.currentTimeMillis())
-        Timber.i("Synced repo %s: %d packages", repo.id, packages.size)
+        Timber.i("Synced repo %s: upserted %d packages", repo.id, packages.size)
     }
+
+    private fun toPackageEntity(repoId: String, pkg: ParsedIndexPackage) = IndexedPackageEntity(
+        packageName = pkg.packageName,
+        repoId = repoId,
+        name = pkg.name,
+        summary = pkg.summary,
+        sourceCodeUrl = pkg.sourceCodeUrl,
+        categoriesCsv = pkg.categories.joinToString(","),
+        signerSha256Csv = pkg.signerSha256.joinToString(","),
+        suggestedVersionCode = pkg.suggestedVersionCode,
+        suggestedVersionName = pkg.suggestedVersionName,
+    )
+
+    private fun toReleaseEntity(repoId: String, packageName: String, rel: ParsedIndexRelease) = IndexedReleaseEntity(
+        packageName = packageName,
+        repoId = repoId,
+        versionName = rel.versionName,
+        versionCode = rel.versionCode,
+        apkName = rel.apkName,
+        apkSha256 = rel.apkSha256,
+        sizeBytes = rel.sizeBytes,
+        signerSha256Csv = rel.signerSha256.joinToString(","),
+    )
 
     private fun sha256FileHex(file: java.io.File): String {
         val digest = MessageDigest.getInstance("SHA-256")

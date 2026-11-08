@@ -27,6 +27,8 @@ data class IndexedPackageEntity(
     val name: String,
     val summary: String?,
     val sourceCodeUrl: String?,
+    /** Comma-separated F-Droid categories; empty when unknown. */
+    val categoriesCsv: String = "",
     val signerSha256Csv: String,
     val suggestedVersionCode: Long?,
     val suggestedVersionName: String?,
