@@ -1,0 +1,87 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "LICENSE"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build static site
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp docs/index.md docs/ROADMAP.md docs/PRIVACY.md docs/RELEASE.md docs/reference.md _site/
+          cp README.md CHANGELOG.md LICENSE _site/
+          # Landing page: GitHub-flavoured markdown via CDN (no Jekyll gems)
+          cat > _site/index.html <<'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>Kiln</title>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5/github-markdown.min.css" />
+            <style>
+              body { margin: 0; background: #0d1117; }
+              .markdown-body { box-sizing: border-box; max-width: 880px; margin: 0 auto; padding: 2rem 1.25rem; }
+              nav { max-width: 880px; margin: 0 auto; padding: 1rem 1.25rem 0; color: #c9d1d9; font-family: system-ui, sans-serif; }
+              nav a { color: #58a6ff; margin-right: 1rem; }
+            </style>
+          </head>
+          <body>
+            <nav>
+              <a href="./">Home</a>
+              <a href="./ROADMAP.md">Roadmap</a>
+              <a href="./PRIVACY.md">Privacy</a>
+              <a href="./RELEASE.md">Release</a>
+              <a href="./CHANGELOG.md">Changelog</a>
+              <a href="https://github.com/involvex/kiln">GitHub</a>
+              <a href="https://github.com/involvex/kiln/releases">Releases</a>
+            </nav>
+            <article id="content" class="markdown-body"></article>
+            <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+            <script>
+              fetch('./index.md').then(r => r.text()).then(t => {
+                document.getElementById('content').innerHTML = marked.parse(t);
+              });
+            </script>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

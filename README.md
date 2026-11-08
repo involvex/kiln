@@ -68,6 +68,7 @@ Feature modules depend only on `:core:*`. Cross-feature binds live in `:app`. Na
 | [CHANGELOG.md](./CHANGELOG.md) | User-facing changes |
 | [docs/PRIVACY.md](./docs/PRIVACY.md) | Privacy policy |
 | [docs/RELEASE.md](./docs/RELEASE.md) | Tagging, signing, F-Droid |
+| [GitHub Pages](https://involvex.github.io/kiln/) | Published docs site |
 | [fastlane/metadata/android/](./fastlane/metadata/android/) | Store listing copy (en/de) |
 
 ## Toolchain (M4)

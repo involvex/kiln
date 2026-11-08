@@ -12,6 +12,8 @@ GitHub release. Keep [CHANGELOG.md](../CHANGELOG.md) in sync.
 2. Tag: `git tag -a v0.1.0 -m "Kiln 0.1.0" && git push origin v0.1.0`
 3. Workflow [`.github/workflows/release.yml`](../.github/workflows/release.yml)
    builds a release APK and attaches it to the GitHub Release.
+4. Docs site (optional): after `docs.yml` runs, enable **Settings → Pages → GitHub Actions**.
+   Site URL: `https://involvex.github.io/kiln/`
 
 ### Signing secrets (optional but recommended)
 

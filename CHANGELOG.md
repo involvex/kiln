@@ -7,11 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Release workflow: do not reference `secrets` in `if:` (GitHub Actions validation)
+- CI: explicit least-privilege `permissions` for CodeQL
+
 ### Added
 
-- GitHub browse in Discover (M12): F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue
-- App Discovery (M11): Sources → Discover; full F-Droid catalog sync with categories; search + install queue
-- Release polish (M10): About section, privacy policy, F-Droid fastlane metadata, tagged release workflow
+- GitHub Pages docs site (Actions → `involvex.github.io/kiln`)
 
 ## [0.1.0] — 2026-11-08
 
@@ -27,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Background update checks (WorkManager) with cooldown / major-bump gate
 - Settings: theme, language, Wi‑Fi-only updates, installer preference, debug log
 - Optional Termux `RUN_COMMAND` integration (feature-flagged)
+- App Discovery: Sources → Discover; F-Droid catalog sync with categories; search + install queue
+- GitHub browse in Discover: owner/repo lookup, saved sources, install queue
+- Release polish: About, privacy policy, F-Droid fastlane metadata, tagged release workflow
 
 ### Security
 
