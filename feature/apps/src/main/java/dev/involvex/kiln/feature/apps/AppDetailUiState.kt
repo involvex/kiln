@@ -4,6 +4,7 @@ import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.InstallJobState
 import dev.involvex.kiln.core.model.InstalledAppDetail
+import dev.involvex.kiln.core.model.RollbackApkEntry
 
 data class AppDetailUiState(
     val isLoading: Boolean = true,
@@ -17,6 +18,10 @@ data class AppDetailUiState(
     val installJob: InstallJobState? = null,
     /** null = not managed yet; true = skipping update checks; false = checking updates */
     val ignoreUpdates: Boolean? = null,
+    val rollbackEntries: List<RollbackApkEntry> = emptyList(),
+    val canSilentDowngrade: Boolean = false,
+    val pendingRollback: RollbackApkEntry? = null,
+    val rollbackInProgress: Boolean = false,
 )
 
 sealed interface AppDetailEvent {
@@ -31,4 +36,7 @@ sealed interface AppDetailEvent {
     data object InstallUpdate : AppDetailEvent
     data object OpenUnknownSourcesSettings : AppDetailEvent
     data class IgnoreUpdatesChanged(val checkForUpdates: Boolean) : AppDetailEvent
+    data class RequestRollback(val entry: RollbackApkEntry) : AppDetailEvent
+    data object ConfirmRollback : AppDetailEvent
+    data object DismissRollback : AppDetailEvent
 }

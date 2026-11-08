@@ -23,6 +23,15 @@ class ShellAllowlistTest {
     }
 
     @Test
+    fun pm_install_downgrade_includes_d_flag() {
+        val path = "/data/user/0/dev.involvex.kiln/files/apk_rollback/com.example/10.apk"
+        assertEquals(
+            listOf("pm", "install", "-r", "-d", "--user", "0", path),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL_DOWNGRADE, listOf(path)),
+        )
+    }
+
+    @Test
     fun pm_install_rejects_injection() {
         assertNull(
             ShellAllowlist.buildArgv(

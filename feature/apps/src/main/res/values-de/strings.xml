@@ -79,4 +79,15 @@
     <string name="feature_apps_uninstall_disabled">System-Apps können hier nicht deinstalliert werden. Später Debloat nutzen.</string>
     <string name="feature_apps_size_unknown">Größe unbekannt</string>
     <string name="feature_apps_back">Zurück</string>
+    <string name="feature_apps_rollback_section">Rollback</string>
+    <string name="feature_apps_rollback_hint">Zwischengespeicherte APKs aus Kiln-Installationen. Downgrade braucht Shizuku/Root.</string>
+    <string name="feature_apps_rollback_action">%1$s (%2$d) installieren</string>
+    <string name="feature_apps_rollback_confirm_title">App zurücksetzen?</string>
+    <string name="feature_apps_rollback_confirm_body">Version %1$s (%2$d) über die aktuelle Installation installieren? App-Daten bleiben nach Möglichkeit erhalten.</string>
+    <string name="feature_apps_rollback_confirm">Downgrade</string>
+    <string name="feature_apps_rollback_cancel">Abbrechen</string>
+    <string name="feature_apps_rollback_ok">Downgrade fertig</string>
+    <string name="feature_apps_rollback_needs_privilege">Downgrade braucht Shizuku oder Root (stille Installation).</string>
+    <string name="feature_apps_rollback_empty">Noch keine älteren APKs im Cache.</string>
+    <string name="feature_apps_rollback_busy">Downgrade läuft…</string>
 </resources>

@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +33,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
+import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
 @Composable
@@ -70,6 +72,7 @@ fun SettingsRoute(
         },
         onUnmeteredOnlyChange = viewModel::setUnmeteredOnly,
         onAutoInstallChange = viewModel::setAutoInstallMatching,
+        onCooldownDaysChange = viewModel::setUpdateCooldownDays,
         onCheckNow = viewModel::checkNow,
         onConsumeCheckNow = viewModel::consumeCheckNowQueued,
         modifier = modifier,
@@ -84,6 +87,7 @@ fun SettingsScreen(
     onBackgroundEnabledChange: (Boolean) -> Unit,
     onUnmeteredOnlyChange: (Boolean) -> Unit,
     onAutoInstallChange: (Boolean) -> Unit,
+    onCooldownDaysChange: (Int) -> Unit,
     onCheckNow: () -> Unit,
     onConsumeCheckNow: () -> Unit,
     modifier: Modifier = Modifier,
@@ -129,6 +133,7 @@ fun SettingsScreen(
                 onEnabledChange = onBackgroundEnabledChange,
                 onUnmeteredOnlyChange = onUnmeteredOnlyChange,
                 onAutoInstallChange = onAutoInstallChange,
+                onCooldownDaysChange = onCooldownDaysChange,
             )
             OutlinedButton(
                 onClick = onCheckNow,
@@ -157,6 +162,7 @@ private fun BackgroundUpdateToggles(
     onEnabledChange: (Boolean) -> Unit,
     onUnmeteredOnlyChange: (Boolean) -> Unit,
     onAutoInstallChange: (Boolean) -> Unit,
+    onCooldownDaysChange: (Int) -> Unit,
 ) {
     SettingsSwitchRow(
         title = stringResource(R.string.settings_background_enabled),
@@ -177,6 +183,28 @@ private fun BackgroundUpdateToggles(
     )
     Text(
         text = stringResource(R.string.settings_auto_install_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Text(
+        text = stringResource(R.string.settings_update_cooldown),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    Text(
+        text = stringResource(R.string.settings_update_cooldown_value, prefs.updateCooldownDays),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Slider(
+        value = prefs.updateCooldownDays.toFloat(),
+        onValueChange = { onCooldownDaysChange(it.roundToInt()) },
+        valueRange = 0f..14f,
+        steps = 13,
+        enabled = prefs.enabled && prefs.autoInstallMatching,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Text(
+        text = stringResource(R.string.settings_update_cooldown_hint),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )

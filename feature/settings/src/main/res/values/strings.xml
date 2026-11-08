@@ -9,7 +9,10 @@
     <string name="settings_background_enabled">Check for updates in the background</string>
     <string name="settings_unmetered_only">Wi‑Fi / unmetered only</string>
     <string name="settings_auto_install_matching">Auto-install signature-matching updates</string>
-    <string name="settings_auto_install_hint">WARNUNG / signature-mismatch updates are never installed automatically.</string>
+    <string name="settings_auto_install_hint">WARNUNG / signature-mismatch updates are never installed automatically. Major version bumps always need a manual tap.</string>
+    <string name="settings_update_cooldown">Auto-install cooldown (days)</string>
+    <string name="settings_update_cooldown_hint">Wait this many days after Kiln first sees an update before auto-install. 0 = off.</string>
+    <string name="settings_update_cooldown_value">%1$d days</string>
     <string name="settings_check_now">Check now</string>
     <string name="settings_check_now_queued">Update check queued…</string>
 </resources>

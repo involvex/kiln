@@ -8,8 +8,12 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ApkExportFormat
+import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.InstallQueue
+import dev.involvex.kiln.core.model.PrivilegeCapability
+import dev.involvex.kiln.core.model.PrivilegedExecutor
+import dev.involvex.kiln.core.model.RollbackApkEntry
 import dev.involvex.kiln.feature.apps.data.InstalledAppsRepository
 import dev.involvex.kiln.feature.apps.data.InstallerLabels
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +28,8 @@ class AppDetailViewModel @AssistedInject constructor(
     private val repository: InstalledAppsRepository,
     private val appUpdateRepository: AppUpdateRepository,
     private val installQueue: InstallQueue,
+    private val rollbackCache: ApkRollbackCache,
+    private val privilegedExecutor: PrivilegedExecutor,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppDetailUiState())
     val uiState: StateFlow<AppDetailUiState> = _uiState.asStateFlow()
@@ -45,6 +51,20 @@ class AppDetailViewModel @AssistedInject constructor(
                 _uiState.update { it.copy(ignoreUpdates = ignore) }
             }
         }
+        viewModelScope.launch {
+            rollbackCache.observe(packageName).collect { entries ->
+                val installedCode = _uiState.value.detail?.versionCode
+                val older = entries.filter { installedCode == null || it.versionCode < installedCode }
+                _uiState.update { it.copy(rollbackEntries = older) }
+            }
+        }
+        viewModelScope.launch {
+            privilegedExecutor.observeStatus().collect { status ->
+                _uiState.update {
+                    it.copy(canSilentDowngrade = PrivilegeCapability.SILENT_INSTALL in status.capabilities)
+                }
+            }
+        }
     }
 
     fun refresh() {
@@ -53,12 +73,15 @@ class AppDetailViewModel @AssistedInject constructor(
             when (val result = repository.detail(packageName)) {
                 is Result.Success -> {
                     val detail = result.value
+                    val rollback = rollbackCache.list(packageName)
+                        .filter { it.versionCode < detail.versionCode }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             detail = detail,
                             installerLabel = InstallerLabels.displayName(detail.installerPackage),
                             errorMessage = null,
+                            rollbackEntries = rollback,
                         )
                     }
                 }
@@ -83,30 +106,19 @@ class AppDetailViewModel @AssistedInject constructor(
 
             AppDetailEvent.DismissExport -> _uiState.update { it.copy(exportDialog = null) }
 
-            is AppDetailEvent.FormatSelected -> {
-                _uiState.update { state ->
-                    state.copy(exportDialog = state.exportDialog?.copy(format = event.format))
-                }
-            }
+            is AppDetailEvent.FormatSelected -> applyExportFormat(event.format)
 
             AppDetailEvent.ClearSnackbar -> _uiState.update { it.copy(snackbarMessage = null) }
 
             AppDetailEvent.InstallUpdate -> enqueueUpdate()
 
-            is AppDetailEvent.IgnoreUpdatesChanged -> {
-                // Switch ON = check for updates = ignoreUpdates false
-                viewModelScope.launch {
-                    when (
-                        val result = appUpdateRepository.setIgnoreUpdates(
-                            packageName,
-                            ignoreUpdates = !event.checkForUpdates,
-                        )
-                    ) {
-                        is Result.Success -> Unit
-                        is Result.Failure -> showMessage(result.message)
-                    }
-                }
-            }
+            is AppDetailEvent.IgnoreUpdatesChanged -> setCheckForUpdates(event.checkForUpdates)
+
+            is AppDetailEvent.RequestRollback -> requestRollback(event.entry)
+
+            AppDetailEvent.DismissRollback -> _uiState.update { it.copy(pendingRollback = null) }
+
+            AppDetailEvent.ConfirmRollback -> confirmRollback()
 
             AppDetailEvent.OpenUnknownSourcesSettings,
             AppDetailEvent.Launch,
@@ -116,12 +128,57 @@ class AppDetailViewModel @AssistedInject constructor(
         }
     }
 
+    private fun applyExportFormat(format: ApkExportFormat) {
+        _uiState.update { state ->
+            state.copy(exportDialog = state.exportDialog?.copy(format = format))
+        }
+    }
+
+    private fun setCheckForUpdates(checkForUpdates: Boolean) {
+        // Switch ON = check for updates = ignoreUpdates false
+        viewModelScope.launch {
+            when (
+                val result = appUpdateRepository.setIgnoreUpdates(
+                    packageName,
+                    ignoreUpdates = !checkForUpdates,
+                )
+            ) {
+                is Result.Success -> Unit
+                is Result.Failure -> showMessage(result.message)
+            }
+        }
+    }
+
+    private fun requestRollback(entry: RollbackApkEntry) {
+        if (!_uiState.value.canSilentDowngrade) {
+            showMessage("rollback_needs_privilege")
+            return
+        }
+        _uiState.update { it.copy(pendingRollback = entry) }
+    }
+
     fun setExportInProgress(inProgress: Boolean) {
         _uiState.update { it.copy(exportInProgress = inProgress) }
     }
 
     fun showMessage(message: String) {
         _uiState.update { it.copy(snackbarMessage = message) }
+    }
+
+    private fun confirmRollback() {
+        val entry = _uiState.value.pendingRollback ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(rollbackInProgress = true, pendingRollback = null) }
+            when (val result = privilegedExecutor.installApk(entry.apkAbsolutePath, allowDowngrade = true)) {
+                is Result.Success -> {
+                    showMessage("rollback_ok")
+                    refresh()
+                }
+
+                is Result.Failure -> showMessage(result.message)
+            }
+            _uiState.update { it.copy(rollbackInProgress = false) }
+        }
     }
 
     private fun enqueueUpdate() {

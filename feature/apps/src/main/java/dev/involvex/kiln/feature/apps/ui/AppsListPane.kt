@@ -167,11 +167,12 @@ private fun formatUpdateCheckMessage(code: String): String = when {
 
     code.startsWith("updates:") -> {
         val parts = code.split(':')
+        // Resource uses %d — Formatter rejects String args (IllegalFormatConversionException).
         stringResource(
             R.string.feature_apps_update_check_ok,
-            parts.getOrNull(1) ?: "0",
-            parts.getOrNull(2) ?: "0",
-            parts.getOrNull(3) ?: "0",
+            parts.getOrNull(1)?.toIntOrNull() ?: 0,
+            parts.getOrNull(2)?.toIntOrNull() ?: 0,
+            parts.getOrNull(3)?.toIntOrNull() ?: 0,
         )
     }
 

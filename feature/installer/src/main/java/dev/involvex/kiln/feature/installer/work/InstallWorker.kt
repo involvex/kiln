@@ -15,6 +15,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dev.involvex.kiln.core.common.Result as KilnResult
 import dev.involvex.kiln.core.database.InstallJobDao
+import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.InstallJobStatus
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
@@ -36,6 +37,7 @@ class InstallWorker @AssistedInject constructor(
     private val http: KilnHttpClient,
     private val sessionRunner: PackageInstallerSessionRunner,
     private val privilegedExecutor: PrivilegedExecutor,
+    private val rollbackCache: ApkRollbackCache,
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
         val jobId = inputData.getString(KEY_JOB_ID) ?: return Result.failure()
@@ -99,6 +101,12 @@ class InstallWorker @AssistedInject constructor(
 
                 is KilnResult.Success -> {
                     mark(jobId, InstallJobStatus.SUCCEEDED, 100, null, apkFile.absolutePath)
+                    rollbackCache.rememberSuccessfulInstall(
+                        packageName = job.packageName,
+                        versionName = job.versionName,
+                        versionCode = job.versionCode,
+                        apkAbsolutePath = apkFile.absolutePath,
+                    )
                     Result.success()
                 }
             }

@@ -111,8 +111,15 @@ fun AppDetailScreen(
         }
     }
 
+    val rollbackOk = stringResource(R.string.feature_apps_rollback_ok)
+    val rollbackNeedsPrivilege = stringResource(R.string.feature_apps_rollback_needs_privilege)
     LaunchedEffect(state.snackbarMessage) {
-        val message = state.snackbarMessage ?: return@LaunchedEffect
+        val raw = state.snackbarMessage ?: return@LaunchedEffect
+        val message = when (raw) {
+            "rollback_ok" -> rollbackOk
+            "rollback_needs_privilege" -> rollbackNeedsPrivilege
+            else -> raw
+        }
         snackbarHostState.showSnackbar(message)
         onEvent(AppDetailEvent.ClearSnackbar)
     }
@@ -174,10 +181,40 @@ fun AppDetailScreen(
                         }
                         context.startActivity(intent)
                     },
+                    rollbackEntries = state.rollbackEntries,
+                    canSilentDowngrade = state.canSilentDowngrade,
+                    rollbackInProgress = state.rollbackInProgress,
+                    onRequestRollback = { onEvent(AppDetailEvent.RequestRollback(it)) },
                     modifier = Modifier.padding(padding),
                 )
             }
         }
+    }
+
+    state.pendingRollback?.let { pending ->
+        AlertDialog(
+            onDismissRequest = { onEvent(AppDetailEvent.DismissRollback) },
+            title = { Text(stringResource(R.string.feature_apps_rollback_confirm_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.feature_apps_rollback_confirm_body,
+                        pending.versionName,
+                        pending.versionCode,
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { onEvent(AppDetailEvent.ConfirmRollback) }) {
+                    Text(stringResource(R.string.feature_apps_rollback_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(AppDetailEvent.DismissRollback) }) {
+                    Text(stringResource(R.string.feature_apps_rollback_cancel))
+                }
+            },
+        )
     }
 
     val dialog = state.exportDialog

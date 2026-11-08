@@ -7,13 +7,12 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import dev.involvex.kiln.core.common.normalizeFingerprint
 import dev.involvex.kiln.core.database.IndexDao
 import dev.involvex.kiln.core.database.InstallJobDao
 import dev.involvex.kiln.core.database.KilnDatabase
 import dev.involvex.kiln.core.database.ManagedAppDao
 import dev.involvex.kiln.core.database.RepoDao
-import dev.involvex.kiln.core.database.RepoEntity
+import dev.involvex.kiln.core.database.ensureKnownRepos
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +28,7 @@ object DatabaseModule {
             .fallbackToDestructiveMigration(true)
             .build()
         CoroutineScope(Dispatchers.IO).launch {
-            seedDefaultRepos(db.repoDao())
+            ensureKnownRepos(db.repoDao())
         }
         return db
     }
@@ -45,36 +44,4 @@ object DatabaseModule {
 
     @Provides
     fun provideInstallJobDao(db: KilnDatabase): InstallJobDao = db.installJobDao()
-}
-
-internal suspend fun seedDefaultRepos(repoDao: RepoDao) {
-    if (repoDao.getAll().isNotEmpty()) return
-    repoDao.upsertAll(
-        listOf(
-            RepoEntity(
-                id = "fdroid",
-                name = "F-Droid",
-                address = "https://f-droid.org/repo",
-                fingerprint = normalizeFingerprint(
-                    "43238D512C1E5EB2D6569F4A3AFBF5523418B82E0A3ED1552770ABB9A9C9CCAB",
-                ),
-                kind = "FDROID",
-                enabled = true,
-                lastSyncedAtEpochMs = null,
-                priority = 1,
-            ),
-            RepoEntity(
-                id = "izzy",
-                name = "IzzyOnDroid",
-                address = "https://apt.izzysoft.de/fdroid/repo",
-                fingerprint = normalizeFingerprint(
-                    "3BF0EE3F971FDAC86BBB970A33919B72932B8EF9F8664890C1B975C718BA0EBB",
-                ),
-                kind = "FDROID",
-                enabled = true,
-                lastSyncedAtEpochMs = null,
-                priority = 0,
-            ),
-        ),
-    )
 }

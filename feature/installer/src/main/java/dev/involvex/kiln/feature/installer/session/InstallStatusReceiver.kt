@@ -6,7 +6,9 @@ import android.content.Intent
 import android.content.pm.PackageInstaller
 import dagger.hilt.android.AndroidEntryPoint
 import dev.involvex.kiln.core.database.InstallJobDao
+import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.InstallJobStatus
+import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +18,8 @@ import timber.log.Timber
 @AndroidEntryPoint
 class InstallStatusReceiver : BroadcastReceiver() {
     @Inject lateinit var installJobDao: InstallJobDao
+
+    @Inject lateinit var rollbackCache: ApkRollbackCache
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != ACTION_INSTALL_STATUS) return
@@ -48,14 +52,24 @@ class InstallStatusReceiver : BroadcastReceiver() {
                     }
 
                     PackageInstaller.STATUS_SUCCESS -> {
+                        val job = installJobDao.get(jobId)
                         installJobDao.updateProgress(
                             jobId = jobId,
                             status = InstallJobStatus.SUCCEEDED.name,
                             progressPercent = 100,
                             errorMessage = null,
-                            localApkPath = installJobDao.get(jobId)?.localApkPath,
+                            localApkPath = job?.localApkPath,
                             updatedAtEpochMs = System.currentTimeMillis(),
                         )
+                        val path = job?.localApkPath
+                        if (job != null && !path.isNullOrBlank() && File(path).isFile) {
+                            rollbackCache.rememberSuccessfulInstall(
+                                packageName = job.packageName,
+                                versionName = job.versionName,
+                                versionCode = job.versionCode,
+                                apkAbsolutePath = path,
+                            )
+                        }
                     }
 
                     else -> {

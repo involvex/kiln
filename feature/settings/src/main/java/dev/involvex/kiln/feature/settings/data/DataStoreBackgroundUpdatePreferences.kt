@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
@@ -39,15 +40,22 @@ class DataStoreBackgroundUpdatePreferences @Inject constructor(@ApplicationConte
         store.edit { it[KEY_AUTO_INSTALL] = autoInstallMatching }
     }
 
+    override suspend fun setUpdateCooldownDays(days: Int) {
+        store.edit { it[KEY_COOLDOWN_DAYS] = days.coerceIn(0, MAX_COOLDOWN_DAYS) }
+    }
+
     private fun Preferences.toPrefs() = BackgroundUpdatePrefs(
         enabled = this[KEY_ENABLED] ?: false,
         unmeteredOnly = this[KEY_UNMETERED] ?: true,
         autoInstallMatching = this[KEY_AUTO_INSTALL] ?: false,
+        updateCooldownDays = this[KEY_COOLDOWN_DAYS] ?: 0,
     )
 
     private companion object {
         val KEY_ENABLED = booleanPreferencesKey("background_updates_enabled")
         val KEY_UNMETERED = booleanPreferencesKey("unmetered_only")
         val KEY_AUTO_INSTALL = booleanPreferencesKey("auto_install_matching")
+        val KEY_COOLDOWN_DAYS = intPreferencesKey("update_cooldown_days")
+        const val MAX_COOLDOWN_DAYS = 30
     }
 }

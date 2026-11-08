@@ -16,6 +16,7 @@ import dev.involvex.kiln.core.database.RepoEntity
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.ManagedApp
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
+import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoUri
 import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.obtainium.ObtainiumImport
 import java.text.DateFormat
@@ -38,6 +39,7 @@ class SourcesViewModel @Inject constructor(
     private val sync: FDroidRepoSync,
     private val tokenStore: GitHubTokenStore,
     private val appUpdateRepository: AppUpdateRepository,
+    private val incomingRepoLinkStore: IncomingRepoLinkStore,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SourcesUiState(githubTokenSet = tokenStore.getToken() != null))
@@ -54,15 +56,67 @@ class SourcesViewModel @Inject constructor(
                 }
             }
         }
+        viewModelScope.launch {
+            incomingRepoLinkStore.pending.collect { uri ->
+                if (uri != null) {
+                    incomingRepoLinkStore.consume()
+                    applyIncomingUri(uri)
+                }
+            }
+        }
     }
 
     fun onAddFieldsChange(name: String? = null, address: String? = null, fingerprint: String? = null) {
+        if (address != null) {
+            val parsed = FDroidRepoUri.parseRepo(address)
+            if (parsed != null) {
+                _uiState.update {
+                    it.copy(
+                        addName = name?.takeIf { n -> n.isNotBlank() } ?: parsed.suggestedName,
+                        addAddress = parsed.address,
+                        addFingerprint = fingerprint?.takeIf { f -> f.isNotBlank() }
+                            ?: parsed.fingerprint.orEmpty(),
+                        message = if (parsed.usesHttp) "repo_http_warn" else it.message,
+                    )
+                }
+                return
+            }
+            val pkg = FDroidRepoUri.parsePackagePage(address)
+            if (pkg != null) {
+                _uiState.update {
+                    it.copy(
+                        addAddress = address,
+                        message = "package_page:${pkg.packageName}",
+                    )
+                }
+                return
+            }
+        }
         _uiState.update {
             it.copy(
                 addName = name ?: it.addName,
                 addAddress = address ?: it.addAddress,
                 addFingerprint = fingerprint ?: it.addFingerprint,
             )
+        }
+    }
+
+    fun applyIncomingUri(raw: String) {
+        val parsed = FDroidRepoUri.parseRepo(raw)
+        if (parsed != null) {
+            _uiState.update {
+                it.copy(
+                    addName = parsed.suggestedName,
+                    addAddress = parsed.address,
+                    addFingerprint = parsed.fingerprint.orEmpty(),
+                    message = if (parsed.usesHttp) "repo_http_warn" else "repo_uri_filled",
+                )
+            }
+            return
+        }
+        val pkg = FDroidRepoUri.parsePackagePage(raw)
+        if (pkg != null) {
+            _uiState.update { it.copy(message = "package_page:${pkg.packageName}") }
         }
     }
 
@@ -81,6 +135,10 @@ class SourcesViewModel @Inject constructor(
         val fp = normalizeFingerprint(state.addFingerprint.trim())
         if (name.isEmpty() || address.isEmpty() || fp.length < MIN_FINGERPRINT_HEX_LENGTH) {
             _uiState.update { it.copy(message = "invalid_repo") }
+            return
+        }
+        if (!address.startsWith("https://")) {
+            _uiState.update { it.copy(message = "repo_http_warn") }
             return
         }
         viewModelScope.launch {
