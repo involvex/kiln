@@ -22,3 +22,6 @@ data object BackupKey
 
 @Serializable
 data object SettingsKey
+
+@Serializable
+data object PrivilegeSetupKey

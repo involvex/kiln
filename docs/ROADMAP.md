@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M3 + M2 on `main` (incl. [#9](https://github.com/involvex/kiln/pull/9), [#10](https://github.com/involvex/kiln/pull/10) update-management UX). Next: HyperOS M3 installer E2E, then `m4-privilege`.
+**Current status:** M4 on branch `m4-privilege` (Privilege layer + Shizuku setup A→D + silent install path). M3 HyperOS E2E checklist still open on device.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -18,7 +18,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M1** | Installed apps + APK export (Tier NONE) | Done | [`prompts/M1-installed-apps.md`](./prompts/M1-installed-apps.md) · `m1-installed-apps` | List matches `pm list packages -3`; exports install via `adb` / second device |
 | **M2** | Sources, update check, auto-match | Done | PLAN §4.2 / §4.8 · `m2-sources` | Updates for ≥5 real apps; auto-match confidence tiers correct |
 | **M3** | Installer (no privilege) | Done | PLAN §4.3 · `m3-installer` | F-Droid + GitHub update E2E |
-| **M4** | Privilege layer + Shizuku setup | Planned | PLAN §4.9 / §5 | Guided setup A→D; silent install; clean Tier NONE fallback |
+| **M4** | Privilege layer + Shizuku setup | In progress | PLAN §4.9 / §5 · `m4-privilege` | Guided setup A→D; silent install; clean Tier NONE fallback |
 | **M5** | Storage analyzer / cleaner | Planned | PLAN §4.5 | Numbers plausible vs system storage UI |
 | **M6** | Debloat mode | Planned | PLAN §4.10 | Snapshot, denylist, deactivate/restore on ≥3 safe packages |
 | **M7** | Backup / restore | Planned | PLAN §4.6 | Round-trip with Root/Shizuku tier |
@@ -32,7 +32,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 Update after each milestone. Tier = active `PrivilegedExecutor`.
 
-| Feature | Now (after M3) | Needs tier |
+| Feature | Now (M4 branch) | Needs tier |
 | --- | --- | --- |
 | Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
 | List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
@@ -41,7 +41,8 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
 | Sources / updates | ✅ F-Droid/Izzy index-v2 + entry.jar verify; GitHub releases; Obtainium import; Room cache | NONE (+ network) |
 | Auto-match | ✅ Confidence tiers HOCH/MITTEL/WARNUNG/KEINE; ManagedApp persistence | NONE |
-| Installer | ✅ Single-APK download + SHA-256 + PackageInstaller (system confirm); splits deferred | NONE / SHIZUKU |
+| Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
+| Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; splits deferred | NONE / SHIZUKU |
 | Storage / cleaner | — | NONE / SHIZUKU |
 | Debloat | — | ≥ SHIZUKU |
 | Backup (app data) | — | NONE (APK only) … ROOT |
@@ -62,9 +63,24 @@ Code for M2 is on `main` (post-#9). Tick on device after install (network requir
 
 ---
 
+## M4 manual acceptance (HyperOS)
+
+Code on `m4-privilege`. Needs Shizuku or ShizukuPlus installed for privileged path; Tier NONE must still work:
+
+- [ ] Settings → Privilege setup opens A→D assistant; status re-checks on resume
+- [ ] Phase A when manager missing; install link opens Shizuku releases
+- [ ] Phase B when binder down: open manager / developer options / copy ADB start command
+- [ ] Phase C: request permission; grant in Shizuku dialog → Phase D
+- [ ] Self-test shows UID (2000 shell or 0 root), SELinux, API; matrix lists silent install Available
+- [ ] With Shizuku ready: update install completes without system confirm (silent `pm install -r`)
+- [ ] Without Shizuku: same install still uses PackageInstaller system confirm (Tier NONE fallback)
+- [ ] No crash when Shizuku stops mid-session; banner/status returns to B/C
+
+---
+
 ## M3 manual acceptance (HyperOS)
 
-Code for M3 is on `m3-installer` (needs M2 merged or stacked install). Network + unknown-sources permission:
+Code for M3 is on `main`. Network + unknown-sources permission:
 
 - [ ] Allow “Install unknown apps” for Kiln when prompted
 - [ ] Sync Sources; open an app with a signature-matching update; Download & install runs FGS notification

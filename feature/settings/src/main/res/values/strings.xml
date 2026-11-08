@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_settings_title">Settings</string>
-    <string name="feature_settings_description">App preferences and privilege setup will live here.</string>
+    <string name="feature_settings_description">App preferences. Privilege setup configures Shizuku for silent install and later privileged features.</string>
+    <string name="settings_privilege_setup">Privilege / Shizuku setup</string>
 </resources>

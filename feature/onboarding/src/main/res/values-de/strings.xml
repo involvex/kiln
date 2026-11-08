@@ -11,4 +11,32 @@
     <string name="onboarding_group_warning">Signatur-Warnung</string>
     <string name="onboarding_group_none">Nicht gefunden</string>
     <string name="onboarding_index_empty">Noch kein F-Droid-Index. Zuerst unter Quellen synchronisieren — sichere Treffer (HOCH) brauchen Paket + Signer aus einem Sync. Bis dahin erscheinen nur GitHub-Map-Vorschläge unter Prüfen.</string>
+
+    <string name="privilege_setup_title">Privilege-Einrichtung</string>
+    <string name="privilege_setup_intro">Privilegierte Aktionen (stille Installation, später Cache/Debloat) brauchen Shizuku oder ShizukuPlus. Ohne bleibt Kiln auf Tier NONE mit System-Dialogen.</string>
+    <string name="privilege_phase_a">A · Nicht installiert</string>
+    <string name="privilege_phase_b">B · Installiert, läuft nicht</string>
+    <string name="privilege_phase_c">C · Läuft, keine Berechtigung</string>
+    <string name="privilege_phase_d">D · Bereit</string>
+    <string name="privilege_phase_a_body">Shizuku (oder ShizukuPlus) installieren. Für Sideload am besten das offizielle GitHub-Release.</string>
+    <string name="privilege_phase_b_body">Shizuku über Kabelloses Debugging (Android 11+), die Manager-App oder ADB am PC starten. Danach hierher zurück.</string>
+    <string name="privilege_phase_c_body">Kiln im Shizuku-Berechtigungsdialog erlauben. Bei „Nie wieder fragen“ die Manager-App öffnen und Kiln manuell freigeben.</string>
+    <string name="privilege_phase_d_body">Shizuku ist bereit. Selbsttest ausführen, um Shell-UID und Capability-Matrix zu prüfen.</string>
+    <string name="privilege_hyperos_hint">HyperOS/MIUI: „USB-Debugging (Sicherheitseinstellungen)“ aktivieren, falls Pairing scheitert; Autostart erlauben und Akku-Optimierung für Shizuku aus, damit der Dienst nicht stirbt.</string>
+    <string name="privilege_manager_detected">Manager: %1$s</string>
+    <string name="privilege_install_shizuku">Shizuku-Releases öffnen</string>
+    <string name="privilege_open_manager">Shizuku-App öffnen</string>
+    <string name="privilege_open_developer">Entwickleroptionen</string>
+    <string name="privilege_adb_hint">ADB (PC): %1$s</string>
+    <string name="privilege_copy_adb">ADB-Befehl kopieren</string>
+    <string name="privilege_request_permission">Shizuku-Berechtigung anfragen</string>
+    <string name="privilege_run_self_test">Selbsttest starten</string>
+    <string name="privilege_self_test_summary">UID %1$d · SELinux %2$s · API %3$d · Shizuku-API %4$d</string>
+    <string name="privilege_matrix_title">Capability-Matrix</string>
+    <string name="privilege_copy_diagnosis">Diagnose kopieren</string>
+    <string name="privilege_refresh">Status erneut prüfen</string>
+    <string name="privilege_copied">In Zwischenablage kopiert</string>
+    <string name="privilege_avail_yes">Verfügbar</string>
+    <string name="privilege_avail_restricted">Eingeschränkt</string>
+    <string name="privilege_avail_no">Nicht verfügbar</string>
 </resources>
