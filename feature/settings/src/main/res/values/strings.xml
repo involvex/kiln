@@ -39,5 +39,6 @@
     <string name="settings_about_license">License: Apache-2.0. No analytics or telemetry.</string>
     <string name="settings_about_source">Source on GitHub</string>
     <string name="settings_about_privacy">Privacy policy</string>
+    <string name="settings_about_support">Support this project</string>
     <string name="settings_about_license_link">View license</string>
 </resources>

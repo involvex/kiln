@@ -221,6 +221,15 @@ private fun AboutSection(versionName: String, versionCode: Long) {
         ) {
             Text(privacyLabel)
         }
+        val supportLabel = stringResource(R.string.settings_about_support)
+        OutlinedButton(
+            onClick = { openHttps(context, URL_SUPPORTING) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = supportLabel },
+        ) {
+            Text(supportLabel)
+        }
         val licenseLabel = stringResource(R.string.settings_about_license_link)
         OutlinedButton(
             onClick = { openHttps(context, URL_LICENSE) },
@@ -241,6 +250,8 @@ private fun openHttps(context: android.content.Context, url: String) {
 private const val URL_SOURCE: String = "https://github.com/involvex/kiln"
 private const val URL_PRIVACY: String =
     "https://github.com/involvex/kiln/blob/main/docs/PRIVACY.md"
+private const val URL_SUPPORTING: String =
+    "https://github.com/involvex/kiln/blob/main/docs/SUPPORTING.md"
 private const val URL_LICENSE: String =
     "https://github.com/involvex/kiln/blob/main/LICENSE"
 
