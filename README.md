@@ -4,7 +4,8 @@ All-in-one package, APK, and storage manager for Android.
 
 - **Package:** `dev.involvex.kiln`
 - **License:** [Apache-2.0](./LICENSE)
-- **Status:** M8 in progress — background auto-update (see [docs/ROADMAP.md](./docs/ROADMAP.md))
+- **Status:** M10 in progress — polish & release (see [docs/ROADMAP.md](./docs/ROADMAP.md))
+- **Version:** `0.1.0` (versionCode 2)
 
 Kiln unifies F-Droid/GitHub sources, APK tools, app backup, storage cleanup, and an optional debloat mode. Privileged actions run through Shizuku/ShizukuPlus or Root when available; Tier NONE stays useful without them.
 
@@ -32,7 +33,7 @@ Install the debug APK:
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Modules (M8)
+## Modules (M10)
 
 ```
 :app                      Navigation 3 shell, Hilt root, theme, FileProvider, AppBindingsModule
@@ -49,7 +50,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 :feature:storage          StorageStats analyzer + cache clear (usage access)
 :feature:debloat          Debloat (denylist, snapshot, disable/restore)
 :feature:backup           APK .kilnbackup.zip via SAF + restore via InstallQueue
-:feature:settings         Privilege, Debloat, background-update DataStore toggles
+:feature:settings         Privilege, Debloat, About, background-update DataStore toggles
 ```
 
 Feature modules depend only on `:core:*`. Cross-feature binds live in `:app`. NavKeys live in `:app`.
@@ -63,6 +64,10 @@ Feature modules depend only on `:core:*`. Cross-feature binds live in `:app`. Na
 | [AGENTS.md](./AGENTS.md) | Agent / contributor rules |
 | [docs/prompts/](./docs/prompts/) | Per-milestone agent prompts |
 | [docs/reference.md](./docs/reference.md) | Reference apps (read-only; no GPL copy) |
+| [CHANGELOG.md](./CHANGELOG.md) | User-facing changes |
+| [docs/PRIVACY.md](./docs/PRIVACY.md) | Privacy policy |
+| [docs/RELEASE.md](./docs/RELEASE.md) | Tagging, signing, F-Droid |
+| [fastlane/metadata/android/](./fastlane/metadata/android/) | Store listing copy (en/de) |
 
 ## Toolchain (M4)
 

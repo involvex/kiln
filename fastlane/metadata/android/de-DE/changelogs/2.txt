@@ -1,0 +1,1 @@
+Erste öffentliche 0.1.0-Release-Politur: About- und Datenschutz-Links, F-Droid-Metadaten, GitHub-Release-Workflow. Kernfunktionen bis Hintergrund-Updates und optionaler Termux-Integration.

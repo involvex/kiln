@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M8 merged (#15). Sources reliability + Update Safety on `sources-repos-uris` (default repos/Izzy FP, `fdroidrepo(s):` URIs, rollback cache, auto-install cooldown/major gate). Shizuku+ self-test on device: uid=2000 shell. M3 HyperOS E2E still open.
+**Current status:** M10 in progress (`m10-polish`) — About, privacy, fastlane metadata, tag release workflow. M9 Termux on [#20](https://github.com/involvex/kiln/pull/20) (Actions green; Kilo review flake). M3 HyperOS E2E still open.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -23,8 +23,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M6** | Debloat mode | Done | PLAN §4.10 · [#13](https://github.com/involvex/kiln/pull/13) | Snapshot, denylist, deactivate/restore on ≥3 safe packages |
 | **M7** | Backup / restore | Done | PLAN §4.6 · [#14](https://github.com/involvex/kiln/pull/14) | APK `.kilnbackup.zip` SAF round-trip; honest NONE/SHIZUKU/ROOT copy |
 | **M8** | Background auto-update | Done | PLAN §8 · [#15](https://github.com/involvex/kiln/pull/15) | WorkManager + constraints + notifications |
-| **M9** | Termux integration | Planned | PLAN §4.7 | Feature-flagged hooks |
-| **M10** | Polish & release | Planned | PLAN §8 | F-Droid/GitHub Releases, screenshots, a11y |
+| **M9** | Termux integration | In review | [`prompts/M9-termux.md`](./prompts/M9-termux.md) · [#20](https://github.com/involvex/kiln/pull/20) | Feature-flagged RUN_COMMAND + PendingIntent |
+| **M10** | Polish & release | In progress | [`prompts/M10-polish-release.md`](./prompts/M10-polish-release.md) · `m10-polish` | About, privacy, fastlane, GitHub Release workflow |
 
 ---
 
@@ -47,6 +47,20 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
 | Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg) | NONE (+ network; silent install/downgrade if SHIZUKU) |
+| Termux RUN_COMMAND | 🚧 on #20 — feature flag, configurable packageId, echo smoke test | NONE (Termux + permission) |
+| Release / store prep | 🚧 version `0.1.0` (code 2); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow | — |
+
+---
+
+## M10 manual acceptance
+
+Code on `m10-polish`:
+
+- [ ] Settings → About shows version name/code
+- [ ] Source / privacy / license buttons open the GitHub URLs
+- [ ] `docs/PRIVACY.md` and `CHANGELOG.md` match the shipped story
+- [ ] Tag `v0.1.0` (after merge) creates a GitHub Release with an APK
+- [ ] Capture phone screenshots into `fastlane/metadata/android/en-US/images/phoneScreenshots/` before F-Droid submit
 
 ---
 

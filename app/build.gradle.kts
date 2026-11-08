@@ -15,6 +15,35 @@ android {
         // local.properties is machine-local; do not fail CI/local lint on path escaping.
         disable += setOf("PropertyEscape", "AndroidGradlePluginVersion", "GradleDependency", "NewerVersionAvailable")
     }
+    // Optional CI/local upload keystore via env (see docs/RELEASE.md). Falls back to debug.
+    val uploadStoreFile = providers.environmentVariable("KILN_STORE_FILE")
+    val uploadStorePassword = providers.environmentVariable("KILN_STORE_PASSWORD")
+    val uploadKeyAlias = providers.environmentVariable("KILN_KEY_ALIAS")
+    val uploadKeyPassword = providers.environmentVariable("KILN_KEY_PASSWORD")
+    val hasUploadKeystore =
+        uploadStoreFile.orNull?.isNotBlank() == true &&
+            uploadStorePassword.orNull?.isNotBlank() == true &&
+            uploadKeyAlias.orNull?.isNotBlank() == true &&
+            uploadKeyPassword.orNull?.isNotBlank() == true
+    signingConfigs {
+        if (hasUploadKeystore) {
+            create("release") {
+                storeFile = file(uploadStoreFile.get())
+                storePassword = uploadStorePassword.get()
+                keyAlias = uploadKeyAlias.get()
+                keyPassword = uploadKeyPassword.get()
+            }
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            signingConfig = if (hasUploadKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
+        }
+    }
 }
 
 dependencies {

@@ -1,0 +1,10 @@
+Kiln vereint F-Droid- und GitHub-Updatequellen, APK-Export/Backup, Speicherbereinigung und optionalen Debloat in einer Apache-2.0-Android-App.
+
+• Installierte Apps listen und exportieren (.apk / .apks / .xapk)
+• F-Droid-kompatible Repos und GitHub Releases synchronisieren; Auto-Match
+• Updates über den System-Installer oder still mit Shizuku
+• Speicheranalyse und Cache leeren; APK-Backup/Restore
+• Optionaler Debloat mit Snapshot; optionale Termux-RUN_COMMAND-Hooks (Standard: aus)
+• Keine Telemetrie — die App-Liste bleibt auf dem Gerät
+
+Privilegierte Aktionen laufen über Shizuku oder Root, wenn eingerichtet; Basisfunktionen brauchen das nicht.
