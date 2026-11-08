@@ -115,6 +115,7 @@ private fun exactMessageRes(code: String): Int? = when (code) {
     "obtainium_no_apps" -> R.string.sources_msg_obtainium_no_apps
     "obtainium_file_read_failed" -> R.string.sources_msg_obtainium_file_read_failed
     "index_oom" -> R.string.sources_msg_index_oom
+    "share_unrecognized" -> R.string.sources_msg_share_unrecognized
     else -> null
 }
 
@@ -122,6 +123,12 @@ private fun exactMessageRes(code: String): Int? = when (code) {
 private fun formatPrefixedMessage(code: String): String? = when {
     code.startsWith("package_page:") ->
         stringResource(R.string.sources_msg_package_page, code.removePrefix("package_page:"))
+
+    code.startsWith("github_added:") ->
+        stringResource(R.string.sources_msg_github_added, code.removePrefix("github_added:"))
+
+    code.startsWith("github_exists:") ->
+        stringResource(R.string.sources_msg_github_exists, code.removePrefix("github_exists:"))
 
     code.startsWith("obtainium:") ->
         stringResource(R.string.sources_msg_obtainium_imported, code.substringAfter(':'))

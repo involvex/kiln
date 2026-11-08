@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.AppUpdateRepository
+import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.core.model.InstallQueue
@@ -14,6 +15,7 @@ import dev.involvex.kiln.core.model.UpdateObservationStore
 import dev.involvex.kiln.feature.apps.data.DefaultInstalledAppsReader
 import dev.involvex.kiln.feature.installer.DefaultInstallQueue
 import dev.involvex.kiln.feature.installer.rollback.FileApkRollbackCache
+import dev.involvex.kiln.feature.settings.data.DataStoreAppearancePreferences
 import dev.involvex.kiln.feature.settings.data.DataStoreBackgroundUpdatePreferences
 import dev.involvex.kiln.feature.sources.DefaultAppUpdateRepository
 import dev.involvex.kiln.feature.sources.updatecheck.DefaultBackgroundUpdateScheduler
@@ -54,4 +56,8 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindUpdateObservationStore(impl: PrefsUpdateObservationStore): UpdateObservationStore
+
+    @Binds
+    @Singleton
+    abstract fun bindAppearancePreferences(impl: DataStoreAppearancePreferences): AppearancePreferences
 }

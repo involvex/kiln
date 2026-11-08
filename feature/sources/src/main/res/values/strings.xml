@@ -15,6 +15,9 @@
     <string name="sources_msg_repo_uri_filled">Repository fields filled from link — review and add.</string>
     <string name="sources_msg_repo_http_warn">HTTP repos are unsupported for sync (HTTPS only). Convert to HTTPS if possible.</string>
     <string name="sources_msg_package_page">Package page for %1$s — open Apps and search that package. This is not a repository URL.</string>
+    <string name="sources_msg_github_added">Added GitHub source %1$s. Updates appear in Apps when a matching APK is found.</string>
+    <string name="sources_msg_github_exists">GitHub source %1$s is already configured.</string>
+    <string name="sources_msg_share_unrecognized">Shared text is not an F-Droid repo link or GitHub repository URL.</string>
     <string name="sources_github_pat">GitHub personal access token</string>
     <string name="sources_github_pat_hint">Optional. Without a token GitHub allows about 60 requests/hour.</string>
     <string name="sources_github_pat_set">A token is stored encrypted on this device.</string>

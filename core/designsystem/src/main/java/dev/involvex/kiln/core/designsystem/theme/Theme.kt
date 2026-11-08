@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
+import dev.involvex.kiln.core.model.KilnThemeStyle
 
 val LocalAmoledDark = staticCompositionLocalOf { false }
 
@@ -67,6 +68,32 @@ private val DarkColorScheme = darkColorScheme(
     outline = KilnDarkOutline,
 )
 
+private val MonokaiColorScheme = darkColorScheme(
+    primary = MonokaiPrimary,
+    onPrimary = MonokaiOnPrimary,
+    primaryContainer = MonokaiPrimaryContainer,
+    onPrimaryContainer = MonokaiOnPrimaryContainer,
+    secondary = MonokaiSecondary,
+    onSecondary = MonokaiOnSecondary,
+    secondaryContainer = MonokaiSecondaryContainer,
+    onSecondaryContainer = MonokaiOnSecondaryContainer,
+    tertiary = MonokaiTertiary,
+    onTertiary = MonokaiOnTertiary,
+    tertiaryContainer = MonokaiTertiaryContainer,
+    onTertiaryContainer = MonokaiOnTertiaryContainer,
+    error = MonokaiError,
+    onError = MonokaiOnError,
+    errorContainer = MonokaiErrorContainer,
+    onErrorContainer = MonokaiOnErrorContainer,
+    background = MonokaiBackground,
+    onBackground = MonokaiOnBackground,
+    surface = MonokaiSurface,
+    onSurface = MonokaiOnSurface,
+    surfaceVariant = MonokaiSurfaceVariant,
+    onSurfaceVariant = MonokaiOnSurfaceVariant,
+    outline = MonokaiOutline,
+)
+
 private fun ColorScheme.amoled(): ColorScheme = copy(
     background = AmoledBlack,
     surface = AmoledBlack,
@@ -78,26 +105,13 @@ private fun ColorScheme.amoled(): ColorScheme = copy(
 )
 
 @Composable
-fun KilnTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
-    amoledDark: Boolean = false,
-    content: @Composable () -> Unit,
-) {
-    val colorScheme = when {
-        // Dynamic Color requires Android 12+ (API 31).
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) {
-                dynamicDarkColorScheme(context).let { if (amoledDark) it.amoled() else it }
-            } else {
-                dynamicLightColorScheme(context)
-            }
-        }
-
-        darkTheme -> if (amoledDark) DarkColorScheme.amoled() else DarkColorScheme
-
-        else -> LightColorScheme
+fun KilnTheme(themeStyle: KilnThemeStyle = KilnThemeStyle.DARK, dynamicColor: Boolean = true, content: @Composable () -> Unit) {
+    val amoledDark = themeStyle == KilnThemeStyle.AMOLED
+    val colorScheme = when (themeStyle) {
+        KilnThemeStyle.LIGHT -> resolveLight(dynamicColor)
+        KilnThemeStyle.DARK -> resolveDark(dynamicColor, amoled = false)
+        KilnThemeStyle.AMOLED -> resolveDark(dynamicColor, amoled = true)
+        KilnThemeStyle.MONOKAI -> MonokaiColorScheme
     }
 
     CompositionLocalProvider(LocalAmoledDark provides amoledDark) {
@@ -107,4 +121,38 @@ fun KilnTheme(
             content = content,
         )
     }
+}
+
+/** Backward-compatible entry for previews that still pass darkTheme/amoledDark. */
+@Composable
+fun KilnTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = true,
+    amoledDark: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    val style = when {
+        amoledDark -> KilnThemeStyle.AMOLED
+        darkTheme -> KilnThemeStyle.DARK
+        else -> KilnThemeStyle.LIGHT
+    }
+    KilnTheme(themeStyle = style, dynamicColor = dynamicColor, content = content)
+}
+
+@Composable
+private fun resolveLight(dynamicColor: Boolean): ColorScheme {
+    if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        return dynamicLightColorScheme(LocalContext.current)
+    }
+    return LightColorScheme
+}
+
+@Composable
+private fun resolveDark(dynamicColor: Boolean, amoled: Boolean): ColorScheme {
+    // Dynamic Color requires Android 12+ (API 31).
+    if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val dynamic = dynamicDarkColorScheme(LocalContext.current)
+        return if (amoled) dynamic.amoled() else dynamic
+    }
+    return if (amoled) DarkColorScheme.amoled() else DarkColorScheme
 }

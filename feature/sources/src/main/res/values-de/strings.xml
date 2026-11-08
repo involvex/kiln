@@ -15,6 +15,9 @@
     <string name="sources_msg_repo_uri_filled">Repo-Felder aus Link übernommen — prüfen und hinzufügen.</string>
     <string name="sources_msg_repo_http_warn">HTTP-Repos werden nicht synchronisiert (nur HTTPS). Wenn möglich auf HTTPS umstellen.</string>
     <string name="sources_msg_package_page">Paketseite für %1$s — unter Apps danach suchen. Das ist keine Repository-URL.</string>
+    <string name="sources_msg_github_added">GitHub-Quelle %1$s hinzugefügt. Updates erscheinen unter Apps, wenn eine passende APK gefunden wird.</string>
+    <string name="sources_msg_github_exists">GitHub-Quelle %1$s ist bereits eingerichtet.</string>
+    <string name="sources_msg_share_unrecognized">Geteilter Text ist kein F-Droid-Repo-Link und keine GitHub-Repository-URL.</string>
     <string name="sources_github_pat">GitHub Personal Access Token</string>
     <string name="sources_github_pat_hint">Optional. Ohne Token erlaubt GitHub etwa 60 Anfragen/Stunde.</string>
     <string name="sources_github_pat_set">Ein Token ist verschlüsselt auf diesem Gerät gespeichert.</string>
