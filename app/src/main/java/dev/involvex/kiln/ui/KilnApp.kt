@@ -1,0 +1,88 @@
+package dev.involvex.kiln.ui
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import dev.involvex.kiln.R
+import dev.involvex.kiln.feature.apps.AppsRoute
+import dev.involvex.kiln.feature.backup.BackupRoute
+import dev.involvex.kiln.feature.settings.SettingsRoute
+import dev.involvex.kiln.feature.sources.SourcesRoute
+import dev.involvex.kiln.feature.storage.StorageRoute
+import dev.involvex.kiln.navigation.AppsKey
+import dev.involvex.kiln.navigation.BackupKey
+import dev.involvex.kiln.navigation.SettingsKey
+import dev.involvex.kiln.navigation.SourcesKey
+import dev.involvex.kiln.navigation.StorageKey
+import dev.involvex.kiln.navigation.TopLevelBackStack
+
+private data class TopLevelDestination(val key: Any, val labelRes: Int, val icon: ImageVector)
+
+@Composable
+fun KilnApp(modifier: Modifier = Modifier) {
+    val destinations = listOf(
+        TopLevelDestination(AppsKey, R.string.nav_apps, Icons.Filled.Apps),
+        TopLevelDestination(SourcesKey, R.string.nav_sources, Icons.Filled.CloudDownload),
+        TopLevelDestination(StorageKey, R.string.nav_storage, Icons.Filled.Storage),
+        TopLevelDestination(BackupKey, R.string.nav_backup, Icons.Filled.Save),
+        TopLevelDestination(SettingsKey, R.string.nav_settings, Icons.Filled.Settings),
+    )
+    val topLevelBackStack = remember { TopLevelBackStack<Any>(AppsKey) }
+
+    Scaffold(
+        modifier = modifier,
+        bottomBar = {
+            NavigationBar {
+                destinations.forEach { destination ->
+                    val selected = destination.key == topLevelBackStack.topLevelKey
+                    NavigationBarItem(
+                        selected = selected,
+                        onClick = { topLevelBackStack.addTopLevel(destination.key) },
+                        icon = {
+                            Icon(
+                                imageVector = destination.icon,
+                                contentDescription = stringResource(destination.labelRes),
+                            )
+                        },
+                        label = { Text(text = stringResource(destination.labelRes)) },
+                    )
+                }
+            }
+        },
+    ) { padding ->
+        NavDisplay(
+            backStack = topLevelBackStack.backStack,
+            onBack = { topLevelBackStack.removeLast() },
+            modifier = Modifier.padding(padding),
+            entryDecorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator(),
+            ),
+            entryProvider = entryProvider {
+                entry<AppsKey> { AppsRoute() }
+                entry<SourcesKey> { SourcesRoute() }
+                entry<StorageKey> { StorageRoute() }
+                entry<BackupKey> { BackupRoute() }
+                entry<SettingsKey> { SettingsRoute() }
+            },
+        )
+    }
+}

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_apps_title">Apps</string>
+    <string name="feature_apps_description">Installierte Apps, Details und APK-Export kommen hierher (M1).</string>
+</resources>

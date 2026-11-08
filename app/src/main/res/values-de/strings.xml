@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kiln</string>
+    <string name="nav_apps">Apps</string>
+    <string name="nav_sources">Quellen</string>
+    <string name="nav_storage">Speicher</string>
+    <string name="nav_backup">Backup</string>
+    <string name="nav_settings">Einstellungen</string>
+</resources>

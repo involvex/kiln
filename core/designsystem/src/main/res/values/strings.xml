@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="designsystem_empty_default_title">Nothing here yet</string>
+    <string name="designsystem_empty_default_description">This screen will grow in a later milestone.</string>
+</resources>

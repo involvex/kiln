@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_backup_title">Backup</string>
+    <string name="feature_backup_description">App backup and restore will live here (M7).</string>
+</resources>

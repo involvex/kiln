@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_storage_title">Storage</string>
+    <string name="feature_storage_description">Storage analysis and cleaner tools will live here (M5).</string>
+</resources>
