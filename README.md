@@ -4,7 +4,7 @@ All-in-one package, APK, and storage manager for Android.
 
 - **Package:** `dev.involvex.kiln`
 - **License:** [Apache-2.0](./LICENSE)
-- **Status:** M5 in progress — Storage analyzer + cache clear (see [docs/ROADMAP.md](./docs/ROADMAP.md))
+- **Status:** M6 in progress — Debloat via Shizuku (see [docs/ROADMAP.md](./docs/ROADMAP.md))
 
 Kiln unifies F-Droid/GitHub sources, APK tools, app backup, storage cleanup, and an optional debloat mode. Privileged actions run through Shizuku/ShizukuPlus or Root when available; Tier NONE stays useful without them.
 
@@ -32,12 +32,12 @@ Install the debug APK:
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Modules (M5)
+## Modules (M6)
 
 ```
 :app                      Navigation 3 shell, Hilt root, theme, FileProvider, AppBindingsModule
 :core:common              Result type, qualified dispatchers, fingerprints, byte sizes
-:core:model               Installed + source/update + install + privilege + storage types
+:core:model               Installed + source/update + install + privilege + storage + debloat types
 :core:network             OkHttp HTTPS client (+ resumable download)
 :core:database            Room (repos, index cache, ManagedApp, install jobs)
 :core:designsystem        Material 3 theme + base components
@@ -47,8 +47,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 :feature:installer        Download queue; PackageInstaller or silent pm via privilege
 :feature:onboarding       Auto-match + Shizuku setup assistant (A→D)
 :feature:storage          StorageStats analyzer + cache clear (usage access)
+:feature:debloat          Debloat (denylist, snapshot, disable/restore)
 :feature:backup           Placeholder (M7)
-:feature:settings         Privilege setup entry
+:feature:settings         Privilege + Debloat entries
 ```
 
 Feature modules depend only on `:core:*`. Cross-feature binds live in `:app`. NavKeys live in `:app`.

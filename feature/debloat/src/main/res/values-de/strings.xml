@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="debloat_title">Debloat</string>
+    <string name="debloat_intro">Standard ist Deaktivieren (umkehrbar). Ratings werden nicht erfunden — leerer Katalog = UNBEKANNT; Expertenmodus nötig. Snapshot vor der ersten Änderung.</string>
+    <string name="debloat_need_shizuku_title">Shizuku nötig</string>
+    <string name="debloat_need_shizuku_body">Debloat braucht die Capability DEBLOAT (Shizuku-Shell). Privilege-Einrichtung öffnen. Ohne kuratierte Ratings sind Aktionen nur im Expertenmodus möglich.</string>
+    <string name="debloat_open_privilege">Privilege-Einrichtung</string>
+    <string name="debloat_back">Zurück</string>
+    <string name="debloat_no_snapshot">Noch kein Snapshot — vor Änderungen speichern.</string>
+    <string name="debloat_snapshot_present">Snapshot gespeichert (Wiederherstellen möglich).</string>
+    <string name="debloat_snapshot">Snapshot speichern</string>
+    <string name="debloat_restore">Snapshot wiederherstellen</string>
+    <string name="debloat_refresh">Aktualisieren</string>
+    <string name="debloat_system_only">Nur System-Apps</string>
+    <string name="debloat_expert_mode">Expertenmodus</string>
+    <string name="debloat_expert_hint">UNBEKANNTE Pakete brauchen Expertenmodus. Bei riskanten Batches ICH VERSTEHE (oder I UNDERSTAND) tippen.</string>
+    <string name="debloat_action_disable">Deaktivieren</string>
+    <string name="debloat_action_uninstall">Für Nutzer entfernen</string>
+    <string name="debloat_action_restore_pkg">Reaktivieren / wiederherstellen</string>
+    <string name="debloat_filter_all">Alle Zustände</string>
+    <string name="debloat_filter_enabled">Aktiv</string>
+    <string name="debloat_filter_disabled">Deaktiviert</string>
+    <string name="debloat_search">Pakete suchen</string>
+    <string name="debloat_apply">Auf %1$d Auswahl anwenden</string>
+    <string name="debloat_row_meta">%1$s · %2$s</string>
+    <string name="debloat_denylisted">Geschützt: %1$s</string>
+    <string name="debloat_state_enabled">Aktiv</string>
+    <string name="debloat_state_disabled">Deaktiviert</string>
+    <string name="debloat_state_uninstalled">Für Nutzer entfernt</string>
+    <string name="debloat_rating_recommended">Empfohlen</string>
+    <string name="debloat_rating_advanced">Fortgeschritten</string>
+    <string name="debloat_rating_expert">Experte</string>
+    <string name="debloat_rating_unsafe">Unsicher</string>
+    <string name="debloat_rating_unknown">Unbekannt</string>
+    <string name="debloat_confirm_title">Debloat bestätigen</string>
+    <string name="debloat_confirm_body">%2$s auf %1$d Paket(e)? Fehler werden pro Paket gemeldet. Nach großen Batches neu starten und testen.</string>
+    <string name="debloat_confirm_more">…und %1$d weitere</string>
+    <string name="debloat_type_confirm_hint">ICH VERSTEHE oder I UNDERSTAND tippen</string>
+    <string name="debloat_confirm_action">Bestätigen</string>
+    <string name="debloat_cancel">Abbrechen</string>
+</resources>

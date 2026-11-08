@@ -190,6 +190,34 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
+    override suspend fun disableUserPackage(packageName: String): Result<Unit> =
+        runDebloatCommand(ShellAllowlist.PM_DISABLE_USER, packageName)
+
+    override suspend fun enablePackage(packageName: String): Result<Unit> = runDebloatCommand(ShellAllowlist.PM_ENABLE, packageName)
+
+    override suspend fun installExistingPackage(packageName: String): Result<Unit> =
+        runDebloatCommand(ShellAllowlist.PM_INSTALL_EXISTING, packageName)
+
+    private suspend fun runDebloatCommand(commandId: String, packageName: String): Result<Unit> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.DEBLOAT !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:DEBLOAT")
+        }
+        if (!ShellAllowlist.isSafePackageName(packageName)) {
+            return@withContext Result.failure("invalid_package")
+        }
+        when (val out = invokeAllowlisted(commandId, listOf(packageName))) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    Result.success(Unit)
+                }
+            }
+        }
+    }
+
     private suspend fun invokeAllowlisted(commandId: String, args: List<String>): Result<String> {
         val service = ensureUserService()
             ?: return Result.failure("user_service_unavailable")

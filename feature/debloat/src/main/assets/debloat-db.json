@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "source": "kiln-empty",
+  "notes": "No package ratings are invented. Entries must come from a license-cleared curated source (e.g. UAD-NG after attribution review). Unknown installed packages use rating UNKNOWN and require expert mode for actions.",
+  "packages": []
+}

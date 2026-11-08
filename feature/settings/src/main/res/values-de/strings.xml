@@ -3,4 +3,5 @@
     <string name="feature_settings_title">Einstellungen</string>
     <string name="feature_settings_description">App-Einstellungen. Privilege richtet Shizuku für stille Installation und spätere privilegierte Funktionen ein.</string>
     <string name="settings_privilege_setup">Privilege / Shizuku-Einrichtung</string>
+    <string name="settings_debloat">Debloat</string>
 </resources>

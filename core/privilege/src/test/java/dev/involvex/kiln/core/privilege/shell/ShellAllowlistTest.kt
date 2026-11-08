@@ -85,4 +85,22 @@ class ShellAllowlistTest {
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_TRIM_CACHES, listOf("-1")))
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_TRIM_CACHES, listOf("999G")))
     }
+
+    @Test
+    fun pm_debloat_commands() {
+        val pkg = "com.example.bloat"
+        assertEquals(
+            listOf("pm", "disable-user", "--user", "0", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_DISABLE_USER, listOf(pkg)),
+        )
+        assertEquals(
+            listOf("pm", "enable", "--user", "0", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_ENABLE, listOf(pkg)),
+        )
+        assertEquals(
+            listOf("pm", "install-existing", "--user", "0", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL_EXISTING, listOf(pkg)),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_DISABLE_USER, listOf("a;b")))
+    }
 }
