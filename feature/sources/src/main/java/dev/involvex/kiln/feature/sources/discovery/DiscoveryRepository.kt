@@ -12,6 +12,7 @@ import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.SourceKind
 import dev.involvex.kiln.feature.sources.FdroidApkUrl
+import dev.involvex.kiln.feature.sources.FdroidMediaUrl
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.github.GitHubOwnerRepo
 import dev.involvex.kiln.feature.sources.github.GitHubReleasesClient
@@ -28,6 +29,9 @@ data class DiscoveryAppRow(
     val categories: List<String>,
     val versionName: String?,
     val versionCode: Long?,
+    val iconUrl: String? = null,
+    val sourceCodeUrl: String? = null,
+    val phoneScreenshotUrls: List<String> = emptyList(),
 )
 
 @Singleton
@@ -52,8 +56,13 @@ class DiscoveryRepository @Inject constructor(
     suspend fun search(query: String, category: String, limit: Int = 200): List<DiscoveryAppRow> {
         val repos = repoDao.getAll().associateBy { it.id }
         return indexDao.searchPackages(query.trim(), category.trim(), limit).map { entity ->
-            entity.toRow(repos[entity.repoId])
+            entity.toDiscoveryRow(repos[entity.repoId])
         }
+    }
+
+    suspend fun catalogRow(packageName: String, repoId: String): DiscoveryAppRow? {
+        val entity = indexDao.getPackage(packageName, repoId) ?: return null
+        return entity.toDiscoveryRow(repoDao.getById(repoId))
     }
 
     suspend fun refreshCatalog(): Result<Int> {
@@ -79,7 +88,6 @@ class DiscoveryRepository @Inject constructor(
         val release = indexDao.latestRelease(row.packageName, row.repoId)
             ?: return Result.failure("release_missing")
         val url = FdroidApkUrl.build(repo.address, release.apkName)
-            ?: return Result.failure("apk_url_invalid")
         val update = AppUpdateInfo(
             packageName = row.packageName,
             availableVersionName = release.versionName,
@@ -178,7 +186,14 @@ class DiscoveryRepository @Inject constructor(
         return installQueue.enqueue(update)
     }
 
-    private fun IndexedPackageEntity.toRow(repo: RepoEntity?) = DiscoveryAppRow(
+    private companion object {
+        const val DEFAULT_APK_REGEX = ".*\\.apk$"
+    }
+}
+
+internal fun IndexedPackageEntity.toDiscoveryRow(repo: RepoEntity?): DiscoveryAppRow {
+    val address = repo?.address.orEmpty()
+    return DiscoveryAppRow(
         packageName = packageName,
         name = name,
         summary = summary,
@@ -187,9 +202,12 @@ class DiscoveryRepository @Inject constructor(
         categories = categoriesCsv.split(',').map { it.trim() }.filter { it.isNotEmpty() },
         versionName = suggestedVersionName,
         versionCode = suggestedVersionCode,
+        iconUrl = FdroidMediaUrl.join(address, iconPath),
+        sourceCodeUrl = sourceCodeUrl,
+        phoneScreenshotUrls = phoneScreenshotsCsv
+            .split(',')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .mapNotNull { FdroidMediaUrl.join(address, it) },
     )
-
-    private companion object {
-        const val DEFAULT_APK_REGEX = ".*\\.apk$"
-    }
 }

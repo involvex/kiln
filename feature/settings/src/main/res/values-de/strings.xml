@@ -26,6 +26,9 @@
     <string name="settings_language_system">System</string>
     <string name="settings_language_english">English</string>
     <string name="settings_language_german">Deutsch</string>
+    <string name="settings_font_style">Schriftstil</string>
+    <string name="settings_font_default">Standard</string>
+    <string name="settings_font_rounded">Abgerundet</string>
     <string name="settings_installer_section">Installer</string>
     <string name="settings_installer_explain">Standard nutzt den System-PackageInstaller-Dialog. Shizuku installiert still, wenn Privilege bereit ist, sonst Fallback auf den Systemdialog.</string>
     <string name="settings_installer_system">Standard</string>

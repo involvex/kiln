@@ -26,6 +26,9 @@
     <string name="settings_language_system">System</string>
     <string name="settings_language_english">English</string>
     <string name="settings_language_german">Deutsch</string>
+    <string name="settings_font_style">Font style</string>
+    <string name="settings_font_default">Default</string>
+    <string name="settings_font_rounded">Rounded display</string>
     <string name="settings_installer_section">Installer</string>
     <string name="settings_installer_explain">Default uses the system PackageInstaller dialog. Shizuku installs silently when privilege is ready, otherwise falls back to the system dialog.</string>
     <string name="settings_installer_system">Default</string>
