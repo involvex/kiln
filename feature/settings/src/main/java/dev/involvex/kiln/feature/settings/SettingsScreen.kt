@@ -37,6 +37,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.core.model.AppearancePrefs
 import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
 import dev.involvex.kiln.core.model.DevPrefs
@@ -120,13 +121,15 @@ fun SettingsScreen(
     val description = state.description.ifBlank {
         stringResource(R.string.feature_settings_description)
     }
+    val scrollState = rememberScrollState()
+    ScrollToTopEffect(scrollState)
     KilnScaffold(title = title, modifier = modifier) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(text = description, style = MaterialTheme.typography.bodyMedium)

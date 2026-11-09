@@ -7,16 +7,23 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -27,12 +34,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -40,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.EntryPointAccessors
 import dev.involvex.kiln.core.designsystem.component.EmptyState
 import dev.involvex.kiln.core.model.ApkExportFormat
+import dev.involvex.kiln.core.model.RepoConfig
 import dev.involvex.kiln.feature.apps.di.ApkExporterEntryPoint
 import dev.involvex.kiln.feature.apps.export.buildExportFilename
 import dev.involvex.kiln.feature.apps.ui.AppDetailContent
@@ -113,11 +125,15 @@ fun AppDetailScreen(
 
     val rollbackOk = stringResource(R.string.feature_apps_rollback_ok)
     val rollbackNeedsPrivilege = stringResource(R.string.feature_apps_rollback_needs_privilege)
+    val linkOk = stringResource(R.string.feature_apps_link_ok)
+    val badGithub = stringResource(R.string.feature_apps_link_bad_github)
     LaunchedEffect(state.snackbarMessage) {
         val raw = state.snackbarMessage ?: return@LaunchedEffect
         val message = when (raw) {
             "rollback_ok" -> rollbackOk
             "rollback_needs_privilege" -> rollbackNeedsPrivilege
+            "link_ok" -> linkOk
+            "bad_github" -> badGithub
             else -> raw
         }
         snackbarHostState.showSnackbar(message)
@@ -174,6 +190,8 @@ fun AppDetailScreen(
                     installJob = state.installJob,
                     ignoreUpdates = state.ignoreUpdates,
                     onIgnoreUpdatesChanged = { onEvent(AppDetailEvent.IgnoreUpdatesChanged(it)) },
+                    managedLink = state.managedLink,
+                    onOpenLinkSource = { onEvent(AppDetailEvent.OpenLinkSource) },
                     onInstallUpdate = { onEvent(AppDetailEvent.InstallUpdate) },
                     onOpenUnknownSources = {
                         val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
@@ -214,6 +232,17 @@ fun AppDetailScreen(
                     Text(stringResource(R.string.feature_apps_rollback_cancel))
                 }
             },
+        )
+    }
+
+    if (state.showLinkSourceDialog) {
+        AppLinkSourceDialog(
+            appLabel = state.detail?.label.orEmpty(),
+            initialGithub = state.managedLink?.githubOwnerRepo.orEmpty(),
+            enabledRepos = state.enabledRepos,
+            onDismiss = { onEvent(AppDetailEvent.DismissLinkSource) },
+            onLinkFdroid = { onEvent(AppDetailEvent.LinkFdroidRepo(it)) },
+            onLinkGithub = { onEvent(AppDetailEvent.LinkGithub(it)) },
         )
     }
 
@@ -266,6 +295,66 @@ fun AppDetailScreen(
             },
         )
     }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AppLinkSourceDialog(
+    appLabel: String,
+    initialGithub: String,
+    enabledRepos: List<RepoConfig>,
+    onDismiss: () -> Unit,
+    onLinkFdroid: (String) -> Unit,
+    onLinkGithub: (String) -> Unit,
+) {
+    var githubInput by remember(initialGithub) { mutableStateOf(initialGithub) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.feature_apps_link_dialog_title, appLabel)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.feature_apps_link_dialog_body), style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.feature_apps_link_fdroid_section), style = MaterialTheme.typography.titleSmall)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    enabledRepos.forEach { repo ->
+                        AssistChip(onClick = { onLinkFdroid(repo.id) }, label = { Text(repo.name) })
+                    }
+                }
+                if (enabledRepos.isEmpty()) {
+                    Text(
+                        stringResource(R.string.feature_apps_link_no_repos),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Text(stringResource(R.string.feature_apps_link_github_section), style = MaterialTheme.typography.titleSmall)
+                OutlinedTextField(
+                    value = githubInput,
+                    onValueChange = { githubInput = it },
+                    label = { Text(stringResource(R.string.feature_apps_link_github_hint)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Uri,
+                        imeAction = ImeAction.Done,
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onLinkGithub(githubInput) },
+                enabled = githubInput.contains('/'),
+            ) {
+                Text(stringResource(R.string.feature_apps_link_github_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.feature_apps_link_cancel))
+            }
+        },
+    )
 }
 
 @Composable

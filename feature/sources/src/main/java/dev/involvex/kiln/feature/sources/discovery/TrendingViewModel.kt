@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 
 data class TrendingUiState(
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val shelves: List<TrendingShelf> = emptyList(),
     val message: String? = null,
     val messageIsError: Boolean = false,
@@ -27,10 +28,45 @@ class TrendingViewModel @Inject constructor(
     val uiState: StateFlow<TrendingUiState> = _uiState.asStateFlow()
 
     init {
-        refresh()
+        refreshLocal()
     }
 
-    fun refresh() {
+    /** Pull-to-refresh: sync F-Droid catalogs, then rebuild shelves. */
+    fun refreshCatalog() {
+        if (_uiState.value.isRefreshing) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true, message = null) }
+            when (val result = discoveryRepository.refreshCatalog()) {
+                is Result.Success -> {
+                    val shelves = trendingRepository.loadShelves()
+                    _uiState.update {
+                        it.copy(
+                            isRefreshing = false,
+                            isLoading = false,
+                            shelves = shelves,
+                            message = "catalog_ok:${result.value}",
+                            messageIsError = false,
+                        )
+                    }
+                }
+
+                is Result.Failure -> {
+                    val shelves = trendingRepository.loadShelves()
+                    _uiState.update {
+                        it.copy(
+                            isRefreshing = false,
+                            isLoading = false,
+                            shelves = shelves,
+                            message = result.message,
+                            messageIsError = true,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun refreshLocal() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val shelves = trendingRepository.loadShelves()

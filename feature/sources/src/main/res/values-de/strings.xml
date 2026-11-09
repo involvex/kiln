@@ -12,10 +12,13 @@
     <string name="trending_shelf_media">Medien</string>
     <string name="trending_shelf_system">System &amp; Tools</string>
     <string name="trending_shelf_ai">KI-bezogen</string>
-    <string name="trending_empty">Katalog unter Entdecken aktualisieren, um Trend-Regale zu laden.</string>
+    <string name="trending_empty">Zum Synchronisieren und Laden der Regale nach unten ziehen.</string>
     <string name="catalog_detail_title">App-Details</string>
     <string name="catalog_detail_install">Installieren</string>
+    <string name="catalog_detail_share">Teilen</string>
     <string name="catalog_detail_sources">Quellen</string>
+    <string name="catalog_detail_links">Links</string>
+    <string name="catalog_detail_store_page">Store-Seite</string>
     <string name="catalog_detail_source_code">Quellcode</string>
     <string name="catalog_detail_version">Version %1$s</string>
     <string name="catalog_detail_screenshots">Screenshots</string>
@@ -38,8 +41,8 @@
     <string name="discovery_msg_github_release_missing">Noch keine Release-Daten — Repo zuerst nachschlagen.</string>
     <string name="discovery_msg_github_no_apk">Kein APK-Asset in den letzten Releases.</string>
     <string name="discovery_catalog_count">Indexierte Pakete: %1$d</string>
-    <string name="discovery_refresh_catalog">Katalog aktualisieren</string>
-    <string name="discovery_refreshing">Lade und indexiere…</string>
+    <string name="discovery_refresh_catalog">Aktualisieren</string>
+    <string name="discovery_refreshing">Aktualisiere…</string>
     <string name="discovery_search">Name oder Paket suchen</string>
     <string name="discovery_category_all">Alle</string>
     <string name="discovery_empty_catalog">Noch kein Katalog. „Katalog aktualisieren“ tippen (Netzwerk nötig).</string>

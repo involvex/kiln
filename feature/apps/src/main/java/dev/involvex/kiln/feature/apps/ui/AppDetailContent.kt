@@ -31,6 +31,7 @@ import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.InstallJobState
 import dev.involvex.kiln.core.model.InstallJobStatus
 import dev.involvex.kiln.core.model.InstalledAppDetail
+import dev.involvex.kiln.core.model.ManagedSourceLink
 import dev.involvex.kiln.core.model.RollbackApkEntry
 import dev.involvex.kiln.feature.apps.R
 import dev.involvex.kiln.feature.apps.icon.PackageIconModel
@@ -48,6 +49,8 @@ fun AppDetailContent(
     installJob: InstallJobState? = null,
     ignoreUpdates: Boolean? = null,
     onIgnoreUpdatesChanged: (checkForUpdates: Boolean) -> Unit = {},
+    managedLink: ManagedSourceLink? = null,
+    onOpenLinkSource: () -> Unit = {},
     onInstallUpdate: () -> Unit = {},
     onOpenUnknownSources: () -> Unit = {},
     rollbackEntries: List<RollbackApkEntry> = emptyList(),
@@ -90,6 +93,10 @@ fun AppDetailContent(
         UpdatePrefsSection(
             ignoreUpdates = ignoreUpdates,
             onIgnoreUpdatesChanged = onIgnoreUpdatesChanged,
+        )
+        ManagedSourceSection(
+            managedLink = managedLink,
+            onOpenLinkSource = onOpenLinkSource,
         )
         PathsSection(detail = detail)
         PermissionsSection(detail = detail)
@@ -158,6 +165,46 @@ private fun RollbackSection(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ManagedSourceSection(managedLink: ManagedSourceLink?, onOpenLinkSource: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.feature_apps_managed_source_section), style = MaterialTheme.typography.titleMedium)
+        if (managedLink == null) {
+            Text(
+                stringResource(R.string.feature_apps_managed_source_none),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            Text(
+                stringResource(
+                    R.string.feature_apps_managed_source_current,
+                    managedLink.sourceId,
+                    managedLink.confidence.name,
+                ),
+            )
+            if (managedLink.pinned) {
+                Text(
+                    stringResource(R.string.feature_apps_managed_source_pinned),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        OutlinedButton(onClick = onOpenLinkSource, modifier = Modifier.fillMaxWidth()) {
+            Text(
+                stringResource(
+                    if (managedLink == null) {
+                        R.string.feature_apps_link_source
+                    } else {
+                        R.string.feature_apps_change_source
+                    },
+                ),
+            )
         }
     }
 }

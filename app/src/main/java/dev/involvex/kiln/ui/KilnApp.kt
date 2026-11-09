@@ -12,6 +12,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -22,6 +23,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import dev.involvex.kiln.R
+import dev.involvex.kiln.core.designsystem.scroll.LocalScrollToTopSignal
+import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopSignal
 import dev.involvex.kiln.feature.apps.AppDetailRoute
 import dev.involvex.kiln.feature.debloat.DebloatRoute
 import dev.involvex.kiln.feature.onboarding.AutoMatchRoute
@@ -55,40 +58,48 @@ fun KilnApp(modifier: Modifier = Modifier) {
         TopLevelDestination(SettingsKey, R.string.nav_settings, Icons.Filled.Settings),
     )
     val topLevelBackStack = remember { TopLevelBackStack<Any>(AppsKey) }
+    val scrollToTop = remember { ScrollToTopSignal() }
 
-    Scaffold(
-        modifier = modifier,
-        bottomBar = {
-            NavigationBar {
-                destinations.forEach { destination ->
-                    val selected = destination.key == topLevelBackStack.topLevelKey
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = { topLevelBackStack.addTopLevel(destination.key) },
-                        icon = {
-                            Icon(
-                                imageVector = destination.icon,
-                                contentDescription = stringResource(destination.labelRes),
-                            )
-                        },
-                        label = { Text(text = stringResource(destination.labelRes)) },
-                    )
+    CompositionLocalProvider(LocalScrollToTopSignal provides scrollToTop) {
+        Scaffold(
+            modifier = modifier,
+            bottomBar = {
+                NavigationBar {
+                    destinations.forEach { destination ->
+                        val selected = destination.key == topLevelBackStack.topLevelKey
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                val alreadyAtRoot = topLevelBackStack.addTopLevel(destination.key)
+                                if (alreadyAtRoot) {
+                                    scrollToTop.request()
+                                }
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = destination.icon,
+                                    contentDescription = stringResource(destination.labelRes),
+                                )
+                            },
+                            label = { Text(text = stringResource(destination.labelRes)) },
+                        )
+                    }
                 }
-            }
-        },
-    ) { padding ->
-        NavDisplay(
-            backStack = topLevelBackStack.backStack,
-            onBack = { topLevelBackStack.removeLast() },
-            modifier = Modifier.padding(padding),
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator(),
-            ),
-            entryProvider = entryProvider {
-                kilnNavEntries(topLevelBackStack)
             },
-        )
+        ) { padding ->
+            NavDisplay(
+                backStack = topLevelBackStack.backStack,
+                onBack = { topLevelBackStack.removeLast() },
+                modifier = Modifier.padding(padding),
+                entryDecorators = listOf(
+                    rememberSaveableStateHolderNavEntryDecorator(),
+                    rememberViewModelStoreNavEntryDecorator(),
+                ),
+                entryProvider = entryProvider {
+                    kilnNavEntries(topLevelBackStack)
+                },
+            )
+        }
     }
 }
 

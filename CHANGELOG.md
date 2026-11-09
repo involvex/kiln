@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Auto-match UX: app icons, confidence chips, match rationale, localized accept feedback
+- Manual source link from Match installed apps and App detail (F-Droid repo or GitHub `owner/repo`, pinned)
+- WARNING matches can be accepted with an explicit confirm dialog (pinned)
+- Catalog App details: share button (store / source URLs); re-tap active bottom tab scrolls to top (and pops nested screens)
+- Pull-to-refresh on Discover and Trending (catalog sync)
+
+### Changed
+
+- Auto-match prefers a signer-matching index repo over a higher-priority repo with a mismatched certificate
+- Catalog App details layout (hero card, chips, links, top-bar back/share)
+- Library pull-to-refresh runs a full update check (repo sync); Discover refresh-catalog control is a compact TextButton
+
 ## [0.2.2] — 2026-11-09
 
 ### Fixed

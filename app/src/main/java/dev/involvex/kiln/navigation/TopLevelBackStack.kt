@@ -27,16 +27,40 @@ class TopLevelBackStack<T : Any>(startKey: T) {
         }
     }
 
-    fun addTopLevel(key: T) {
-        if (topLevelStacks[key] == null) {
+    /**
+     * Selects [key] as the active top-level tab.
+     *
+     * @return `true` when the tab was already selected and already at its root
+     * (caller should scroll that tab’s content to the top). Nested destinations
+     * on a reselected tab are popped first; that returns `false`.
+     */
+    fun addTopLevel(key: T): Boolean {
+        val existing = topLevelStacks[key]
+        if (existing == null) {
             topLevelStacks[key] = mutableStateListOf(key)
-        } else {
-            topLevelStacks.apply {
-                remove(key)?.let { put(key, it) }
-            }
+            topLevelKey = key
+            updateBackStack()
+            return false
+        }
+
+        val alreadySelected = key == topLevelKey
+        // Move this stack to the end so [keys.last] stays the active tab.
+        topLevelStacks.apply {
+            remove(key)?.let { put(key, it) }
         }
         topLevelKey = key
+
+        if (alreadySelected && existing.size > 1) {
+            while (existing.size > 1) {
+                // Prefer removeAt over List.removeLast() (API 35+ / NewApi on minSdk 26).
+                existing.removeAt(existing.lastIndex)
+            }
+            updateBackStack()
+            return false
+        }
+
         updateBackStack()
+        return alreadySelected
     }
 
     fun add(key: T) {

@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M17** shipped as `v0.2.0`. Hotfix `0.2.1` (versionCode 4) targets remaining HyperOS locale recreate flicker. Publishing / F-Droid submit still deferred.
+**Current status:** **M17** shipped; hotfixes through `0.2.2`. **M18** (`m18-auto-match-ux`) improves Match installed apps for the next release. Publishing / F-Droid submit still deferred.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -32,6 +32,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M15** | Store-like Discover | Done | [`prompts/M15-store-ui.md`](./prompts/M15-store-ui.md) · [#27](https://github.com/involvex/kiln/pull/27) | Library\|Discover; catalog detail+icons; font pref |
 | **M16** | Trending shelves | Done | [`prompts/M16-trending.md`](./prompts/M16-trending.md) · [#27](https://github.com/involvex/kiln/pull/27) | Topic shelves; no fake download counts |
 | **M17** | HyperOS E2E + release prep | Done | [`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md) · `m17-hyperos-release-prep` | Checklist + `0.2.0` (code 3); Termux multi-candidate detect; flicker + Apps spacing fixes; tag `v0.2.0` after merge; no store submit |
+| **M18** | Auto-match UX | In progress | `m18-auto-match-ux` | Icons/chips/rationale; prefer signer-matching repo; WARNING confirm + manual F-Droid/GitHub link (Match + App detail) |
 
 ---
 
@@ -47,7 +48,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | APK export (single / batch) | ✅ `.apk` / `.apks` STORED / `.xapk`; SAF + share + WorkManager batch | NONE |
 | Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
 | Sources / updates | ✅ F-Droid/Izzy/Guardian defaults + FP upsert; `fdroidrepo(s):` / `?fingerprint=` deep links; index-v2 + entry.jar verify; GitHub; Obtainium import; Room cache | NONE (+ network) |
-| Auto-match | ✅ Confidence tiers HOCH/MITTEL/WARNUNG/KEINE; ManagedApp persistence | NONE |
+| Auto-match | ✅ Confidence tiers; icons/chips/rationale; signer-preferring multi-repo pick; WARNING confirm + manual F-Droid/GitHub link (pinned) | NONE |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; splits deferred | NONE / SHIZUKU |
 | Storage / cleaner | ✅ Usage-access gate; App/Data/Cache list; clear via Shizuku or app-info deep-link | NONE / SHIZUKU |

@@ -9,7 +9,10 @@ import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.InstalledAppsReader
+import dev.involvex.kiln.core.model.ManagedSourceLink
 import dev.involvex.kiln.core.model.MatchConfidence
+import dev.involvex.kiln.core.model.RepoConfig
+import dev.involvex.kiln.core.model.SourceKind
 import dev.involvex.kiln.core.model.UpdateCheckResult
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.github.GitHubReleasesClient
@@ -92,6 +95,34 @@ class DefaultAppUpdateRepository @Inject constructor(
 
     override fun observeIgnoreUpdates(packageName: String): Flow<Boolean?> = managedAppDao.observe(packageName).map { it?.ignoreUpdates }
 
+    override fun observeManagedLink(packageName: String): Flow<ManagedSourceLink?> = managedAppDao.observe(packageName).map { entity ->
+        entity?.let {
+            ManagedSourceLink(
+                sourceId = it.sourceId,
+                confidence = runCatching { MatchConfidence.valueOf(it.confidence) }
+                    .getOrDefault(MatchConfidence.NONE),
+                pinned = it.pinned,
+                githubOwnerRepo = it.githubOwnerRepo,
+            )
+        }
+    }
+
+    override fun observeEnabledRepos(): Flow<List<RepoConfig>> = repoDao.observeAll().map { repos ->
+        repos.filter { it.enabled }
+            .sortedBy { it.priority }
+            .map {
+                RepoConfig(
+                    id = it.id,
+                    name = it.name,
+                    address = it.address,
+                    fingerprint = it.fingerprint,
+                    kind = runCatching { SourceKind.valueOf(it.kind) }.getOrDefault(SourceKind.FDROID),
+                    enabled = it.enabled,
+                    lastSyncedAtEpochMs = it.lastSyncedAtEpochMs,
+                )
+            }
+    }
+
     override suspend fun setIgnoreUpdates(packageName: String, ignoreUpdates: Boolean): Result<Unit> {
         val existing = managedAppDao.get(packageName)
         val update = updatesState.value[packageName]
@@ -109,6 +140,31 @@ class DefaultAppUpdateRepository @Inject constructor(
                 includePreReleases = false,
             )
         managedAppDao.upsert(entity)
+        refreshUpdates()
+        return Result.success(Unit)
+    }
+
+    override suspend fun linkManagedSource(
+        packageName: String,
+        sourceId: String,
+        confidence: MatchConfidence,
+        githubOwnerRepo: String?,
+        githubAssetRegex: String?,
+        pinned: Boolean,
+    ): Result<Unit> {
+        val existing = managedAppDao.get(packageName)
+        managedAppDao.upsert(
+            ManagedAppEntity(
+                packageName = packageName,
+                sourceId = sourceId.ifBlank { "manual" },
+                confidence = confidence.name,
+                pinned = pinned,
+                ignoreUpdates = existing?.ignoreUpdates ?: false,
+                githubOwnerRepo = githubOwnerRepo,
+                githubAssetRegex = githubAssetRegex ?: existing?.githubAssetRegex ?: ".*\\.apk$",
+                includePreReleases = existing?.includePreReleases ?: false,
+            ),
+        )
         refreshUpdates()
         return Result.success(Unit)
     }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -20,6 +21,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.feature.sources.R
 
 @Composable
@@ -81,60 +84,69 @@ fun DiscoveryScreen(
     onClearMessage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val listState = rememberLazyListState()
+    ScrollToTopEffect(listState)
     KilnScaffold(
         title = stringResource(R.string.discovery_title),
         modifier = modifier,
         showTopBar = showTopBar,
     ) { padding ->
-        LazyColumn(
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = onRefreshCatalog,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (!embedded) {
-                item {
-                    OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.discovery_back))
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (!embedded) {
+                    item {
+                        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.discovery_back))
+                        }
                     }
                 }
-            }
-            item {
-                SourceTabs(selected = state.sourceTab, onSelect = onSourceTab)
-            }
-            state.message?.let { msg ->
                 item {
-                    Text(
-                        text = formatDiscoveryMessage(msg),
-                        color = if (state.messageIsError) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        },
+                    SourceTabs(selected = state.sourceTab, onSelect = onSourceTab)
+                }
+                state.message?.let { msg ->
+                    item {
+                        Text(
+                            text = formatDiscoveryMessage(msg),
+                            color = if (state.messageIsError) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            },
+                        )
+                        TextButton(onClick = onClearMessage) {
+                            Text(stringResource(R.string.sources_dismiss))
+                        }
+                    }
+                }
+                when (state.sourceTab) {
+                    DiscoverySourceTab.FDROID -> fdroidItems(
+                        state = state,
+                        onQueryChange = onQueryChange,
+                        onCategory = onCategory,
+                        onRefreshCatalog = onRefreshCatalog,
+                        onInstall = onInstall,
+                        onOpenCatalogDetail = onOpenCatalogDetail,
                     )
-                    TextButton(onClick = onClearMessage) {
-                        Text(stringResource(R.string.sources_dismiss))
-                    }
-                }
-            }
-            when (state.sourceTab) {
-                DiscoverySourceTab.FDROID -> fdroidItems(
-                    state = state,
-                    onQueryChange = onQueryChange,
-                    onCategory = onCategory,
-                    onRefreshCatalog = onRefreshCatalog,
-                    onInstall = onInstall,
-                    onOpenCatalogDetail = onOpenCatalogDetail,
-                )
 
-                DiscoverySourceTab.GITHUB -> githubItems(
-                    state = state,
-                    onGithubQueryChange = onGithubQueryChange,
-                    onLookupGithub = onLookupGithub,
-                    onLookupSavedGithub = onLookupSavedGithub,
-                    onInstallGithub = onInstallGithub,
-                )
+                    DiscoverySourceTab.GITHUB -> githubItems(
+                        state = state,
+                        onGithubQueryChange = onGithubQueryChange,
+                        onLookupGithub = onLookupGithub,
+                        onLookupSavedGithub = onLookupSavedGithub,
+                        onInstallGithub = onInstallGithub,
+                    )
+                }
             }
         }
     }
@@ -155,29 +167,29 @@ private fun LazyListScope.fdroidItems(
         )
     }
     item {
-        Text(
-            text = stringResource(R.string.discovery_catalog_count, state.packageCount),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-    item {
-        Button(
-            onClick = onRefreshCatalog,
-            enabled = !state.isRefreshing,
+        Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(stringResource(R.string.discovery_refresh_catalog))
-        }
-    }
-    if (state.isRefreshing) {
-        item {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            Text(
+                text = stringResource(R.string.discovery_catalog_count, state.packageCount),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(
+                onClick = onRefreshCatalog,
+                enabled = !state.isRefreshing,
             ) {
-                CircularProgressIndicator()
-                Text(stringResource(R.string.discovery_refreshing))
+                Text(
+                    text = if (state.isRefreshing) {
+                        stringResource(R.string.discovery_refreshing)
+                    } else {
+                        stringResource(R.string.discovery_refresh_catalog)
+                    },
+                    style = MaterialTheme.typography.labelLarge,
+                )
             }
         }
     }
