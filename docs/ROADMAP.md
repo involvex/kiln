@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M13–M16 UX merged via [#27](https://github.com/involvex/kiln/pull/27). Next: **M17** HyperOS E2E + release prep (`m17-hyperos-release-prep`). Publishing / F-Droid submit still deferred until device checklists look solid.
+**Current status:** **M17** in progress on `m17-hyperos-release-prep` — version bumped to `0.2.0` (versionCode 3), CHANGELOG moved, Termux fork-detection fix landed. Awaiting merge + tag `v0.2.0`. Publishing / F-Droid submit still deferred unless explicitly requested.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -31,7 +31,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M14** | 4-tab nav + Manage | Done | [`prompts/M14-nav-manage.md`](./prompts/M14-nav-manage.md) · [#27](https://github.com/involvex/kiln/pull/27) | Apps / Sources / Manage / Settings; Storage+Backup under Manage |
 | **M15** | Store-like Discover | Done | [`prompts/M15-store-ui.md`](./prompts/M15-store-ui.md) · [#27](https://github.com/involvex/kiln/pull/27) | Library\|Discover; catalog detail+icons; font pref |
 | **M16** | Trending shelves | Done | [`prompts/M16-trending.md`](./prompts/M16-trending.md) · [#27](https://github.com/involvex/kiln/pull/27) | Topic shelves; no fake download counts |
-| **M17** | HyperOS E2E + release prep | Planned | [`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md) · `m17-hyperos-release-prep` | Device checklists for M13–M16; CHANGELOG; version bump toward `0.2.0`; no store submit yet |
+| **M17** | HyperOS E2E + release prep | In progress | [`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md) · `m17-hyperos-release-prep` | Device checklists for M13–M16; CHANGELOG; version bumped to `0.2.0` (versionCode 3); Termux fork detection (`com.involvex.termux_app`); no store submit yet |
 
 ---
 
@@ -54,9 +54,9 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
 | Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg) | NONE (+ network; silent install/downgrade if SHIZUKU) |
-| Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent | NONE (Termux + permission + allow-external-apps) |
+| Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
-| Release / store prep | ✅ version `0.1.0` (code 2); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow | — |
+| Release / store prep | ✅ version `0.2.0` (code 3); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG moved | — |
 | App Discovery | ✅ Apps → Discover; catalog refresh; icons; detail; search/categories; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
 | Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage | NONE |
@@ -165,14 +165,14 @@ Deferred in this PR: treemap, orphaned `Android/data`, APK leftover scanner.
 
 Owns the post-#27 device pass before a `0.2.0` tag. Prompt: [`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md).
 
-- [ ] Language EN/DE chips: first frame + bottom nav labels switch
-- [ ] Settings → Check now: no crash; update notification / empty-result path OK
-- [ ] Termux: Request RUN_COMMAND → grant → checklist refresh
-- [ ] Exactly 4 tabs; Manage → Storage | Backup only
-- [ ] Apps → Library | Discover | Trending
-- [ ] Catalog refresh: icons + detail (+ screenshots when index has media)
-- [ ] Trending ≥3 shelves with honest copy (no fake download charts)
-- [ ] CHANGELOG / optional `0.2.0` bump only after the above look solid
+- [x] Language EN/DE chips: first frame + bottom nav labels switch — verified on device, no crash
+- [x] Settings → Check now: no crash; update notification / empty-result path OK
+- [x] Exactly 4 tabs; Manage → Storage | Backup only
+- [x] Apps → Library | Discover | Trending
+- [x] Catalog refresh: icons + detail (+ screenshots when index has media)
+- [x] Trending ≥3 shelves with honest copy (no fake download charts)
+- [x] CHANGELOG / `0.2.0` bump done in PR
+- [x] Termux: smoke test now runs — **was failing**: device ships a renamed fork (`com.involvex.termux_app`), not the official `com.termux`, so the package-id field defaulted to `com.termux` and nothing matched. Fixed with `TermuxPackageDetector` (scan + service-class verification) + "Detect Termux package" button + App Info shortcut for forks that declare their own `RUN_COMMAND` permission. Re-run after the rebuild.
 
 Older M1/M3/M4/M5 checklists below remain open for a fuller pass when convenient.
 
