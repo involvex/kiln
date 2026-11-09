@@ -4,6 +4,7 @@
     <!-- Official Termux; forks with a different applicationId declare their own
          `{packageId}.permission.RUN_COMMAND` — request that via App Info if needed. -->
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
+    <uses-permission android:name="com.involvex.termux_app.permission.RUN_COMMAND" />
 
     <application>
         <receiver

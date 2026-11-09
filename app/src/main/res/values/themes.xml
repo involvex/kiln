@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- AppCompat parent required for AppCompatDelegate.setApplicationLocales. -->
-    <style name="Theme.Kiln" parent="Theme.AppCompat.DayNight.NoActionBar" />
+    <!--
+      AppCompat (not DayNight): locales still work, but the window does not
+      follow the system light theme while Compose stays on a fixed Kiln style.
+      A light DayNight window on HyperOS flashed white against the dark UI.
+    -->
+    <style name="Theme.Kiln" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/kiln_window_background</item>
+        <item name="android:statusBarColor">@color/kiln_window_background</item>
+        <item name="android:navigationBarColor">@color/kiln_window_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
 </resources>

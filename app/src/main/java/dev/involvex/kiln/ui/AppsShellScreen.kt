@@ -37,7 +37,7 @@ fun AppsShellRoute(onOpenDetail: (String) -> Unit, onOpenCatalogDetail: (String,
         SingleChoiceSegmentedButtonRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 4.dp),
         ) {
             AppsShellSegment.entries.forEachIndexed { index, item ->
                 SegmentedButton(
@@ -59,6 +59,7 @@ fun AppsShellRoute(onOpenDetail: (String) -> Unit, onOpenCatalogDetail: (String,
             AppsShellSegment.LIBRARY -> {
                 AppsRoute(
                     onOpenDetail = onOpenDetail,
+                    embedded = true,
                     modifier = Modifier.weight(1f),
                 )
             }

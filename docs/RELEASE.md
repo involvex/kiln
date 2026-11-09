@@ -29,6 +29,22 @@ add repository secrets:
 | `KILN_KEY_PASSWORD` | Key password |
 
 Never commit keystores or `local.properties` with passwords.
+Never paste secret values into chat or shell history if you can avoid it.
+
+From the repo, with `gh` authenticated to `involvex/kiln`:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\path\to\kiln-upload.jks")) |
+  gh secret set KILN_STORE_FILE_BASE64 -R involvex/kiln
+
+# Each command prompts for the value. Do not pass passwords with --body in a shared terminal log.
+gh secret set KILN_STORE_PASSWORD -R involvex/kiln
+gh secret set KILN_KEY_ALIAS -R involvex/kiln
+gh secret set KILN_KEY_PASSWORD -R involvex/kiln
+gh secret list -R involvex/kiln
+```
+
+Without all four, the release APK stays debug-signed. The workflow already reads `KILN_STORE_FILE_BASE64` in [`.github/workflows/release.yml`](../.github/workflows/release.yml).
 
 ## F-Droid
 

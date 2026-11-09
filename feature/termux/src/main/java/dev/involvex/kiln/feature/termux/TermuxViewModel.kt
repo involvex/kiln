@@ -3,23 +3,28 @@ package dev.involvex.kiln.feature.termux
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.involvex.kiln.core.common.IoDispatcher
 import dev.involvex.kiln.core.model.TermuxPreferences
 import dev.involvex.kiln.feature.termux.run.TermuxCommandLauncher
 import dev.involvex.kiln.feature.termux.run.TermuxLaunchOutcome
 import dev.involvex.kiln.feature.termux.run.TermuxResultBus
 import dev.involvex.kiln.feature.termux.run.TermuxRunCommandIntentBuilder
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class TermuxViewModel @Inject constructor(
     private val preferences: TermuxPreferences,
     private val launcher: TermuxCommandLauncher,
     private val resultBus: TermuxResultBus,
+    private val detector: TermuxPackageDetector,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(TermuxUiState())
     val uiState: StateFlow<TermuxUiState> = _uiState.asStateFlow()
@@ -74,11 +79,35 @@ class TermuxViewModel @Inject constructor(
 
     fun refreshEnvironment() {
         val packageId = _uiState.value.prefs.packageId
+        val installed = launcher.isPackageInstalled(packageId)
         _uiState.update {
             it.copy(
-                packageInstalled = launcher.isPackageInstalled(packageId),
+                packageInstalled = installed,
                 permissionGranted = launcher.hasRunCommandPermission(packageId),
+                // A working saved package id wins over a stale "not found" banner.
+                detectionFailed = if (installed) false else it.detectionFailed,
             )
+        }
+    }
+
+    /** Scan installed apps for a Termux (or renamed fork) and persist the package id. */
+    fun detectPackageId() {
+        viewModelScope.launch {
+            // Runs PackageManager across every installed app — must not block main.
+            val detected = withContext(ioDispatcher) { detector.detect() }
+            if (detected != null) {
+                preferences.setPackageId(detected.packageId)
+                _uiState.update {
+                    it.copy(
+                        packageIdDraft = detected.packageId,
+                        detectionFailed = false,
+                    )
+                }
+            } else {
+                _uiState.update { state ->
+                    state.copy(detectionFailed = !state.packageInstalled)
+                }
+            }
         }
     }
 
