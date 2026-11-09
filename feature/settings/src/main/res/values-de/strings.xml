@@ -4,6 +4,7 @@
     <string name="feature_settings_description">App-Einstellungen. Privilege richtet Shizuku für stille Installation und spätere privilegierte Funktionen ein.</string>
     <string name="settings_privilege_setup">Privilege / Shizuku-Einrichtung</string>
     <string name="settings_debloat">Debloat</string>
+    <string name="settings_permission_audit">Berechtigungs-Audit</string>
     <string name="settings_termux">Termux</string>
     <string name="settings_activity_log">Aktivitätsprotokoll</string>
     <string name="settings_activity_log_title">Aktivitätsprotokoll</string>
@@ -24,6 +25,7 @@
     <string name="settings_activity_log_type_cache">Cache</string>
     <string name="settings_activity_log_type_maintenance">Wartung</string>
     <string name="settings_activity_log_type_debloat">Debloat</string>
+    <string name="settings_activity_log_type_permission">Berechtigung</string>
     <string name="settings_activity_log_type_shell">Shell</string>
     <string name="settings_activity_log_type_termux">Termux</string>
     <string name="settings_activity_log_type_automation">Automation</string>

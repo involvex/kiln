@@ -61,6 +61,7 @@ import kotlinx.coroutines.delay
 fun SettingsRoute(
     onOpenPrivilegeSetup: () -> Unit,
     onOpenDebloat: () -> Unit,
+    onOpenPermissionAudit: () -> Unit,
     onOpenTermux: () -> Unit,
     onOpenActivityLog: () -> Unit,
     modifier: Modifier = Modifier,
@@ -95,6 +96,7 @@ fun SettingsRoute(
         state = state,
         onOpenPrivilegeSetup = onOpenPrivilegeSetup,
         onOpenDebloat = onOpenDebloat,
+        onOpenPermissionAudit = onOpenPermissionAudit,
         onOpenTermux = onOpenTermux,
         onOpenActivityLog = onOpenActivityLog,
         onBackgroundEnabledChange = { enabled ->
@@ -144,6 +146,7 @@ fun SettingsScreen(
     state: SettingsUiState,
     onOpenPrivilegeSetup: () -> Unit,
     onOpenDebloat: () -> Unit,
+    onOpenPermissionAudit: () -> Unit,
     onOpenTermux: () -> Unit,
     onOpenActivityLog: () -> Unit,
     onBackgroundEnabledChange: (Boolean) -> Unit,
@@ -199,6 +202,12 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.settings_debloat))
+            }
+            OutlinedButton(
+                onClick = onOpenPermissionAudit,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.settings_permission_audit))
             }
             OutlinedButton(
                 onClick = onOpenTermux,

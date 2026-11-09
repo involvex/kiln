@@ -60,6 +60,7 @@ dependencies {
     implementation(project(":feature:storage"))
     implementation(project(":feature:backup"))
     implementation(project(":feature:debloat"))
+    implementation(project(":feature:permissions"))
     implementation(project(":feature:termux"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:maintenance"))

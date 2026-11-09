@@ -22,6 +22,7 @@ object CapabilityMatrix {
             PrivilegeCapability.RUN_SHELL_DIAGNOSTIC to avail(shell),
             PrivilegeCapability.ACCESS_ANDROID_DATA to avail(shell),
             PrivilegeCapability.DEBLOAT to avail(shell),
+            PrivilegeCapability.MANAGE_APP_OPS to avail(shell),
             PrivilegeCapability.FULL_BACKUP to if (root) {
                 CapabilityAvailability.AVAILABLE
             } else {

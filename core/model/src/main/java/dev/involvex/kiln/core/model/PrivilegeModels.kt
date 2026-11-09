@@ -21,6 +21,7 @@ enum class PrivilegeCapability {
     RUN_SHELL_DIAGNOSTIC,
     ACCESS_ANDROID_DATA,
     DEBLOAT,
+    MANAGE_APP_OPS,
     FULL_BACKUP,
 }
 
@@ -64,6 +65,7 @@ data class PrivilegeStatus(
  * Sole entry point for privileged work. Implementations live in `:core:privilege`.
  * Features must never call Shizuku / `su` directly.
  */
+@Suppress("TooManyFunctions") // Grows with privilege-gated milestones (install, cache, debloat, appops).
 interface PrivilegedExecutor {
     fun observeStatus(): Flow<PrivilegeStatus>
 
@@ -99,4 +101,16 @@ interface PrivilegedExecutor {
 
     /** `pm install-existing --user 0` after user uninstall. Requires [PrivilegeCapability.DEBLOAT]. */
     suspend fun installExistingPackage(packageName: String): Result<Unit>
+
+    /**
+     * Revoke a runtime permission via allowlisted `pm revoke`.
+     * Requires [PrivilegeCapability.MANAGE_APP_OPS].
+     */
+    suspend fun revokeRuntimePermission(packageName: String, permission: String): Result<Unit>
+
+    /**
+     * Set an AppOp via allowlisted `appops set` (fixed op + mode allowlists).
+     * Requires [PrivilegeCapability.MANAGE_APP_OPS].
+     */
+    suspend fun setAppOp(packageName: String, op: String, mode: String): Result<Unit>
 }

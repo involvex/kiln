@@ -13,8 +13,10 @@ class CapabilityMatrixTest {
         val matrix = CapabilityMatrix.fromUid(CapabilityMatrix.SHELL_UID, PrivilegeTier.SHIZUKU)
         assertEquals(CapabilityAvailability.AVAILABLE, matrix[PrivilegeCapability.SILENT_INSTALL])
         assertEquals(CapabilityAvailability.AVAILABLE, matrix[PrivilegeCapability.DEBLOAT])
+        assertEquals(CapabilityAvailability.AVAILABLE, matrix[PrivilegeCapability.MANAGE_APP_OPS])
         assertEquals(CapabilityAvailability.RESTRICTED, matrix[PrivilegeCapability.FULL_BACKUP])
         assertTrue(PrivilegeCapability.SILENT_INSTALL in CapabilityMatrix.capabilities(2000, PrivilegeTier.SHIZUKU))
+        assertTrue(PrivilegeCapability.MANAGE_APP_OPS in CapabilityMatrix.capabilities(2000, PrivilegeTier.SHIZUKU))
         assertTrue(PrivilegeCapability.FULL_BACKUP !in CapabilityMatrix.capabilities(2000, PrivilegeTier.SHIZUKU))
     }
 

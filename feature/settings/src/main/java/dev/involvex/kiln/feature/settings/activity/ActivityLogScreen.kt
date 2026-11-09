@@ -214,6 +214,7 @@ private fun typeChipLabel(type: ActivityLogType): String = stringResource(
         ActivityLogType.CACHE -> R.string.settings_activity_log_type_cache
         ActivityLogType.MAINTENANCE -> R.string.settings_activity_log_type_maintenance
         ActivityLogType.DEBLOAT -> R.string.settings_activity_log_type_debloat
+        ActivityLogType.PERMISSION -> R.string.settings_activity_log_type_permission
         ActivityLogType.SHELL -> R.string.settings_activity_log_type_shell
         ActivityLogType.TERMUX -> R.string.settings_activity_log_type_termux
         ActivityLogType.AUTOMATION -> R.string.settings_activity_log_type_automation
