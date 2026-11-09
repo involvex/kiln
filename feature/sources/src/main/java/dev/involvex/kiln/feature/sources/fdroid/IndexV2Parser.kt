@@ -20,6 +20,8 @@ data class ParsedIndexPackage(
     val sourceCodeUrl: String?,
     /** F-Droid index-v2 `metadata.categories` (e.g. Internet, System). */
     val categories: List<String> = emptyList(),
+    /** F-Droid index-v2 `metadata.antiFeatures` keys (e.g. Tracking, NonFreeNet). */
+    val antiFeatures: List<String> = emptyList(),
     val signerSha256: List<String>,
     val suggestedVersionCode: Long?,
     val suggestedVersionName: String?,
@@ -105,6 +107,7 @@ object IndexV2Parser {
         val summary = localized(metadata?.get("summary"))
         val sourceCode = metadata?.get("sourceCode")?.jsonPrimitive?.contentOrNull
         val categories = parseCategories(metadata?.get("categories"))
+        val antiFeatures = parseAntiFeatures(metadata?.get("antiFeatures"))
         val iconPath = mediaFilePath(metadata?.get("icon"))
         val phoneScreenshotPaths = parsePhoneScreenshots(metadata?.get("phoneScreenshots"))
         val versions = pkg["versions"]?.jsonObject.orEmpty()
@@ -116,6 +119,7 @@ object IndexV2Parser {
             summary = summary,
             sourceCodeUrl = sourceCode,
             categories = categories,
+            antiFeatures = antiFeatures,
             iconPath = iconPath,
             phoneScreenshotPaths = phoneScreenshotPaths,
             signerSha256 = releases.firstOrNull()?.signerSha256.orEmpty(),
@@ -153,6 +157,17 @@ object IndexV2Parser {
     private fun parseCategories(element: JsonElement?): List<String> {
         if (element == null) return emptyList()
         return when (element) {
+            is JsonArray -> element.mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.takeIf { c -> c.isNotBlank() } }
+            is JsonPrimitive -> element.contentOrNull?.takeIf { it.isNotBlank() }?.let { listOf(it) }.orEmpty()
+            else -> emptyList()
+        }
+    }
+
+    /** Index-v2 uses a map of anti-feature id → localized reason, or occasionally a string array. */
+    private fun parseAntiFeatures(element: JsonElement?): List<String> {
+        if (element == null) return emptyList()
+        return when (element) {
+            is JsonObject -> element.keys.filter { it.isNotBlank() }.sorted()
             is JsonArray -> element.mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.takeIf { c -> c.isNotBlank() } }
             is JsonPrimitive -> element.contentOrNull?.takeIf { it.isNotBlank() }?.let { listOf(it) }.orEmpty()
             else -> emptyList()

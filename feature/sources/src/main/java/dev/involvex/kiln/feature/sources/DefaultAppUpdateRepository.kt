@@ -8,14 +8,18 @@ import dev.involvex.kiln.core.database.ManagedAppEntity
 import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.AppUpdateRepository
+import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.ManagedSourceLink
 import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.RepoConfig
 import dev.involvex.kiln.core.model.SourceKind
 import dev.involvex.kiln.core.model.UpdateCheckResult
+import dev.involvex.kiln.core.model.parseGitHubReleaseChannel
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
+import dev.involvex.kiln.feature.sources.github.GitHubActionsClient
 import dev.involvex.kiln.feature.sources.github.GitHubReleasesClient
+import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.github.GitHubVersionCode
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -32,6 +36,8 @@ class DefaultAppUpdateRepository @Inject constructor(
     private val repoDao: RepoDao,
     private val installedAppsReader: InstalledAppsReader,
     private val gitHubReleasesClient: GitHubReleasesClient,
+    private val gitHubActionsClient: GitHubActionsClient,
+    private val gitHubTokenStore: GitHubTokenStore,
     private val fdroidRepoSync: FDroidRepoSync,
 ) : AppUpdateRepository {
     private val updatesState = MutableStateFlow<Map<String, AppUpdateInfo>>(emptyMap())
@@ -56,7 +62,13 @@ class DefaultAppUpdateRepository @Inject constructor(
                 )
                 val ownerRepo = app.githubOwnerRepo
                 val fromGitHub = if (ownerRepo != null) {
-                    findGitHubUpdate(app.packageName, ownerRepo, app.githubAssetRegex, app.includePreReleases, local)
+                    findGitHubUpdate(
+                        packageName = app.packageName,
+                        ownerRepo = ownerRepo,
+                        assetRegex = app.githubAssetRegex,
+                        channel = parseGitHubReleaseChannel(app.githubChannel),
+                        local = local,
+                    )
                 } else {
                     null
                 }
@@ -103,6 +115,7 @@ class DefaultAppUpdateRepository @Inject constructor(
                     .getOrDefault(MatchConfidence.NONE),
                 pinned = it.pinned,
                 githubOwnerRepo = it.githubOwnerRepo,
+                githubChannel = parseGitHubReleaseChannel(it.githubChannel),
             )
         }
     }
@@ -137,7 +150,7 @@ class DefaultAppUpdateRepository @Inject constructor(
                     ?.takeIf { it.startsWith("github:") }
                     ?.removePrefix("github:"),
                 githubAssetRegex = ".*\\.apk$",
-                includePreReleases = false,
+                githubChannel = GitHubReleaseChannel.STABLE.name,
             )
         managedAppDao.upsert(entity)
         refreshUpdates()
@@ -151,6 +164,7 @@ class DefaultAppUpdateRepository @Inject constructor(
         githubOwnerRepo: String?,
         githubAssetRegex: String?,
         pinned: Boolean,
+        githubChannel: GitHubReleaseChannel?,
     ): Result<Unit> {
         val existing = managedAppDao.get(packageName)
         managedAppDao.upsert(
@@ -162,9 +176,20 @@ class DefaultAppUpdateRepository @Inject constructor(
                 ignoreUpdates = existing?.ignoreUpdates ?: false,
                 githubOwnerRepo = githubOwnerRepo,
                 githubAssetRegex = githubAssetRegex ?: existing?.githubAssetRegex ?: ".*\\.apk$",
-                includePreReleases = existing?.includePreReleases ?: false,
+                githubChannel = (githubChannel ?: parseGitHubReleaseChannel(existing?.githubChannel)).name,
             ),
         )
+        refreshUpdates()
+        return Result.success(Unit)
+    }
+
+    override suspend fun setGitHubChannel(packageName: String, channel: GitHubReleaseChannel): Result<Unit> {
+        val existing = managedAppDao.get(packageName)
+            ?: return Result.failure("not_managed")
+        if (existing.githubOwnerRepo.isNullOrBlank()) {
+            return Result.failure("not_github_source")
+        }
+        managedAppDao.upsert(existing.copy(githubChannel = channel.name))
         refreshUpdates()
         return Result.success(Unit)
     }
@@ -218,35 +243,90 @@ class DefaultAppUpdateRepository @Inject constructor(
         packageName: String,
         ownerRepo: String,
         assetRegex: String?,
-        includePre: Boolean,
+        channel: GitHubReleaseChannel,
         local: dev.involvex.kiln.core.model.InstalledAppMatchInput,
     ): AppUpdateInfo? {
         val regex = runCatching { Regex(assetRegex ?: ".*\\.apk$") }.getOrElse { Regex(".*\\.apk$") }
-        return when (
-            val result = gitHubReleasesClient.latestMatchingRelease(ownerRepo, regex, includePre)
-        ) {
+        return when (channel) {
+            GitHubReleaseChannel.NIGHTLY -> findGitHubNightlyUpdate(packageName, ownerRepo, regex, local)
+
+            GitHubReleaseChannel.STABLE,
+            GitHubReleaseChannel.PRE_RELEASE,
+            -> findGitHubReleaseUpdate(packageName, ownerRepo, regex, channel, local)
+        }
+    }
+
+    private suspend fun findGitHubReleaseUpdate(
+        packageName: String,
+        ownerRepo: String,
+        regex: Regex,
+        channel: GitHubReleaseChannel,
+        local: dev.involvex.kiln.core.model.InstalledAppMatchInput,
+    ): AppUpdateInfo? = when (
+        val result = gitHubReleasesClient.latestMatchingRelease(ownerRepo, regex, channel)
+    ) {
+        is Result.Failure -> {
+            Timber.d("GitHub update check failed for %s", packageName)
+            null
+        }
+
+        is Result.Success -> {
+            val pick = result.value
+            val remoteCode = GitHubVersionCode.parse(pick.tagName)
+            if (!isRemoteNewer(local.versionCode, local.versionName, remoteCode, pick.tagName)) {
+                null
+            } else {
+                AppUpdateInfo(
+                    packageName = packageName,
+                    availableVersionName = pick.tagName,
+                    availableVersionCode = remoteCode,
+                    sourceId = "github:$ownerRepo",
+                    sourceLabel = "GitHub $ownerRepo",
+                    confidence = MatchConfidence.MEDIUM,
+                    signatureMatches = false,
+                    downloadUrl = pick.downloadUrl,
+                    apkSha256 = null,
+                    sizeBytes = pick.sizeBytes,
+                )
+            }
+        }
+    }
+
+    private suspend fun findGitHubNightlyUpdate(
+        packageName: String,
+        ownerRepo: String,
+        apkRegex: Regex,
+        local: dev.involvex.kiln.core.model.InstalledAppMatchInput,
+    ): AppUpdateInfo? {
+        if (gitHubTokenStore.getToken().isNullOrBlank()) {
+            Timber.d("GitHub nightly skipped for %s: PAT required", packageName)
+            return null
+        }
+        return when (val result = gitHubActionsClient.latestMatchingArtifact(ownerRepo)) {
             is Result.Failure -> {
-                Timber.d("GitHub update check failed for %s", packageName)
+                Timber.d("GitHub Actions check failed for %s: %s", packageName, result.message)
                 null
             }
 
             is Result.Success -> {
                 val pick = result.value
-                val remoteCode = GitHubVersionCode.parse(pick.tagName)
-                if (!isRemoteNewer(local.versionCode, local.versionName, remoteCode, pick.tagName)) {
+                val remoteCode = if (pick.runNumber > 0) pick.runNumber else GitHubVersionCode.parse(pick.versionLabel)
+                if (!isRemoteNewer(local.versionCode, local.versionName, remoteCode, pick.versionLabel)) {
                     null
                 } else {
                     AppUpdateInfo(
                         packageName = packageName,
-                        availableVersionName = pick.tagName,
+                        availableVersionName = pick.versionLabel,
                         availableVersionCode = remoteCode,
                         sourceId = "github:$ownerRepo",
-                        sourceLabel = "GitHub $ownerRepo",
+                        sourceLabel = "GitHub $ownerRepo (nightly)",
                         confidence = MatchConfidence.MEDIUM,
                         signatureMatches = false,
                         downloadUrl = pick.downloadUrl,
                         apkSha256 = null,
                         sizeBytes = pick.sizeBytes,
+                        requiresGitHubAuth = true,
+                        apkAssetRegex = apkRegex.pattern,
                     )
                 }
             }

@@ -8,9 +8,11 @@ import dev.involvex.kiln.core.database.ManagedAppEntity
 import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.database.RepoEntity
 import dev.involvex.kiln.core.model.AppUpdateInfo
+import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.SourceKind
+import dev.involvex.kiln.core.model.parseGitHubReleaseChannel
 import dev.involvex.kiln.feature.sources.FdroidApkUrl
 import dev.involvex.kiln.feature.sources.FdroidMediaUrl
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
@@ -28,6 +30,7 @@ data class DiscoveryAppRow(
     val repoName: String,
     val repoAddress: String = "",
     val categories: List<String>,
+    val antiFeatures: List<String> = emptyList(),
     val versionName: String?,
     val versionCode: Long?,
     val iconUrl: String? = null,
@@ -130,9 +133,12 @@ class DiscoveryRepository @Inject constructor(
         val regex = runCatching {
             Regex(existing?.githubAssetRegex ?: DEFAULT_APK_REGEX)
         }.getOrElse { Regex(DEFAULT_APK_REGEX) }
-        val includePre = existing?.includePreReleases == true
+        val channel = parseGitHubReleaseChannel(existing?.githubChannel)
+        if (channel == GitHubReleaseChannel.NIGHTLY) {
+            return Result.failure("github_nightly_use_library")
+        }
         return when (
-            val result = gitHubReleasesClient.latestMatchingRelease(ownerRepo, regex, includePre)
+            val result = gitHubReleasesClient.latestMatchingRelease(ownerRepo, regex, channel)
         ) {
             is Result.Failure -> result
 
@@ -148,7 +154,7 @@ class DiscoveryRepository @Inject constructor(
                             ignoreUpdates = false,
                             githubOwnerRepo = ownerRepo,
                             githubAssetRegex = DEFAULT_APK_REGEX,
-                            includePreReleases = false,
+                            githubChannel = GitHubReleaseChannel.STABLE.name,
                         ),
                     )
                 }
@@ -202,6 +208,7 @@ internal fun IndexedPackageEntity.toDiscoveryRow(repo: RepoEntity?): DiscoveryAp
         repoName = repo?.name ?: repoId,
         repoAddress = address,
         categories = categoriesCsv.split(',').map { it.trim() }.filter { it.isNotEmpty() },
+        antiFeatures = antiFeaturesCsv.split(',').map { it.trim() }.filter { it.isNotEmpty() },
         versionName = suggestedVersionName,
         versionCode = suggestedVersionCode,
         iconUrl = FdroidMediaUrl.join(address, iconPath),

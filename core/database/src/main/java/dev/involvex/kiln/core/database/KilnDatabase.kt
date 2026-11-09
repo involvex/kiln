@@ -11,7 +11,7 @@ import androidx.room.RoomDatabase
         ManagedAppEntity::class,
         InstallJobEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class KilnDatabase : RoomDatabase() {

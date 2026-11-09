@@ -155,6 +155,7 @@ class FDroidRepoSync @Inject constructor(
         summary = pkg.summary,
         sourceCodeUrl = pkg.sourceCodeUrl,
         categoriesCsv = pkg.categories.joinToString(","),
+        antiFeaturesCsv = pkg.antiFeatures.joinToString(","),
         signerSha256Csv = pkg.signerSha256.joinToString(","),
         suggestedVersionCode = pkg.suggestedVersionCode,
         suggestedVersionName = pkg.suggestedVersionName,

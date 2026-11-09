@@ -103,7 +103,11 @@ object ObtainiumImport {
             ignoreUpdates = false,
             githubOwnerRepo = ownerRepo,
             githubAssetRegex = assetRegex,
-            includePreReleases = includePre,
+            githubChannel = if (includePre) {
+                dev.involvex.kiln.core.model.GitHubReleaseChannel.PRE_RELEASE
+            } else {
+                dev.involvex.kiln.core.model.GitHubReleaseChannel.STABLE
+            },
         )
     }
 

@@ -29,6 +29,8 @@ data class IndexedPackageEntity(
     val sourceCodeUrl: String?,
     /** Comma-separated F-Droid categories; empty when unknown. */
     val categoriesCsv: String = "",
+    /** Comma-separated F-Droid anti-feature ids; empty when none. */
+    val antiFeaturesCsv: String = "",
     val signerSha256Csv: String,
     val suggestedVersionCode: Long?,
     val suggestedVersionName: String?,
@@ -63,7 +65,8 @@ data class ManagedAppEntity(
     val ignoreUpdates: Boolean,
     val githubOwnerRepo: String?,
     val githubAssetRegex: String?,
-    val includePreReleases: Boolean,
+    /** [dev.involvex.kiln.core.model.GitHubReleaseChannel] name; default STABLE. */
+    val githubChannel: String = "STABLE",
 )
 
 @Entity(
@@ -82,6 +85,8 @@ data class InstallJobEntity(
     val progressPercent: Int = 0,
     val errorMessage: String? = null,
     val localApkPath: String? = null,
+    val requiresGitHubAuth: Boolean = false,
+    val apkAssetRegex: String? = null,
     val createdAtEpochMs: Long,
     val updatedAtEpochMs: Long,
 )

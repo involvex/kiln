@@ -2,6 +2,7 @@ package dev.involvex.kiln.feature.apps
 
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.AppUpdateInfo
+import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallJobState
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.ManagedSourceLink
@@ -23,6 +24,7 @@ data class AppDetailUiState(
     val managedLink: ManagedSourceLink? = null,
     val enabledRepos: List<RepoConfig> = emptyList(),
     val showLinkSourceDialog: Boolean = false,
+    val hasGitHubToken: Boolean = false,
     val rollbackEntries: List<RollbackApkEntry> = emptyList(),
     val canSilentDowngrade: Boolean = false,
     val pendingRollback: RollbackApkEntry? = null,
@@ -45,6 +47,7 @@ sealed interface AppDetailEvent {
     data object DismissLinkSource : AppDetailEvent
     data class LinkFdroidRepo(val repoId: String) : AppDetailEvent
     data class LinkGithub(val ownerRepo: String) : AppDetailEvent
+    data class SetGitHubChannel(val channel: GitHubReleaseChannel) : AppDetailEvent
     data class RequestRollback(val entry: RollbackApkEntry) : AppDetailEvent
     data object ConfirmRollback : AppDetailEvent
     data object DismissRollback : AppDetailEvent

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
@@ -28,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.involvex.kiln.core.model.AppUpdateInfo
+import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallJobState
 import dev.involvex.kiln.core.model.InstallJobStatus
 import dev.involvex.kiln.core.model.InstalledAppDetail
@@ -51,6 +53,8 @@ fun AppDetailContent(
     onIgnoreUpdatesChanged: (checkForUpdates: Boolean) -> Unit = {},
     managedLink: ManagedSourceLink? = null,
     onOpenLinkSource: () -> Unit = {},
+    onGitHubChannelChange: (GitHubReleaseChannel) -> Unit = {},
+    hasGitHubToken: Boolean = false,
     onInstallUpdate: () -> Unit = {},
     onOpenUnknownSources: () -> Unit = {},
     rollbackEntries: List<RollbackApkEntry> = emptyList(),
@@ -97,6 +101,8 @@ fun AppDetailContent(
         ManagedSourceSection(
             managedLink = managedLink,
             onOpenLinkSource = onOpenLinkSource,
+            onGitHubChannelChange = onGitHubChannelChange,
+            hasGitHubToken = hasGitHubToken,
         )
         PathsSection(detail = detail)
         PermissionsSection(detail = detail)
@@ -170,7 +176,12 @@ private fun RollbackSection(
 }
 
 @Composable
-private fun ManagedSourceSection(managedLink: ManagedSourceLink?, onOpenLinkSource: () -> Unit) {
+private fun ManagedSourceSection(
+    managedLink: ManagedSourceLink?,
+    onOpenLinkSource: () -> Unit,
+    onGitHubChannelChange: (GitHubReleaseChannel) -> Unit,
+    hasGitHubToken: Boolean,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.feature_apps_managed_source_section), style = MaterialTheme.typography.titleMedium)
         if (managedLink == null) {
@@ -193,6 +204,41 @@ private fun ManagedSourceSection(managedLink: ManagedSourceLink?, onOpenLinkSour
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+            if (!managedLink.githubOwnerRepo.isNullOrBlank()) {
+                Text(
+                    stringResource(R.string.feature_apps_github_channel_label),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    GitHubReleaseChannel.entries.forEach { channel ->
+                        FilterChip(
+                            selected = managedLink.githubChannel == channel,
+                            onClick = { onGitHubChannelChange(channel) },
+                            label = {
+                                Text(
+                                    stringResource(
+                                        when (channel) {
+                                            GitHubReleaseChannel.STABLE -> R.string.feature_apps_github_channel_stable
+                                            GitHubReleaseChannel.PRE_RELEASE -> R.string.feature_apps_github_channel_pre_release
+                                            GitHubReleaseChannel.NIGHTLY -> R.string.feature_apps_github_channel_nightly
+                                        },
+                                    ),
+                                )
+                            },
+                        )
+                    }
+                }
+                if (managedLink.githubChannel == GitHubReleaseChannel.NIGHTLY && !hasGitHubToken) {
+                    Text(
+                        stringResource(R.string.feature_apps_github_channel_nightly_needs_pat),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
         }
         OutlinedButton(onClick = onOpenLinkSource, modifier = Modifier.fillMaxWidth()) {

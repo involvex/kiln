@@ -205,7 +205,7 @@ class AutoMatchViewModel @Inject constructor(
                         ignoreUpdates = false,
                         githubOwnerRepo = it.githubOwnerRepo,
                         githubAssetRegex = it.githubAssetRegex,
-                        includePreReleases = false,
+                        githubChannel = "STABLE",
                     )
                 },
             )
