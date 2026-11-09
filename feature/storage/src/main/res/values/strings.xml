@@ -22,4 +22,23 @@
     <string name="storage_confirm_open_settings">Open system settings for %1$s so you can clear cache there?</string>
     <string name="storage_confirm_action">Continue</string>
     <string name="storage_cancel">Cancel</string>
+    <string name="storage_size_bars_title">Largest apps</string>
+    <string name="storage_leftovers_title">APK leftovers</string>
+    <string name="storage_leftovers_hint">Pick a Downloads (or other) folder to find .apk / .apks / .xapk files. Delete only after confirm.</string>
+    <string name="storage_leftovers_pick">Pick folder</string>
+    <string name="storage_leftovers_empty">No APK leftovers in the selected folder.</string>
+    <string name="storage_leftovers_delete">Delete selected leftovers</string>
+    <string name="storage_leftovers_item">%1$s — %2$s</string>
+    <string name="storage_orphans_title">Orphaned Android/data &amp; obb</string>
+    <string name="storage_orphans_hint">Package folders with no matching install. Needs Shizuku (ACCESS_ANDROID_DATA). HyperOS may hide some trees.</string>
+    <string name="storage_orphans_privilege">Open Privilege setup</string>
+    <string name="storage_orphans_refresh">Scan orphans</string>
+    <string name="storage_orphans_empty">No orphaned shared-storage folders found.</string>
+    <string name="storage_orphans_delete">Delete selected orphans</string>
+    <string name="storage_orphans_item">%1$s · %2$s — %3$s</string>
+    <string name="storage_confirm_delete_leftovers">Permanently delete %1$d leftover APK file(s)? This cannot be undone.</string>
+    <string name="storage_confirm_delete_orphans">Permanently delete %1$d orphaned Android/data or obb folder(s)? This cannot be undone.</string>
+    <string name="storage_delete_confirm">Delete</string>
+    <string name="storage_result_fmt">Done: %1$d ok, %2$d failed</string>
+    <string name="storage_capability_missing">Privilege required — open setup</string>
 </resources>

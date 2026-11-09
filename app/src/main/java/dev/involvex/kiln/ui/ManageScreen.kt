@@ -23,7 +23,7 @@ import dev.involvex.kiln.feature.storage.StorageRoute
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ManageRoute(modifier: Modifier = Modifier) {
+fun ManageRoute(modifier: Modifier = Modifier, onOpenPrivilegeSetup: () -> Unit = {}) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     Scaffold(
         modifier = modifier,
@@ -51,6 +51,7 @@ fun ManageRoute(modifier: Modifier = Modifier) {
             when (selectedTab) {
                 0 -> StorageRoute(
                     showTopBar = false,
+                    onOpenPrivilegeSetup = onOpenPrivilegeSetup,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),

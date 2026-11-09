@@ -22,4 +22,23 @@
     <string name="storage_confirm_open_settings">Systemeinstellungen für %1$s öffnen, um den Cache dort zu leeren?</string>
     <string name="storage_confirm_action">Weiter</string>
     <string name="storage_cancel">Abbrechen</string>
+    <string name="storage_size_bars_title">Größte Apps</string>
+    <string name="storage_leftovers_title">APK-Reste</string>
+    <string name="storage_leftovers_hint">Wähle einen Downloads- (oder anderen) Ordner, um .apk / .apks / .xapk zu finden. Löschen nur nach Bestätigung.</string>
+    <string name="storage_leftovers_pick">Ordner wählen</string>
+    <string name="storage_leftovers_empty">Keine APK-Reste im gewählten Ordner.</string>
+    <string name="storage_leftovers_delete">Ausgewählte Reste löschen</string>
+    <string name="storage_leftovers_item">%1$s — %2$s</string>
+    <string name="storage_orphans_title">Verwaiste Android/data &amp; obb</string>
+    <string name="storage_orphans_hint">Paketordner ohne passende Installation. Braucht Shizuku (ACCESS_ANDROID_DATA). HyperOS kann Bäume verstecken.</string>
+    <string name="storage_orphans_privilege">Privilege-Einrichtung öffnen</string>
+    <string name="storage_orphans_refresh">Verwaiste scannen</string>
+    <string name="storage_orphans_empty">Keine verwaisten Shared-Storage-Ordner gefunden.</string>
+    <string name="storage_orphans_delete">Ausgewählte Verwaiste löschen</string>
+    <string name="storage_orphans_item">%1$s · %2$s — %3$s</string>
+    <string name="storage_confirm_delete_leftovers">%1$d APK-Rest(e) dauerhaft löschen? Nicht rückgängig machbar.</string>
+    <string name="storage_confirm_delete_orphans">%1$d verwaiste Android/data- oder obb-Ordner dauerhaft löschen? Nicht rückgängig machbar.</string>
+    <string name="storage_delete_confirm">Löschen</string>
+    <string name="storage_result_fmt">Fertig: %1$d ok, %2$d fehlgeschlagen</string>
+    <string name="storage_capability_missing">Privilegien nötig — Einrichtung öffnen</string>
 </resources>

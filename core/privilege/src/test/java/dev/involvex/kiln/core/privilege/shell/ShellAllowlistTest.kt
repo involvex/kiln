@@ -141,4 +141,25 @@ class ShellAllowlistTest {
         assertTrue(ShellAllowlist.isAllowedAppOp("RECORD_AUDIO"))
         assertFalse(ShellAllowlist.isAllowedAppOpMode("deny"))
     }
+
+    @Test
+    fun android_shared_fs_allowlist() {
+        val pkg = "com.example.gone"
+        assertEquals(
+            listOf("ls", "-1", "/storage/emulated/0/Android/data"),
+            ShellAllowlist.buildArgv(ShellAllowlist.LS_ANDROID_ROOT, listOf("data")),
+        )
+        assertEquals(
+            listOf("du", "-s", "/storage/emulated/0/Android/obb/$pkg"),
+            ShellAllowlist.buildArgv(ShellAllowlist.DU_ANDROID_PKG, listOf("obb", pkg)),
+        )
+        assertEquals(
+            listOf("rm", "-rf", "/storage/emulated/0/Android/data/$pkg"),
+            ShellAllowlist.buildArgv(ShellAllowlist.RM_ANDROID_PKG, listOf("data", pkg)),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.LS_ANDROID_ROOT, listOf("sdcard")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.RM_ANDROID_PKG, listOf("data", "../evil")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.RM_ANDROID_PKG, listOf("data", "com.example;rm")))
+        assertNull(ShellAllowlist.androidPackagePath("data", "a/b"))
+    }
 }

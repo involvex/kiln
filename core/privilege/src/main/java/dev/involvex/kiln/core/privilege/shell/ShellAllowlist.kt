@@ -1,5 +1,6 @@
 package dev.involvex.kiln.core.privilege.shell
 
+import dev.involvex.kiln.core.model.AndroidSharedRoot
 import dev.involvex.kiln.core.model.PermissionAppOpsAllowlist
 
 /**
@@ -18,6 +19,9 @@ object ShellAllowlist {
     const val PM_INSTALL_EXISTING = "pm_install_existing"
     const val PM_REVOKE = "pm_revoke"
     const val APPOPS_SET = "appops_set"
+    const val LS_ANDROID_ROOT = "ls_android_root"
+    const val DU_ANDROID_PKG = "du_android_pkg"
+    const val RM_ANDROID_PKG = "rm_android_pkg"
 
     private val PACKAGE_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
     private val PERMISSION_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
@@ -126,7 +130,33 @@ object ShellAllowlist {
             }
         }
 
+        LS_ANDROID_ROOT -> {
+            val root = resolveRoot(args.singleOrNull()) ?: return null
+            listOf("ls", "-1", root.absolutePath)
+        }
+
+        DU_ANDROID_PKG -> {
+            val path = androidPackagePath(args.getOrNull(0), args.getOrNull(1)) ?: return null
+            if (args.size != 2) return null
+            listOf("du", "-s", path)
+        }
+
+        RM_ANDROID_PKG -> {
+            val path = androidPackagePath(args.getOrNull(0), args.getOrNull(1)) ?: return null
+            if (args.size != 2) return null
+            // ProcessBuilder argv — never a concatenated shell string.
+            listOf("rm", "-rf", path)
+        }
+
         else -> null
+    }
+
+    fun resolveRoot(pathKey: String?): AndroidSharedRoot? = pathKey?.let { AndroidSharedRoot.fromPathKey(it) }
+
+    fun androidPackagePath(pathKey: String?, packageName: String?): String? {
+        val root = resolveRoot(pathKey) ?: return null
+        if (packageName == null || !isSafePackageName(packageName)) return null
+        return "${root.absolutePath}/$packageName"
     }
 
     fun isSafePackageName(value: String): Boolean = value.length in 3..255 && PACKAGE_NAME.matches(value)
