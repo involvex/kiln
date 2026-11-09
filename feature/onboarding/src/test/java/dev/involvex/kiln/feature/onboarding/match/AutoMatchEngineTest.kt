@@ -96,6 +96,55 @@ class AutoMatchEngineTest {
     }
 
     @Test
+    fun `prefers signer-matching repo over higher-priority mismatch`() {
+        val githubMap = mockk<GitHubMap>()
+        every { githubMap.lookup(any()) } returns null
+        val installed = listOf(
+            InstalledAppMatchInput(
+                packageName = "com.example",
+                label = "Example",
+                versionName = "1",
+                versionCode = 1,
+                signerSha256 = listOf("AA:BB"),
+            ),
+        )
+        val indexed = listOf(
+            IndexedPackageEntity(
+                packageName = "com.example",
+                repoId = "izzy",
+                name = "Example",
+                summary = null,
+                sourceCodeUrl = null,
+                signerSha256Csv = "11:22",
+                suggestedVersionCode = 2,
+                suggestedVersionName = "2",
+            ),
+            IndexedPackageEntity(
+                packageName = "com.example",
+                repoId = "fdroid",
+                name = "Example",
+                summary = null,
+                sourceCodeUrl = "https://github.com/example/app",
+                signerSha256Csv = "AA:BB",
+                suggestedVersionCode = 2,
+                suggestedVersionName = "2",
+            ),
+        )
+        val result = AutoMatchEngine.match(
+            installed = installed,
+            indexed = indexed,
+            // Izzy would win on priority alone, but its signer mismatches.
+            repoPriority = mapOf("izzy" to 0, "fdroid" to 1),
+            repoNames = mapOf("izzy" to "IzzyOnDroid", "fdroid" to "F-Droid"),
+            githubMap = githubMap,
+        )
+        val hit = result.single()
+        assertEquals(MatchConfidence.HIGH, hit.confidence)
+        assertEquals("fdroid", hit.repoId)
+        assertEquals(listOf("izzy"), hit.alternateRepoIds)
+    }
+
+    @Test
     fun `warning when signer mismatches`() {
         val githubMap = mockk<GitHubMap>()
         every { githubMap.lookup(any()) } returns null

@@ -2,7 +2,7 @@
 <resources>
     <string name="onboarding_back">Zurück</string>
     <string name="onboarding_auto_match_title">Installierte Apps zuordnen</string>
-    <string name="onboarding_auto_match_body">Sichere Treffer (Paket + Signer) sind vorausgewählt. Signaturabweichungen können hier nicht übernommen werden. Der Abgleich bleibt auf dem Gerät.</string>
+    <string name="onboarding_auto_match_body">Sichere Treffer (Paket + Signer) sind vorausgewählt. Signatur-Warnungen brauchen eine Bestätigung oder eine manuelle Quellen-Verknüpfung. Der Abgleich bleibt auf dem Gerät.</string>
     <string name="onboarding_accept_all_safe">Alle sicheren übernehmen</string>
     <string name="onboarding_accept_selected">Auswahl übernehmen</string>
     <string name="onboarding_refresh">Aktualisieren</string>
@@ -11,6 +11,34 @@
     <string name="onboarding_group_warning">Signatur-Warnung</string>
     <string name="onboarding_group_none">Nicht gefunden</string>
     <string name="onboarding_index_empty">Noch kein F-Droid-Index. Zuerst unter Quellen synchronisieren — sichere Treffer (HOCH) brauchen Paket + Signer aus einem Sync. Bis dahin erscheinen nur GitHub-Map-Vorschläge unter Prüfen.</string>
+    <string name="onboarding_accepted_count">%1$d App(s) verknüpft.</string>
+    <string name="onboarding_chip_high">Hoch</string>
+    <string name="onboarding_chip_medium">Prüfen</string>
+    <string name="onboarding_chip_warning">Signatur</string>
+    <string name="onboarding_chip_none">Keine</string>
+    <string name="onboarding_rationale_signer_match">Paket und Signaturzertifikat passen zu diesem Repo.</string>
+    <string name="onboarding_rationale_index_no_signers">Paket im Index gefunden, aber das Repo listet keine Signer zur Prüfung.</string>
+    <string name="onboarding_rationale_github_map">Vorschlag aus der lokalen GitHub-Map (kein F-Droid-Treffer).</string>
+    <string name="onboarding_rationale_signer_mismatch">Gleiche Paket-ID, anderes Signaturzertifikat als im Index.</string>
+    <string name="onboarding_rationale_not_found">Weder im synchronisierten Index noch in der GitHub-Map.</string>
+    <string name="onboarding_also_in_repos">Auch gelistet in: %1$s</string>
+    <string name="onboarding_accept_warning">Trotzdem übernehmen</string>
+    <string name="onboarding_link_source">Quelle verknüpfen…</string>
+    <string name="onboarding_change_source">Quelle ändern…</string>
+    <string name="onboarding_warning_confirm_title">Signaturabweichung übernehmen?</string>
+    <string name="onboarding_warning_confirm_body">%1$s würde Updates von %2$s verfolgen, obwohl das Signaturzertifikat nicht passt. Updates aus dieser Quelle bleiben gesperrt, bis die Signatur stimmt. Diese Wahl pinnen?</string>
+    <string name="onboarding_warning_confirm_accept">Pinnen &amp; übernehmen</string>
+    <string name="onboarding_warning_confirm_cancel">Abbrechen</string>
+    <string name="onboarding_link_dialog_title">%1$s verknüpfen</string>
+    <string name="onboarding_link_dialog_body">F-Droid-Repo wählen oder GitHub owner/repo eingeben. Die Verknüpfung wird gepinnt und vom Auto-Match nicht überschrieben.</string>
+    <string name="onboarding_link_fdroid_section">F-Droid-Repos</string>
+    <string name="onboarding_link_no_repos">Noch keine aktivierten Repos. Zuerst Quellen synchronisieren.</string>
+    <string name="onboarding_link_github_section">GitHub Releases</string>
+    <string name="onboarding_link_github_hint">owner/repo</string>
+    <string name="onboarding_link_github_confirm">GitHub verknüpfen</string>
+    <string name="onboarding_link_cancel">Abbrechen</string>
+    <string name="onboarding_link_bad_github">Format owner/repo (ein Slash).</string>
+    <string name="onboarding_link_failed">Verknüpfung konnte nicht gespeichert werden.</string>
 
     <string name="privilege_setup_title">Privilege-Einrichtung</string>
     <string name="privilege_setup_intro">Privilegierte Aktionen (stille Installation, später Cache/Debloat) brauchen Shizuku oder ShizukuPlus. Ohne bleibt Kiln auf Tier NONE mit System-Dialogen.</string>

@@ -4,6 +4,8 @@ import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.InstallJobState
 import dev.involvex.kiln.core.model.InstalledAppDetail
+import dev.involvex.kiln.core.model.ManagedSourceLink
+import dev.involvex.kiln.core.model.RepoConfig
 import dev.involvex.kiln.core.model.RollbackApkEntry
 
 data class AppDetailUiState(
@@ -18,6 +20,9 @@ data class AppDetailUiState(
     val installJob: InstallJobState? = null,
     /** null = not managed yet; true = skipping update checks; false = checking updates */
     val ignoreUpdates: Boolean? = null,
+    val managedLink: ManagedSourceLink? = null,
+    val enabledRepos: List<RepoConfig> = emptyList(),
+    val showLinkSourceDialog: Boolean = false,
     val rollbackEntries: List<RollbackApkEntry> = emptyList(),
     val canSilentDowngrade: Boolean = false,
     val pendingRollback: RollbackApkEntry? = null,
@@ -36,6 +41,10 @@ sealed interface AppDetailEvent {
     data object InstallUpdate : AppDetailEvent
     data object OpenUnknownSourcesSettings : AppDetailEvent
     data class IgnoreUpdatesChanged(val checkForUpdates: Boolean) : AppDetailEvent
+    data object OpenLinkSource : AppDetailEvent
+    data object DismissLinkSource : AppDetailEvent
+    data class LinkFdroidRepo(val repoId: String) : AppDetailEvent
+    data class LinkGithub(val ownerRepo: String) : AppDetailEvent
     data class RequestRollback(val entry: RollbackApkEntry) : AppDetailEvent
     data object ConfirmRollback : AppDetailEvent
     data object DismissRollback : AppDetailEvent

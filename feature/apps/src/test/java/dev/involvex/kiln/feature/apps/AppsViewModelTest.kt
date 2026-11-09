@@ -8,7 +8,9 @@ import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.InstalledAppSummary
+import dev.involvex.kiln.core.model.ManagedSourceLink
 import dev.involvex.kiln.core.model.MatchConfidence
+import dev.involvex.kiln.core.model.RepoConfig
 import dev.involvex.kiln.core.model.UpdateCheckResult
 import dev.involvex.kiln.feature.apps.data.InstalledAppsRepository
 import dev.involvex.kiln.feature.apps.export.ApkExporter
@@ -177,5 +179,18 @@ class AppsViewModelTest {
         override fun observeIgnoreUpdates(packageName: String): Flow<Boolean?> = flowOf(false)
 
         override suspend fun setIgnoreUpdates(packageName: String, ignoreUpdates: Boolean): Result<Unit> = Result.success(Unit)
+
+        override fun observeManagedLink(packageName: String): Flow<ManagedSourceLink?> = flowOf(null)
+
+        override fun observeEnabledRepos(): Flow<List<RepoConfig>> = flowOf(emptyList())
+
+        override suspend fun linkManagedSource(
+            packageName: String,
+            sourceId: String,
+            confidence: MatchConfidence,
+            githubOwnerRepo: String?,
+            githubAssetRegex: String?,
+            pinned: Boolean,
+        ): Result<Unit> = Result.success(Unit)
     }
 }

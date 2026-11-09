@@ -11,6 +11,7 @@ import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.InstallQueue
+import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
 import dev.involvex.kiln.core.model.RollbackApkEntry
@@ -49,6 +50,16 @@ class AppDetailViewModel @AssistedInject constructor(
         viewModelScope.launch {
             appUpdateRepository.observeIgnoreUpdates(packageName).collect { ignore ->
                 _uiState.update { it.copy(ignoreUpdates = ignore) }
+            }
+        }
+        viewModelScope.launch {
+            appUpdateRepository.observeManagedLink(packageName).collect { link ->
+                _uiState.update { it.copy(managedLink = link) }
+            }
+        }
+        viewModelScope.launch {
+            appUpdateRepository.observeEnabledRepos().collect { repos ->
+                _uiState.update { it.copy(enabledRepos = repos) }
             }
         }
         viewModelScope.launch {
@@ -120,11 +131,74 @@ class AppDetailViewModel @AssistedInject constructor(
 
             AppDetailEvent.ConfirmRollback -> confirmRollback()
 
+            AppDetailEvent.OpenLinkSource,
+            AppDetailEvent.DismissLinkSource,
+            is AppDetailEvent.LinkFdroidRepo,
+            is AppDetailEvent.LinkGithub,
+            -> onLinkEvent(event)
+
             AppDetailEvent.OpenUnknownSourcesSettings,
             AppDetailEvent.Launch,
             AppDetailEvent.OpenAppInfo,
             AppDetailEvent.Uninstall,
             -> Unit // handled in UI via intents
+        }
+    }
+
+    private fun onLinkEvent(event: AppDetailEvent) {
+        when (event) {
+            AppDetailEvent.OpenLinkSource -> _uiState.update { it.copy(showLinkSourceDialog = true) }
+            AppDetailEvent.DismissLinkSource -> _uiState.update { it.copy(showLinkSourceDialog = false) }
+            is AppDetailEvent.LinkFdroidRepo -> linkFdroid(event.repoId)
+            is AppDetailEvent.LinkGithub -> linkGithub(event.ownerRepo)
+            else -> Unit
+        }
+    }
+
+    private fun linkFdroid(repoId: String) {
+        viewModelScope.launch {
+            when (
+                val result = appUpdateRepository.linkManagedSource(
+                    packageName = packageName,
+                    sourceId = repoId,
+                    confidence = MatchConfidence.MEDIUM,
+                    pinned = true,
+                )
+            ) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(showLinkSourceDialog = false) }
+                    showMessage("link_ok")
+                }
+
+                is Result.Failure -> showMessage(result.message)
+            }
+        }
+    }
+
+    private fun linkGithub(ownerRepo: String) {
+        val normalized = ownerRepo.trim().trim('/')
+        if (!normalized.contains('/') || normalized.count { it == '/' } != 1) {
+            showMessage("bad_github")
+            return
+        }
+        viewModelScope.launch {
+            when (
+                val result = appUpdateRepository.linkManagedSource(
+                    packageName = packageName,
+                    sourceId = "github:$normalized",
+                    confidence = MatchConfidence.MEDIUM,
+                    githubOwnerRepo = normalized,
+                    githubAssetRegex = ".*\\.apk$",
+                    pinned = true,
+                )
+            ) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(showLinkSourceDialog = false) }
+                    showMessage("link_ok")
+                }
+
+                is Result.Failure -> showMessage(result.message)
+            }
         }
     }
 

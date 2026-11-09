@@ -16,6 +16,22 @@
     <string name="feature_apps_update_check_error">Update-Prüfung fehlgeschlagen: %1$s</string>
     <string name="feature_apps_ignore_updates">Updates für diese App prüfen</string>
     <string name="feature_apps_ignore_updates_hint">Aus = Kiln überspringt diese App bei der Update-Prüfung.</string>
+    <string name="feature_apps_managed_source_section">Update-Quelle</string>
+    <string name="feature_apps_managed_source_none">Noch nicht verknüpft. Apps zuordnen oder hier eine Quelle wählen.</string>
+    <string name="feature_apps_managed_source_current">%1$s · %2$s</string>
+    <string name="feature_apps_managed_source_pinned">Gepinnt — Auto-Match überschreibt diese Wahl nicht.</string>
+    <string name="feature_apps_link_source">Quelle verknüpfen…</string>
+    <string name="feature_apps_change_source">Quelle ändern…</string>
+    <string name="feature_apps_link_dialog_title">%1$s verknüpfen</string>
+    <string name="feature_apps_link_dialog_body">F-Droid-Repo wählen oder GitHub owner/repo eingeben. Die Verknüpfung wird gepinnt.</string>
+    <string name="feature_apps_link_fdroid_section">F-Droid-Repos</string>
+    <string name="feature_apps_link_no_repos">Noch keine aktivierten Repos. Zuerst Quellen synchronisieren.</string>
+    <string name="feature_apps_link_github_section">GitHub Releases</string>
+    <string name="feature_apps_link_github_hint">owner/repo</string>
+    <string name="feature_apps_link_github_confirm">GitHub verknüpfen</string>
+    <string name="feature_apps_link_cancel">Abbrechen</string>
+    <string name="feature_apps_link_ok">Quelle verknüpft.</string>
+    <string name="feature_apps_link_bad_github">Format owner/repo (ein Slash).</string>
     <string name="feature_apps_dismiss">Schließen</string>
     <string name="feature_apps_sort_name">Name</string>
     <string name="feature_apps_sort_size">Größe</string>

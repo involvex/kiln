@@ -2,7 +2,7 @@
 <resources>
     <string name="onboarding_back">Back</string>
     <string name="onboarding_auto_match_title">Match installed apps</string>
-    <string name="onboarding_auto_match_body">Safe matches (package + signer) are selected by default. Signature mismatches cannot be accepted without a later manual override. Matching stays on-device.</string>
+    <string name="onboarding_auto_match_body">Safe matches (package + signer) are selected by default. Signature warnings need an explicit confirm, or link another source manually. Matching stays on-device.</string>
     <string name="onboarding_accept_all_safe">Accept all safe</string>
     <string name="onboarding_accept_selected">Accept selected</string>
     <string name="onboarding_refresh">Refresh</string>
@@ -11,6 +11,34 @@
     <string name="onboarding_group_warning">Signature warning</string>
     <string name="onboarding_group_none">Not found</string>
     <string name="onboarding_index_empty">No F-Droid index cached yet. Sync Sources first — safe (HIGH) matches need package + signer from a synced repo. Until then only GitHub-map suggestions appear under Review.</string>
+    <string name="onboarding_accepted_count">Linked %1$d app(s).</string>
+    <string name="onboarding_chip_high">High</string>
+    <string name="onboarding_chip_medium">Review</string>
+    <string name="onboarding_chip_warning">Signature</string>
+    <string name="onboarding_chip_none">None</string>
+    <string name="onboarding_rationale_signer_match">Package and signing certificate match this repo.</string>
+    <string name="onboarding_rationale_index_no_signers">Package found in the index, but the repo listed no signers to verify.</string>
+    <string name="onboarding_rationale_github_map">Suggested from the on-device GitHub map (no F-Droid index hit).</string>
+    <string name="onboarding_rationale_signer_mismatch">Same package id, different signing certificate than the index entry.</string>
+    <string name="onboarding_rationale_not_found">Not in the synced index or GitHub map.</string>
+    <string name="onboarding_also_in_repos">Also listed in: %1$s</string>
+    <string name="onboarding_accept_warning">Accept anyway</string>
+    <string name="onboarding_link_source">Link source…</string>
+    <string name="onboarding_change_source">Change source…</string>
+    <string name="onboarding_warning_confirm_title">Accept signature mismatch?</string>
+    <string name="onboarding_warning_confirm_body">%1$s would track updates from %2$s even though the signing certificate does not match. Future updates from that source stay blocked until the signature matches. Pin this choice?</string>
+    <string name="onboarding_warning_confirm_accept">Pin &amp; accept</string>
+    <string name="onboarding_warning_confirm_cancel">Cancel</string>
+    <string name="onboarding_link_dialog_title">Link %1$s</string>
+    <string name="onboarding_link_dialog_body">Pick an F-Droid-format repo or enter a GitHub owner/repo. The link is pinned so auto-match will not override it.</string>
+    <string name="onboarding_link_fdroid_section">F-Droid repos</string>
+    <string name="onboarding_link_no_repos">No enabled repos yet. Sync Sources first.</string>
+    <string name="onboarding_link_github_section">GitHub Releases</string>
+    <string name="onboarding_link_github_hint">owner/repo</string>
+    <string name="onboarding_link_github_confirm">Link GitHub</string>
+    <string name="onboarding_link_cancel">Cancel</string>
+    <string name="onboarding_link_bad_github">Use owner/repo (one slash).</string>
+    <string name="onboarding_link_failed">Could not save the link.</string>
 
     <string name="privilege_setup_title">Privilege setup</string>
     <string name="privilege_setup_intro">Privileged actions (silent install, later cache clean / debloat) need Shizuku or ShizukuPlus. Without it, Kiln stays on Tier NONE with system dialogs.</string>

@@ -90,6 +90,14 @@ data class InstalledAppMatchInput(
 
 data class UpdateCheckResult(val reposSynced: Int, val reposFailed: Int, val updatesFound: Int)
 
+/** Persisted update-source binding for an installed package. */
+data class ManagedSourceLink(
+    val sourceId: String,
+    val confidence: MatchConfidence,
+    val pinned: Boolean,
+    val githubOwnerRepo: String? = null,
+)
+
 /**
  * Available updates for managed / matched packages.
  * Implemented in `:feature:sources`, consumed by `:feature:apps`.
@@ -109,9 +117,28 @@ interface AppUpdateRepository {
     /** `null` if the package is not a managed app yet. */
     fun observeIgnoreUpdates(packageName: String): kotlinx.coroutines.flow.Flow<Boolean?>
 
+    /** `null` if the package is not a managed app yet. */
+    fun observeManagedLink(packageName: String): kotlinx.coroutines.flow.Flow<ManagedSourceLink?>
+
+    /** Enabled F-Droid-format repos for manual source linking. */
+    fun observeEnabledRepos(): kotlinx.coroutines.flow.Flow<List<RepoConfig>>
+
     /**
      * Persist [ignoreUpdates] for [packageName]. Creates a minimal managed row when missing
      * (source from current update info or `"manual"`).
      */
     suspend fun setIgnoreUpdates(packageName: String, ignoreUpdates: Boolean): Result<Unit>
+
+    /**
+     * Manually bind an installed package to an update source (F-Droid repo id or `github:owner/repo`).
+     * Sets [pinned] so later auto-match / priority does not silently override the choice.
+     */
+    suspend fun linkManagedSource(
+        packageName: String,
+        sourceId: String,
+        confidence: MatchConfidence,
+        githubOwnerRepo: String? = null,
+        githubAssetRegex: String? = null,
+        pinned: Boolean = true,
+    ): Result<Unit>
 }
