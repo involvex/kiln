@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_updates_description">Zeigt verfügbare Kiln-Updates und Shortcuts zum Prüfen oder Cache-Leeren.</string>
+    <string name="widget_updates_loading">Kiln…</string>
+    <string name="widget_updates_title">Kiln</string>
+    <string name="widget_updates_queued">Update-Check eingereiht…</string>
+    <string name="widget_updates_check_now">Jetzt prüfen</string>
+    <string name="widget_updates_trim">Caches leeren</string>
+    <string name="widget_updates_trim_confirm">Leeren bestätigen</string>
+    <string name="widget_updates_trim_cancel">Abbrechen</string>
+    <string name="widget_updates_zero">Keine Updates</string>
+    <plurals name="widget_updates_count">
+        <item quantity="one">%d Update</item>
+        <item quantity="other">%d Updates</item>
+    </plurals>
+    <string name="tile_updates_label">Kiln-Updates</string>
+    <string name="tile_updates_subtitle_zero">Keine Updates</string>
+    <plurals name="tile_updates_subtitle_count">
+        <item quantity="one">%d Update</item>
+        <item quantity="other">%d Updates</item>
+    </plurals>
+</resources>

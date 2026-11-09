@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M25** shipped on main (#38). **M24** (`m24-activity-log`) adds a searchable local Activity log. App version **0.2.2** (code 5). Publishing / F-Droid submit still deferred.
+**Current status:** **M24** shipped on main (#39). **M26** (`m26-widgets-qs`) adds Glance widget + QS tile. App version **0.2.2** (code 5). Publishing / F-Droid submit still deferred.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -38,9 +38,9 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M21** | Changelog & Watchlist | Done | [`prompts/M21-changelog-watchlist.md`](./prompts/M21-changelog-watchlist.md) · [#35](https://github.com/involvex/kiln/pull/35) | Release notes on updates; Watch from catalog; Sources watchlist |
 | **M22** | Intent / Broadcast API | Done | [`prompts/M22-intent-api.md`](./prompts/M22-intent-api.md) · [#36](https://github.com/involvex/kiln/pull/36) | Opt-in AutomationReceiver: CHECK_UPDATES / INSTALL_UPDATE / INSTALL_FROM_URL / CLEAN_CACHE; signature permission |
 | **M23** | Scheduled maintenance | Done | [`prompts/M23-scheduled-maintenance.md`](./prompts/M23-scheduled-maintenance.md) · [#37](https://github.com/involvex/kiln/pull/37) | Weekly WorkManager (Wi‑Fi+charging): trim caches, prune downloads/rollback/backup temps; run protocol |
-| **M24** | Activity log | In progress | [`prompts/M24-activity-log.md`](./prompts/M24-activity-log.md) · `m24-activity-log` | Searchable local log of installs, backups, cleaner, shell |
+| **M24** | Activity log | Done | [`prompts/M24-activity-log.md`](./prompts/M24-activity-log.md) · [#39](https://github.com/involvex/kiln/pull/39) | Searchable local log of installs, backups, cleaner, shell |
 | **M25** | Config export/import | Done | [`prompts/M25-config-export.md`](./prompts/M25-config-export.md) · [#38](https://github.com/involvex/kiln/pull/38) | Kiln-Config JSON via SAF (Cloudflare sync later) |
-| **M26** | Widgets / QS tile | Planned | PLAN §12 P2 | Glance: update count, check-now, cache shortcut |
+| **M26** | Widgets / QS tile | In progress | [`prompts/M26-widgets-qs.md`](./prompts/M26-widgets-qs.md) · `m26-widgets-qs` | Glance: update count, check-now, cache shortcut; thin QS tile |
 | **M27** | Permission audit | Planned | PLAN §12 P2 | Dangerous perms overview; AppOps / bulk revoke via privilege |
 | **M28** | Storage phase 2 | Planned | PLAN §4.5 deferred | Treemap, APK leftovers, orphaned Android/data |
 
@@ -57,9 +57,9 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Changelog & Watchlist | Done | M21 #35 |
 | Intent / Broadcast API | Done | M22 #36 |
 | Scheduled maintenance | Done | M23 #37 |
-| Activity log | In progress | M24 |
+| Activity log | Done | M24 #39 |
 | Config export/import | Done | M25 #38 (Obtainium import already exists; separate format) |
-| Widgets / QS | Open | M26 |
+| Widgets / QS | In progress | M26 |
 | Permission audit | Open | M27 |
 | Storage phase 2 | Open | M28 |
 | SAF backup rotation / data tiers / encryption | Open | Unscheduled |
@@ -73,7 +73,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 Update after each milestone. Tier = active `PrivilegedExecutor`.
 
-| Feature | Now (main, post-M25) | Needs tier |
+| Feature | Now (main, post-M24) | Needs tier |
 | --- | --- | --- |
 | Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
 | List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
@@ -89,7 +89,8 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Automation Intent API | ✅ Settings opt-in + signature `AUTOMATION`; CHECK_UPDATES / INSTALL_* / CLEAN_CACHE + result broadcast | NONE (+ privilege for CLEAN_CACHE) |
 | Scheduled maintenance | ✅ weekly Wi‑Fi+charging; trim / prune downloads / rollback / backup temps; protocol | NONE (+ privilege for trim) |
 | Kiln-Config export/import | ✅ SAF JSON merge of repos, managed apps, non-secret prefs (no PAT) | NONE |
-| Activity log | 🟡 M24: Room-backed searchable log (install/backup/cache/maintenance/shell/…) | NONE |
+| Activity log | ✅ Room-backed searchable log (install/backup/cache/maintenance/shell/…) | NONE |
+| Widgets / QS | 🟡 M26: Glance update count + Check now + Trim; QS tile Check now | NONE (+ privilege for Trim) |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; splits deferred | NONE / SHIZUKU |
 | Storage / cleaner | ✅ Usage-access gate; App/Data/Cache list; clear via Shizuku or app-info deep-link | NONE / SHIZUKU |
@@ -283,8 +284,8 @@ flowchart LR
   M27 --> M28[M28 Storage phase 2]
 ```
 
-1. **M0–M23** and **M25** shipped on main (M25 = [#38](https://github.com/involvex/kiln/pull/38); M23 = [#37](https://github.com/involvex/kiln/pull/37)).
-2. Current: **M24** only ([`prompts/M24-activity-log.md`](./prompts/M24-activity-log.md)). Do not mix M26+.
+1. **M0–M25** shipped on main (M24 = [#39](https://github.com/involvex/kiln/pull/39); M25 = [#38](https://github.com/involvex/kiln/pull/38)).
+2. Current: **M26** only ([`prompts/M26-widgets-qs.md`](./prompts/M26-widgets-qs.md)). Do not mix M27+.
 3. Publishing / F-Droid still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

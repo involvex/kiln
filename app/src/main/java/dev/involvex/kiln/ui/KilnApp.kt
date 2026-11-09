@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -35,6 +36,7 @@ import dev.involvex.kiln.feature.sources.SourcesRoute
 import dev.involvex.kiln.feature.sources.discovery.CatalogDetailRoute
 import dev.involvex.kiln.feature.sources.discovery.DiscoveryRoute
 import dev.involvex.kiln.feature.termux.TermuxRoute
+import dev.involvex.kiln.feature.widgets.ManageDeepLinkStore
 import dev.involvex.kiln.navigation.ActivityLogKey
 import dev.involvex.kiln.navigation.AppDetailKey
 import dev.involvex.kiln.navigation.AppsKey
@@ -52,7 +54,7 @@ import dev.involvex.kiln.navigation.TopLevelBackStack
 private data class TopLevelDestination(val key: Any, val labelRes: Int, val icon: ImageVector)
 
 @Composable
-fun KilnApp(modifier: Modifier = Modifier) {
+fun KilnApp(modifier: Modifier = Modifier, manageDeepLinkStore: ManageDeepLinkStore? = null) {
     val destinations = listOf(
         TopLevelDestination(AppsKey, R.string.nav_apps, Icons.Filled.Apps),
         TopLevelDestination(SourcesKey, R.string.nav_sources, Icons.Filled.CloudDownload),
@@ -61,6 +63,16 @@ fun KilnApp(modifier: Modifier = Modifier) {
     )
     val topLevelBackStack = remember { TopLevelBackStack<Any>(AppsKey) }
     val scrollToTop = remember { ScrollToTopSignal() }
+
+    if (manageDeepLinkStore != null) {
+        LaunchedEffect(manageDeepLinkStore) {
+            manageDeepLinkStore.pending.collect { pending ->
+                if (pending && manageDeepLinkStore.consume()) {
+                    topLevelBackStack.addTopLevel(ManageKey)
+                }
+            }
+        }
+    }
 
     CompositionLocalProvider(LocalScrollToTopSignal provides scrollToTop) {
         Scaffold(

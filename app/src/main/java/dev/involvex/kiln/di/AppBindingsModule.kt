@@ -27,6 +27,8 @@ import dev.involvex.kiln.core.model.MaintenanceScheduler
 import dev.involvex.kiln.core.model.TermuxPreferences
 import dev.involvex.kiln.core.model.UpdateObservationStore
 import dev.involvex.kiln.core.model.WatchlistRepository
+import dev.involvex.kiln.core.model.WidgetPreferences
+import dev.involvex.kiln.core.model.WidgetUpdatePublisher
 import dev.involvex.kiln.feature.apps.data.DefaultInstalledAppsReader
 import dev.involvex.kiln.feature.installer.DefaultInstallQueue
 import dev.involvex.kiln.feature.installer.rollback.DefaultApkDownloadJanitor
@@ -45,6 +47,8 @@ import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.updatecheck.DefaultBackgroundUpdateScheduler
 import dev.involvex.kiln.feature.sources.updatecheck.PrefsUpdateObservationStore
 import dev.involvex.kiln.feature.termux.data.DataStoreTermuxPreferences
+import dev.involvex.kiln.feature.widgets.WidgetCountPublisher
+import dev.involvex.kiln.feature.widgets.data.DataStoreWidgetPreferences
 import dev.involvex.kiln.logging.TimberDebugLogController
 import javax.inject.Singleton
 
@@ -143,4 +147,12 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindDebugLogController(impl: TimberDebugLogController): DebugLogController
+
+    @Binds
+    @Singleton
+    abstract fun bindWidgetPreferences(impl: DataStoreWidgetPreferences): WidgetPreferences
+
+    @Binds
+    @Singleton
+    abstract fun bindWidgetUpdatePublisher(impl: WidgetCountPublisher): WidgetUpdatePublisher
 }

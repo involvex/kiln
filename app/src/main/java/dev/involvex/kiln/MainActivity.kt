@@ -25,7 +25,9 @@ import dev.involvex.kiln.core.model.KilnFontStyle
 import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnLocales
 import dev.involvex.kiln.core.model.KilnThemeStyle
+import dev.involvex.kiln.core.model.WidgetIntents
 import dev.involvex.kiln.feature.sources.IncomingRepoLinkStore
+import dev.involvex.kiln.feature.widgets.ManageDeepLinkStore
 import dev.involvex.kiln.ui.KilnApp
 import javax.inject.Inject
 
@@ -36,6 +38,9 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var appearancePreferences: AppearancePreferences
+
+    @Inject
+    lateinit var manageDeepLinkStore: ManageDeepLinkStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -49,7 +54,11 @@ class MainActivity : AppCompatActivity() {
             val appearance by appearancePreferences.observe().collectAsStateWithLifecycle(
                 initialValue = AppearancePrefs(),
             )
-            KilnRoot(themeStyle = appearance.theme, fontStyle = appearance.fontStyle)
+            KilnRoot(
+                themeStyle = appearance.theme,
+                fontStyle = appearance.fontStyle,
+                manageDeepLinkStore = manageDeepLinkStore,
+            )
         }
     }
 
@@ -61,6 +70,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun offerIncoming(intent: Intent?) {
         if (intent == null) return
+        if (intent.getBooleanExtra(WidgetIntents.EXTRA_OPEN_MANAGE, false)) {
+            manageDeepLinkStore.offer()
+        }
         when (intent.action) {
             Intent.ACTION_SEND -> {
                 if (intent.type?.startsWith("text/") == true) {
@@ -107,7 +119,7 @@ internal fun applyKilnLanguage(language: KilnLanguage) {
 }
 
 @Composable
-private fun KilnRoot(themeStyle: KilnThemeStyle, fontStyle: KilnFontStyle) {
+private fun KilnRoot(themeStyle: KilnThemeStyle, fontStyle: KilnFontStyle, manageDeepLinkStore: ManageDeepLinkStore) {
     val view = LocalView.current
     KilnTheme(themeStyle = themeStyle, fontStyle = fontStyle, dynamicColor = false) {
         val lightBars = themeStyle == KilnThemeStyle.LIGHT
@@ -125,7 +137,7 @@ private fun KilnRoot(themeStyle: KilnThemeStyle, fontStyle: KilnFontStyle) {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background,
         ) {
-            KilnApp()
+            KilnApp(manageDeepLinkStore = manageDeepLinkStore)
         }
     }
 }
