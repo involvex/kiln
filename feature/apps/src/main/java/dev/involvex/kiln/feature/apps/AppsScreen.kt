@@ -8,7 +8,11 @@ import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
@@ -18,6 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -27,9 +32,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,7 +52,12 @@ import java.io.File
 import kotlinx.coroutines.launch
 
 @Composable
-fun AppsRoute(onOpenDetail: (String) -> Unit, modifier: Modifier = Modifier, viewModel: AppsViewModel = hiltViewModel()) {
+fun AppsRoute(
+    onOpenDetail: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    embedded: Boolean = false,
+    viewModel: AppsViewModel = hiltViewModel(),
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     AppsScreen(
         state = state,
@@ -54,6 +66,7 @@ fun AppsRoute(onOpenDetail: (String) -> Unit, modifier: Modifier = Modifier, vie
         loadDetail = viewModel::loadDetailForExport,
         exportToUri = viewModel::exportToUri,
         exportToFile = viewModel::exportToFile,
+        embedded = embedded,
         modifier = modifier,
     )
 }
@@ -68,6 +81,7 @@ fun AppsScreen(
     loadDetail: suspend (String) -> Result<InstalledAppDetail>,
     exportToUri: suspend (InstalledAppDetail, ApkExportFormat, Uri, ContentResolver) -> Result<Unit>,
     exportToFile: suspend (InstalledAppDetail, ApkExportFormat, File) -> Result<Unit>,
+    embedded: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -112,7 +126,18 @@ fun AppsScreen(
 
     Scaffold(
         modifier = modifier,
-        topBar = { AppsTopBar(state = state, onEvent = onEvent) },
+        contentWindowInsets = if (embedded) {
+            WindowInsets(0, 0, 0, 0)
+        } else {
+            ScaffoldDefaults.contentWindowInsets
+        },
+        topBar = {
+            if (embedded) {
+                AppsActionsBar(state = state, onEvent = onEvent)
+            } else {
+                AppsTopBar(state = state, onEvent = onEvent)
+            }
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding: PaddingValues ->
         AppsListPane(
@@ -196,34 +221,57 @@ private fun AppsTopBar(state: AppsUiState, onEvent: (AppsEvent) -> Unit) {
                 },
             )
         },
-        actions = {
-            if (state.selectionMode) {
-                IconButton(onClick = { onEvent(AppsEvent.ExportSelection) }) {
-                    Icon(
-                        Icons.Filled.FileDownload,
-                        contentDescription = stringResource(R.string.feature_apps_export),
-                    )
-                }
-                IconButton(onClick = { onEvent(AppsEvent.ClearSelection) }) {
-                    Icon(
-                        Icons.Filled.Close,
-                        contentDescription = stringResource(R.string.feature_apps_clear_selection),
-                    )
-                }
-            } else {
-                IconButton(onClick = { onEvent(AppsEvent.SortDirectionToggled) }) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Sort,
-                        contentDescription = if (state.sortDirection == SortDirection.ASCENDING) {
-                            stringResource(R.string.feature_apps_sort_direction_asc)
-                        } else {
-                            stringResource(R.string.feature_apps_sort_direction_desc)
-                        },
-                    )
-                }
-            }
-        },
+        actions = { AppsActionButtons(state = state, onEvent = onEvent) },
     )
+}
+
+/** Sort / selection actions without a second title bar when the shell already shows segments. */
+@Composable
+private fun AppsActionsBar(state: AppsUiState, onEvent: (AppsEvent) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (state.selectionMode) {
+            Text(
+                text = stringResource(R.string.feature_apps_selected_count, state.selectedPackages.size),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 16.dp),
+            )
+        }
+        AppsActionButtons(state = state, onEvent = onEvent)
+    }
+}
+
+@Composable
+private fun AppsActionButtons(state: AppsUiState, onEvent: (AppsEvent) -> Unit) {
+    if (state.selectionMode) {
+        IconButton(onClick = { onEvent(AppsEvent.ExportSelection) }) {
+            Icon(
+                Icons.Filled.FileDownload,
+                contentDescription = stringResource(R.string.feature_apps_export),
+            )
+        }
+        IconButton(onClick = { onEvent(AppsEvent.ClearSelection) }) {
+            Icon(
+                Icons.Filled.Close,
+                contentDescription = stringResource(R.string.feature_apps_clear_selection),
+            )
+        }
+    } else {
+        IconButton(onClick = { onEvent(AppsEvent.SortDirectionToggled) }) {
+            Icon(
+                Icons.AutoMirrored.Filled.Sort,
+                contentDescription = if (state.sortDirection == SortDirection.ASCENDING) {
+                    stringResource(R.string.feature_apps_sort_direction_asc)
+                } else {
+                    stringResource(R.string.feature_apps_sort_direction_desc)
+                },
+            )
+        }
+    }
 }
 
 private class AppsExportActions(

@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI: explicit least-privilege `permissions` for CodeQL
 - First-time GitHub Discover install when package is not already installed
 - Termux smoke test silently failing on renamed Termux forks: the package-id field defaulted to `com.termux`, so the fork was never detected and the RUN_COMMAND intent was never built
+- Termux “No install found” stayed visible after a successful checklist: detection stopped at the first `*termux*` package (for example Termux:Boot) and the failure flag was never cleared
+- HyperOS full-screen black/white flash: DayNight window theme fought the Compose theme, and locale apply compared list identity instead of language tags
+- Apps Library showed a second title bar under Library / Discover / Trending, leaving a large empty gap above the list
 
 ### Changed
 

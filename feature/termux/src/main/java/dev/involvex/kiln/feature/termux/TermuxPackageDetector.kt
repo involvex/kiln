@@ -34,14 +34,21 @@ class TermuxPackageDetector @Inject constructor(@ApplicationContext private val 
 
     data class Detected(val packageId: String)
 
-    /** Returns the first installed Termux-like package that exposes RUN_COMMAND, or null. */
+    /**
+     * Returns a Termux-like package that exposes RUN_COMMAND, or null.
+     *
+     * Add-ons such as `com.termux.boot` match the name filter but do not host
+     * RunCommandService. Every candidate is tried, with official `com.termux`
+     * preferred over forks.
+     */
     fun detect(): Detected? {
         val installed = runCatching {
             context.packageManager.getInstalledApplications(PackageManager.GET_PERMISSIONS)
         }.getOrNull().orEmpty().mapNotNull { it.packageName }
 
-        val candidate = selectCandidate(installed) ?: return null
-        return resolveServiceComponent(candidate)?.let { Detected(candidate) }
+        return termuxCandidates(installed)
+            .firstOrNull { resolveServiceComponent(it) != null }
+            ?.let { Detected(it) }
     }
 
     /** Resolves the actual RunCommandService component for [packageId], or null. */
@@ -57,8 +64,20 @@ class TermuxPackageDetector @Inject constructor(@ApplicationContext private val 
     }
 
     companion object {
-        /** Case-insensitive "termux" substring — the heuristic Kiln uses to spot a Termux install. */
+        private const val OFFICIAL_PACKAGE_ID = "com.termux"
+
+        /**
+         * Termux-like package ids, official `com.termux` first, then the rest
+         * in stable order. Callers still verify a RUN_COMMAND service exists.
+         */
         @JvmStatic
-        fun selectCandidate(packageNames: Iterable<String>): String? = packageNames.firstOrNull { it.contains("termux", ignoreCase = true) }
+        fun termuxCandidates(packageNames: Iterable<String>): List<String> = packageNames
+            .filter { it.contains("termux", ignoreCase = true) }
+            .distinct()
+            .sortedWith(compareBy<String> { if (it == OFFICIAL_PACKAGE_ID) 0 else 1 }.thenBy { it })
+
+        /** Preferred Termux-like package id, or null when none match the name filter. */
+        @JvmStatic
+        fun selectCandidate(packageNames: Iterable<String>): String? = termuxCandidates(packageNames).firstOrNull()
     }
 }

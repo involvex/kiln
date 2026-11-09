@@ -17,7 +17,7 @@
     <string name="termux_check_permission_missing">Grant RUN_COMMAND under App info → Permissions → Additional permissions</string>
     <string name="termux_request_permission">Request RUN_COMMAND permission</string>
 <string name="termux_open_app_info">Open Termux app info</string>
-    <string name="termux_fork_permission_note">Kiln only declares com.termux.permission.RUN_COMMAND in its manifest. Forks with a different package id usually cannot grant this permission to Kiln.</string>
+    <string name="termux_fork_permission_note">Kiln declares RUN_COMMAND for com.termux and com.involvex.termux_app. Other forks need a matching permission in Kiln, or a grant under App info.</string>
     <string name="termux_check_allow_external">In Termux, set allow-external-apps=true in ~/.termux/termux.properties</string>
     <string name="termux_refresh_checks">Refresh checks</string>
     <string name="termux_run_echo">Run echo smoke test</string>

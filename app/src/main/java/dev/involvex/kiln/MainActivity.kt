@@ -1,15 +1,22 @@
 package dev.involvex.kiln
 
+import android.app.Activity
 import android.content.Intent
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import androidx.core.os.LocaleListCompat
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import dev.involvex.kiln.core.designsystem.theme.KilnTheme
@@ -77,14 +84,11 @@ internal fun applyKilnLanguage(language: KilnLanguage) {
         KilnLanguage.ENGLISH -> "en"
         KilnLanguage.GERMAN -> "de"
     }
-    val desired = if (tags.isEmpty()) {
-        LocaleListCompat.getEmptyLocaleList()
-    } else {
-        LocaleListCompat.forLanguageTags(tags)
-    }
-    if (AppCompatDelegate.getApplicationLocales() != desired) {
-        AppCompatDelegate.setApplicationLocales(desired)
-    }
+    // Compare tags, not LocaleListCompat identity. A flaky != on HyperOS
+    // re-applied the same locale and recreated the Activity in a loop.
+    val current = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+    if (current == tags) return
+    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tags))
 }
 
 @Composable
@@ -96,7 +100,19 @@ private fun ApplyLanguage(language: KilnLanguage) {
 
 @Composable
 private fun KilnRoot(themeStyle: KilnThemeStyle, fontStyle: KilnFontStyle) {
+    val view = LocalView.current
     KilnTheme(themeStyle = themeStyle, fontStyle = fontStyle) {
+        val background = MaterialTheme.colorScheme.background.toArgb()
+        val lightBars = themeStyle == KilnThemeStyle.LIGHT
+        if (!view.isInEditMode) {
+            SideEffect {
+                val window = (view.context as Activity).window
+                window.setBackgroundDrawable(ColorDrawable(background))
+                val controller = WindowCompat.getInsetsController(window, view)
+                controller.isAppearanceLightStatusBars = lightBars
+                controller.isAppearanceLightNavigationBars = lightBars
+            }
+        }
         KilnApp()
     }
 }

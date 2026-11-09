@@ -315,10 +315,9 @@ private fun ResultBlock(result: TermuxCommandResult) {
 /**
  * Opens the system App Info screen for [packageId].
  *
- * Renamed Termux forks declare `com.involvex.termux_app.permission.RUN_COMMAND`
- * under their own package id, which Kiln cannot declare in its manifest, so
- * the `RequestPermission` launcher cannot grant it. The user grants it once in
- * App Info → Permissions; this button short-circuits that.
+ * Opens App Info so the user can grant a fork `RUN_COMMAND` permission that
+ * Kiln does not declare. Known ids `com.termux` and `com.involvex.termux_app`
+ * are already in the manifest and can use the in-app request.
  */
 private fun Context.openAppInfo(packageId: String) {
     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {

@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M17** in progress on `m17-hyperos-release-prep` — version bumped to `0.2.0` (versionCode 3), CHANGELOG moved, Termux fork-detection fix landed. Awaiting merge + tag `v0.2.0`. Publishing / F-Droid submit still deferred unless explicitly requested.
+**Current status:** **M17** ready to merge on `m17-hyperos-release-prep` (`0.2.0`, versionCode 3). Device checklist recorded; Termux detect, HyperOS flicker, and Apps spacing fixes included. Tag `v0.2.0` after merge. Publishing / F-Droid submit still deferred.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -31,7 +31,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M14** | 4-tab nav + Manage | Done | [`prompts/M14-nav-manage.md`](./prompts/M14-nav-manage.md) · [#27](https://github.com/involvex/kiln/pull/27) | Apps / Sources / Manage / Settings; Storage+Backup under Manage |
 | **M15** | Store-like Discover | Done | [`prompts/M15-store-ui.md`](./prompts/M15-store-ui.md) · [#27](https://github.com/involvex/kiln/pull/27) | Library\|Discover; catalog detail+icons; font pref |
 | **M16** | Trending shelves | Done | [`prompts/M16-trending.md`](./prompts/M16-trending.md) · [#27](https://github.com/involvex/kiln/pull/27) | Topic shelves; no fake download counts |
-| **M17** | HyperOS E2E + release prep | In progress | [`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md) · `m17-hyperos-release-prep` | Device checklists for M13–M16; CHANGELOG; version bumped to `0.2.0` (versionCode 3); Termux fork detection (`com.involvex.termux_app`); no store submit yet |
+| **M17** | HyperOS E2E + release prep | Done | [`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md) · `m17-hyperos-release-prep` | Checklist + `0.2.0` (code 3); Termux multi-candidate detect; flicker + Apps spacing fixes; tag `v0.2.0` after merge; no store submit |
 
 ---
 
@@ -172,7 +172,9 @@ Owns the post-#27 device pass before a `0.2.0` tag. Prompt: [`prompts/M17-hypero
 - [x] Catalog refresh: icons + detail (+ screenshots when index has media)
 - [x] Trending ≥3 shelves with honest copy (no fake download charts)
 - [x] CHANGELOG / `0.2.0` bump done in PR
-- [x] Termux: smoke test now runs — **was failing**: device ships a renamed fork (`com.involvex.termux_app`), not the official `com.termux`, so the package-id field defaulted to `com.termux` and nothing matched. Fixed with `TermuxPackageDetector` (scan + service-class verification) + "Detect Termux package" button + App Info shortcut for forks that declare their own `RUN_COMMAND` permission. Re-run after the rebuild.
+- [x] Termux: smoke test now runs — **was failing**: device ships a renamed fork (`com.involvex.termux_app`), not the official `com.termux`, so the package-id field defaulted to `com.termux` and nothing matched. Fixed with `TermuxPackageDetector` (scan + service-class verification) + "Detect Termux package" button + App Info shortcut for forks that declare their own `RUN_COMMAND` permission. Follow-up: multi-candidate detect (skip Termux:Boot add-ons) + clear sticky “No install found” when checklist is green. Re-run Detect after rebuild.
+- [x] HyperOS flicker: DayNight window + locale identity compare — fixed with dark AppCompat theme + language-tag equality
+- [x] Apps Library whitespace: embedded shell drops duplicate “Apps” TopAppBar
 
 Older M1/M3/M4/M5 checklists below remain open for a fuller pass when convenient.
 

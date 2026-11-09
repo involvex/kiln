@@ -79,24 +79,34 @@ class TermuxViewModel @Inject constructor(
 
     fun refreshEnvironment() {
         val packageId = _uiState.value.prefs.packageId
+        val installed = launcher.isPackageInstalled(packageId)
         _uiState.update {
             it.copy(
-                packageInstalled = launcher.isPackageInstalled(packageId),
+                packageInstalled = installed,
                 permissionGranted = launcher.hasRunCommandPermission(packageId),
+                // A working saved package id wins over a stale "not found" banner.
+                detectionFailed = if (installed) false else it.detectionFailed,
             )
         }
     }
 
-    /** Scan installed apps for a Termux (or renamed fork) and pre-fill the package-id field. */
+    /** Scan installed apps for a Termux (or renamed fork) and persist the package id. */
     fun detectPackageId() {
         viewModelScope.launch {
             // Runs PackageManager across every installed app — must not block main.
             val detected = withContext(ioDispatcher) { detector.detect() }
-            _uiState.update {
-                it.copy(
-                    packageIdDraft = detected?.packageId ?: _uiState.value.packageIdDraft,
-                    detectionFailed = detected == null,
-                )
+            if (detected != null) {
+                preferences.setPackageId(detected.packageId)
+                _uiState.update {
+                    it.copy(
+                        packageIdDraft = detected.packageId,
+                        detectionFailed = false,
+                    )
+                }
+            } else {
+                _uiState.update { state ->
+                    state.copy(detectionFailed = !state.packageInstalled)
+                }
             }
         }
     }

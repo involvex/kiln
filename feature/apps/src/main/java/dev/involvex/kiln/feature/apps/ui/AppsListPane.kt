@@ -74,15 +74,13 @@ fun AppsListPane(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+                .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TextField(
                 value = state.query,
                 onValueChange = onQueryChange,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                modifier = Modifier.weight(1f),
                 singleLine = true,
                 placeholder = { Text(stringResource(R.string.feature_apps_search_hint)) },
             )

@@ -45,11 +45,21 @@ class TermuxPackageDetectorTest {
     }
 
     @Test
-    fun returnsFirstMatch() {
+    fun prefersOfficialPackageOverAddons() {
         assertEquals(
-            "com.termux.boot",
+            "com.termux",
             TermuxPackageDetector.selectCandidate(
                 listOf("com.termux.boot", "com.termux"),
+            ),
+        )
+    }
+
+    @Test
+    fun ordersOfficialThenForksSoAddonsDoNotHideRunCommandHost() {
+        assertEquals(
+            listOf("com.termux", "com.involvex.termux_app", "com.termux.boot"),
+            TermuxPackageDetector.termuxCandidates(
+                listOf("com.termux.boot", "com.involvex.termux_app", "com.termux"),
             ),
         )
     }
