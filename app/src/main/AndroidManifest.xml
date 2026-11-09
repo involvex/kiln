@@ -20,7 +20,7 @@
         tools:ignore="ProtectedPermissions" />
     <!-- M9: Termux RUN_COMMAND (also declared in :feature:termux; grant under Additional permissions). -->
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
-
+    <uses-permission android:name="com.involvex.termux_app.permission.RUN_COMMAND" />
     <application
         android:name=".KilnApplication"
         android:allowBackup="true"
