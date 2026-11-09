@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -23,6 +24,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,6 +44,8 @@ import dev.involvex.kiln.core.model.AppearancePrefs
 import dev.involvex.kiln.core.model.AutomationPrefs
 import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
 import dev.involvex.kiln.core.model.DevPrefs
+import dev.involvex.kiln.core.model.KilnConfigFilenames
+import dev.involvex.kiln.core.model.KilnConfigImportPreview
 import dev.involvex.kiln.core.model.KilnFontStyle
 import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
@@ -71,6 +75,20 @@ fun SettingsRoute(
     val notificationPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { /* Settings switch already written; OS may still deny notifications. */ }
+    val exportConfig = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(KilnConfigFilenames.MIME_JSON),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.exportConfigToUri(uri, context.contentResolver)
+        }
+    }
+    val importConfig = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.previewImportFromUri(uri, context.contentResolver)
+        }
+    }
 
     SettingsScreen(
         state = state,
@@ -100,6 +118,13 @@ fun SettingsRoute(
         onMaintenanceBackupTempChange = viewModel::setMaintenancePruneBackupTemp,
         onRunMaintenanceNow = viewModel::runMaintenanceNow,
         onConsumeMaintenanceRunQueued = viewModel::consumeMaintenanceRunQueued,
+        onExportConfig = { exportConfig.launch(viewModel.suggestedConfigFileName()) },
+        onImportConfig = {
+            importConfig.launch(arrayOf(KilnConfigFilenames.MIME_JSON, "application/octet-stream", "text/*", "*/*"))
+        },
+        onConfirmImport = viewModel::confirmPendingImport,
+        onDismissImport = viewModel::dismissImportPreview,
+        onConsumeConfigMessage = viewModel::consumeConfigMessage,
         onThemeChange = viewModel::setTheme,
         onLanguageChange = viewModel::setLanguage,
         onFontStyleChange = viewModel::setFontStyle,
@@ -130,6 +155,11 @@ fun SettingsScreen(
     onMaintenanceBackupTempChange: (Boolean) -> Unit,
     onRunMaintenanceNow: () -> Unit,
     onConsumeMaintenanceRunQueued: () -> Unit,
+    onExportConfig: () -> Unit,
+    onImportConfig: () -> Unit,
+    onConfirmImport: () -> Unit,
+    onDismissImport: () -> Unit,
+    onConsumeConfigMessage: () -> Unit,
     onThemeChange: (KilnThemeStyle) -> Unit,
     onLanguageChange: (KilnLanguage) -> Unit,
     onFontStyleChange: (KilnFontStyle) -> Unit,
@@ -221,11 +251,26 @@ fun SettingsScreen(
                 onConsumeRunQueued = onConsumeMaintenanceRunQueued,
             )
             HorizontalDivider()
+            KilnConfigSection(
+                busy = state.configBusy,
+                messageKey = state.configMessage,
+                onExport = onExportConfig,
+                onImport = onImportConfig,
+                onConsumeMessage = onConsumeConfigMessage,
+            )
+            HorizontalDivider()
             AboutSection(
                 versionName = state.appVersionName,
                 versionCode = state.appVersionCode,
             )
         }
+    }
+    state.pendingImportPreview?.let { preview ->
+        ImportConfirmDialog(
+            preview = preview,
+            onConfirm = onConfirmImport,
+            onDismiss = onDismissImport,
+        )
     }
 }
 
@@ -301,6 +346,124 @@ private const val URL_SUPPORTING: String =
     "https://github.com/involvex/kiln/blob/main/docs/SUPPORTING.md"
 private const val URL_LICENSE: String =
     "https://github.com/involvex/kiln/blob/main/LICENSE"
+
+@Composable
+private fun KilnConfigSection(
+    busy: Boolean,
+    messageKey: String?,
+    onExport: () -> Unit,
+    onImport: () -> Unit,
+    onConsumeMessage: () -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.settings_config_section),
+        style = MaterialTheme.typography.titleMedium,
+    )
+    Text(
+        text = stringResource(R.string.settings_config_explain),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    OutlinedButton(
+        onClick = onExport,
+        enabled = !busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.settings_config_export))
+    }
+    OutlinedButton(
+        onClick = onImport,
+        enabled = !busy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.settings_config_import))
+    }
+    if (busy) {
+        Text(
+            text = stringResource(R.string.settings_config_busy),
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+    messageKey?.let { key ->
+        Text(
+            text = configMessageText(key),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        LaunchedEffect(key) {
+            delay(4_000)
+            onConsumeMessage()
+        }
+    }
+}
+
+@Composable
+private fun configMessageText(key: String): String = when {
+    key == "config_export_ok" -> stringResource(R.string.settings_config_export_ok)
+
+    key == "config_export_write_failed" -> stringResource(R.string.settings_config_export_failed)
+
+    key == "config_import_read_failed" -> stringResource(R.string.settings_config_import_read_failed)
+
+    key.startsWith("config_export_failed:") -> stringResource(R.string.settings_config_export_failed)
+
+    key.startsWith("config_import_failed:") -> stringResource(R.string.settings_config_import_failed)
+
+    key.startsWith("config_import_ok:") -> {
+        val parts = key.removePrefix("config_import_ok:").split(":")
+        stringResource(
+            R.string.settings_config_import_ok,
+            parts.getOrNull(0) ?: "0",
+            parts.getOrNull(1) ?: "0",
+            parts.getOrNull(2) ?: "0",
+        )
+    }
+
+    else -> key
+}
+
+@Composable
+private fun ImportConfirmDialog(preview: KilnConfigImportPreview, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val prefsLine = if (preview.prefsSections.isEmpty()) {
+        stringResource(R.string.settings_config_import_prefs_none)
+    } else {
+        stringResource(
+            R.string.settings_config_import_prefs,
+            preview.prefsSections.joinToString(", "),
+        )
+    }
+    val patHint = if (preview.githubPatWasConfigured) {
+        stringResource(R.string.settings_config_import_pat_hint)
+    } else {
+        ""
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_config_import_confirm_title)) },
+        text = {
+            Text(
+                stringResource(
+                    R.string.settings_config_import_confirm_body,
+                    preview.reposNew,
+                    preview.reposUpdated,
+                    preview.managedAppsUpserted,
+                    prefsLine,
+                    patHint,
+                ),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.settings_config_import_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.settings_config_import_cancel))
+            }
+        },
+    )
+}
 
 @Composable
 private fun AutomationSection(prefs: AutomationPrefs, onEnabledChange: (Boolean) -> Unit) {

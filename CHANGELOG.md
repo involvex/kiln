@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Kiln-Config export/import (Settings): SAF JSON of repos, managed apps/watchlist, and non-secret prefs; merge import; GitHub PAT never exported
 - Scheduled maintenance (Settings → Maintenance, off by default): weekly WorkManager on Wi‑Fi + charging; optional system cache trim (Shizuku), prune download/rollback/backup temps; Run now + last-run protocol
 - Intent/Broadcast automation API (Settings → Automation, off by default): signature permission `dev.involvex.kiln.permission.AUTOMATION`; actions `CHECK_UPDATES`, `INSTALL_UPDATE`, `INSTALL_FROM_URL`, `CLEAN_CACHE`; result broadcast + optional failure notification
 - Release notes on App detail updates (GitHub release body / F-Droid whatsNew, plain text)

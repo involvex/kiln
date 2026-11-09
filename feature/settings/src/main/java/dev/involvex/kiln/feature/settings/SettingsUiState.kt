@@ -4,6 +4,7 @@ import dev.involvex.kiln.core.model.AppearancePrefs
 import dev.involvex.kiln.core.model.AutomationPrefs
 import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
 import dev.involvex.kiln.core.model.DevPrefs
+import dev.involvex.kiln.core.model.KilnConfigImportPreview
 import dev.involvex.kiln.core.model.MaintenancePrefs
 import dev.involvex.kiln.core.model.MaintenanceRunRecord
 import dev.involvex.kiln.core.model.PreferredInstaller
@@ -23,4 +24,8 @@ data class SettingsUiState(
     val maintenanceRunQueued: Boolean = false,
     val appVersionName: String = "",
     val appVersionCode: Long = 0L,
+    val configBusy: Boolean = false,
+    val configMessage: String? = null,
+    val pendingImportPreview: KilnConfigImportPreview? = null,
+    val pendingImportJson: String? = null,
 )
