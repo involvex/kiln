@@ -63,6 +63,7 @@ dependencies {
     implementation(project(":feature:termux"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:maintenance"))
+    implementation(project(":feature:widgets"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

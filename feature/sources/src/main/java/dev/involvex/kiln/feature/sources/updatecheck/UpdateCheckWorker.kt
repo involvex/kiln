@@ -13,6 +13,7 @@ import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.UpdateObservationKey
 import dev.involvex.kiln.core.model.UpdateObservationStore
+import dev.involvex.kiln.core.model.WidgetUpdatePublisher
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
 
@@ -26,6 +27,7 @@ class UpdateCheckWorker @AssistedInject constructor(
     private val notifier: UpdateCheckNotifier,
     private val installedAppsReader: InstalledAppsReader,
     private val observationStore: UpdateObservationStore,
+    private val widgetUpdatePublisher: WidgetUpdatePublisher,
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
         val prefs = preferences.current()
@@ -42,6 +44,7 @@ class UpdateCheckWorker @AssistedInject constructor(
             is KilnResult.Success -> {
                 val updates = appUpdateRepository.updates().first()
                 val count = check.value.updatesFound
+                runCatching { widgetUpdatePublisher.publishFromMap(updates) }
                 if (count > 0) {
                     notifier.notifyUpdatesFound(count)
                 }

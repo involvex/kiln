@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <receiver
+            android:name=".glance.KilnUpdatesWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_updates_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/kiln_updates_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".glance.WidgetActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="dev.involvex.kiln.widget.CHECK_NOW" />
+                <action android:name="dev.involvex.kiln.widget.TRIM_REQUEST" />
+                <action android:name="dev.involvex.kiln.widget.TRIM_CONFIRM" />
+                <action android:name="dev.involvex.kiln.widget.TRIM_CANCEL" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".tile.KilnUpdatesTileService"
+            android:exported="true"
+            android:icon="@android:drawable/stat_sys_download_done"
+            android:label="@string/tile_updates_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

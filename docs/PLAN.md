@@ -422,7 +422,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 ### UX
 
 - **P2 — Widgets & Quick-Settings-Tile (Glance)**: „X Updates verfügbar", Ein-Klick-Cache-Clean, App-Shortcuts. → **M26**
-- **P2 — Aktivitätsprotokoll**: Lokales, durchsuchbares Log. → **M24** (M23 nur Maintenance-Protokoll)
+- **P2 — Aktivitätsprotokoll**: Lokales, durchsuchbares Log. → **M24** (Done #39; M23 nur Maintenance-Protokoll)
 - **P3 — Tablet-/Foldable-Layouts** (Adaptive Layouts, Navigation Rail).
 
 ### Empfohlene Reihenfolge (aktuell)

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Home-screen Glance widget + QS tile: update count, Check now (WorkManager), widget Trim caches (Shizuku or open Manage)
 - Activity log (Settings): searchable local Room log of installs, backups, cache clears, maintenance, privilege shell, debloat, Termux, and automation (cap 500; no paths/tokens)
 - Kiln-Config export/import (Settings): SAF JSON of repos, managed apps/watchlist, and non-secret prefs; merge import; GitHub PAT never exported
 - Scheduled maintenance (Settings → Maintenance, off by default): weekly WorkManager on Wi‑Fi + charging; optional system cache trim (Shizuku), prune download/rollback/backup temps; Run now + last-run protocol
