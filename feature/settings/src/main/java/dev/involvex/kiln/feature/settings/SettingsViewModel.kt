@@ -1,12 +1,16 @@
 package dev.involvex.kiln.feature.settings
 
+import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.involvex.kiln.core.common.IoDispatcher
+import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.AutomationPreferences
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
@@ -14,6 +18,8 @@ import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.core.model.DebugLogController
 import dev.involvex.kiln.core.model.DevPreferences
 import dev.involvex.kiln.core.model.InstallerPreferences
+import dev.involvex.kiln.core.model.KilnConfigFilenames
+import dev.involvex.kiln.core.model.KilnConfigRepository
 import dev.involvex.kiln.core.model.KilnFontStyle
 import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
@@ -23,12 +29,17 @@ import dev.involvex.kiln.core.model.MaintenanceScheduler
 import dev.involvex.kiln.core.model.PreferredInstaller
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
+import java.io.IOException
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @HiltViewModel
 @Suppress("TooManyFunctions") // Settings aggregates many independent preference setters.
@@ -45,6 +56,8 @@ class SettingsViewModel @Inject constructor(
     private val privilegedExecutor: PrivilegedExecutor,
     private val scheduler: BackgroundUpdateScheduler,
     private val maintenanceScheduler: MaintenanceScheduler,
+    private val kilnConfigRepository: KilnConfigRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -180,6 +193,135 @@ class SettingsViewModel @Inject constructor(
 
     fun consumeCheckNowQueued() {
         _uiState.update { it.copy(checkNowQueued = false) }
+    }
+
+    fun suggestedConfigFileName(): String = KilnConfigFilenames.suggested()
+
+    fun exportConfigToUri(uri: Uri, contentResolver: ContentResolver) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(configBusy = true, configMessage = null) }
+            when (
+                val built = kilnConfigRepository.exportJson(
+                    versionName = _uiState.value.appVersionName,
+                    versionCode = _uiState.value.appVersionCode,
+                )
+            ) {
+                is Result.Failure -> {
+                    deleteUriQuietly(contentResolver, uri)
+                    _uiState.update {
+                        it.copy(configBusy = false, configMessage = "config_export_failed:${built.message}")
+                    }
+                }
+
+                is Result.Success -> {
+                    val write = withContext(ioDispatcher) {
+                        runCatching {
+                            contentResolver.openOutputStream(uri)?.use { out ->
+                                out.write(built.value.toByteArray(StandardCharsets.UTF_8))
+                            } ?: error("openOutputStream_null")
+                        }
+                    }
+                    if (write.isFailure) {
+                        deleteUriQuietly(contentResolver, uri)
+                        Timber.w(write.exceptionOrNull(), "Kiln-Config export write failed")
+                        _uiState.update {
+                            it.copy(configBusy = false, configMessage = "config_export_write_failed")
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(configBusy = false, configMessage = "config_export_ok")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun previewImportFromUri(uri: Uri, contentResolver: ContentResolver) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(configBusy = true, configMessage = null) }
+            val text = withContext(ioDispatcher) {
+                runCatching {
+                    contentResolver.openInputStream(uri)?.use { input ->
+                        input.readBytes().toString(StandardCharsets.UTF_8)
+                    }
+                }.getOrNull()
+            }
+            if (text.isNullOrBlank()) {
+                _uiState.update {
+                    it.copy(configBusy = false, configMessage = "config_import_read_failed")
+                }
+                return@launch
+            }
+            when (val preview = kilnConfigRepository.previewImport(text)) {
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(configBusy = false, configMessage = "config_import_failed:${preview.message}")
+                    }
+                }
+
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            configBusy = false,
+                            pendingImportPreview = preview.value,
+                            pendingImportJson = text,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun confirmPendingImport() {
+        val json = _uiState.value.pendingImportJson ?: return
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    configBusy = true,
+                    pendingImportPreview = null,
+                    pendingImportJson = null,
+                    configMessage = null,
+                )
+            }
+            when (val result = kilnConfigRepository.importMerge(json)) {
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(configBusy = false, configMessage = "config_import_failed:${result.message}")
+                    }
+                }
+
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            configBusy = false,
+                            configMessage = "config_import_ok:${result.value.reposUpserted}:" +
+                                "${result.value.managedAppsUpserted}:${result.value.prefsSectionsApplied}",
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun dismissImportPreview() {
+        _uiState.update {
+            it.copy(pendingImportPreview = null, pendingImportJson = null)
+        }
+    }
+
+    fun consumeConfigMessage() {
+        _uiState.update { it.copy(configMessage = null) }
+    }
+
+    private fun deleteUriQuietly(contentResolver: ContentResolver, uri: Uri) {
+        runCatching {
+            contentResolver.delete(uri, null, null)
+        }.onFailure { error ->
+            if (error !is IOException) {
+                Timber.w(error, "Could not delete failed Kiln-Config export URI")
+            }
+        }
     }
 
     private fun readVersionName(): String = try {

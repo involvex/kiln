@@ -17,6 +17,7 @@ import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
 import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.InstallerPreferences
+import dev.involvex.kiln.core.model.KilnConfigRepository
 import dev.involvex.kiln.core.model.MaintenancePreferences
 import dev.involvex.kiln.core.model.MaintenanceRunStore
 import dev.involvex.kiln.core.model.MaintenanceScheduler
@@ -29,6 +30,7 @@ import dev.involvex.kiln.feature.installer.rollback.DefaultApkDownloadJanitor
 import dev.involvex.kiln.feature.installer.rollback.FileApkRollbackCache
 import dev.involvex.kiln.feature.maintenance.DefaultMaintenanceScheduler
 import dev.involvex.kiln.feature.maintenance.FileMaintenanceRunStore
+import dev.involvex.kiln.feature.settings.config.DefaultKilnConfigRepository
 import dev.involvex.kiln.feature.settings.data.DataStoreAppearancePreferences
 import dev.involvex.kiln.feature.settings.data.DataStoreAutomationPreferences
 import dev.involvex.kiln.feature.settings.data.DataStoreBackgroundUpdatePreferences
@@ -81,6 +83,10 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindMaintenancePreferences(impl: DataStoreMaintenancePreferences): MaintenancePreferences
+
+    @Binds
+    @Singleton
+    abstract fun bindKilnConfigRepository(impl: DefaultKilnConfigRepository): KilnConfigRepository
 
     @Binds
     @Singleton
