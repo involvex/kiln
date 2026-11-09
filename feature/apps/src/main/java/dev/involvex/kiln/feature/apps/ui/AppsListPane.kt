@@ -55,7 +55,6 @@ fun AppsListPane(
     onQueryChange: (String) -> Unit,
     onFilterChange: (AppListFilter) -> Unit,
     onSortFieldChange: (AppSortField) -> Unit,
-    onRefresh: () -> Unit,
     onCheckUpdates: () -> Unit,
     onDismissUpdateCheckMessage: () -> Unit,
     onCancelBatch: () -> Unit,
@@ -93,19 +92,6 @@ fun AppsListPane(
                 )
             }
         }
-        TextButton(
-            onClick = onCheckUpdates,
-            enabled = !state.isCheckingUpdates,
-            modifier = Modifier.padding(horizontal = 12.dp),
-        ) {
-            Text(
-                if (state.isCheckingUpdates) {
-                    stringResource(R.string.feature_apps_checking_updates)
-                } else {
-                    stringResource(R.string.feature_apps_check_updates)
-                },
-            )
-        }
         state.updateCheckMessage?.let { code ->
             Text(
                 text = formatUpdateCheckMessage(code),
@@ -121,10 +107,13 @@ fun AppsListPane(
             FilterRow(filter = state.filter, onFilterChange = onFilterChange)
             SortRow(sortField = state.sortField, onSortFieldChange = onSortFieldChange)
         }
+        // weight(1f): fillMaxSize inside Column breaks nested scroll / pull-to-refresh.
         PullToRefreshBox(
-            isRefreshing = state.isLoading || state.isCheckingUpdates,
-            onRefresh = onRefresh,
-            modifier = Modifier.fillMaxSize(),
+            isRefreshing = state.isCheckingUpdates || state.isLoading,
+            onRefresh = onCheckUpdates,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
         ) {
             AppsListBody(
                 state = state,

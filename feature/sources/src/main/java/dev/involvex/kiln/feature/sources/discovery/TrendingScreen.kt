@@ -3,7 +3,6 @@ package dev.involvex.kiln.feature.sources.discovery
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -37,6 +37,7 @@ fun TrendingRoute(
         state = state,
         onOpenCatalogDetail = onOpenCatalogDetail,
         onInstall = viewModel::install,
+        onRefreshCatalog = viewModel::refreshCatalog,
         onClearMessage = viewModel::clearMessage,
         showTopBar = showTopBar,
         modifier = modifier,
@@ -48,6 +49,7 @@ fun TrendingScreen(
     state: TrendingUiState,
     onOpenCatalogDetail: (String, String) -> Unit,
     onInstall: (DiscoveryAppRow) -> Unit,
+    onRefreshCatalog: () -> Unit,
     onClearMessage: () -> Unit,
     showTopBar: Boolean = true,
     modifier: Modifier = Modifier,
@@ -59,52 +61,58 @@ fun TrendingScreen(
         modifier = modifier,
         showTopBar = showTopBar,
     ) { padding ->
-        LazyColumn(
-            state = listState,
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = onRefreshCatalog,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item {
-                Text(
-                    text = stringResource(R.string.trending_honesty),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            state.message?.let { msg ->
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
                 item {
                     Text(
-                        text = formatTrendingMessage(msg),
-                        color = if (state.messageIsError) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        },
+                        text = stringResource(R.string.trending_honesty),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    TextButton(onClick = onClearMessage) {
-                        Text(stringResource(R.string.sources_dismiss))
+                }
+                state.message?.let { msg ->
+                    item {
+                        Text(
+                            text = formatTrendingMessage(msg),
+                            color = if (state.messageIsError) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            },
+                        )
+                        TextButton(onClick = onClearMessage) {
+                            Text(stringResource(R.string.sources_dismiss))
+                        }
                     }
                 }
-            }
-            if (state.isLoading) {
-                item { CircularProgressIndicator() }
-            } else if (state.shelves.isEmpty()) {
-                item {
-                    Text(
-                        text = stringResource(R.string.trending_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            } else {
-                items(state.shelves, key = { it.id.name }) { shelf ->
-                    TrendingShelfSection(
-                        shelf = shelf,
-                        onOpenCatalogDetail = onOpenCatalogDetail,
-                        onInstall = onInstall,
-                    )
+                if (state.isLoading && state.shelves.isEmpty()) {
+                    item { CircularProgressIndicator() }
+                } else if (state.shelves.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.trending_empty),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                } else {
+                    items(state.shelves, key = { it.id.name }) { shelf ->
+                        TrendingShelfSection(
+                            shelf = shelf,
+                            onOpenCatalogDetail = onOpenCatalogDetail,
+                            onInstall = onInstall,
+                        )
+                    }
                 }
             }
         }
@@ -149,6 +157,9 @@ private fun ColumnSectionTitle(id: TrendingShelfId) {
 private fun formatTrendingMessage(code: String): String = when {
     code.startsWith("install_queued:") ->
         stringResource(R.string.discovery_msg_install_queued, code.substringAfter(':'))
+
+    code.startsWith("catalog_ok:") ->
+        stringResource(R.string.discovery_msg_catalog_ok, code.substringAfter(':'))
 
     else -> code
 }
