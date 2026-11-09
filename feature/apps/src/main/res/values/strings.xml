@@ -20,6 +20,11 @@
     <string name="feature_apps_managed_source_none">Not linked yet. Match installed apps or link a source here.</string>
     <string name="feature_apps_managed_source_current">%1$s · %2$s</string>
     <string name="feature_apps_managed_source_pinned">Pinned — auto-match will not override this choice.</string>
+    <string name="feature_apps_github_channel_label">GitHub channel</string>
+    <string name="feature_apps_github_channel_stable">Stable</string>
+    <string name="feature_apps_github_channel_pre_release">Pre-release</string>
+    <string name="feature_apps_github_channel_nightly">Nightly</string>
+    <string name="feature_apps_github_channel_nightly_needs_pat">Nightly needs a GitHub token. Add one under Sources.</string>
     <string name="feature_apps_link_source">Link source…</string>
     <string name="feature_apps_change_source">Change source…</string>
     <string name="feature_apps_link_dialog_title">Link %1$s</string>

@@ -20,6 +20,11 @@
     <string name="feature_apps_managed_source_none">Noch nicht verknüpft. Apps zuordnen oder hier eine Quelle wählen.</string>
     <string name="feature_apps_managed_source_current">%1$s · %2$s</string>
     <string name="feature_apps_managed_source_pinned">Gepinnt — Auto-Match überschreibt diese Wahl nicht.</string>
+    <string name="feature_apps_github_channel_label">GitHub-Kanal</string>
+    <string name="feature_apps_github_channel_stable">Stabil</string>
+    <string name="feature_apps_github_channel_pre_release">Vorab</string>
+    <string name="feature_apps_github_channel_nightly">Nightly</string>
+    <string name="feature_apps_github_channel_nightly_needs_pat">Nightly braucht ein GitHub-Token. Unter Quellen hinterlegen.</string>
     <string name="feature_apps_link_source">Quelle verknüpfen…</string>
     <string name="feature_apps_change_source">Quelle ändern…</string>
     <string name="feature_apps_link_dialog_title">%1$s verknüpfen</string>

@@ -238,6 +238,9 @@ private fun CatalogDetailContent(
         if (row.categories.isNotEmpty()) {
             item { CategoryChipsReadOnly(categories = row.categories) }
         }
+        if (row.antiFeatures.isNotEmpty()) {
+            item { AntiFeatureChips(antiFeatures = row.antiFeatures) }
+        }
         item { CatalogMetaCard(row) }
         item { CatalogLinksCard(row = row, context = context) }
         item { CatalogScreenshotsSection(row.phoneScreenshotUrls) }
@@ -476,6 +479,38 @@ private fun CategoryChipsReadOnly(categories: List<String>) {
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AntiFeatureChips(antiFeatures: List<String>) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(R.string.catalog_detail_anti_features),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            antiFeatures.forEach { id ->
+                val labelRes = AntiFeatureLabels.labelRes(id)
+                val label = if (labelRes != null) stringResource(labelRes) else id
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.errorContainer,
+                ) {
+                    Text(
+                        text = label,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
             }
         }
     }

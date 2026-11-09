@@ -4,11 +4,12 @@ import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class GitHubTokenStore @Inject constructor(@ApplicationContext context: Context) {
+class GitHubTokenStore @Inject constructor(@ApplicationContext context: Context) : GitHubAuthHeaderProvider {
     private val prefs = EncryptedSharedPreferences.create(
         context,
         "kiln_github_secrets",
@@ -28,6 +29,17 @@ class GitHubTokenStore @Inject constructor(@ApplicationContext context: Context)
             }
         }.apply()
     }
+
+    override suspend fun bearerHeaders(): Map<String, String> {
+        val token = getToken() ?: return emptyMap()
+        return mapOf(
+            "Authorization" to "Bearer $token",
+            "Accept" to "application/vnd.github+json",
+            "X-GitHub-Api-Version" to "2022-11-28",
+        )
+    }
+
+    override suspend fun hasToken(): Boolean = getToken() != null
 
     companion object {
         private const val KEY_PAT = "github_pat"

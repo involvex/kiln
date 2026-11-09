@@ -192,6 +192,8 @@ fun AppDetailScreen(
                     onIgnoreUpdatesChanged = { onEvent(AppDetailEvent.IgnoreUpdatesChanged(it)) },
                     managedLink = state.managedLink,
                     onOpenLinkSource = { onEvent(AppDetailEvent.OpenLinkSource) },
+                    onGitHubChannelChange = { onEvent(AppDetailEvent.SetGitHubChannel(it)) },
+                    hasGitHubToken = state.hasGitHubToken,
                     onInstallUpdate = { onEvent(AppDetailEvent.InstallUpdate) },
                     onOpenUnknownSources = {
                         val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {

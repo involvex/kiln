@@ -16,12 +16,14 @@ import dagger.assisted.AssistedInject
 import dev.involvex.kiln.core.common.Result as KilnResult
 import dev.involvex.kiln.core.database.InstallJobDao
 import dev.involvex.kiln.core.model.ApkRollbackCache
+import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
 import dev.involvex.kiln.core.model.InstallJobStatus
 import dev.involvex.kiln.core.model.InstallerPreferences
 import dev.involvex.kiln.core.model.PreferredInstaller
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
 import dev.involvex.kiln.core.network.KilnHttpClient
+import dev.involvex.kiln.feature.installer.ArtifactZipExtractor
 import dev.involvex.kiln.feature.installer.DefaultInstallQueue
 import dev.involvex.kiln.feature.installer.InstallCommitPolicy
 import dev.involvex.kiln.feature.installer.R
@@ -42,6 +44,7 @@ class InstallWorker @AssistedInject constructor(
     private val privilegedExecutor: PrivilegedExecutor,
     private val rollbackCache: ApkRollbackCache,
     private val installerPreferences: InstallerPreferences,
+    private val gitHubAuth: GitHubAuthHeaderProvider,
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
         val jobId = inputData.getString(KEY_JOB_ID) ?: return Result.failure()
@@ -50,7 +53,8 @@ class InstallWorker @AssistedInject constructor(
         setForeground(foregroundInfo(job.packageName, 0))
 
         mark(jobId, InstallJobStatus.DOWNLOADING, 0, null, job.localApkPath)
-        val apkFile = File(File(appContext.cacheDir, DOWNLOAD_DIR).apply { mkdirs() }, "$jobId.apk")
+        val downloadDir = File(appContext.cacheDir, DOWNLOAD_DIR).apply { mkdirs() }
+        val apkFile = File(downloadDir, "$jobId.apk")
         if (job.downloadUrl.startsWith(DefaultInstallQueue.LOCAL_URL_PREFIX)) {
             val source = job.localApkPath?.let { File(it) }
             if (source == null || !source.isFile) {
@@ -64,13 +68,48 @@ class InstallWorker @AssistedInject constructor(
                 return Result.failure(workDataOf(KEY_ERROR to (e.message ?: "copy_failed")))
             }
         } else {
-            when (val download = http.downloadToFile(job.downloadUrl, apkFile)) {
-                is KilnResult.Failure -> {
-                    mark(jobId, InstallJobStatus.FAILED, 100, download.message, null)
-                    return Result.failure(workDataOf(KEY_ERROR to download.message))
+            val headers = if (job.requiresGitHubAuth) {
+                val auth = gitHubAuth.bearerHeaders()
+                if (auth.isEmpty()) {
+                    mark(jobId, InstallJobStatus.FAILED, 100, "github_pat_required", null)
+                    return Result.failure(workDataOf(KEY_ERROR to "github_pat_required"))
                 }
+                auth
+            } else {
+                emptyMap()
+            }
+            val isZip = ArtifactZipExtractor.looksLikeArtifactZip(job.downloadUrl, job.requiresGitHubAuth)
+            if (isZip) {
+                val zipFile = File(downloadDir, "$jobId.zip")
+                when (val download = http.downloadToFile(job.downloadUrl, zipFile, headers)) {
+                    is KilnResult.Failure -> {
+                        mark(jobId, InstallJobStatus.FAILED, 100, download.message, null)
+                        return Result.failure(workDataOf(KEY_ERROR to download.message))
+                    }
 
-                is KilnResult.Success -> Unit
+                    is KilnResult.Success -> Unit
+                }
+                val regex = runCatching {
+                    Regex(job.apkAssetRegex ?: ".*\\.apk$")
+                }.getOrElse { Regex(".*\\.apk$") }
+                when (val extracted = ArtifactZipExtractor.extractMatchingApk(zipFile, apkFile, regex)) {
+                    is KilnResult.Failure -> {
+                        zipFile.delete()
+                        mark(jobId, InstallJobStatus.FAILED, 100, extracted.message, null)
+                        return Result.failure(workDataOf(KEY_ERROR to extracted.message))
+                    }
+
+                    is KilnResult.Success -> zipFile.delete()
+                }
+            } else {
+                when (val download = http.downloadToFile(job.downloadUrl, apkFile, headers)) {
+                    is KilnResult.Failure -> {
+                        mark(jobId, InstallJobStatus.FAILED, 100, download.message, null)
+                        return Result.failure(workDataOf(KEY_ERROR to download.message))
+                    }
+
+                    is KilnResult.Success -> Unit
+                }
             }
         }
 

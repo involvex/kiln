@@ -10,6 +10,8 @@ import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.AppUpdateRepository
+import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
+import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.PrivilegeCapability
@@ -31,6 +33,7 @@ class AppDetailViewModel @AssistedInject constructor(
     private val installQueue: InstallQueue,
     private val rollbackCache: ApkRollbackCache,
     private val privilegedExecutor: PrivilegedExecutor,
+    private val gitHubAuth: GitHubAuthHeaderProvider,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppDetailUiState())
     val uiState: StateFlow<AppDetailUiState> = _uiState.asStateFlow()
@@ -75,6 +78,9 @@ class AppDetailViewModel @AssistedInject constructor(
                     it.copy(canSilentDowngrade = PrivilegeCapability.SILENT_INSTALL in status.capabilities)
                 }
             }
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(hasGitHubToken = gitHubAuth.hasToken()) }
         }
     }
 
@@ -135,6 +141,7 @@ class AppDetailViewModel @AssistedInject constructor(
             AppDetailEvent.DismissLinkSource,
             is AppDetailEvent.LinkFdroidRepo,
             is AppDetailEvent.LinkGithub,
+            is AppDetailEvent.SetGitHubChannel,
             -> onLinkEvent(event)
 
             AppDetailEvent.OpenUnknownSourcesSettings,
@@ -151,7 +158,18 @@ class AppDetailViewModel @AssistedInject constructor(
             AppDetailEvent.DismissLinkSource -> _uiState.update { it.copy(showLinkSourceDialog = false) }
             is AppDetailEvent.LinkFdroidRepo -> linkFdroid(event.repoId)
             is AppDetailEvent.LinkGithub -> linkGithub(event.ownerRepo)
+            is AppDetailEvent.SetGitHubChannel -> setGitHubChannel(event.channel)
             else -> Unit
+        }
+    }
+
+    private fun setGitHubChannel(channel: GitHubReleaseChannel) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(hasGitHubToken = gitHubAuth.hasToken()) }
+            when (val result = appUpdateRepository.setGitHubChannel(packageName, channel)) {
+                is Result.Success -> Unit
+                is Result.Failure -> showMessage(result.message)
+            }
         }
     }
 

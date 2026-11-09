@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- GitHub update channels on App detail: Stable, Pre-release, Nightly (Actions artifacts; PAT required for Nightly)
+- F-Droid anti-feature chips on catalog App details (from index-v2 metadata)
 - Auto-match UX: app icons, confidence chips, match rationale, localized accept feedback
 - Manual source link from Match installed apps and App detail (F-Droid repo or GitHub `owner/repo`, pinned)
 - WARNING matches can be accepted with an explicit confirm dialog (pinned)
@@ -17,9 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Managed GitHub apps store `githubChannel` instead of a boolean pre-release flag (Obtainium `includePrereleases` maps to Pre-release)
 - Auto-match prefers a signer-matching index repo over a higher-priority repo with a mismatched certificate
 - Catalog App details layout (hero card, chips, links, top-bar back/share)
 - Library pull-to-refresh runs a full update check (repo sync); Discover refresh-catalog control is a compact TextButton
+
+### Fixed
+
+- Lint: share chooser title via `stringResource`; `List.removeLast` NewApi on minSdk 26
 
 ## [0.2.2] — 2026-11-09
 

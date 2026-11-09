@@ -6,6 +6,7 @@ import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.AppListFilter
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.AppUpdateRepository
+import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.InstalledAppSummary
 import dev.involvex.kiln.core.model.ManagedSourceLink
@@ -191,6 +192,9 @@ class AppsViewModelTest {
             githubOwnerRepo: String?,
             githubAssetRegex: String?,
             pinned: Boolean,
+            githubChannel: GitHubReleaseChannel?,
         ): Result<Unit> = Result.success(Unit)
+
+        override suspend fun setGitHubChannel(packageName: String, channel: GitHubReleaseChannel): Result<Unit> = Result.success(Unit)
     }
 }

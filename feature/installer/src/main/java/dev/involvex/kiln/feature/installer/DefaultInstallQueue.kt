@@ -54,6 +54,8 @@ class DefaultInstallQueue @Inject constructor(
             expectedSha256 = update.apkSha256,
             sizeBytes = update.sizeBytes,
             localApkPath = null,
+            requiresGitHubAuth = update.requiresGitHubAuth,
+            apkAssetRegex = update.apkAssetRegex,
         )
     }
 
@@ -70,6 +72,8 @@ class DefaultInstallQueue @Inject constructor(
             expectedSha256 = request.expectedSha256,
             sizeBytes = apk.length(),
             localApkPath = apk.absolutePath,
+            requiresGitHubAuth = false,
+            apkAssetRegex = null,
         )
     }
 
@@ -81,6 +85,8 @@ class DefaultInstallQueue @Inject constructor(
         expectedSha256: String?,
         sizeBytes: Long?,
         localApkPath: String?,
+        requiresGitHubAuth: Boolean,
+        apkAssetRegex: String?,
     ): Result<String> {
         val now = System.currentTimeMillis()
         val jobId = UUID.randomUUID().toString()
@@ -97,6 +103,8 @@ class DefaultInstallQueue @Inject constructor(
                 progressPercent = 0,
                 errorMessage = null,
                 localApkPath = localApkPath,
+                requiresGitHubAuth = requiresGitHubAuth,
+                apkAssetRegex = apkAssetRegex,
                 createdAtEpochMs = now,
                 updatedAtEpochMs = now,
             ),

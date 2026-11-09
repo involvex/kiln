@@ -14,6 +14,16 @@ enum class SourceKind {
     GITHUB,
 }
 
+/** Update channel for a GitHub-managed app (Releases vs Actions artifacts). */
+enum class GitHubReleaseChannel {
+    STABLE,
+    PRE_RELEASE,
+    NIGHTLY,
+}
+
+fun parseGitHubReleaseChannel(raw: String?): GitHubReleaseChannel = runCatching { GitHubReleaseChannel.valueOf(raw?.trim().orEmpty()) }
+    .getOrDefault(GitHubReleaseChannel.STABLE)
+
 data class RepoConfig(
     val id: String,
     val name: String,
@@ -55,7 +65,7 @@ data class ManagedApp(
     val ignoreUpdates: Boolean = false,
     val githubOwnerRepo: String? = null,
     val githubAssetRegex: String? = null,
-    val includePreReleases: Boolean = false,
+    val githubChannel: GitHubReleaseChannel = GitHubReleaseChannel.STABLE,
 )
 
 data class AppUpdateInfo(
@@ -66,10 +76,14 @@ data class AppUpdateInfo(
     val sourceLabel: String,
     val confidence: MatchConfidence,
     val signatureMatches: Boolean,
-    /** HTTPS URL for the single APK (null = cannot install yet). */
+    /** HTTPS URL for the single APK or Actions artifact zip (null = cannot install yet). */
     val downloadUrl: String? = null,
     val apkSha256: String? = null,
     val sizeBytes: Long? = null,
+    /** When true, [downloadUrl] needs a GitHub PAT (Actions artifact zip). */
+    val requiresGitHubAuth: Boolean = false,
+    /** Regex used to pick an APK inside an Actions artifact zip. */
+    val apkAssetRegex: String? = null,
 )
 
 /**
@@ -96,6 +110,7 @@ data class ManagedSourceLink(
     val confidence: MatchConfidence,
     val pinned: Boolean,
     val githubOwnerRepo: String? = null,
+    val githubChannel: GitHubReleaseChannel = GitHubReleaseChannel.STABLE,
 )
 
 /**
@@ -140,5 +155,12 @@ interface AppUpdateRepository {
         githubOwnerRepo: String? = null,
         githubAssetRegex: String? = null,
         pinned: Boolean = true,
+        githubChannel: GitHubReleaseChannel? = null,
     ): Result<Unit>
+
+    /**
+     * Sets the GitHub update channel for a managed app. No-op failure when the package
+     * is not linked to a GitHub owner/repo.
+     */
+    suspend fun setGitHubChannel(packageName: String, channel: GitHubReleaseChannel): Result<Unit>
 }

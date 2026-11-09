@@ -1,6 +1,7 @@
 package dev.involvex.kiln.feature.sources.github
 
 import dev.involvex.kiln.core.common.Result
+import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.network.KilnHttpClient
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,11 +23,31 @@ data class GitHubAssetDto(val name: String, @SerialName("browser_download_url") 
 
 data class GitHubReleasePick(val tagName: String, val assetName: String, val downloadUrl: String, val sizeBytes: Long)
 
+object GitHubReleasePicker {
+    fun pick(releases: List<GitHubReleaseDto>, assetRegex: Regex, channel: GitHubReleaseChannel): GitHubReleasePick? {
+        val includePre = channel != GitHubReleaseChannel.STABLE
+        return releases
+            .asSequence()
+            .filter { includePre || !it.prerelease }
+            .mapNotNull { release ->
+                val asset = release.assets.firstOrNull { assetRegex.containsMatchIn(it.name) }
+                    ?: return@mapNotNull null
+                GitHubReleasePick(
+                    tagName = release.tagName,
+                    assetName = asset.name,
+                    downloadUrl = asset.browserDownloadUrl,
+                    sizeBytes = asset.size,
+                )
+            }
+            .firstOrNull()
+    }
+}
+
 @Singleton
 class GitHubReleasesClient @Inject constructor(private val http: KilnHttpClient, private val tokenStore: GitHubTokenStore) {
     private val json = Json { ignoreUnknownKeys = true }
 
-    suspend fun latestMatchingRelease(ownerRepo: String, assetRegex: Regex, includePreReleases: Boolean): Result<GitHubReleasePick> {
+    suspend fun latestMatchingRelease(ownerRepo: String, assetRegex: Regex, channel: GitHubReleaseChannel): Result<GitHubReleasePick> {
         val url = "https://api.github.com/repos/$ownerRepo/releases?per_page=20"
         val headers = buildMap {
             put("Accept", "application/vnd.github+json")
@@ -38,20 +59,7 @@ class GitHubReleasesClient @Inject constructor(private val http: KilnHttpClient,
         }
         return try {
             val releases = json.decodeFromString<List<GitHubReleaseDto>>(body)
-            val pick = releases
-                .asSequence()
-                .filter { includePreReleases || !it.prerelease }
-                .mapNotNull { release ->
-                    val asset = release.assets.firstOrNull { assetRegex.containsMatchIn(it.name) }
-                        ?: return@mapNotNull null
-                    GitHubReleasePick(
-                        tagName = release.tagName,
-                        assetName = asset.name,
-                        downloadUrl = asset.browserDownloadUrl,
-                        sizeBytes = asset.size,
-                    )
-                }
-                .firstOrNull()
+            val pick = GitHubReleasePicker.pick(releases, assetRegex, channel)
             if (pick == null) {
                 Result.failure("no_matching_github_asset")
             } else {

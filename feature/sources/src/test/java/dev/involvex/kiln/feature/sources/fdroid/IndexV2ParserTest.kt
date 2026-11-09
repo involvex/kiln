@@ -61,6 +61,30 @@ class IndexV2ParserTest {
     }
 
     @Test
+    fun `parses antiFeatures map keys`() {
+        val index = """
+            {
+              "packages": {
+                "com.example.track": {
+                  "metadata": {
+                    "name": {"en-US": "Track"},
+                    "antiFeatures": {
+                      "Tracking": {"en-US": "Sends analytics"},
+                      "NonFreeNet": {}
+                    }
+                  },
+                  "versions": {}
+                }
+              }
+            }
+        """.trimIndent()
+        val result = IndexV2Parser.parsePackages(index)
+        assertTrue(result is Result.Success)
+        val pkg = (result as Result.Success).value.single()
+        assertEquals(listOf("NonFreeNet", "Tracking"), pkg.antiFeatures)
+    }
+
+    @Test
     fun `parses icon and phone screenshots paths`() {
         val index = """
             {

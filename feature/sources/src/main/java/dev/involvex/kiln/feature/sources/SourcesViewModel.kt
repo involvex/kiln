@@ -146,7 +146,7 @@ class SourcesViewModel @Inject constructor(
                         ignoreUpdates = false,
                         githubOwnerRepo = ownerRepo,
                         githubAssetRegex = ".*\\.apk$",
-                        includePreReleases = false,
+                        githubChannel = "STABLE",
                     ),
                 )
                 "github_added:$ownerRepo"
@@ -286,7 +286,7 @@ class SourcesViewModel @Inject constructor(
                                     ignoreUpdates = it.ignoreUpdates,
                                     githubOwnerRepo = it.githubOwnerRepo,
                                     githubAssetRegex = it.githubAssetRegex,
-                                    includePreReleases = it.includePreReleases,
+                                    githubChannel = it.githubChannel.name,
                                 )
                             },
                         )
