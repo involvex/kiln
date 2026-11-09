@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.core.model.AppearancePrefs
+import dev.involvex.kiln.core.model.AutomationPrefs
 import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
 import dev.involvex.kiln.core.model.DevPrefs
 import dev.involvex.kiln.core.model.KilnFontStyle
@@ -87,6 +88,7 @@ fun SettingsRoute(
         onUnmeteredOnlyChange = viewModel::setUnmeteredOnly,
         onAutoInstallChange = viewModel::setAutoInstallMatching,
         onCooldownDaysChange = viewModel::setUpdateCooldownDays,
+        onAutomationEnabledChange = viewModel::setAutomationEnabled,
         onThemeChange = viewModel::setTheme,
         onLanguageChange = viewModel::setLanguage,
         onFontStyleChange = viewModel::setFontStyle,
@@ -108,6 +110,7 @@ fun SettingsScreen(
     onUnmeteredOnlyChange: (Boolean) -> Unit,
     onAutoInstallChange: (Boolean) -> Unit,
     onCooldownDaysChange: (Int) -> Unit,
+    onAutomationEnabledChange: (Boolean) -> Unit,
     onThemeChange: (KilnThemeStyle) -> Unit,
     onLanguageChange: (KilnLanguage) -> Unit,
     onFontStyleChange: (KilnFontStyle) -> Unit,
@@ -179,6 +182,11 @@ fun SettingsScreen(
                 onCooldownDaysChange = onCooldownDaysChange,
                 onCheckNow = onCheckNow,
                 onConsumeCheckNow = onConsumeCheckNow,
+            )
+            HorizontalDivider()
+            AutomationSection(
+                prefs = state.automation,
+                onEnabledChange = onAutomationEnabledChange,
             )
             HorizontalDivider()
             AboutSection(
@@ -261,6 +269,24 @@ private const val URL_SUPPORTING: String =
     "https://github.com/involvex/kiln/blob/main/docs/SUPPORTING.md"
 private const val URL_LICENSE: String =
     "https://github.com/involvex/kiln/blob/main/LICENSE"
+
+@Composable
+private fun AutomationSection(prefs: AutomationPrefs, onEnabledChange: (Boolean) -> Unit) {
+    Text(
+        text = stringResource(R.string.settings_automation_section),
+        style = MaterialTheme.typography.titleMedium,
+    )
+    Text(
+        text = stringResource(R.string.settings_automation_explain),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    SettingsSwitchRow(
+        title = stringResource(R.string.settings_automation_enabled),
+        checked = prefs.enabled,
+        onCheckedChange = onEnabledChange,
+    )
+}
 
 @Composable
 private fun BackgroundUpdatesBlock(

@@ -16,6 +16,9 @@
     <string name="settings_update_cooldown_value">%1$d days</string>
     <string name="settings_check_now">Check now</string>
     <string name="settings_check_now_queued">Update check queued…</string>
+    <string name="settings_automation_section">Automation</string>
+    <string name="settings_automation_explain">Allow same-signer apps (or ADB) to send CHECK_UPDATES, INSTALL_UPDATE, INSTALL_FROM_URL, and CLEAN_CACHE broadcasts. Off by default. Results are broadcast under the AUTOMATION signature permission.</string>
+    <string name="settings_automation_enabled">Enable Intent / Broadcast API</string>
     <string name="settings_appearance_section">Appearance</string>
     <string name="settings_theme">Theme</string>
     <string name="settings_theme_light">Light</string>

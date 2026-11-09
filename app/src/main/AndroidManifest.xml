@@ -21,6 +21,11 @@
     <!-- M9: Termux RUN_COMMAND (also declared in :feature:termux; grant under Additional permissions). -->
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
     <uses-permission android:name="com.involvex.termux_app.permission.RUN_COMMAND" />
+    <!-- M22: signature-gated automation broadcasts (Termux / same-signer callers). -->
+    <permission
+        android:name="dev.involvex.kiln.permission.AUTOMATION"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="dev.involvex.kiln.permission.AUTOMATION" />
     <application
         android:name=".KilnApplication"
         android:allowBackup="true"
@@ -106,5 +111,18 @@
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
+
+        <!-- M22: opt-in automation API (Settings → Automation). -->
+        <receiver
+            android:name=".automation.AutomationReceiver"
+            android:exported="true"
+            android:permission="dev.involvex.kiln.permission.AUTOMATION">
+            <intent-filter>
+                <action android:name="dev.involvex.kiln.action.CHECK_UPDATES" />
+                <action android:name="dev.involvex.kiln.action.INSTALL_UPDATE" />
+                <action android:name="dev.involvex.kiln.action.INSTALL_FROM_URL" />
+                <action android:name="dev.involvex.kiln.action.CLEAN_CACHE" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

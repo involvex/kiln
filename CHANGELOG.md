@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Intent/Broadcast automation API (Settings → Automation, off by default): signature permission `dev.involvex.kiln.permission.AUTOMATION`; actions `CHECK_UPDATES`, `INSTALL_UPDATE`, `INSTALL_FROM_URL`, `CLEAN_CACHE`; result broadcast + optional failure notification
 - Release notes on App detail updates (GitHub release body / F-Droid whatsNew, plain text)
 - Watchlist: Watch uninstalled catalog apps (and GitHub lookups); Sources list with new-version badge; background notify, no auto-install
 - App detail: Open in Play Store for unmanaged apps installed via Play or Aurora (`market://` with https fallback)
