@@ -14,6 +14,7 @@ data class DiscoveryGithubRow(
     val sizeBytes: Long?,
     val downloadUrl: String?,
     val saved: Boolean,
+    val releaseNotes: String? = null,
 )
 
 data class DiscoveryUiState(

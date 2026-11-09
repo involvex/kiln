@@ -96,6 +96,9 @@
     <string name="feature_apps_action_update">Herunterladen &amp; installieren</string>
     <string name="feature_apps_update_section">Update</string>
     <string name="feature_apps_update_available">Version %1$s verfügbar von %2$s</string>
+    <string name="feature_apps_update_release_notes">Versionshinweise</string>
+    <string name="feature_apps_update_release_notes_more">Mehr anzeigen</string>
+    <string name="feature_apps_update_release_notes_less">Weniger anzeigen</string>
     <string name="feature_apps_update_signature_warning">Signatur stimmt nicht mit der installierten App überein. Installation gesperrt. Typisch, wenn F-Droid einen Rebuild signiert und die App von GitHub oder Play kommt.</string>
     <string name="feature_apps_update_badge">Update %1$s</string>
     <string name="feature_apps_update_badge_warning">Signatur-Warnung · %1$s</string>

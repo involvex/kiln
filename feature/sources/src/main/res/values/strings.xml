@@ -15,6 +15,16 @@
     <string name="trending_empty">Pull to refresh to sync the catalog and load shelves.</string>
     <string name="catalog_detail_title">App details</string>
     <string name="catalog_detail_install">Install</string>
+    <string name="catalog_detail_watch">Watch</string>
+    <string name="catalog_detail_watching">Watching</string>
+    <string name="catalog_detail_unwatch">Unwatch</string>
+    <string name="catalog_detail_watch_ok">Added to watchlist</string>
+    <string name="catalog_detail_unwatch_ok">Removed from watchlist</string>
+    <string name="catalog_detail_already_managed">Already linked as an update source</string>
+    <string name="sources_watchlist_section">Watchlist</string>
+    <string name="sources_watchlist_empty">No watched apps yet. Watch from Discover catalog details.</string>
+    <string name="sources_watchlist_update">New: %1$s</string>
+    <string name="sources_watchlist_unwatch">Unwatch</string>
     <string name="catalog_detail_share">Share</string>
     <string name="catalog_detail_sources">Sources</string>
     <string name="catalog_detail_links">Links</string>

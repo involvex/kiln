@@ -15,6 +15,16 @@
     <string name="trending_empty">Zum Synchronisieren und Laden der Regale nach unten ziehen.</string>
     <string name="catalog_detail_title">App-Details</string>
     <string name="catalog_detail_install">Installieren</string>
+    <string name="catalog_detail_watch">Beobachten</string>
+    <string name="catalog_detail_watching">Wird beobachtet</string>
+    <string name="catalog_detail_unwatch">Nicht mehr beobachten</string>
+    <string name="catalog_detail_watch_ok">Zur Watchlist hinzugefügt</string>
+    <string name="catalog_detail_unwatch_ok">Von der Watchlist entfernt</string>
+    <string name="catalog_detail_already_managed">Bereits als Update-Quelle verknüpft</string>
+    <string name="sources_watchlist_section">Watchlist</string>
+    <string name="sources_watchlist_empty">Noch keine beobachteten Apps. Beobachten über Katalog-Details in Discover.</string>
+    <string name="sources_watchlist_update">Neu: %1$s</string>
+    <string name="sources_watchlist_unwatch">Nicht mehr beobachten</string>
     <string name="catalog_detail_share">Teilen</string>
     <string name="catalog_detail_sources">Quellen</string>
     <string name="catalog_detail_links">Links</string>

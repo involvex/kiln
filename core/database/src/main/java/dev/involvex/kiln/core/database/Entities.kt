@@ -54,6 +54,8 @@ data class IndexedReleaseEntity(
     val apkSha256: String?,
     val sizeBytes: Long?,
     val signerSha256Csv: String,
+    /** F-Droid index-v2 `whatsNew` (localized plain text); null when absent. */
+    val whatsNew: String? = null,
 )
 
 @Entity(tableName = "managed_apps")
@@ -67,6 +69,8 @@ data class ManagedAppEntity(
     val githubAssetRegex: String?,
     /** [dev.involvex.kiln.core.model.GitHubReleaseChannel] name; default STABLE. */
     val githubChannel: String = "STABLE",
+    /** True when watching an uninstalled app for new versions (no local install required). */
+    val watchOnly: Boolean = false,
 )
 
 @Entity(

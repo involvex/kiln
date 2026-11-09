@@ -10,6 +10,7 @@ import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.database.RepoEntity
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.network.KilnHttpClient
+import dev.involvex.kiln.feature.sources.ReleaseNotesText
 import java.nio.file.Files
 import java.security.MessageDigest
 import javax.inject.Inject
@@ -172,6 +173,7 @@ class FDroidRepoSync @Inject constructor(
         apkSha256 = rel.apkSha256,
         sizeBytes = rel.sizeBytes,
         signerSha256Csv = rel.signerSha256.joinToString(","),
+        whatsNew = ReleaseNotesText.normalize(rel.whatsNew),
     )
 
     private fun sha256FileHex(file: java.io.File): String {

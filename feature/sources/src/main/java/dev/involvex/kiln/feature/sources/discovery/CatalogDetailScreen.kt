@@ -68,6 +68,7 @@ fun CatalogDetailRoute(
         state = state,
         onBack = onBack,
         onInstall = viewModel::install,
+        onToggleWatch = viewModel::toggleWatch,
         onClearMessage = viewModel::clearMessage,
         modifier = modifier,
     )
@@ -78,6 +79,7 @@ fun CatalogDetailScreen(
     state: CatalogDetailUiState,
     onBack: () -> Unit,
     onInstall: () -> Unit,
+    onToggleWatch: () -> Unit,
     onClearMessage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -134,8 +136,10 @@ fun CatalogDetailScreen(
                 row = row,
                 message = state.message,
                 messageIsError = state.messageIsError,
+                isWatching = state.isWatching,
                 padding = padding,
                 onInstall = onInstall,
+                onToggleWatch = onToggleWatch,
                 onClearMessage = onClearMessage,
                 onShare = {
                     val body = CatalogShareLinks.shareBody(
@@ -194,8 +198,10 @@ private fun CatalogDetailContent(
     row: DiscoveryAppRow,
     message: String?,
     messageIsError: Boolean,
+    isWatching: Boolean,
     padding: PaddingValues,
     onInstall: () -> Unit,
+    onToggleWatch: () -> Unit,
     onClearMessage: () -> Unit,
     onShare: () -> Unit,
 ) {
@@ -268,6 +274,36 @@ private fun CatalogDetailContent(
                     Text(stringResource(R.string.catalog_detail_install))
                 }
             }
+        }
+        item {
+            CatalogWatchActions(isWatching = isWatching, onToggleWatch = onToggleWatch)
+        }
+    }
+}
+
+@Composable
+private fun CatalogWatchActions(isWatching: Boolean, onToggleWatch: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(
+            onClick = onToggleWatch,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                stringResource(
+                    if (isWatching) {
+                        R.string.catalog_detail_unwatch
+                    } else {
+                        R.string.catalog_detail_watch
+                    },
+                ),
+            )
+        }
+        if (isWatching) {
+            Text(
+                stringResource(R.string.catalog_detail_watching),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -522,6 +558,12 @@ private fun formatCatalogMessage(code: String): String = when {
         stringResource(R.string.discovery_msg_install_queued, code.substringAfter(':'))
 
     code == "catalog_missing" -> stringResource(R.string.catalog_detail_missing)
+
+    code == "watch_ok" -> stringResource(R.string.catalog_detail_watch_ok)
+
+    code == "unwatch_ok" -> stringResource(R.string.catalog_detail_unwatch_ok)
+
+    code == "already_managed" -> stringResource(R.string.catalog_detail_already_managed)
 
     else -> code
 }

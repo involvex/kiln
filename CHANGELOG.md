@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Release notes on App detail updates (GitHub release body / F-Droid whatsNew, plain text)
+- Watchlist: Watch uninstalled catalog apps (and GitHub lookups); Sources list with new-version badge; background notify, no auto-install
 - App detail: Open in Play Store for unmanaged apps installed via Play or Aurora (`market://` with https fallback)
 - GitHub update channels on App detail: Stable, Pre-release, Nightly (Actions artifacts; PAT required for Nightly)
 - F-Droid anti-feature chips on catalog App details (from index-v2 metadata)

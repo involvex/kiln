@@ -96,6 +96,9 @@
     <string name="feature_apps_action_update">Download &amp; install</string>
     <string name="feature_apps_update_section">Update</string>
     <string name="feature_apps_update_available">Version %1$s available from %2$s</string>
+    <string name="feature_apps_update_release_notes">Release notes</string>
+    <string name="feature_apps_update_release_notes_more">Show more</string>
+    <string name="feature_apps_update_release_notes_less">Show less</string>
     <string name="feature_apps_update_signature_warning">Signature does not match the installed app. Install is blocked. This often happens when F-Droid signs a rebuild of an app you installed from GitHub or Play.</string>
     <string name="feature_apps_update_badge">Update %1$s</string>
     <string name="feature_apps_update_badge_warning">Signature warning · %1$s</string>

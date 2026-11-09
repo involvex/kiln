@@ -9,12 +9,15 @@ import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
+import dev.involvex.kiln.core.model.InstalledAppMatchInput
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.ManagedSourceLink
 import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.RepoConfig
 import dev.involvex.kiln.core.model.SourceKind
 import dev.involvex.kiln.core.model.UpdateCheckResult
+import dev.involvex.kiln.core.model.WatchlistEntry
+import dev.involvex.kiln.core.model.WatchlistRepository
 import dev.involvex.kiln.core.model.parseGitHubReleaseChannel
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.github.GitHubActionsClient
@@ -26,6 +29,8 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
@@ -39,7 +44,8 @@ class DefaultAppUpdateRepository @Inject constructor(
     private val gitHubActionsClient: GitHubActionsClient,
     private val gitHubTokenStore: GitHubTokenStore,
     private val fdroidRepoSync: FDroidRepoSync,
-) : AppUpdateRepository {
+) : AppUpdateRepository,
+    WatchlistRepository {
     private val updatesState = MutableStateFlow<Map<String, AppUpdateInfo>>(emptyMap())
 
     override fun updates(): Flow<Map<String, AppUpdateInfo>> = updatesState.asStateFlow()
@@ -48,41 +54,65 @@ class DefaultAppUpdateRepository @Inject constructor(
         val installed = installedAppsReader.userApps().associateBy { it.packageName }
         val repos = repoDao.getAll().associateBy { it.id }
         val out = linkedMapOf<String, AppUpdateInfo>()
-        managedAppDao.getAll()
-            .filter { !it.ignoreUpdates }
-            .mapNotNull { app -> installed[app.packageName]?.let { local -> app to local } }
-            .forEach { (app, local) ->
-                val fromIndex = findFdroidUpdate(
-                    app.packageName,
-                    app.sourceId,
-                    local.versionCode,
-                    local.versionName,
-                    local.signerSha256,
-                    repos,
+        for (app in managedAppDao.getAll().filter { !it.ignoreUpdates }) {
+            val local = installed[app.packageName]
+            if (local != null) {
+                if (app.watchOnly) {
+                    managedAppDao.upsert(app.copy(watchOnly = false))
+                }
+                putBestUpdate(out, app, local, repos, watchOnly = false)
+            } else if (app.watchOnly) {
+                val synthetic = InstalledAppMatchInput(
+                    packageName = app.packageName,
+                    label = app.packageName,
+                    versionName = null,
+                    versionCode = 0L,
+                    signerSha256 = emptyList(),
                 )
-                val ownerRepo = app.githubOwnerRepo
-                val fromGitHub = if (ownerRepo != null) {
-                    findGitHubUpdate(
-                        packageName = app.packageName,
-                        ownerRepo = ownerRepo,
-                        assetRegex = app.githubAssetRegex,
-                        channel = parseGitHubReleaseChannel(app.githubChannel),
-                        local = local,
-                    )
-                } else {
-                    null
-                }
-                val best = listOfNotNull(fromIndex, fromGitHub)
-                    .filter { it.signatureMatches || it.confidence == MatchConfidence.WARNING }
-                    .maxWithOrNull(
-                        compareBy<AppUpdateInfo> { it.signatureMatches }
-                            .thenBy { it.availableVersionCode },
-                    )
-                if (best != null) {
-                    out[app.packageName] = best
-                }
+                putBestUpdate(out, app, synthetic, repos, watchOnly = true)
             }
+        }
         updatesState.value = out
+    }
+
+    private suspend fun putBestUpdate(
+        out: MutableMap<String, AppUpdateInfo>,
+        app: ManagedAppEntity,
+        local: InstalledAppMatchInput,
+        repos: Map<String, dev.involvex.kiln.core.database.RepoEntity>,
+        watchOnly: Boolean,
+    ) {
+        val fromIndex = findFdroidUpdate(
+            app.packageName,
+            app.sourceId,
+            local.versionCode,
+            local.versionName,
+            local.signerSha256,
+            repos,
+            watchOnly = watchOnly,
+        )
+        val ownerRepo = app.githubOwnerRepo
+        val fromGitHub = if (ownerRepo != null) {
+            findGitHubUpdate(
+                packageName = app.packageName,
+                ownerRepo = ownerRepo,
+                assetRegex = app.githubAssetRegex,
+                channel = parseGitHubReleaseChannel(app.githubChannel),
+                local = local,
+                watchOnly = watchOnly,
+            )
+        } else {
+            null
+        }
+        val best = listOfNotNull(fromIndex, fromGitHub)
+            .filter { it.signatureMatches || it.confidence == MatchConfidence.WARNING }
+            .maxWithOrNull(
+                compareBy<AppUpdateInfo> { it.signatureMatches }
+                    .thenBy { it.availableVersionCode },
+            )
+        if (best != null) {
+            out[app.packageName] = best
+        }
     }
 
     override suspend fun checkForUpdates(): Result<UpdateCheckResult> {
@@ -136,6 +166,34 @@ class DefaultAppUpdateRepository @Inject constructor(
             }
     }
 
+    override fun observeIsWatching(packageName: String): Flow<Boolean> = managedAppDao.observe(packageName).map { it?.watchOnly == true }
+
+    override fun observeWatchlist(): Flow<List<WatchlistEntry>> = channelFlow {
+        combine(managedAppDao.observeAll(), updatesState) { apps, updates -> apps to updates }
+            .collect { (apps, updates) ->
+                send(buildWatchlistEntries(apps, updates))
+            }
+    }
+
+    private suspend fun buildWatchlistEntries(apps: List<ManagedAppEntity>, updates: Map<String, AppUpdateInfo>): List<WatchlistEntry> =
+        apps.filter { it.watchOnly }
+            .sortedBy { it.packageName.lowercase() }
+            .map { app ->
+                val update = updates[app.packageName]
+                val displayName = indexDao.getPackage(app.packageName, app.sourceId)?.name
+                    ?: app.githubOwnerRepo
+                    ?: app.packageName
+                WatchlistEntry(
+                    packageName = app.packageName,
+                    displayName = displayName,
+                    sourceId = app.sourceId,
+                    githubOwnerRepo = app.githubOwnerRepo,
+                    availableVersionName = update?.availableVersionName,
+                    hasUpdate = update != null,
+                    releaseNotes = update?.releaseNotes,
+                )
+            }
+
     override suspend fun setIgnoreUpdates(packageName: String, ignoreUpdates: Boolean): Result<Unit> {
         val existing = managedAppDao.get(packageName)
         val update = updatesState.value[packageName]
@@ -151,6 +209,7 @@ class DefaultAppUpdateRepository @Inject constructor(
                     ?.removePrefix("github:"),
                 githubAssetRegex = ".*\\.apk$",
                 githubChannel = GitHubReleaseChannel.STABLE.name,
+                watchOnly = false,
             )
         managedAppDao.upsert(entity)
         refreshUpdates()
@@ -177,6 +236,7 @@ class DefaultAppUpdateRepository @Inject constructor(
                 githubOwnerRepo = githubOwnerRepo,
                 githubAssetRegex = githubAssetRegex ?: existing?.githubAssetRegex ?: ".*\\.apk$",
                 githubChannel = (githubChannel ?: parseGitHubReleaseChannel(existing?.githubChannel)).name,
+                watchOnly = false,
             ),
         )
         refreshUpdates()
@@ -194,6 +254,38 @@ class DefaultAppUpdateRepository @Inject constructor(
         return Result.success(Unit)
     }
 
+    override suspend fun watchCatalogPackage(packageName: String, repoId: String): Result<Unit> {
+        val existing = managedAppDao.get(packageName)
+        if (existing != null && !existing.watchOnly) {
+            return Result.failure("already_managed")
+        }
+        managedAppDao.upsert(
+            ManagedAppEntity(
+                packageName = packageName,
+                sourceId = repoId,
+                confidence = MatchConfidence.MEDIUM.name,
+                pinned = true,
+                ignoreUpdates = false,
+                githubOwnerRepo = null,
+                githubAssetRegex = null,
+                githubChannel = GitHubReleaseChannel.STABLE.name,
+                watchOnly = true,
+            ),
+        )
+        refreshUpdates()
+        return Result.success(Unit)
+    }
+
+    override suspend fun unwatchPackage(packageName: String): Result<Unit> {
+        val existing = managedAppDao.get(packageName) ?: return Result.success(Unit)
+        if (!existing.watchOnly) {
+            return Result.failure("not_watching")
+        }
+        managedAppDao.delete(packageName)
+        refreshUpdates()
+        return Result.success(Unit)
+    }
+
     private suspend fun findFdroidUpdate(
         packageName: String,
         preferredSourceId: String,
@@ -201,6 +293,7 @@ class DefaultAppUpdateRepository @Inject constructor(
         installedName: String?,
         installedSigners: List<String>,
         repos: Map<String, dev.involvex.kiln.core.database.RepoEntity>,
+        watchOnly: Boolean,
     ): AppUpdateInfo? {
         val releases = indexDao.releasesFor(packageName)
         if (releases.isEmpty()) return null
@@ -215,14 +308,7 @@ class DefaultAppUpdateRepository @Inject constructor(
             return null
         }
         val indexSigners = latest.signerSha256Csv.split(',').filter { it.isNotBlank() }
-        val matches = indexSigners.isEmpty() || installedSigners.any { inst ->
-            indexSigners.any { fingerprintsEqual(inst, it) }
-        }
-        val confidence = when {
-            matches && indexSigners.isNotEmpty() -> MatchConfidence.HIGH
-            indexSigners.isEmpty() -> MatchConfidence.MEDIUM
-            else -> MatchConfidence.WARNING
-        }
+        val (matches, confidence) = fdroidMatch(watchOnly, indexSigners, installedSigners)
         val repoAddress = repos[latest.repoId]?.address
         val downloadUrl = repoAddress?.let { FdroidApkUrl.build(it, latest.apkName) }
         return AppUpdateInfo(
@@ -236,7 +322,26 @@ class DefaultAppUpdateRepository @Inject constructor(
             downloadUrl = downloadUrl,
             apkSha256 = latest.apkSha256,
             sizeBytes = latest.sizeBytes,
+            releaseNotes = ReleaseNotesText.normalize(latest.whatsNew),
+            watchOnly = watchOnly,
         )
+    }
+
+    private fun fdroidMatch(
+        watchOnly: Boolean,
+        indexSigners: List<String>,
+        installedSigners: List<String>,
+    ): Pair<Boolean, MatchConfidence> {
+        if (watchOnly) return true to MatchConfidence.MEDIUM
+        val matches = indexSigners.isEmpty() || installedSigners.any { inst ->
+            indexSigners.any { fingerprintsEqual(inst, it) }
+        }
+        val confidence = when {
+            matches && indexSigners.isNotEmpty() -> MatchConfidence.HIGH
+            indexSigners.isEmpty() -> MatchConfidence.MEDIUM
+            else -> MatchConfidence.WARNING
+        }
+        return matches to confidence
     }
 
     private suspend fun findGitHubUpdate(
@@ -244,15 +349,16 @@ class DefaultAppUpdateRepository @Inject constructor(
         ownerRepo: String,
         assetRegex: String?,
         channel: GitHubReleaseChannel,
-        local: dev.involvex.kiln.core.model.InstalledAppMatchInput,
+        local: InstalledAppMatchInput,
+        watchOnly: Boolean,
     ): AppUpdateInfo? {
         val regex = runCatching { Regex(assetRegex ?: ".*\\.apk$") }.getOrElse { Regex(".*\\.apk$") }
         return when (channel) {
-            GitHubReleaseChannel.NIGHTLY -> findGitHubNightlyUpdate(packageName, ownerRepo, regex, local)
+            GitHubReleaseChannel.NIGHTLY -> findGitHubNightlyUpdate(packageName, ownerRepo, regex, local, watchOnly)
 
             GitHubReleaseChannel.STABLE,
             GitHubReleaseChannel.PRE_RELEASE,
-            -> findGitHubReleaseUpdate(packageName, ownerRepo, regex, channel, local)
+            -> findGitHubReleaseUpdate(packageName, ownerRepo, regex, channel, local, watchOnly)
         }
     }
 
@@ -261,7 +367,8 @@ class DefaultAppUpdateRepository @Inject constructor(
         ownerRepo: String,
         regex: Regex,
         channel: GitHubReleaseChannel,
-        local: dev.involvex.kiln.core.model.InstalledAppMatchInput,
+        local: InstalledAppMatchInput,
+        watchOnly: Boolean,
     ): AppUpdateInfo? = when (
         val result = gitHubReleasesClient.latestMatchingRelease(ownerRepo, regex, channel)
     ) {
@@ -287,6 +394,8 @@ class DefaultAppUpdateRepository @Inject constructor(
                     downloadUrl = pick.downloadUrl,
                     apkSha256 = null,
                     sizeBytes = pick.sizeBytes,
+                    releaseNotes = pick.releaseNotes,
+                    watchOnly = watchOnly,
                 )
             }
         }
@@ -296,7 +405,8 @@ class DefaultAppUpdateRepository @Inject constructor(
         packageName: String,
         ownerRepo: String,
         apkRegex: Regex,
-        local: dev.involvex.kiln.core.model.InstalledAppMatchInput,
+        local: InstalledAppMatchInput,
+        watchOnly: Boolean,
     ): AppUpdateInfo? {
         if (gitHubTokenStore.getToken().isNullOrBlank()) {
             Timber.d("GitHub nightly skipped for %s: PAT required", packageName)
@@ -327,6 +437,7 @@ class DefaultAppUpdateRepository @Inject constructor(
                         sizeBytes = pick.sizeBytes,
                         requiresGitHubAuth = true,
                         apkAssetRegex = apkRegex.pattern,
+                        watchOnly = watchOnly,
                     )
                 }
             }
