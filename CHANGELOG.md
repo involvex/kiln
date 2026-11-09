@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-11-09
+
+### Fixed
+
+- HyperOS continuous black/default flicker: locale apply treated `en-US` / `de-DE` as different from `en` / `de` and recreated MainActivity in a loop; follow-system now uses an empty LocaleList; Material You dynamic color disabled at the root so wallpaper shifts cannot thrash the window
+
 ## [0.2.0] — 2026-11-09
 
 ### Added
@@ -58,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - No telemetry; HTTPS-only network; signature checks on updates; tokens not logged
 
-[Unreleased]: https://github.com/involvex/kiln/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/involvex/kiln/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/involvex/kiln/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/involvex/kiln/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/involvex/kiln/releases/tag/v0.1.0

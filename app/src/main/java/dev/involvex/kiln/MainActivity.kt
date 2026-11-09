@@ -1,19 +1,15 @@
 package dev.involvex.kiln
 
-import android.app.Activity
 import android.content.Intent
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.WindowCompat
@@ -24,6 +20,7 @@ import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.AppearancePrefs
 import dev.involvex.kiln.core.model.KilnFontStyle
 import dev.involvex.kiln.core.model.KilnLanguage
+import dev.involvex.kiln.core.model.KilnLocales
 import dev.involvex.kiln.core.model.KilnThemeStyle
 import dev.involvex.kiln.feature.sources.IncomingRepoLinkStore
 import dev.involvex.kiln.ui.KilnApp
@@ -79,16 +76,17 @@ class MainActivity : AppCompatActivity() {
 }
 
 internal fun applyKilnLanguage(language: KilnLanguage) {
-    val tags = when (language) {
-        KilnLanguage.SYSTEM -> ""
-        KilnLanguage.ENGLISH -> "en"
-        KilnLanguage.GERMAN -> "de"
-    }
-    // Compare tags, not LocaleListCompat identity. A flaky != on HyperOS
-    // re-applied the same locale and recreated the Activity in a loop.
     val current = AppCompatDelegate.getApplicationLocales().toLanguageTags()
-    if (current == tags) return
-    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tags))
+    if (KilnLocales.isSatisfied(language, current)) return
+
+    val desired = if (language == KilnLanguage.SYSTEM) {
+        // Empty list = follow system. forLanguageTags("") does not always
+        // round-trip on HyperOS the same way getEmptyLocaleList() does.
+        LocaleListCompat.getEmptyLocaleList()
+    } else {
+        LocaleListCompat.forLanguageTags(KilnLocales.desiredLanguageTags(language))
+    }
+    AppCompatDelegate.setApplicationLocales(desired)
 }
 
 @Composable
@@ -101,14 +99,16 @@ private fun ApplyLanguage(language: KilnLanguage) {
 @Composable
 private fun KilnRoot(themeStyle: KilnThemeStyle, fontStyle: KilnFontStyle) {
     val view = LocalView.current
-    KilnTheme(themeStyle = themeStyle, fontStyle = fontStyle) {
-        val background = MaterialTheme.colorScheme.background.toArgb()
+    // dynamicColor=false: HyperOS Monet / wallpaper shifts were fighting the
+    // fixed Theme.Kiln windowBackground and flashing the whole surface.
+    KilnTheme(themeStyle = themeStyle, fontStyle = fontStyle, dynamicColor = false) {
         val lightBars = themeStyle == KilnThemeStyle.LIGHT
         if (!view.isInEditMode) {
             SideEffect {
-                val window = (view.context as Activity).window
-                window.setBackgroundDrawable(ColorDrawable(background))
-                val controller = WindowCompat.getInsetsController(window, view)
+                val controller = WindowCompat.getInsetsController(
+                    (view.context as android.app.Activity).window,
+                    view,
+                )
                 controller.isAppearanceLightStatusBars = lightBars
                 controller.isAppearanceLightNavigationBars = lightBars
             }
