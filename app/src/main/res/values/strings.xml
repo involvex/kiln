@@ -29,4 +29,7 @@
     <string name="settings_font_style">Font style</string>
     <string name="settings_font_default">Default</string>
     <string name="settings_font_rounded">Rounded display</string>
+    <string name="automation_failure_channel">Automation</string>
+    <string name="automation_failure_title">Automation failed</string>
+    <string name="automation_failure_body">%1$s: %2$s</string>
 </resources>

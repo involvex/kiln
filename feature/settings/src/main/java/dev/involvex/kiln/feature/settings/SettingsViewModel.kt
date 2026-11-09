@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.model.AppearancePreferences
+import dev.involvex.kiln.core.model.AutomationPreferences
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.core.model.DebugLogController
@@ -30,6 +31,7 @@ import kotlinx.coroutines.launch
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val preferences: BackgroundUpdatePreferences,
+    private val automationPreferences: AutomationPreferences,
     private val appearancePreferences: AppearancePreferences,
     private val installerPreferences: InstallerPreferences,
     private val devPreferences: DevPreferences,
@@ -46,6 +48,11 @@ class SettingsViewModel @Inject constructor(
             preferences.observe().collect { prefs ->
                 _uiState.update { it.copy(backgroundUpdates = prefs) }
                 scheduler.apply(prefs)
+            }
+        }
+        viewModelScope.launch {
+            automationPreferences.observe().collect { prefs ->
+                _uiState.update { it.copy(automation = prefs) }
             }
         }
         viewModelScope.launch {
@@ -81,6 +88,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setBackgroundUpdatesEnabled(enabled: Boolean) {
         viewModelScope.launch { preferences.setEnabled(enabled) }
+    }
+
+    fun setAutomationEnabled(enabled: Boolean) {
+        viewModelScope.launch { automationPreferences.setEnabled(enabled) }
     }
 
     fun setUnmeteredOnly(unmeteredOnly: Boolean) {
