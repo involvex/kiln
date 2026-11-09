@@ -38,11 +38,7 @@ import dev.involvex.kiln.core.model.BackupAppCandidate
 import dev.involvex.kiln.core.model.BackupContentTier
 
 @Composable
-fun BackupRoute(
-    modifier: Modifier = Modifier,
-    showTopBar: Boolean = true,
-    viewModel: BackupViewModel = hiltViewModel(),
-) {
+fun BackupRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, viewModel: BackupViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val createDoc = rememberLauncherForActivityResult(

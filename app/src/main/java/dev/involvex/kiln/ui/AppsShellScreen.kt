@@ -30,11 +30,7 @@ private enum class AppsShellSegment {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppsShellRoute(
-    onOpenDetail: (String) -> Unit,
-    onOpenCatalogDetail: (String, String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun AppsShellRoute(onOpenDetail: (String) -> Unit, onOpenCatalogDetail: (String, String) -> Unit, modifier: Modifier = Modifier) {
     var segmentIndex by rememberSaveable { mutableIntStateOf(0) }
     val segment = AppsShellSegment.entries[segmentIndex]
     Column(modifier = modifier.fillMaxSize()) {

@@ -13,8 +13,8 @@ import dev.involvex.kiln.core.database.InstallJobEntity
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.InstallJobState
 import dev.involvex.kiln.core.model.InstallJobStatus
-import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.InstallQueue
+import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.LocalInstallRequest
 import dev.involvex.kiln.feature.installer.work.InstallWorker
 import java.io.File

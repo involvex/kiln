@@ -55,6 +55,7 @@ fun ManageRoute(modifier: Modifier = Modifier) {
                         .fillMaxWidth()
                         .weight(1f),
                 )
+
                 else -> BackupRoute(
                     showTopBar = false,
                     modifier = Modifier

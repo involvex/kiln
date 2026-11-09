@@ -19,9 +19,7 @@ data class CatalogDetailUiState(
 )
 
 @HiltViewModel
-class CatalogDetailViewModel @Inject constructor(
-    private val repository: DiscoveryRepository,
-) : ViewModel() {
+class CatalogDetailViewModel @Inject constructor(private val repository: DiscoveryRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(CatalogDetailUiState())
     val uiState: StateFlow<CatalogDetailUiState> = _uiState.asStateFlow()
 

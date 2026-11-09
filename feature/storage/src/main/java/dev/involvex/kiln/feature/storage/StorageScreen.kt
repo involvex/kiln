@@ -37,11 +37,7 @@ import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.model.AppStorageStats
 
 @Composable
-fun StorageRoute(
-    modifier: Modifier = Modifier,
-    showTopBar: Boolean = true,
-    viewModel: StorageViewModel = hiltViewModel(),
-) {
+fun StorageRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, viewModel: StorageViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current

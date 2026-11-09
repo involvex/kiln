@@ -29,11 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 
 @Composable
-fun SourcesRoute(
-    onOpenAutoMatch: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: SourcesViewModel = hiltViewModel(),
-) {
+fun SourcesRoute(onOpenAutoMatch: () -> Unit, modifier: Modifier = Modifier, viewModel: SourcesViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     SourcesScreen(
         state = state,
@@ -168,11 +164,7 @@ private fun humanizeSyncDetail(detail: String): String = when {
     else -> detail
 }
 
-private fun LazyListScope.sourcesHeader(
-    isSyncing: Boolean,
-    onSyncAll: () -> Unit,
-    onOpenAutoMatch: () -> Unit,
-) {
+private fun LazyListScope.sourcesHeader(isSyncing: Boolean, onSyncAll: () -> Unit, onOpenAutoMatch: () -> Unit) {
     item {
         Text(
             text = stringResource(R.string.feature_sources_description),

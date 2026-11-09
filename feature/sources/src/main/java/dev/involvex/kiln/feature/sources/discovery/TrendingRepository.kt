@@ -15,10 +15,7 @@ enum class TrendingShelfId {
     AI,
 }
 
-data class TrendingShelf(
-    val id: TrendingShelfId,
-    val apps: List<DiscoveryAppRow>,
-)
+data class TrendingShelf(val id: TrendingShelfId, val apps: List<DiscoveryAppRow>)
 
 /**
  * Topic shelves are **heuristic**, not popularity charts: apps come from the local F-Droid-style
@@ -27,10 +24,7 @@ data class TrendingShelf(
  * descending as a stand-in for “recent catalog activity” — Kiln does not collect or use download counts.
  */
 @Singleton
-class TrendingRepository @Inject constructor(
-    private val indexDao: IndexDao,
-    private val repoDao: RepoDao,
-) {
+class TrendingRepository @Inject constructor(private val indexDao: IndexDao, private val repoDao: RepoDao) {
     suspend fun loadShelves(): List<TrendingShelf> {
         val repos = repoDao.getAll().associateBy { it.id }
         return listOf(
@@ -56,21 +50,13 @@ class TrendingRepository @Inject constructor(
         return TrendingShelf(TrendingShelfId.PRIVACY, apps)
     }
 
-    private suspend fun shelfCategory(
-        id: TrendingShelfId,
-        category: String,
-        repos: Map<String, RepoEntity>,
-    ): TrendingShelf {
+    private suspend fun shelfCategory(id: TrendingShelfId, category: String, repos: Map<String, RepoEntity>): TrendingShelf {
         val apps = indexDao.packagesByCategory(category, SHELF_DISPLAY_LIMIT)
             .map { it.toDiscoveryRow(repos[it.repoId]) }
         return TrendingShelf(id, apps)
     }
 
-    private suspend fun shelfCategories(
-        id: TrendingShelfId,
-        categories: List<String>,
-        repos: Map<String, RepoEntity>,
-    ): TrendingShelf {
+    private suspend fun shelfCategories(id: TrendingShelfId, categories: List<String>, repos: Map<String, RepoEntity>): TrendingShelf {
         val merged = linkedMapOf<Pair<String, String>, IndexedPackageEntity>()
         for (category in categories) {
             for (entity in indexDao.packagesByCategory(category, SHELF_QUERY_LIMIT)) {
