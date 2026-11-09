@@ -8,12 +8,15 @@
     <string name="termux_package_id">Termux package ID</string>
     <string name="termux_package_id_hint">Official Termux is com.termux. Change this for a custom fork.</string>
     <string name="termux_save_package_id">Save package ID</string>
+<string name="termux_detect_package">Detect Termux package</string>
+<string name="termux_detect_failed">No Termux install found. Enter the package ID manually.</string>
     <string name="termux_setup_section">Setup checklist</string>
     <string name="termux_check_installed_ok">Installed: %1$s</string>
     <string name="termux_check_installed_missing">Not installed: %1$s</string>
     <string name="termux_check_permission_ok">RUN_COMMAND permission granted</string>
     <string name="termux_check_permission_missing">Grant RUN_COMMAND under App info → Permissions → Additional permissions</string>
     <string name="termux_request_permission">Request RUN_COMMAND permission</string>
+<string name="termux_open_app_info">Open Termux app info</string>
     <string name="termux_fork_permission_note">Kiln only declares com.termux.permission.RUN_COMMAND in its manifest. Forks with a different package id usually cannot grant this permission to Kiln.</string>
     <string name="termux_check_allow_external">In Termux, set allow-external-apps=true in ~/.termux/termux.properties</string>
     <string name="termux_refresh_checks">Refresh checks</string>

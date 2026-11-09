@@ -1,6 +1,7 @@
 package dev.involvex.kiln.feature.termux.run
 
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Intent
 
 /**
@@ -40,11 +41,17 @@ object TermuxRunCommandIntentBuilder {
         )
     }
 
-    fun build(request: TermuxRunCommandRequest, resultPendingIntent: PendingIntent?): Intent {
+    fun build(request: TermuxRunCommandRequest, resultPendingIntent: PendingIntent?, serviceComponent: ComponentName? = null): Intent {
         val described = spec(request)
         val packageId = described.packageId
         return Intent().apply {
-            setClassName(packageId, described.serviceClassName)
+            // A resolved component wins: renamed forks do not always put
+            // RunCommandService at $packageId.app.RunCommandService.
+            if (serviceComponent != null) {
+                component = serviceComponent
+            } else {
+                setClassName(packageId, described.serviceClassName)
+            }
             action = described.action
             putExtra(TermuxRunCommandApi.extraCommandPath(packageId), described.commandPath)
             if (described.arguments.isNotEmpty()) {

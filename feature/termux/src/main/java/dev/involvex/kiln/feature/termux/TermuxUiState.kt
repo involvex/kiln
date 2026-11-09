@@ -24,4 +24,6 @@ data class TermuxUiState(
     val lastResult: TermuxCommandResult? = null,
     val statusKind: TermuxStatusKind = TermuxStatusKind.None,
     val startFailedDetail: String? = null,
+    /** Set by [TermuxViewModel.detectPackageId] when no Termux-like install was found. */
+    val detectionFailed: Boolean = false,
 )

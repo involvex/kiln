@@ -1,5 +1,9 @@
 package dev.involvex.kiln.feature.termux
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -43,6 +48,7 @@ fun TermuxRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: Te
     ) {
         viewModel.refreshEnvironment()
     }
+    val context = LocalContext.current
     TermuxScreen(
         state = state,
         onBack = onBack,
@@ -50,9 +56,14 @@ fun TermuxRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: Te
         onPackageIdChange = viewModel::setPackageIdDraft,
         onSavePackageId = viewModel::savePackageId,
         onRefresh = viewModel::refreshEnvironment,
+        onDetectPackage = viewModel::detectPackageId,
         onRequestPermission = {
             val packageId = state.prefs.packageId.ifBlank { TermuxPrefs.DEFAULT_TERMUX_PACKAGE_ID }
             permissionLauncher.launch(TermuxRunCommandApi.permission(packageId))
+        },
+        onOpenAppInfo = {
+            val packageId = state.prefs.packageId.ifBlank { TermuxPrefs.DEFAULT_TERMUX_PACKAGE_ID }
+            context.openAppInfo(packageId)
         },
         onRunSmokeTest = viewModel::runEchoSmokeTest,
         modifier = modifier,
@@ -67,7 +78,9 @@ fun TermuxScreen(
     onPackageIdChange: (String) -> Unit,
     onSavePackageId: () -> Unit,
     onRefresh: () -> Unit,
+    onDetectPackage: () -> Unit,
     onRequestPermission: () -> Unit,
+    onOpenAppInfo: () -> Unit,
     onRunSmokeTest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -129,6 +142,19 @@ fun TermuxScreen(
             ) {
                 Text(stringResource(R.string.termux_save_package_id))
             }
+            OutlinedButton(
+                onClick = onDetectPackage,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.termux_detect_package))
+            }
+            if (state.detectionFailed) {
+                Text(
+                    text = stringResource(R.string.termux_detect_failed),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
             Text(
                 text = stringResource(R.string.termux_setup_section),
                 style = MaterialTheme.typography.titleMedium,
@@ -161,13 +187,19 @@ fun TermuxScreen(
                 ) {
                     Text(stringResource(R.string.termux_request_permission))
                 }
+                OutlinedButton(
+                    onClick = onOpenAppInfo,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.termux_open_app_info))
+                }
             }
             val packageId = state.prefs.packageId.ifBlank { TermuxPrefs.DEFAULT_TERMUX_PACKAGE_ID }
             if (packageId != TermuxPrefs.DEFAULT_TERMUX_PACKAGE_ID) {
                 Text(
                     text = stringResource(R.string.termux_fork_permission_note),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Text(
@@ -278,4 +310,19 @@ private fun ResultBlock(result: TermuxCommandResult) {
             color = MaterialTheme.colorScheme.error,
         )
     }
+}
+
+/**
+ * Opens the system App Info screen for [packageId].
+ *
+ * Renamed Termux forks declare `com.involvex.termux_app.permission.RUN_COMMAND`
+ * under their own package id, which Kiln cannot declare in its manifest, so
+ * the `RequestPermission` launcher cannot grant it. The user grants it once in
+ * App Info → Permissions; this button short-circuits that.
+ */
+private fun Context.openAppInfo(packageId: String) {
+    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = Uri.fromParts("package", packageId, null)
+    }
+    runCatching { startActivity(intent) }
 }

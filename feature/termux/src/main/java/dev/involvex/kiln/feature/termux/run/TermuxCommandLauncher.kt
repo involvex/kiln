@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.involvex.kiln.feature.termux.TermuxPackageDetector
 import dev.involvex.kiln.feature.termux.TermuxResultReceiver
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
@@ -24,7 +25,10 @@ sealed interface TermuxLaunchOutcome {
 }
 
 @Singleton
-class TermuxCommandLauncher @Inject constructor(@ApplicationContext private val context: Context) {
+class TermuxCommandLauncher @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val detector: TermuxPackageDetector,
+) {
     private val nextExecutionId = AtomicInteger(1_000)
 
     fun nextExecutionId(): Int = nextExecutionId.getAndIncrement()
@@ -66,7 +70,8 @@ class TermuxCommandLauncher @Inject constructor(@ApplicationContext private val 
             resultIntent,
             pendingFlags,
         )
-        val serviceIntent = TermuxRunCommandIntentBuilder.build(request, pendingIntent)
+        val serviceComponent = detector.resolveServiceComponent(request.packageId)
+        val serviceIntent = TermuxRunCommandIntentBuilder.build(request, pendingIntent, serviceComponent)
         return try {
             context.startService(serviceIntent)
             TermuxLaunchOutcome.Started(request.executionId)
