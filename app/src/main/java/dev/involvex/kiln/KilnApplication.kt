@@ -12,6 +12,8 @@ import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.core.model.DebugLogController
 import dev.involvex.kiln.core.model.DevPreferences
+import dev.involvex.kiln.core.model.MaintenancePreferences
+import dev.involvex.kiln.core.model.MaintenanceScheduler
 import dev.involvex.kiln.feature.apps.icon.PackageIconFetcher
 import dev.involvex.kiln.feature.apps.icon.PackageIconKeyer
 import javax.inject.Inject
@@ -35,6 +37,12 @@ class KilnApplication :
 
     @Inject
     lateinit var backgroundUpdateScheduler: BackgroundUpdateScheduler
+
+    @Inject
+    lateinit var maintenancePreferences: MaintenancePreferences
+
+    @Inject
+    lateinit var maintenanceScheduler: MaintenanceScheduler
 
     @Inject
     lateinit var appearancePreferences: AppearancePreferences
@@ -69,6 +77,9 @@ class KilnApplication :
         }
         applicationScope.launch {
             backgroundUpdateScheduler.apply(backgroundUpdatePreferences.current())
+        }
+        applicationScope.launch {
+            maintenanceScheduler.apply(maintenancePreferences.current())
         }
     }
 

@@ -45,7 +45,11 @@ import dev.involvex.kiln.core.model.DevPrefs
 import dev.involvex.kiln.core.model.KilnFontStyle
 import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
+import dev.involvex.kiln.core.model.MaintenancePrefs
+import dev.involvex.kiln.core.model.MaintenanceRunRecord
 import dev.involvex.kiln.core.model.PreferredInstaller
+import java.text.DateFormat
+import java.util.Date
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
@@ -89,6 +93,13 @@ fun SettingsRoute(
         onAutoInstallChange = viewModel::setAutoInstallMatching,
         onCooldownDaysChange = viewModel::setUpdateCooldownDays,
         onAutomationEnabledChange = viewModel::setAutomationEnabled,
+        onMaintenanceEnabledChange = viewModel::setMaintenanceEnabled,
+        onMaintenanceTrimChange = viewModel::setMaintenanceTrimCaches,
+        onMaintenanceDownloadsChange = viewModel::setMaintenancePruneDownloads,
+        onMaintenanceRollbackChange = viewModel::setMaintenancePruneRollback,
+        onMaintenanceBackupTempChange = viewModel::setMaintenancePruneBackupTemp,
+        onRunMaintenanceNow = viewModel::runMaintenanceNow,
+        onConsumeMaintenanceRunQueued = viewModel::consumeMaintenanceRunQueued,
         onThemeChange = viewModel::setTheme,
         onLanguageChange = viewModel::setLanguage,
         onFontStyleChange = viewModel::setFontStyle,
@@ -101,6 +112,7 @@ fun SettingsRoute(
 }
 
 @Composable
+@Suppress("LongMethod", "LongParameterList")
 fun SettingsScreen(
     state: SettingsUiState,
     onOpenPrivilegeSetup: () -> Unit,
@@ -111,6 +123,13 @@ fun SettingsScreen(
     onAutoInstallChange: (Boolean) -> Unit,
     onCooldownDaysChange: (Int) -> Unit,
     onAutomationEnabledChange: (Boolean) -> Unit,
+    onMaintenanceEnabledChange: (Boolean) -> Unit,
+    onMaintenanceTrimChange: (Boolean) -> Unit,
+    onMaintenanceDownloadsChange: (Boolean) -> Unit,
+    onMaintenanceRollbackChange: (Boolean) -> Unit,
+    onMaintenanceBackupTempChange: (Boolean) -> Unit,
+    onRunMaintenanceNow: () -> Unit,
+    onConsumeMaintenanceRunQueued: () -> Unit,
     onThemeChange: (KilnThemeStyle) -> Unit,
     onLanguageChange: (KilnLanguage) -> Unit,
     onFontStyleChange: (KilnFontStyle) -> Unit,
@@ -187,6 +206,19 @@ fun SettingsScreen(
             AutomationSection(
                 prefs = state.automation,
                 onEnabledChange = onAutomationEnabledChange,
+            )
+            HorizontalDivider()
+            MaintenanceSection(
+                prefs = state.maintenance,
+                lastRun = state.lastMaintenanceRun,
+                runQueued = state.maintenanceRunQueued,
+                onEnabledChange = onMaintenanceEnabledChange,
+                onTrimChange = onMaintenanceTrimChange,
+                onDownloadsChange = onMaintenanceDownloadsChange,
+                onRollbackChange = onMaintenanceRollbackChange,
+                onBackupTempChange = onMaintenanceBackupTempChange,
+                onRunNow = onRunMaintenanceNow,
+                onConsumeRunQueued = onConsumeMaintenanceRunQueued,
             )
             HorizontalDivider()
             AboutSection(
@@ -286,6 +318,95 @@ private fun AutomationSection(prefs: AutomationPrefs, onEnabledChange: (Boolean)
         checked = prefs.enabled,
         onCheckedChange = onEnabledChange,
     )
+}
+
+@Composable
+private fun MaintenanceSection(
+    prefs: MaintenancePrefs,
+    lastRun: MaintenanceRunRecord?,
+    runQueued: Boolean,
+    onEnabledChange: (Boolean) -> Unit,
+    onTrimChange: (Boolean) -> Unit,
+    onDownloadsChange: (Boolean) -> Unit,
+    onRollbackChange: (Boolean) -> Unit,
+    onBackupTempChange: (Boolean) -> Unit,
+    onRunNow: () -> Unit,
+    onConsumeRunQueued: () -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.settings_maintenance_section),
+        style = MaterialTheme.typography.titleMedium,
+    )
+    Text(
+        text = stringResource(R.string.settings_maintenance_explain),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    SettingsSwitchRow(
+        title = stringResource(R.string.settings_maintenance_enabled),
+        checked = prefs.enabled,
+        onCheckedChange = onEnabledChange,
+    )
+    if (prefs.enabled) {
+        SettingsSwitchRow(
+            title = stringResource(R.string.settings_maintenance_trim),
+            checked = prefs.trimCaches,
+            onCheckedChange = onTrimChange,
+        )
+        SettingsSwitchRow(
+            title = stringResource(R.string.settings_maintenance_downloads),
+            checked = prefs.pruneDownloads,
+            onCheckedChange = onDownloadsChange,
+        )
+        SettingsSwitchRow(
+            title = stringResource(R.string.settings_maintenance_rollback),
+            checked = prefs.pruneRollback,
+            onCheckedChange = onRollbackChange,
+        )
+        SettingsSwitchRow(
+            title = stringResource(R.string.settings_maintenance_backup_temp),
+            checked = prefs.pruneBackupTemp,
+            onCheckedChange = onBackupTempChange,
+        )
+    }
+    OutlinedButton(
+        onClick = onRunNow,
+        enabled = prefs.enabled,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.settings_maintenance_run_now))
+    }
+    if (runQueued) {
+        Text(
+            text = stringResource(R.string.settings_maintenance_run_queued),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        LaunchedEffect(runQueued) {
+            delay(2_500)
+            onConsumeRunQueued()
+        }
+    }
+    Text(
+        text = lastRunSummary(lastRun),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun lastRunSummary(lastRun: MaintenanceRunRecord?): String {
+    if (lastRun == null) {
+        return stringResource(R.string.settings_maintenance_last_run_none)
+    }
+    val whenText = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
+        .format(Date(lastRun.finishedAtEpochMs))
+    val status = if (lastRun.ok) {
+        stringResource(R.string.settings_maintenance_last_run_ok)
+    } else {
+        stringResource(R.string.settings_maintenance_last_run_partial)
+    }
+    val lines = lastRun.tasks.joinToString("; ") { "${it.taskId}=${it.status}" }
+    return stringResource(R.string.settings_maintenance_last_run, whenText, status, lines)
 }
 
 @Composable

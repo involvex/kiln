@@ -38,6 +38,7 @@ Kiln ist eine Android-App (reines Kotlin + Jetpack Compose), die Package-Manager
 :core:common  :core:model  :core:database  :core:network  :core:designsystem  :core:privilege
 :feature:apps  :feature:sources  :feature:installer  :feature:storage
 :feature:backup  :feature:onboarding  :feature:debloat  :feature:termux  :feature:settings
+:feature:maintenance
 ```
 
 Module werden erst angelegt, wenn der Meilenstein sie braucht (siehe `docs/PLAN.md` §3 und `docs/ROADMAP.md`). Feature-Module hängen nie voneinander ab, nur von `:core:*`. Navigation (Navigation 3) läuft ausschließlich über `:app`; Features exportieren nur Screen-Composables.

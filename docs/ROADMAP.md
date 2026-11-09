@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M21** shipped on main (#35). **M22** (`m22-intent-api`) adds opt-in Intent/Broadcast automation API. Publishing / F-Droid submit still deferred.
+**Current status:** **M22** shipped on main (#36). **M23** (`m23-scheduled-maintenance`) adds opt-in weekly scheduled maintenance. App version **0.2.2** (code 5). Publishing / F-Droid submit still deferred.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -36,7 +36,36 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M19** | GitHub channels + Anti-features | Done | [`prompts/M19-channels-antifeatures.md`](./prompts/M19-channels-antifeatures.md) · [#33](https://github.com/involvex/kiln/pull/33) | Stable/Pre-release/Nightly (Actions artifacts + PAT); anti-feature chips on catalog detail |
 | **M20** | Play Store deep-link | Done | [`prompts/M20-play-deeplink.md`](./prompts/M20-play-deeplink.md) · [#34](https://github.com/involvex/kiln/pull/34) | App detail “Open in Play Store” for unmanaged Play/Aurora installs (`market://` + https fallback) |
 | **M21** | Changelog & Watchlist | Done | [`prompts/M21-changelog-watchlist.md`](./prompts/M21-changelog-watchlist.md) · [#35](https://github.com/involvex/kiln/pull/35) | Release notes on updates; Watch from catalog; Sources watchlist |
-| **M22** | Intent / Broadcast API | In progress | [`prompts/M22-intent-api.md`](./prompts/M22-intent-api.md) · `m22-intent-api` | Opt-in AutomationReceiver: CHECK_UPDATES / INSTALL_UPDATE / INSTALL_FROM_URL / CLEAN_CACHE; signature permission |
+| **M22** | Intent / Broadcast API | Done | [`prompts/M22-intent-api.md`](./prompts/M22-intent-api.md) · [#36](https://github.com/involvex/kiln/pull/36) | Opt-in AutomationReceiver: CHECK_UPDATES / INSTALL_UPDATE / INSTALL_FROM_URL / CLEAN_CACHE; signature permission |
+| **M23** | Scheduled maintenance | In progress | [`prompts/M23-scheduled-maintenance.md`](./prompts/M23-scheduled-maintenance.md) · `m23-scheduled-maintenance` | Weekly WorkManager (Wi‑Fi+charging): trim caches, prune downloads/rollback/backup temps; run protocol |
+| **M24** | Activity log | Planned | PLAN §12 P2 | Searchable local log of installs, backups, cleaner, shell |
+| **M25** | Config export/import | Planned | PLAN §12 P2 | Kiln-Config JSON via SAF (Cloudflare sync later) |
+| **M26** | Widgets / QS tile | Planned | PLAN §12 P2 | Glance: update count, check-now, cache shortcut |
+| **M27** | Permission audit | Planned | PLAN §12 P2 | Dangerous perms overview; AppOps / bulk revoke via privilege |
+| **M28** | Storage phase 2 | Planned | PLAN §4.5 deferred | Treemap, APK leftovers, orphaned Android/data |
+
+---
+
+## PLAN §12 backlog status
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Rollback / Downgrade | Done (core) | ≤3/pkg cache; M23 adds age/1 GiB prune; Settings N slider later |
+| Update cooldown | Done (core) | Global days + major auto-install skip; per-app later |
+| GitHub Nightly channels | Done | M19 #33 |
+| Anti-feature chips | Done | M19; Exodus trackers still open |
+| Changelog & Watchlist | Done | M21 #35 |
+| Intent / Broadcast API | Done | M22 #36 |
+| Scheduled maintenance | In progress | M23 |
+| Activity log | Open | M24 |
+| Config export/import | Open | M25 (Obtainium import already exists) |
+| Widgets / QS | Open | M26 |
+| Permission audit | Open | M27 |
+| Storage phase 2 | Open | M28 |
+| SAF backup rotation / data tiers / encryption | Open | Unscheduled |
+| Freeze/hibernate, dual-user, tablet, APK tools 2, mirrors/proxy | Open | Unscheduled |
+| Publishing / F-Droid submit | Partial | Fastlane + tag workflow ready; screenshots / submit deferred |
+| HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
 
 ---
 
@@ -44,7 +73,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 Update after each milestone. Tier = active `PrivilegedExecutor`.
 
-| Feature | Now (main, post-M16) | Needs tier |
+| Feature | Now (main, post-M22) | Needs tier |
 | --- | --- | --- |
 | Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
 | List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
@@ -57,7 +86,8 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Anti-features | ✅ F-Droid `metadata.antiFeatures` chips on catalog detail | NONE (+ catalog) |
 | Play Store deep-link | ✅ App detail CTA when unmanaged + Play/Aurora installer (`market://` → https) | NONE |
 | Changelog / watchlist | ✅ Release notes on App detail; Watch from catalog; Sources watchlist (notify, no auto-install) | NONE (+ network) |
-| Automation Intent API | 🟡 M22: Settings opt-in + signature `AUTOMATION`; CHECK_UPDATES / INSTALL_* / CLEAN_CACHE + result broadcast | NONE (+ privilege for CLEAN_CACHE) |
+| Automation Intent API | ✅ Settings opt-in + signature `AUTOMATION`; CHECK_UPDATES / INSTALL_* / CLEAN_CACHE + result broadcast | NONE (+ privilege for CLEAN_CACHE) |
+| Scheduled maintenance | 🟡 M23: weekly Wi‑Fi+charging; trim / prune downloads / rollback / backup temps; protocol | NONE (+ privilege for trim) |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; splits deferred | NONE / SHIZUKU |
 | Storage / cleaner | ✅ Usage-access gate; App/Data/Cache list; clear via Shizuku or app-info deep-link | NONE / SHIZUKU |
@@ -66,7 +96,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg) | NONE (+ network; silent install/downgrade if SHIZUKU) |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
-| Release / store prep | ✅ version `0.2.0` (code 3); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG moved | — |
+| Release / store prep | ✅ version `0.2.2` (code 5); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG moved; F-Droid submit deferred | — |
 | App Discovery | ✅ Apps → Discover; catalog refresh; icons; detail; search/categories; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
 | Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage | NONE |
@@ -171,9 +201,9 @@ Deferred in this PR: treemap, orphaned `Android/data`, APK leftover scanner.
 
 ---
 
-## M17 manual acceptance (HyperOS) — next agent
+## M17 manual acceptance (HyperOS) — done
 
-Owns the post-#27 device pass before a `0.2.0` tag. Prompt: [`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md).
+Shipped with `0.2.0` and follow-up flicker hotfixes through `0.2.2`. Prompt: [`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md).
 
 - [x] Language EN/DE chips: first frame + bottom nav labels switch — verified on device, no crash
 - [x] Settings → Check now: no crash; update notification / empty-result path OK
@@ -238,32 +268,23 @@ Code and CI for M1 are on `main`. Tick these on the device when convenient:
 
 ```mermaid
 flowchart LR
-  M0[M0 Setup] --> M1[M1 Apps Export]
-  M1 --> M2[M2 Sources Match]
-  M2 --> M3[M3 Installer]
-  M3 --> M4[M4 Privilege]
-  M4 --> M5[M5 Storage]
-  M4 --> M6[M6 Debloat]
-  M5 --> M7[M7 Backup]
-  M6 --> M7
-  M7 --> M8[M8 AutoUpdate]
-  M8 --> M9[M9 Termux]
-  M9 --> M10[M10 Release]
-  M10 --> M11[M11 Discovery]
-  M11 --> M12[M12 GitHub browse]
-  M12 --> M13[M13 Stability]
-  M13 --> M14[M14 Manage]
-  M14 --> M15[M15 Store UI]
-  M15 --> M16[M16 Trending]
-  M16 --> M17[M17 HyperOS E2E]
+  M17[M17 HyperOS E2E] --> M18[M18 Auto-match UX]
+  M18 --> M19[M19 Channels + Anti-features]
+  M19 --> M20[M20 Play deeplink]
+  M20 --> M21[M21 Changelog + Watchlist]
+  M21 --> M22[M22 Intent API]
+  M22 --> M23[M23 Scheduled maintenance]
+  M23 --> M24[M24 Activity log]
+  M24 --> M25[M25 Config export]
+  M25 --> M26[M26 Widgets]
+  M26 --> M27[M27 Permission audit]
+  M27 --> M28[M28 Storage phase 2]
 ```
 
-1. **M13–M16** shipped on main via [#27](https://github.com/involvex/kiln/pull/27) — do not re-open that UX plan.
-2. Next agent: **M17** only ([`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md)).
-3. After M17 device confidence: optional tag `v0.2.0` (publishing / F-Droid still deferred unless explicitly requested).
-4. After M22: backlog P1/P2 candidates (pick one milestone, do not mix): scheduled maintenance — see [`PLAN.md`](./PLAN.md) §12.
-
-Backlog ideas (P1–P3) live in [`PLAN.md`](./PLAN.md) §12 — do not pull them into the current milestone.
+1. **M0–M22** shipped on main (M22 = [#36](https://github.com/involvex/kiln/pull/36)).
+2. Current: **M23** only ([`prompts/M23-scheduled-maintenance.md`](./prompts/M23-scheduled-maintenance.md)). Do not mix M24+.
+3. Publishing / F-Droid still deferred unless explicitly requested.
+4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 
 ---
 

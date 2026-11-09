@@ -62,6 +62,7 @@ dependencies {
     implementation(project(":feature:debloat"))
     implementation(project(":feature:termux"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:maintenance"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

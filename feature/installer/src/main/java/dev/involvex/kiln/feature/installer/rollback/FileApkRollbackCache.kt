@@ -4,6 +4,7 @@ import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.RollbackApkEntry
+import dev.involvex.kiln.core.model.RollbackPrunePolicy
 import java.io.File
 import java.io.IOException
 import javax.inject.Inject
@@ -63,6 +64,25 @@ class FileApkRollbackCache @Inject constructor(@ApplicationContext private val c
 
     override suspend fun get(packageName: String, versionCode: Long): RollbackApkEntry? = mutex.withLock {
         entriesFor(packageName).firstOrNull { it.versionCode == versionCode }
+    }
+
+    override suspend fun pruneByAgeAndSize(maxAgeMs: Long, maxTotalBytes: Long, nowEpochMs: Long): Long = mutex.withLock {
+        val all = scanAll()
+        val toDelete = RollbackPrunePolicy.selectForDeletion(all, maxAgeMs, maxTotalBytes, nowEpochMs)
+        var freed = 0L
+        for (entry in toDelete) {
+            val apk = File(entry.apkAbsolutePath)
+            val size = if (apk.isFile) apk.length() else entry.sizeBytes
+            val meta = File(apk.parentFile, "${entry.versionCode}.meta")
+            if (apk.delete()) {
+                freed += size
+            }
+            meta.delete()
+        }
+        if (toDelete.isNotEmpty()) {
+            snapshot.value = scanAll()
+        }
+        freed
     }
 
     private fun entriesFor(packageName: String): List<RollbackApkEntry> {
