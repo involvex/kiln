@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.involvex.kiln.core.common.Result
+import dev.involvex.kiln.core.model.ActivityLogEvents
+import dev.involvex.kiln.core.model.ActivityLogRecorder
+import dev.involvex.kiln.core.model.ActivityLogType
 import dev.involvex.kiln.core.model.AppStorageStats
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
@@ -21,6 +24,7 @@ class StorageViewModel @Inject constructor(
     private val repository: StorageStatsRepository,
     private val usageAccessChecker: UsageAccessChecker,
     private val privilegedExecutor: PrivilegedExecutor,
+    private val activityLog: ActivityLogRecorder,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(StorageUiState())
     val uiState: StateFlow<StorageUiState> = _uiState.asStateFlow()
@@ -137,6 +141,15 @@ class StorageViewModel @Inject constructor(
             _uiState.update { it.copy(clearing = true, message = null, error = null) }
             when (val result = privilegedExecutor.clearCache(pending.packageName)) {
                 is Result.Failure -> {
+                    activityLog.record(
+                        ActivityLogEvents.create(
+                            type = ActivityLogType.CACHE,
+                            action = "clear_cache",
+                            success = false,
+                            packageName = pending.packageName,
+                            detailKey = result.message,
+                        ),
+                    )
                     _uiState.update {
                         it.copy(
                             clearing = false,
@@ -147,6 +160,15 @@ class StorageViewModel @Inject constructor(
                 }
 
                 is Result.Success -> {
+                    activityLog.record(
+                        ActivityLogEvents.create(
+                            type = ActivityLogType.CACHE,
+                            action = "clear_cache",
+                            success = true,
+                            packageName = pending.packageName,
+                            detailKey = "bytes:${result.value}",
+                        ),
+                    )
                     _uiState.update {
                         it.copy(
                             clearing = false,

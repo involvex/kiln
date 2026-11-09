@@ -4,6 +4,9 @@ import android.content.Context
 import android.content.Intent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.common.Result as KilnResult
+import dev.involvex.kiln.core.model.ActivityLogEvents
+import dev.involvex.kiln.core.model.ActivityLogRecorder
+import dev.involvex.kiln.core.model.ActivityLogType
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.AutomationApi
@@ -28,6 +31,7 @@ class AutomationCommandHandler @Inject constructor(
     private val installQueue: InstallQueue,
     private val privilegedExecutor: PrivilegedExecutor,
     private val failureNotifier: AutomationFailureNotifier,
+    private val activityLog: ActivityLogRecorder,
 ) {
     suspend fun handle(intent: Intent): AutomationOutcome {
         if (!automationPreferences.current().enabled) {
@@ -48,11 +52,30 @@ class AutomationCommandHandler @Inject constructor(
 
             is AutomationCommand.CleanCache -> cleanCache(command.packageName)
         }
+        recordAutomation(command, outcome)
         broadcastResult(intent.action, outcome)
         if (!outcome.ok) {
             failureNotifier.notifyFailure(intent.action, outcome.message)
         }
         return outcome
+    }
+
+    private suspend fun recordAutomation(command: AutomationCommand, outcome: AutomationOutcome) {
+        val (action, packageName) = when (command) {
+            AutomationCommand.CheckUpdates -> "check_updates" to null
+            is AutomationCommand.InstallUpdate -> "install_update" to command.packageName
+            is AutomationCommand.InstallFromUrl -> "install_from_url" to command.packageName
+            is AutomationCommand.CleanCache -> "clean_cache" to command.packageName
+        }
+        activityLog.record(
+            ActivityLogEvents.create(
+                type = ActivityLogType.AUTOMATION,
+                action = action,
+                success = outcome.ok,
+                packageName = packageName,
+                detailKey = outcome.message.substringBefore(':'),
+            ),
+        )
     }
 
     private suspend fun installManagedUpdate(packageName: String): AutomationOutcome {
@@ -91,8 +114,31 @@ class AutomationCommandHandler @Inject constructor(
 
     private suspend fun cleanCache(packageName: String?): AutomationOutcome =
         when (val result = privilegedExecutor.clearCache(packageName)) {
-            is KilnResult.Success -> AutomationOutcome(ok = true, message = "cache_cleared:${result.value}")
-            is KilnResult.Failure -> AutomationOutcome(ok = false, message = result.message)
+            is KilnResult.Success -> {
+                activityLog.record(
+                    ActivityLogEvents.create(
+                        type = ActivityLogType.CACHE,
+                        action = "clear_cache",
+                        success = true,
+                        packageName = packageName,
+                        detailKey = "bytes:${result.value}",
+                    ),
+                )
+                AutomationOutcome(ok = true, message = "cache_cleared:${result.value}")
+            }
+
+            is KilnResult.Failure -> {
+                activityLog.record(
+                    ActivityLogEvents.create(
+                        type = ActivityLogType.CACHE,
+                        action = "clear_cache",
+                        success = false,
+                        packageName = packageName,
+                        detailKey = result.message,
+                    ),
+                )
+                AutomationOutcome(ok = false, message = result.message)
+            }
         }
 
     private fun failAndBroadcast(requestAction: String?, message: String): AutomationOutcome {

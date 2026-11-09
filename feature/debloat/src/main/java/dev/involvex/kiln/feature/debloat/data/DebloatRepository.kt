@@ -7,6 +7,9 @@ import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.common.IoDispatcher
 import dev.involvex.kiln.core.common.Result
+import dev.involvex.kiln.core.model.ActivityLogEvents
+import dev.involvex.kiln.core.model.ActivityLogRecorder
+import dev.involvex.kiln.core.model.ActivityLogType
 import dev.involvex.kiln.core.model.DebloatAction
 import dev.involvex.kiln.core.model.DebloatActionResult
 import dev.involvex.kiln.core.model.DebloatAppRow
@@ -31,6 +34,7 @@ class DebloatRepository @Inject constructor(
     private val denylistResolver: DebloatDenylistResolver,
     private val snapshotStore: DebloatSnapshotStore,
     private val privilegedExecutor: PrivilegedExecutor,
+    private val activityLog: ActivityLogRecorder,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) {
     suspend fun loadRows(): List<DebloatAppRow> = withContext(ioDispatcher) {
@@ -100,10 +104,29 @@ class DebloatRepository @Inject constructor(
             when (result) {
                 is Result.Failure -> {
                     Timber.w("Debloat %s %s failed: %s", action, pkg, result.message)
+                    activityLog.record(
+                        ActivityLogEvents.create(
+                            type = ActivityLogType.DEBLOAT,
+                            action = action.name.lowercase(),
+                            success = false,
+                            packageName = pkg,
+                            detailKey = result.message,
+                        ),
+                    )
                     DebloatActionResult(pkg, action, false, result.message)
                 }
 
-                is Result.Success -> DebloatActionResult(pkg, action, true, null)
+                is Result.Success -> {
+                    activityLog.record(
+                        ActivityLogEvents.create(
+                            type = ActivityLogType.DEBLOAT,
+                            action = action.name.lowercase(),
+                            success = true,
+                            packageName = pkg,
+                        ),
+                    )
+                    DebloatActionResult(pkg, action, true, null)
+                }
             }
         }
     }

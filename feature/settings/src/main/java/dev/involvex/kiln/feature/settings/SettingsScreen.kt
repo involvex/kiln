@@ -62,6 +62,7 @@ fun SettingsRoute(
     onOpenPrivilegeSetup: () -> Unit,
     onOpenDebloat: () -> Unit,
     onOpenTermux: () -> Unit,
+    onOpenActivityLog: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -95,6 +96,7 @@ fun SettingsRoute(
         onOpenPrivilegeSetup = onOpenPrivilegeSetup,
         onOpenDebloat = onOpenDebloat,
         onOpenTermux = onOpenTermux,
+        onOpenActivityLog = onOpenActivityLog,
         onBackgroundEnabledChange = { enabled ->
             viewModel.setBackgroundUpdatesEnabled(enabled)
             if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -143,6 +145,7 @@ fun SettingsScreen(
     onOpenPrivilegeSetup: () -> Unit,
     onOpenDebloat: () -> Unit,
     onOpenTermux: () -> Unit,
+    onOpenActivityLog: () -> Unit,
     onBackgroundEnabledChange: (Boolean) -> Unit,
     onUnmeteredOnlyChange: (Boolean) -> Unit,
     onAutoInstallChange: (Boolean) -> Unit,
@@ -202,6 +205,12 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.settings_termux))
+            }
+            OutlinedButton(
+                onClick = onOpenActivityLog,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.settings_activity_log))
             }
             HorizontalDivider()
             AppearanceSection(

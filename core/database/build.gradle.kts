@@ -17,5 +17,6 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.timber)
     testImplementation(libs.androidx.room.testing)
 }

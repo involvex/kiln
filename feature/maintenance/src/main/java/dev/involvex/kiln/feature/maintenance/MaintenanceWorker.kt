@@ -6,6 +6,9 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import dev.involvex.kiln.core.model.ActivityLogEvents
+import dev.involvex.kiln.core.model.ActivityLogRecorder
+import dev.involvex.kiln.core.model.ActivityLogType
 import dev.involvex.kiln.core.model.MaintenanceDefaults
 import dev.involvex.kiln.core.model.MaintenancePreferences
 import dev.involvex.kiln.core.model.MaintenanceRunRecord
@@ -20,6 +23,7 @@ class MaintenanceWorker @AssistedInject constructor(
     private val preferences: MaintenancePreferences,
     private val runner: MaintenanceRunner,
     private val runStore: MaintenanceRunStore,
+    private val activityLog: ActivityLogRecorder,
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
         val force = inputData.getBoolean(KEY_FORCE, false)
@@ -30,18 +34,25 @@ class MaintenanceWorker @AssistedInject constructor(
         }
         if (!prefs.enabled && force) {
             val now = System.currentTimeMillis()
-            runStore.append(
-                MaintenanceRunRecord(
-                    startedAtEpochMs = now,
-                    finishedAtEpochMs = now,
-                    ok = true,
-                    tasks = listOf(
-                        MaintenanceTaskResult(
-                            taskId = "master",
-                            status = MaintenanceDefaults.STATUS_SKIPPED,
-                            detail = "maintenance_disabled",
-                        ),
+            val skipped = MaintenanceRunRecord(
+                startedAtEpochMs = now,
+                finishedAtEpochMs = now,
+                ok = true,
+                tasks = listOf(
+                    MaintenanceTaskResult(
+                        taskId = "master",
+                        status = MaintenanceDefaults.STATUS_SKIPPED,
+                        detail = "maintenance_disabled",
                     ),
+                ),
+            )
+            runStore.append(skipped)
+            activityLog.record(
+                ActivityLogEvents.create(
+                    type = ActivityLogType.MAINTENANCE,
+                    action = "scheduled_run",
+                    success = true,
+                    detailKey = "maintenance_disabled",
                 ),
             )
             Timber.d("Maintenance Run now while master off — recorded skip")
@@ -49,6 +60,15 @@ class MaintenanceWorker @AssistedInject constructor(
         }
         val record = runner.run(prefs)
         runStore.append(record)
+        val bytes = record.tasks.sumOf { it.bytesFreed }
+        activityLog.record(
+            ActivityLogEvents.create(
+                type = ActivityLogType.MAINTENANCE,
+                action = "scheduled_run",
+                success = record.ok,
+                detailKey = "tasks:${record.tasks.size};bytes:$bytes",
+            ),
+        )
         Timber.d("Maintenance finished ok=%s tasks=%d", record.ok, record.tasks.size)
         return Result.success()
     }
