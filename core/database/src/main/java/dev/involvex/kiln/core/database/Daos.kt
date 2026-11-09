@@ -212,3 +212,37 @@ interface InstallJobDao {
     @Query("DELETE FROM install_jobs WHERE jobId = :jobId")
     suspend fun delete(jobId: String)
 }
+
+@Dao
+interface ActivityLogDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: ActivityLogEntity)
+
+    @Query("SELECT COUNT(*) FROM activity_log")
+    suspend fun count(): Int
+
+    @Query(
+        """
+        DELETE FROM activity_log WHERE id IN (
+            SELECT id FROM activity_log ORDER BY epochMs ASC LIMIT :limit
+        )
+        """,
+    )
+    suspend fun deleteOldest(limit: Int)
+
+    @Query("DELETE FROM activity_log")
+    suspend fun deleteAll()
+
+    @Query("SELECT * FROM activity_log ORDER BY epochMs DESC LIMIT :limit")
+    fun observeRecent(limit: Int): Flow<List<ActivityLogEntity>>
+
+    @Query(
+        """
+        SELECT * FROM activity_log
+        WHERE (:type = '' OR type = :type)
+        ORDER BY epochMs DESC
+        LIMIT :limit
+        """,
+    )
+    fun observeFiltered(type: String, limit: Int): Flow<List<ActivityLogEntity>>
+}

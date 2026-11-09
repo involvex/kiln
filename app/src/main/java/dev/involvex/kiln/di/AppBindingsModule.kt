@@ -4,6 +4,9 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.involvex.kiln.core.database.RoomActivityLogStore
+import dev.involvex.kiln.core.model.ActivityLogRecorder
+import dev.involvex.kiln.core.model.ActivityLogRepository
 import dev.involvex.kiln.core.model.ApkDownloadJanitor
 import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.AppUpdateRepository
@@ -51,6 +54,7 @@ import javax.inject.Singleton
  */
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("TooManyFunctions") // Cross-feature @Binds grow with each milestone contract.
 abstract class AppBindingsModule {
     @Binds
     @Singleton
@@ -99,6 +103,14 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindMaintenanceRunStore(impl: FileMaintenanceRunStore): MaintenanceRunStore
+
+    @Binds
+    @Singleton
+    abstract fun bindActivityLogRecorder(impl: RoomActivityLogStore): ActivityLogRecorder
+
+    @Binds
+    @Singleton
+    abstract fun bindActivityLogRepository(impl: RoomActivityLogStore): ActivityLogRepository
 
     @Binds
     @Singleton

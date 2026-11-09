@@ -10,8 +10,9 @@ import androidx.room.RoomDatabase
         IndexedReleaseEntity::class,
         ManagedAppEntity::class,
         InstallJobEntity::class,
+        ActivityLogEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = false,
 )
 abstract class KilnDatabase : RoomDatabase() {
@@ -22,4 +23,6 @@ abstract class KilnDatabase : RoomDatabase() {
     abstract fun managedAppDao(): ManagedAppDao
 
     abstract fun installJobDao(): InstallJobDao
+
+    abstract fun activityLogDao(): ActivityLogDao
 }

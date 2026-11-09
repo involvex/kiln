@@ -15,6 +15,9 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dev.involvex.kiln.core.common.Result as KilnResult
 import dev.involvex.kiln.core.database.InstallJobDao
+import dev.involvex.kiln.core.model.ActivityLogEvents
+import dev.involvex.kiln.core.model.ActivityLogRecorder
+import dev.involvex.kiln.core.model.ActivityLogType
 import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
 import dev.involvex.kiln.core.model.InstallJobStatus
@@ -45,6 +48,7 @@ class InstallWorker @AssistedInject constructor(
     private val rollbackCache: ApkRollbackCache,
     private val installerPreferences: InstallerPreferences,
     private val gitHubAuth: GitHubAuthHeaderProvider,
+    private val activityLog: ActivityLogRecorder,
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
         val jobId = inputData.getString(KEY_JOB_ID) ?: return Result.failure()
@@ -190,6 +194,25 @@ class InstallWorker @AssistedInject constructor(
             updatedAtEpochMs = System.currentTimeMillis(),
         )
         Timber.d("Install job %s → %s (%d)", jobId, status, progress)
+        if (status == InstallJobStatus.SUCCEEDED || status == InstallJobStatus.FAILED) {
+            val job = installJobDao.get(jobId)
+            activityLog.record(
+                ActivityLogEvents.create(
+                    type = ActivityLogType.INSTALL,
+                    action = if (status == InstallJobStatus.SUCCEEDED) {
+                        "install_succeeded"
+                    } else {
+                        "install_failed"
+                    },
+                    success = status == InstallJobStatus.SUCCEEDED,
+                    packageName = job?.packageName,
+                    versionName = job?.versionName,
+                    versionCode = job?.versionCode,
+                    detailKey = error,
+                    refId = jobId,
+                ),
+            )
+        }
     }
 
     private fun ensureChannel() {

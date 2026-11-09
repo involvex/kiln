@@ -10,6 +10,9 @@ import android.os.RemoteException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.common.IoDispatcher
 import dev.involvex.kiln.core.common.Result
+import dev.involvex.kiln.core.model.ActivityLogEvents
+import dev.involvex.kiln.core.model.ActivityLogRecorder
+import dev.involvex.kiln.core.model.ActivityLogType
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegeStatus
 import dev.involvex.kiln.core.model.PrivilegeTier
@@ -41,6 +44,7 @@ import timber.log.Timber
 class DefaultPrivilegedExecutor @Inject constructor(
     @ApplicationContext private val context: Context,
     private val managerDetector: ShizukuManagerDetector,
+    private val activityLog: ActivityLogRecorder,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : PrivilegedExecutor {
     private val statusFlow = MutableStateFlow(buildStatus(selfTest = null))
@@ -225,15 +229,48 @@ class DefaultPrivilegedExecutor @Inject constructor(
 
     private suspend fun invokeAllowlisted(commandId: String, args: List<String>): Result<String> {
         val service = ensureUserService()
-            ?: return Result.failure("user_service_unavailable")
+            ?: return Result.failure("user_service_unavailable").also {
+                recordShell(commandId, args, success = false, detailKey = "user_service_unavailable")
+            }
         return try {
             val raw = service.runAllowlisted(commandId, args.toTypedArray())
-            Result.success(raw ?: "ERR:null")
+            val value = raw ?: "ERR:null"
+            val ok = !value.startsWith("ERR:")
+            recordShell(
+                commandId = commandId,
+                args = args,
+                success = ok,
+                detailKey = if (ok) null else "shell_error",
+            )
+            Result.success(value)
         } catch (e: RemoteException) {
             Timber.w(e, "UserService remote failure")
             userService = null
+            recordShell(commandId, args, success = false, detailKey = "remote")
             Result.failure("remote:${e.message}", e)
         }
+    }
+
+    private suspend fun recordShell(commandId: String, args: List<String>, success: Boolean, detailKey: String?) {
+        // Never log APK paths; only package-shaped first args for package commands.
+        val packageName = when (commandId) {
+            ShellAllowlist.PM_INSTALL,
+            ShellAllowlist.PM_INSTALL_DOWNGRADE,
+            ShellAllowlist.PM_TRIM_CACHES,
+            ShellAllowlist.ID,
+            -> null
+
+            else -> args.firstOrNull()?.takeIf { ShellAllowlist.isSafePackageName(it) }
+        }
+        activityLog.record(
+            ActivityLogEvents.create(
+                type = ActivityLogType.SHELL,
+                action = commandId,
+                success = success,
+                packageName = packageName,
+                detailKey = detailKey,
+            ),
+        )
     }
 
     private suspend fun ensureUserService(): IKilnUserService? = userServiceMutex.withLock {

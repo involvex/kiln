@@ -410,7 +410,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 
 - **P1 — GitHub Actions Artifacts / Nightly / Beta-Kanäle**: → **shipped M19**
 - **P2 — Intent-/Broadcast-API für Automatisierung**: → **shipped M22**
-- **P2 — Config-Export/-Import und Sync**: Quellenliste und Regeln als JSON (Kiln-Config) via SAF → **M25**; optional Sync über Cloudflare Worker (Hono + D1/R2) später.
+- **P2 — Config-Export/-Import und Sync**: Quellenliste und Regeln als JSON (Kiln-Config) via SAF → **M25** (Done #38); optional Sync über Cloudflare Worker (Hono + D1/R2) später.
 - **P3 — APK-Werkzeuge Phase 2**: Manifest-Viewer, Signaturvergleich zweier APKs, Splits zu einer APK zusammenführen, mit eigenem Schlüssel neu signieren (`apksig`). Bewusst nicht Kern, weil hoher Aufwand.
 
 ### Storage & Wartung

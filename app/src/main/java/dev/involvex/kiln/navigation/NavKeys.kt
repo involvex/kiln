@@ -40,3 +40,6 @@ data object TermuxKey
 
 @Serializable
 data object DiscoveryKey
+
+@Serializable
+data object ActivityLogKey

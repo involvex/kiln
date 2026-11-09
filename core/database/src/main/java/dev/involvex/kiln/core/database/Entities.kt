@@ -94,3 +94,24 @@ data class InstallJobEntity(
     val createdAtEpochMs: Long,
     val updatedAtEpochMs: Long,
 )
+
+@Entity(
+    tableName = "activity_log",
+    indices = [
+        Index(value = ["epochMs"]),
+        Index(value = ["type"]),
+        Index(value = ["packageName"]),
+    ],
+)
+data class ActivityLogEntity(
+    @PrimaryKey val id: String,
+    val epochMs: Long,
+    val type: String,
+    val action: String,
+    val packageName: String? = null,
+    val versionName: String? = null,
+    val versionCode: Long? = null,
+    val success: Boolean,
+    val detailKey: String? = null,
+    val refId: String? = null,
+)

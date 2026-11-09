@@ -6,6 +6,9 @@ import android.content.Intent
 import android.content.pm.PackageInstaller
 import dagger.hilt.android.AndroidEntryPoint
 import dev.involvex.kiln.core.database.InstallJobDao
+import dev.involvex.kiln.core.model.ActivityLogEvents
+import dev.involvex.kiln.core.model.ActivityLogRecorder
+import dev.involvex.kiln.core.model.ActivityLogType
 import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.InstallJobStatus
 import java.io.File
@@ -20,6 +23,8 @@ class InstallStatusReceiver : BroadcastReceiver() {
     @Inject lateinit var installJobDao: InstallJobDao
 
     @Inject lateinit var rollbackCache: ApkRollbackCache
+
+    @Inject lateinit var activityLog: ActivityLogRecorder
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != ACTION_INSTALL_STATUS) return
@@ -70,18 +75,42 @@ class InstallStatusReceiver : BroadcastReceiver() {
                                 apkAbsolutePath = path,
                             )
                         }
+                        activityLog.record(
+                            ActivityLogEvents.create(
+                                type = ActivityLogType.INSTALL,
+                                action = "install_succeeded",
+                                success = true,
+                                packageName = job?.packageName,
+                                versionName = job?.versionName,
+                                versionCode = job?.versionCode,
+                                refId = jobId,
+                            ),
+                        )
                     }
 
                     else -> {
                         val key = InstallStatusMapper.messageKey(status)
                         Timber.w("Install failed job=%s status=%s msg=%s", jobId, key, message)
+                        val job = installJobDao.get(jobId)
                         installJobDao.updateProgress(
                             jobId = jobId,
                             status = InstallJobStatus.FAILED.name,
                             progressPercent = 100,
                             errorMessage = key,
-                            localApkPath = installJobDao.get(jobId)?.localApkPath,
+                            localApkPath = job?.localApkPath,
                             updatedAtEpochMs = System.currentTimeMillis(),
+                        )
+                        activityLog.record(
+                            ActivityLogEvents.create(
+                                type = ActivityLogType.INSTALL,
+                                action = "install_failed",
+                                success = false,
+                                packageName = job?.packageName,
+                                versionName = job?.versionName,
+                                versionCode = job?.versionCode,
+                                detailKey = key,
+                                refId = jobId,
+                            ),
                         )
                     }
                 }

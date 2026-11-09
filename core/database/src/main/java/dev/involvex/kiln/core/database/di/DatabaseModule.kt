@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dev.involvex.kiln.core.database.ActivityLogDao
 import dev.involvex.kiln.core.database.IndexDao
 import dev.involvex.kiln.core.database.InstallJobDao
 import dev.involvex.kiln.core.database.KilnDatabase
@@ -44,4 +45,7 @@ object DatabaseModule {
 
     @Provides
     fun provideInstallJobDao(db: KilnDatabase): InstallJobDao = db.installJobDao()
+
+    @Provides
+    fun provideActivityLogDao(db: KilnDatabase): ActivityLogDao = db.activityLogDao()
 }
