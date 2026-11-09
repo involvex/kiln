@@ -22,6 +22,13 @@ class AutoInstallPolicyTest {
     }
 
     @Test
+    fun watch_only_skipped() {
+        val updates = listOf(matching("watched").copy(watchOnly = true), matching("ok"))
+        val selected = AutoInstallPolicy.selectForEnqueue(updates, autoInstallMatching = true)
+        assertEquals(listOf("ok"), selected.map { it.packageName })
+    }
+
+    @Test
     fun major_bump_skipped() {
         val updates = listOf(matching("app").copy(availableVersionName = "2.0.0"))
         val selected = AutoInstallPolicy.selectForEnqueue(

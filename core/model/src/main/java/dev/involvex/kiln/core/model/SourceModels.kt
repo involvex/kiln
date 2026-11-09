@@ -55,6 +55,7 @@ data class IndexedRelease(
     val apkSha256: String?,
     val sizeBytes: Long?,
     val signerSha256: List<String>,
+    val whatsNew: String? = null,
 )
 
 data class ManagedApp(
@@ -66,6 +67,8 @@ data class ManagedApp(
     val githubOwnerRepo: String? = null,
     val githubAssetRegex: String? = null,
     val githubChannel: GitHubReleaseChannel = GitHubReleaseChannel.STABLE,
+    /** True when the user watches an uninstalled catalog/GitHub app for new versions. */
+    val watchOnly: Boolean = false,
 )
 
 data class AppUpdateInfo(
@@ -84,6 +87,21 @@ data class AppUpdateInfo(
     val requiresGitHubAuth: Boolean = false,
     /** Regex used to pick an APK inside an Actions artifact zip. */
     val apkAssetRegex: String? = null,
+    /** Plain-text release notes / whatsNew (truncated). */
+    val releaseNotes: String? = null,
+    /** True when this update is for a watch-only (not installed) managed row. */
+    val watchOnly: Boolean = false,
+)
+
+/** Watched uninstalled package shown on Sources. */
+data class WatchlistEntry(
+    val packageName: String,
+    val displayName: String,
+    val sourceId: String,
+    val githubOwnerRepo: String? = null,
+    val availableVersionName: String? = null,
+    val hasUpdate: Boolean = false,
+    val releaseNotes: String? = null,
 )
 
 /**
@@ -163,4 +181,18 @@ interface AppUpdateRepository {
      * is not linked to a GitHub owner/repo.
      */
     suspend fun setGitHubChannel(packageName: String, channel: GitHubReleaseChannel): Result<Unit>
+}
+
+/** Watch uninstalled catalog/GitHub apps for new versions without installing. */
+interface WatchlistRepository {
+    /** Watch an uninstalled F-Droid catalog package for newer index versions. */
+    suspend fun watchCatalogPackage(packageName: String, repoId: String): Result<Unit>
+
+    /** Remove watch-only status (deletes the managed row when it was watch-only). */
+    suspend fun unwatchPackage(packageName: String): Result<Unit>
+
+    fun observeWatchlist(): kotlinx.coroutines.flow.Flow<List<WatchlistEntry>>
+
+    /** Whether [packageName] is currently watch-only. */
+    fun observeIsWatching(packageName: String): kotlinx.coroutines.flow.Flow<Boolean>
 }

@@ -17,6 +17,7 @@ import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.InstallerPreferences
 import dev.involvex.kiln.core.model.TermuxPreferences
 import dev.involvex.kiln.core.model.UpdateObservationStore
+import dev.involvex.kiln.core.model.WatchlistRepository
 import dev.involvex.kiln.feature.apps.data.DefaultInstalledAppsReader
 import dev.involvex.kiln.feature.installer.DefaultInstallQueue
 import dev.involvex.kiln.feature.installer.rollback.FileApkRollbackCache
@@ -46,6 +47,10 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindAppUpdateRepository(impl: DefaultAppUpdateRepository): AppUpdateRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindWatchlistRepository(impl: DefaultAppUpdateRepository): WatchlistRepository
 
     @Binds
     @Singleton

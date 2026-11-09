@@ -18,6 +18,7 @@ class GitHubReleasePickerTest {
             ),
             GitHubReleaseDto(
                 tagName = "v1.0.0",
+                body = "  Bug fixes  ",
                 prerelease = false,
                 assets = listOf(GitHubAssetDto("app.apk", "https://example.com/s.apk", 20)),
             ),
@@ -25,6 +26,7 @@ class GitHubReleasePickerTest {
         val pick = GitHubReleasePicker.pick(releases, apk, GitHubReleaseChannel.STABLE)
         assertEquals("v1.0.0", pick?.tagName)
         assertEquals("https://example.com/s.apk", pick?.downloadUrl)
+        assertEquals("Bug fixes", pick?.releaseNotes)
     }
 
     @Test

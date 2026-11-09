@@ -3,6 +3,7 @@ package dev.involvex.kiln.feature.sources.github
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.network.KilnHttpClient
+import dev.involvex.kiln.feature.sources.ReleaseNotesText
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.serialization.SerialName
@@ -14,6 +15,7 @@ import kotlinx.serialization.json.Json
 data class GitHubReleaseDto(
     @SerialName("tag_name") val tagName: String,
     val name: String? = null,
+    val body: String? = null,
     @SerialName("prerelease") val prerelease: Boolean = false,
     val assets: List<GitHubAssetDto> = emptyList(),
 )
@@ -21,7 +23,13 @@ data class GitHubReleaseDto(
 @Serializable
 data class GitHubAssetDto(val name: String, @SerialName("browser_download_url") val browserDownloadUrl: String, val size: Long = 0)
 
-data class GitHubReleasePick(val tagName: String, val assetName: String, val downloadUrl: String, val sizeBytes: Long)
+data class GitHubReleasePick(
+    val tagName: String,
+    val assetName: String,
+    val downloadUrl: String,
+    val sizeBytes: Long,
+    val releaseNotes: String? = null,
+)
 
 object GitHubReleasePicker {
     fun pick(releases: List<GitHubReleaseDto>, assetRegex: Regex, channel: GitHubReleaseChannel): GitHubReleasePick? {
@@ -37,6 +45,7 @@ object GitHubReleasePicker {
                     assetName = asset.name,
                     downloadUrl = asset.browserDownloadUrl,
                     sizeBytes = asset.size,
+                    releaseNotes = ReleaseNotesText.normalize(release.body),
                 )
             }
             .firstOrNull()

@@ -37,6 +37,7 @@ data class ParsedIndexRelease(
     val apkSha256: String?,
     val sizeBytes: Long?,
     val signerSha256: List<String>,
+    val whatsNew: String? = null,
 )
 
 data class EntryIndexPointer(val name: String, val sha256: String, val size: Long?)
@@ -195,6 +196,7 @@ object IndexV2Parser {
             apkSha256 = file["sha256"]?.jsonPrimitive?.contentOrNull,
             sizeBytes = file["size"]?.jsonPrimitive?.longOrNull,
             signerSha256 = signerList,
+            whatsNew = localized(obj["whatsNew"]),
         )
     }
 

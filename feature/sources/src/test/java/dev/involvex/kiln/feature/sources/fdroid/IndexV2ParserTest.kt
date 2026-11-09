@@ -2,6 +2,7 @@ package dev.involvex.kiln.feature.sources.fdroid
 
 import dev.involvex.kiln.core.common.Result
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -58,6 +59,30 @@ class IndexV2ParserTest {
         assertEquals(listOf("Internet", "Security"), pkg.categories)
         assertEquals(123L, pkg.suggestedVersionCode)
         assertEquals("AA:BB", pkg.releases.single().signerSha256.single())
+        assertNull(pkg.releases.single().whatsNew)
+    }
+
+    @Test
+    fun `parses whatsNew localized text`() {
+        val index = """
+            {
+              "packages": {
+                "com.example.app": {
+                  "metadata": { "name": {"en-US": "Example"} },
+                  "versions": {
+                    "deadbeef": {
+                      "file": {"name": "app.apk", "sha256": "ff", "size": 10},
+                      "manifest": { "versionName": "1.0", "versionCode": 1 },
+                      "whatsNew": { "en-US": "Fixed crashes" }
+                    }
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+        val result = IndexV2Parser.parsePackages(index)
+        assertTrue(result is Result.Success)
+        assertEquals("Fixed crashes", (result as Result.Success).value.single().releases.single().whatsNew)
     }
 
     @Test

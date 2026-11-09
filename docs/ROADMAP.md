@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M19** shipped on main. **M20** (`m20-play-deeplink`) adds App-detail Play Store deep-link for unmanaged Play/Aurora installs. Publishing / F-Droid submit still deferred.
+**Current status:** **M20** shipped on main. **M21** (`m21-changelog-watchlist`) adds release notes + watchlist for uninstalled catalog/GitHub apps. Publishing / F-Droid submit still deferred.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -34,7 +34,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M17** | HyperOS E2E + release prep | Done | [`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md) · `m17-hyperos-release-prep` | Checklist + `0.2.0` (code 3); Termux multi-candidate detect; flicker + Apps spacing fixes; tag `v0.2.0` after merge; no store submit |
 | **M18** | Auto-match UX | Done | `m18-auto-match-ux` · [#32](https://github.com/involvex/kiln/pull/32) | Icons/chips/rationale; prefer signer-matching repo; WARNING confirm + manual F-Droid/GitHub link (Match + App detail) |
 | **M19** | GitHub channels + Anti-features | Done | [`prompts/M19-channels-antifeatures.md`](./prompts/M19-channels-antifeatures.md) · [#33](https://github.com/involvex/kiln/pull/33) | Stable/Pre-release/Nightly (Actions artifacts + PAT); anti-feature chips on catalog detail |
-| **M20** | Play Store deep-link | In progress | [`prompts/M20-play-deeplink.md`](./prompts/M20-play-deeplink.md) · `m20-play-deeplink` | App detail “Open in Play Store” for unmanaged Play/Aurora installs (`market://` + https fallback) |
+| **M20** | Play Store deep-link | Done | [`prompts/M20-play-deeplink.md`](./prompts/M20-play-deeplink.md) · [#34](https://github.com/involvex/kiln/pull/34) | App detail “Open in Play Store” for unmanaged Play/Aurora installs (`market://` + https fallback) |
+| **M21** | Changelog & Watchlist | In progress | [`prompts/M21-changelog-watchlist.md`](./prompts/M21-changelog-watchlist.md) · `m21-changelog-watchlist` | Release notes on updates; Watch from catalog; Sources watchlist |
 
 ---
 
@@ -54,6 +55,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | GitHub channels | ✅ Stable / Pre-release / Nightly (Actions artifacts; PAT required for Nightly) | NONE (+ network; PAT for Nightly) |
 | Anti-features | ✅ F-Droid `metadata.antiFeatures` chips on catalog detail | NONE (+ catalog) |
 | Play Store deep-link | ✅ App detail CTA when unmanaged + Play/Aurora installer (`market://` → https) | NONE |
+| Changelog / watchlist | ✅ Release notes on App detail; Watch from catalog; Sources watchlist (notify, no auto-install) | NONE (+ network) |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; splits deferred | NONE / SHIZUKU |
 | Storage / cleaner | ✅ Usage-access gate; App/Data/Cache list; clear via Shizuku or app-info deep-link | NONE / SHIZUKU |
@@ -257,7 +259,7 @@ flowchart LR
 1. **M13–M16** shipped on main via [#27](https://github.com/involvex/kiln/pull/27) — do not re-open that UX plan.
 2. Next agent: **M17** only ([`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md)).
 3. After M17 device confidence: optional tag `v0.2.0` (publishing / F-Droid still deferred unless explicitly requested).
-4. After M20: backlog P1/P2 candidates (pick one milestone, do not mix): changelog/watchlist, scheduled maintenance, Intent/Broadcast API — see [`PLAN.md`](./PLAN.md) §12.
+4. After M21: backlog P1/P2 candidates (pick one milestone, do not mix): scheduled maintenance, Intent/Broadcast API — see [`PLAN.md`](./PLAN.md) §12.
 
 Backlog ideas (P1–P3) live in [`PLAN.md`](./PLAN.md) §12 — do not pull them into the current milestone.
 

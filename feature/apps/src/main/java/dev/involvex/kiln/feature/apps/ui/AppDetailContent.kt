@@ -22,6 +22,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -320,6 +324,9 @@ private fun UpdateSection(
                     color = MaterialTheme.colorScheme.error,
                 )
             }
+            availableUpdate.releaseNotes?.takeIf { it.isNotBlank() }?.let { notes ->
+                ReleaseNotesBlock(notes = notes)
+            }
             val canInstall = availableUpdate.signatureMatches &&
                 !availableUpdate.downloadUrl.isNullOrBlank() &&
                 installJob?.status != InstallJobStatus.DOWNLOADING &&
@@ -343,6 +350,34 @@ private fun UpdateSection(
                     stringResource(R.string.feature_apps_install_error, job.errorMessage.orEmpty()),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReleaseNotesBlock(notes: String) {
+    var expanded by remember(notes) { mutableStateOf(false) }
+    val previewLimit = 600
+    val showToggle = notes.length > previewLimit
+    val body = if (expanded || !showToggle) notes else notes.take(previewLimit).trimEnd() + "…"
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            stringResource(R.string.feature_apps_update_release_notes),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Text(body, style = MaterialTheme.typography.bodySmall)
+        if (showToggle) {
+            TextButton(onClick = { expanded = !expanded }) {
+                Text(
+                    stringResource(
+                        if (expanded) {
+                            R.string.feature_apps_update_release_notes_less
+                        } else {
+                            R.string.feature_apps_update_release_notes_more
+                        },
+                    ),
                 )
             }
         }

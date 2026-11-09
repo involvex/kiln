@@ -15,6 +15,7 @@ import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.database.RepoEntity
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.ManagedApp
+import dev.involvex.kiln.core.model.WatchlistRepository
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoUri
 import dev.involvex.kiln.feature.sources.github.GitHubOwnerRepo
@@ -40,6 +41,7 @@ class SourcesViewModel @Inject constructor(
     private val sync: FDroidRepoSync,
     private val tokenStore: GitHubTokenStore,
     private val appUpdateRepository: AppUpdateRepository,
+    private val watchlistRepository: WatchlistRepository,
     private val incomingRepoLinkStore: IncomingRepoLinkStore,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -58,11 +60,25 @@ class SourcesViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
+            watchlistRepository.observeWatchlist().collect { entries ->
+                _uiState.update { it.copy(watchlist = entries) }
+            }
+        }
+        viewModelScope.launch {
             incomingRepoLinkStore.pending.collect { uri ->
                 if (uri != null) {
                     incomingRepoLinkStore.consume()
                     applyIncomingUri(uri)
                 }
+            }
+        }
+    }
+
+    fun unwatch(packageName: String) {
+        viewModelScope.launch {
+            when (val result = withContext(ioDispatcher) { watchlistRepository.unwatchPackage(packageName) }) {
+                is Result.Success -> Unit
+                is Result.Failure -> _uiState.update { it.copy(message = result.message) }
             }
         }
     }

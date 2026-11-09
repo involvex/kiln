@@ -1,5 +1,7 @@
 package dev.involvex.kiln.feature.sources
 
+import dev.involvex.kiln.core.model.WatchlistEntry
+
 data class RepoUiModel(
     val id: String,
     val name: String,
@@ -12,6 +14,7 @@ data class RepoUiModel(
 
 data class SourcesUiState(
     val repos: List<RepoUiModel> = emptyList(),
+    val watchlist: List<WatchlistEntry> = emptyList(),
     val isSyncing: Boolean = false,
     val message: String? = null,
     val githubTokenSet: Boolean = false,

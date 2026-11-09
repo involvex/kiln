@@ -25,6 +25,7 @@ object AutoInstallPolicy {
             0L
         }
         return updates.filter { update ->
+            if (update.watchOnly) return@filter false
             if (!update.signatureMatches) return@filter false
             val installedName = installedVersionNames[update.packageName]
             if (isMajorBump(installedName, update.availableVersionName)) {

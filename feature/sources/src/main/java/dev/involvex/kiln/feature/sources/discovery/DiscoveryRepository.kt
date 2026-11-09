@@ -15,6 +15,7 @@ import dev.involvex.kiln.core.model.SourceKind
 import dev.involvex.kiln.core.model.parseGitHubReleaseChannel
 import dev.involvex.kiln.feature.sources.FdroidApkUrl
 import dev.involvex.kiln.feature.sources.FdroidMediaUrl
+import dev.involvex.kiln.feature.sources.ReleaseNotesText
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.github.GitHubOwnerRepo
 import dev.involvex.kiln.feature.sources.github.GitHubReleasesClient
@@ -103,7 +104,9 @@ class DiscoveryRepository @Inject constructor(
             downloadUrl = url,
             apkSha256 = release.apkSha256,
             sizeBytes = release.sizeBytes,
+            releaseNotes = ReleaseNotesText.normalize(release.whatsNew),
         )
+        clearWatchOnlyIfPresent(row.packageName)
         return installQueue.enqueue(update)
     }
 
@@ -150,11 +153,12 @@ class DiscoveryRepository @Inject constructor(
                             packageName = packageName,
                             sourceId = "github:$ownerRepo",
                             confidence = MatchConfidence.MEDIUM.name,
-                            pinned = false,
+                            pinned = true,
                             ignoreUpdates = false,
                             githubOwnerRepo = ownerRepo,
                             githubAssetRegex = DEFAULT_APK_REGEX,
                             githubChannel = GitHubReleaseChannel.STABLE.name,
+                            watchOnly = true,
                         ),
                     )
                 }
@@ -168,6 +172,7 @@ class DiscoveryRepository @Inject constructor(
                         sizeBytes = pick.sizeBytes,
                         downloadUrl = pick.downloadUrl,
                         saved = true,
+                        releaseNotes = pick.releaseNotes,
                     ),
                 )
             }
@@ -189,8 +194,17 @@ class DiscoveryRepository @Inject constructor(
             downloadUrl = url,
             apkSha256 = null,
             sizeBytes = row.sizeBytes,
+            releaseNotes = row.releaseNotes,
         )
+        clearWatchOnlyIfPresent(row.packageName)
         return installQueue.enqueue(update)
+    }
+
+    private suspend fun clearWatchOnlyIfPresent(packageName: String) {
+        val existing = managedAppDao.get(packageName) ?: return
+        if (existing.watchOnly) {
+            managedAppDao.upsert(existing.copy(watchOnly = false))
+        }
     }
 
     private companion object {

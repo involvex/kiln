@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,6 +30,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
+import dev.involvex.kiln.core.model.WatchlistEntry
 
 @Composable
 fun SourcesRoute(onOpenAutoMatch: () -> Unit, modifier: Modifier = Modifier, viewModel: SourcesViewModel = hiltViewModel()) {
@@ -45,6 +47,7 @@ fun SourcesRoute(onOpenAutoMatch: () -> Unit, modifier: Modifier = Modifier, vie
         onSaveGithubToken = viewModel::saveGithubToken,
         onClearGithubToken = viewModel::clearGithubToken,
         onOpenAutoMatch = onOpenAutoMatch,
+        onUnwatch = viewModel::unwatch,
         onClearMessage = viewModel::clearMessage,
         modifier = modifier,
     )
@@ -63,6 +66,7 @@ fun SourcesScreen(
     onSaveGithubToken: () -> Unit,
     onClearGithubToken: () -> Unit,
     onOpenAutoMatch: () -> Unit,
+    onUnwatch: (String) -> Unit,
     onClearMessage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -78,6 +82,7 @@ fun SourcesScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             sourcesHeader(state.isSyncing, onSyncAll, onOpenAutoMatch)
+            sourcesWatchlist(state.watchlist, onUnwatch)
             sourcesRepoList(state.repos)
             item { AddRepoSection(state, onAddFieldsChange, onAddRepo) }
             item { GithubPatSection(state, onGithubTokenInputChange, onSaveGithubToken, onClearGithubToken) }
@@ -167,6 +172,56 @@ private fun formatPrefixedMessage(code: String): String? = when {
 private fun humanizeSyncDetail(detail: String): String = when {
     detail.contains("index_oom") -> stringResource(R.string.sources_msg_index_oom)
     else -> detail
+}
+
+private fun LazyListScope.sourcesWatchlist(entries: List<WatchlistEntry>, onUnwatch: (String) -> Unit) {
+    item {
+        Text(
+            text = stringResource(R.string.sources_watchlist_section),
+            style = MaterialTheme.typography.titleMedium,
+        )
+    }
+    if (entries.isEmpty()) {
+        item {
+            Text(
+                text = stringResource(R.string.sources_watchlist_empty),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    } else {
+        items(entries, key = { it.packageName }) { entry ->
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(entry.displayName, style = MaterialTheme.typography.titleSmall)
+                    Text(entry.packageName, style = MaterialTheme.typography.bodySmall)
+                    if (entry.hasUpdate && entry.availableVersionName != null) {
+                        Text(
+                            text = stringResource(
+                                R.string.sources_watchlist_update,
+                                entry.availableVersionName.orEmpty(),
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    entry.releaseNotes?.takeIf { it.isNotBlank() }?.let { notes ->
+                        Text(
+                            text = ReleaseNotesText.preview(notes),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    OutlinedButton(onClick = { onUnwatch(entry.packageName) }) {
+                        Text(stringResource(R.string.sources_watchlist_unwatch))
+                    }
+                }
+            }
+        }
+    }
 }
 
 private fun LazyListScope.sourcesHeader(isSyncing: Boolean, onSyncAll: () -> Unit, onOpenAutoMatch: () -> Unit) {
