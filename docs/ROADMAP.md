@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M17** ready to merge on `m17-hyperos-release-prep` (`0.2.0`, versionCode 3). Device checklist recorded; Termux detect, HyperOS flicker, and Apps spacing fixes included. Tag `v0.2.0` after merge. Publishing / F-Droid submit still deferred.
+**Current status:** **M17** shipped as `v0.2.0`. Hotfix `0.2.1` (versionCode 4) targets remaining HyperOS locale recreate flicker. Publishing / F-Droid submit still deferred.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
