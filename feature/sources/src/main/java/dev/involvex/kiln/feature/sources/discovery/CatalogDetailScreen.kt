@@ -69,7 +69,9 @@ fun CatalogDetailScreen(
     KilnScaffold(title = stringResource(R.string.catalog_detail_title), modifier = modifier) { padding ->
         when {
             state.isLoading -> CatalogDetailLoading(padding)
+
             state.row == null -> CatalogDetailError(padding, onBack)
+
             else -> CatalogDetailContent(
                 row = checkNotNull(state.row),
                 message = state.message,

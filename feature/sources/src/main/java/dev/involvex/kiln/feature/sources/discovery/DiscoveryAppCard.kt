@@ -33,12 +33,7 @@ import dev.involvex.kiln.feature.sources.R
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun DiscoveryAppCard(
-    row: DiscoveryAppRow,
-    onInstall: () -> Unit,
-    modifier: Modifier = Modifier,
-    onOpenDetail: (() -> Unit)? = null,
-) {
+fun DiscoveryAppCard(row: DiscoveryAppRow, onInstall: () -> Unit, modifier: Modifier = Modifier, onOpenDetail: (() -> Unit)? = null) {
     val context = LocalContext.current
     Card(
         modifier = modifier
