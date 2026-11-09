@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M12 GitHub browse in Discover (`m12-github-browse`). M11 Discovery merged (#22). M9 Termux (#20) + M10 polish (#21) on main. Publishing deferred. M3 HyperOS E2E still open.
+**Current status:** M13–M16 UX plan implemented (settings stability, 4-tab Manage, store-like Discover, Trending). Publishing deferred. M3 HyperOS E2E still open.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -26,7 +26,11 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M9** | Termux integration | Done | [`prompts/M9-termux.md`](./prompts/M9-termux.md) · [#20](https://github.com/involvex/kiln/pull/20) | Feature-flagged RUN_COMMAND + PendingIntent |
 | **M10** | Polish & release | Done | [`prompts/M10-polish-release.md`](./prompts/M10-polish-release.md) · [#21](https://github.com/involvex/kiln/pull/21) | About, privacy, fastlane, GitHub Release workflow |
 | **M11** | App Discovery | Done | PLAN §4.2 browse · [#22](https://github.com/involvex/kiln/pull/22) | Search + categories + catalog sync + install enqueue |
-| **M12** | GitHub browse | In progress | [`prompts/M12-github-browse.md`](./prompts/M12-github-browse.md) · `m12-github-browse` | Discover GitHub tab: lookup + saved sources + install queue |
+| **M12** | GitHub browse | Done | [`prompts/M12-github-browse.md`](./prompts/M12-github-browse.md) | Discover GitHub tab: lookup + saved sources + install queue |
+| **M13** | Settings stability | Done | [`prompts/M13-settings-stability.md`](./prompts/M13-settings-stability.md) · `m13-settings-stability` | Check-now no crash; EN/DE locales; Termux RequestPermission |
+| **M14** | 4-tab nav + Manage | Done | [`prompts/M14-nav-manage.md`](./prompts/M14-nav-manage.md) | Apps / Sources / Manage / Settings; Storage+Backup under Manage |
+| **M15** | Store-like Discover | Done | [`prompts/M15-store-ui.md`](./prompts/M15-store-ui.md) | Library\|Discover; catalog detail+icons; font pref |
+| **M16** | Trending shelves | Done | [`prompts/M16-trending.md`](./prompts/M16-trending.md) | Topic shelves; no fake download counts |
 
 ---
 
@@ -49,10 +53,13 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
 | Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg) | NONE (+ network; silent install/downgrade if SHIZUKU) |
-| Termux RUN_COMMAND | ✅ feature flag, configurable packageId, echo smoke test + PendingIntent | NONE (Termux + permission + allow-external-apps) |
+| Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent | NONE (Termux + permission + allow-external-apps) |
+| Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
 | Release / store prep | ✅ version `0.1.0` (code 2); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow | — |
-| App Discovery | ✅ Sources → Discover; catalog refresh; search/categories; install queue | NONE (+ network) |
-| GitHub browse (Discover) | 🚧 F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
+| App Discovery | ✅ Apps → Discover; catalog refresh; icons; detail; search/categories; install queue | NONE (+ network) |
+| GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
+| Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage | NONE |
+| Trending shelves | ✅ Category/keyword shelves (honest: no download charts) | NONE (+ catalog) |
 
 ---
 
@@ -214,6 +221,10 @@ flowchart LR
   M9 --> M10[M10 Release]
   M10 --> M11[M11 Discovery]
   M11 --> M12[M12 GitHub browse]
+  M12 --> M13[M13 Stability]
+  M13 --> M14[M14 Manage]
+  M14 --> M15[M15 Store UI]
+  M15 --> M16[M16 Trending]
 ```
 
 1. Finish **M0** → merge → install debug APK on HyperOS phone.
@@ -221,6 +232,7 @@ flowchart LR
 3. **M2–M3** for updates without leaving Kiln.
 4. **M4** unlocks silent install, cache clear, later debloat/backup depth.
 5. Ship when M0–M5 feel solid; treat M6+ as stretch.
+6. **M13–M16** UX plan: verify language / Check now / Termux grant / 4-tab / Discover+Trending on HyperOS.
 
 Backlog ideas (P1–P3) live in [`PLAN.md`](./PLAN.md) §12 — do not pull them into the current milestone.
 

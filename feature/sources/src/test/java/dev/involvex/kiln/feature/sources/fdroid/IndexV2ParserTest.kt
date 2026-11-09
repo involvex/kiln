@@ -59,4 +59,30 @@ class IndexV2ParserTest {
         assertEquals(123L, pkg.suggestedVersionCode)
         assertEquals("AA:BB", pkg.releases.single().signerSha256.single())
     }
+
+    @Test
+    fun `parses icon and phone screenshots paths`() {
+        val index = """
+            {
+              "packages": {
+                "com.example.media": {
+                  "metadata": {
+                    "name": {"en-US": "Media"},
+                    "icon": {"en-US": {"name": "/icons/icon.png"}},
+                    "phoneScreenshots": [
+                      {"en-US": {"name": "phone/ss1.png"}},
+                      {"name": "phone/ss2.png"}
+                    ]
+                  },
+                  "versions": {}
+                }
+              }
+            }
+        """.trimIndent()
+        val result = IndexV2Parser.parsePackages(index)
+        assertTrue(result is Result.Success)
+        val pkg = (result as Result.Success).value.single()
+        assertEquals("icons/icon.png", pkg.iconPath?.trimStart('/'))
+        assertEquals(listOf("phone/ss1.png", "phone/ss2.png"), pkg.phoneScreenshotPaths)
+    }
 }

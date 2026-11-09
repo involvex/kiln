@@ -21,7 +21,13 @@ data object StorageKey
 data object BackupKey
 
 @Serializable
+data object ManageKey
+
+@Serializable
 data object SettingsKey
+
+@Serializable
+data class CatalogDetailKey(val packageName: String, val repoId: String)
 
 @Serializable
 data object PrivilegeSetupKey

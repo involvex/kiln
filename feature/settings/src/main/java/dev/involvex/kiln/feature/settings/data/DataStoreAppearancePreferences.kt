@@ -9,6 +9,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.AppearancePrefs
+import dev.involvex.kiln.core.model.KilnFontStyle
 import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
 import javax.inject.Inject
@@ -37,15 +38,22 @@ class DataStoreAppearancePreferences @Inject constructor(@ApplicationContext con
         store.edit { it[KEY_LANGUAGE] = language.name }
     }
 
+    override suspend fun setFontStyle(fontStyle: KilnFontStyle) {
+        store.edit { it[KEY_FONT] = fontStyle.name }
+    }
+
     private fun Preferences.toPrefs() = AppearancePrefs(
         theme = this[KEY_THEME]?.let { runCatching { KilnThemeStyle.valueOf(it) }.getOrNull() }
             ?: KilnThemeStyle.DARK,
         language = this[KEY_LANGUAGE]?.let { runCatching { KilnLanguage.valueOf(it) }.getOrNull() }
             ?: KilnLanguage.SYSTEM,
+        fontStyle = this[KEY_FONT]?.let { runCatching { KilnFontStyle.valueOf(it) }.getOrNull() }
+            ?: KilnFontStyle.DEFAULT,
     )
 
     private companion object {
         val KEY_THEME = stringPreferencesKey("theme")
         val KEY_LANGUAGE = stringPreferencesKey("language")
+        val KEY_FONT = stringPreferencesKey("font_style")
     }
 }

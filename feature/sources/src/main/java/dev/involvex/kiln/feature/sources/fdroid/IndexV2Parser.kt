@@ -23,6 +23,8 @@ data class ParsedIndexPackage(
     val signerSha256: List<String>,
     val suggestedVersionCode: Long?,
     val suggestedVersionName: String?,
+    val iconPath: String? = null,
+    val phoneScreenshotPaths: List<String> = emptyList(),
     val releases: List<ParsedIndexRelease>,
 )
 
@@ -103,6 +105,8 @@ object IndexV2Parser {
         val summary = localized(metadata?.get("summary"))
         val sourceCode = metadata?.get("sourceCode")?.jsonPrimitive?.contentOrNull
         val categories = parseCategories(metadata?.get("categories"))
+        val iconPath = mediaFilePath(metadata?.get("icon"))
+        val phoneScreenshotPaths = parsePhoneScreenshots(metadata?.get("phoneScreenshots"))
         val versions = pkg["versions"]?.jsonObject.orEmpty()
         val releases = versions.values.mapNotNull { parseRelease(it) }
             .sortedByDescending { it.versionCode }
@@ -112,11 +116,38 @@ object IndexV2Parser {
             summary = summary,
             sourceCodeUrl = sourceCode,
             categories = categories,
+            iconPath = iconPath,
+            phoneScreenshotPaths = phoneScreenshotPaths,
             signerSha256 = releases.firstOrNull()?.signerSha256.orEmpty(),
             suggestedVersionCode = releases.firstOrNull()?.versionCode,
             suggestedVersionName = releases.firstOrNull()?.versionName,
             releases = releases,
         )
+    }
+
+    private fun parsePhoneScreenshots(element: JsonElement?): List<String> {
+        if (element == null) return emptyList()
+        return when (element) {
+            is JsonArray -> element.mapNotNull { mediaFilePath(it) }
+            else -> mediaFilePath(element)?.let { listOf(it) }.orEmpty()
+        }
+    }
+
+    /** Resolves index-v2 file `name` from a direct file object or locale-nested maps. */
+    private fun mediaFilePath(element: JsonElement?): String? {
+        if (element == null) return null
+        return when (element) {
+            is JsonObject -> {
+                element["name"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+                    ?: element.values.firstNotNullOfOrNull { mediaFilePath(it) }
+            }
+
+            is JsonArray -> element.firstNotNullOfOrNull { mediaFilePath(it) }
+
+            is JsonPrimitive -> element.contentOrNull?.takeIf { it.isNotBlank() }
+
+            else -> null
+        }
     }
 
     private fun parseCategories(element: JsonElement?): List<String> {

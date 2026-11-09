@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_apps_title">Apps</string>
+    <string name="apps_segment_library">Library</string>
+    <string name="apps_segment_discover">Discover</string>
+    <string name="apps_segment_trending">Trending</string>
+    <string name="apps_filters_menu">Filters and sort</string>
     <string name="feature_apps_search_hint">Search name or package</string>
     <string name="feature_apps_filter_user">User</string>
     <string name="feature_apps_filter_system">System</string>

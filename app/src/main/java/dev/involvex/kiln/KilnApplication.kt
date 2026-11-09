@@ -7,6 +7,7 @@ import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import dagger.hilt.android.HiltAndroidApp
+import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.core.model.DebugLogController
@@ -19,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @HiltAndroidApp
 class KilnApplication :
@@ -35,6 +37,9 @@ class KilnApplication :
     lateinit var backgroundUpdateScheduler: BackgroundUpdateScheduler
 
     @Inject
+    lateinit var appearancePreferences: AppearancePreferences
+
+    @Inject
     lateinit var devPreferences: DevPreferences
 
     @Inject
@@ -44,6 +49,10 @@ class KilnApplication :
 
     override fun onCreate() {
         super.onCreate()
+        // Apply locale before first Activity so Settings chips match resources.
+        runBlocking {
+            applyKilnLanguage(appearancePreferences.current().language)
+        }
         applicationScope.launch {
             // Plant immediately from persisted prefs (and always for debuggable builds).
             debugLogController.apply(devPreferences.current().debugLogEnabled)

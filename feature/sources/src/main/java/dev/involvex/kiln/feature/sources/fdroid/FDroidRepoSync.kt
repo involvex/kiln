@@ -158,6 +158,8 @@ class FDroidRepoSync @Inject constructor(
         signerSha256Csv = pkg.signerSha256.joinToString(","),
         suggestedVersionCode = pkg.suggestedVersionCode,
         suggestedVersionName = pkg.suggestedVersionName,
+        iconPath = pkg.iconPath,
+        phoneScreenshotsCsv = pkg.phoneScreenshotPaths.joinToString(","),
     )
 
     private fun toReleaseEntity(repoId: String, packageName: String, rel: ParsedIndexRelease) = IndexedReleaseEntity(

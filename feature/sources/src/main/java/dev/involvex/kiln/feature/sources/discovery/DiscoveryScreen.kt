@@ -32,11 +32,21 @@ import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.feature.sources.R
 
 @Composable
-fun DiscoveryRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: DiscoveryViewModel = hiltViewModel()) {
+fun DiscoveryRoute(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    onOpenCatalogDetail: ((String, String) -> Unit)? = null,
+    embedded: Boolean = false,
+    showTopBar: Boolean = true,
+    viewModel: DiscoveryViewModel = hiltViewModel(),
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     DiscoveryScreen(
         state = state,
         onBack = onBack,
+        embedded = embedded,
+        showTopBar = showTopBar,
+        onOpenCatalogDetail = onOpenCatalogDetail,
         onSourceTab = viewModel::setSourceTab,
         onQueryChange = viewModel::setQuery,
         onCategory = viewModel::setCategory,
@@ -56,6 +66,9 @@ fun DiscoveryRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel:
 fun DiscoveryScreen(
     state: DiscoveryUiState,
     onBack: () -> Unit,
+    embedded: Boolean = false,
+    showTopBar: Boolean = true,
+    onOpenCatalogDetail: ((String, String) -> Unit)? = null,
     onSourceTab: (DiscoverySourceTab) -> Unit,
     onQueryChange: (String) -> Unit,
     onCategory: (String) -> Unit,
@@ -68,7 +81,11 @@ fun DiscoveryScreen(
     onClearMessage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    KilnScaffold(title = stringResource(R.string.discovery_title), modifier = modifier) { padding ->
+    KilnScaffold(
+        title = stringResource(R.string.discovery_title),
+        modifier = modifier,
+        showTopBar = showTopBar,
+    ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -76,9 +93,11 @@ fun DiscoveryScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item {
-                OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.discovery_back))
+            if (!embedded) {
+                item {
+                    OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.discovery_back))
+                    }
                 }
             }
             item {
@@ -106,6 +125,7 @@ fun DiscoveryScreen(
                     onCategory = onCategory,
                     onRefreshCatalog = onRefreshCatalog,
                     onInstall = onInstall,
+                    onOpenCatalogDetail = onOpenCatalogDetail,
                 )
 
                 DiscoverySourceTab.GITHUB -> githubItems(
@@ -126,6 +146,7 @@ private fun LazyListScope.fdroidItems(
     onCategory: (String) -> Unit,
     onRefreshCatalog: () -> Unit,
     onInstall: (DiscoveryAppRow) -> Unit,
+    onOpenCatalogDetail: ((String, String) -> Unit)?,
 ) {
     item {
         Text(
@@ -180,7 +201,13 @@ private fun LazyListScope.fdroidItems(
         item { CircularProgressIndicator() }
     }
     items(state.results, key = { "${it.repoId}:${it.packageName}" }) { row ->
-        DiscoveryAppCard(row = row, onInstall = { onInstall(row) })
+        DiscoveryAppCard(
+            row = row,
+            onInstall = { onInstall(row) },
+            onOpenDetail = onOpenCatalogDetail?.let { open ->
+                { open(row.packageName, row.repoId) }
+            },
+        )
     }
     if (!state.isSearching && state.results.isEmpty() && state.packageCount == 0) {
         item {
@@ -305,38 +332,6 @@ private fun CategoryChips(categories: List<String>, selected: String, onSelect: 
                 onClick = { onSelect(category) },
                 label = { Text(category) },
             )
-        }
-    }
-}
-
-@Composable
-private fun DiscoveryAppCard(row: DiscoveryAppRow, onInstall: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(text = row.name, style = MaterialTheme.typography.titleMedium)
-        Text(
-            text = row.packageName,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        row.summary?.takeIf { it.isNotBlank() }?.let {
-            Text(text = it, style = MaterialTheme.typography.bodyMedium)
-        }
-        val placeholder = stringResource(R.string.discovery_placeholder)
-        Text(
-            text = stringResource(
-                R.string.discovery_app_meta,
-                row.repoName,
-                row.versionName ?: placeholder,
-                row.categories.joinToString(", ").ifBlank { placeholder },
-            ),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        OutlinedButton(onClick = onInstall, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.discovery_install))
         }
     }
 }

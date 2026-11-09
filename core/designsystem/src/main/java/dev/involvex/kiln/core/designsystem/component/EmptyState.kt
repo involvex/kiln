@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.involvex.kiln.core.designsystem.theme.KilnTheme
+import dev.involvex.kiln.core.model.KilnThemeStyle
 
 @Composable
 fun EmptyState(title: String, description: String, modifier: Modifier = Modifier) {
@@ -42,7 +43,7 @@ fun EmptyState(title: String, description: String, modifier: Modifier = Modifier
 @Preview(showBackground = true)
 @Composable
 private fun EmptyStatePreview() {
-    KilnTheme {
+    KilnTheme(themeStyle = KilnThemeStyle.DARK) {
         EmptyState(
             title = "Nothing here yet",
             description = "This screen will grow in a later milestone.",

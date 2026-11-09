@@ -37,7 +37,7 @@ import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.model.AppStorageStats
 
 @Composable
-fun StorageRoute(modifier: Modifier = Modifier, viewModel: StorageViewModel = hiltViewModel()) {
+fun StorageRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, viewModel: StorageViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -76,6 +76,7 @@ fun StorageRoute(modifier: Modifier = Modifier, viewModel: StorageViewModel = hi
         onOpenAppDetails = { pkg ->
             context.startActivity(viewModel.appDetailsIntent(pkg))
         },
+        showTopBar = showTopBar,
         modifier = modifier,
     )
 }
@@ -93,10 +94,12 @@ fun StorageScreen(
     onDismissClear: () -> Unit,
     onOpenAppDetails: (String) -> Unit,
     modifier: Modifier = Modifier,
+    showTopBar: Boolean = true,
 ) {
     KilnScaffold(
         title = stringResource(R.string.feature_storage_title),
         modifier = modifier,
+        showTopBar = showTopBar,
     ) { padding ->
         when (state.permission) {
             StoragePermissionState.UNKNOWN,

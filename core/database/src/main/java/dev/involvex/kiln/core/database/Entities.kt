@@ -32,6 +32,10 @@ data class IndexedPackageEntity(
     val signerSha256Csv: String,
     val suggestedVersionCode: Long?,
     val suggestedVersionName: String?,
+    /** Relative path to icon within the repo (index-v2 `metadata.icon`). */
+    val iconPath: String? = null,
+    /** Comma-separated relative screenshot paths (`metadata.phoneScreenshots`). */
+    val phoneScreenshotsCsv: String = "",
 )
 
 @Entity(

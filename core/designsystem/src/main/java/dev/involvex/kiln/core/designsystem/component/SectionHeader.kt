@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.involvex.kiln.core.designsystem.theme.KilnTheme
+import dev.involvex.kiln.core.model.KilnThemeStyle
 
 @Composable
 fun SectionHeader(title: String, modifier: Modifier = Modifier) {
@@ -25,7 +26,7 @@ fun SectionHeader(title: String, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 private fun SectionHeaderPreview() {
-    KilnTheme {
+    KilnTheme(themeStyle = KilnThemeStyle.DARK) {
         SectionHeader(title = "Installed apps")
     }
 }
