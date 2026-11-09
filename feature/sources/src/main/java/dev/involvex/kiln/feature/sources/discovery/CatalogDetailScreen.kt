@@ -82,6 +82,7 @@ fun CatalogDetailScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val shareChooserTitle = stringResource(R.string.catalog_detail_share)
     val row = state.row
     KilnScaffold(
         title = stringResource(R.string.catalog_detail_title),
@@ -112,13 +113,13 @@ fun CatalogDetailScreen(
                             putExtra(Intent.EXTRA_TEXT, body)
                         }
                         context.startActivity(
-                            Intent.createChooser(share, context.getString(R.string.catalog_detail_share)),
+                            Intent.createChooser(share, shareChooserTitle),
                         )
                     },
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Share,
-                        contentDescription = stringResource(R.string.catalog_detail_share),
+                        contentDescription = shareChooserTitle,
                     )
                 }
             }
@@ -151,7 +152,7 @@ fun CatalogDetailScreen(
                         putExtra(Intent.EXTRA_TEXT, body)
                     }
                     context.startActivity(
-                        Intent.createChooser(share, context.getString(R.string.catalog_detail_share)),
+                        Intent.createChooser(share, shareChooserTitle),
                     )
                 },
             )
