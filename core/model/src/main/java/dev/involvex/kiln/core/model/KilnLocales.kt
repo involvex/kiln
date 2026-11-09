@@ -24,8 +24,14 @@ object KilnLocales {
     fun isSatisfied(language: KilnLanguage, currentLanguageTags: String): Boolean {
         val current = currentLanguageTags.trim()
         return when (language) {
+            // Empty LocaleList = follow system. Some OEMs still report resolved
+            // tags after that; callers must not re-apply SYSTEM in a loop. Treat
+            // empty as the only "app override cleared" signal — Application owns
+            // one-shot apply, Compose must not fight with a default SYSTEM value.
             KilnLanguage.SYSTEM -> current.isEmpty()
+
             KilnLanguage.ENGLISH -> primaryLanguage(current) == "en"
+
             KilnLanguage.GERMAN -> primaryLanguage(current) == "de"
         }
     }
