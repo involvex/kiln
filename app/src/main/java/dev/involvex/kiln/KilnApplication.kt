@@ -49,9 +49,16 @@ class KilnApplication :
 
     override fun onCreate() {
         super.onCreate()
-        // Apply locale before first Activity so Settings chips match resources.
+        // Apply locale once from persisted prefs, then on preference changes only.
+        // Never apply from Compose with a default AppearancePrefs() — that races
+        // DataStore and toggles en ↔ system locale on HyperOS (~6 relaunches/s).
         runBlocking {
             applyKilnLanguage(appearancePreferences.current().language)
+        }
+        applicationScope.launch {
+            appearancePreferences.observe().collectLatest { prefs ->
+                applyKilnLanguage(prefs.language)
+            }
         }
         applicationScope.launch {
             // Plant immediately from persisted prefs (and always for debuggable builds).

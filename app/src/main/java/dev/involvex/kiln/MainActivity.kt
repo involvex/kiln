@@ -6,10 +6,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.WindowCompat
@@ -39,10 +42,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         offerIncoming(intent)
         setContent {
+            // Theme/font only — language is applied in KilnApplication.
+            // Do NOT call setApplicationLocales from Compose: collectAsStateWithLifecycle
+            // starts with AppearancePrefs() (SYSTEM) before DataStore emits, which fought
+            // the real preference (en ↔ de-DE) and relaunched MainActivity ~6×/s on HyperOS.
             val appearance by appearancePreferences.observe().collectAsStateWithLifecycle(
                 initialValue = AppearancePrefs(),
             )
-            ApplyLanguage(appearance.language)
             KilnRoot(themeStyle = appearance.theme, fontStyle = appearance.fontStyle)
         }
     }
@@ -75,32 +81,34 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+/** Last language we asked AppCompat to apply in this process (stops SYSTEM OEM tag thrash). */
+@Volatile
+private var lastAppliedLanguage: KilnLanguage? = null
+
 internal fun applyKilnLanguage(language: KilnLanguage) {
     val current = AppCompatDelegate.getApplicationLocales().toLanguageTags()
-    if (KilnLocales.isSatisfied(language, current)) return
+    if (KilnLocales.isSatisfied(language, current)) {
+        lastAppliedLanguage = language
+        return
+    }
+    // HyperOS may report resolved system tags (e.g. de-DE) even after
+    // setApplicationLocales(empty). Re-applying SYSTEM would relaunch forever.
+    if (language == KilnLanguage.SYSTEM && lastAppliedLanguage == KilnLanguage.SYSTEM) {
+        return
+    }
 
     val desired = if (language == KilnLanguage.SYSTEM) {
-        // Empty list = follow system. forLanguageTags("") does not always
-        // round-trip on HyperOS the same way getEmptyLocaleList() does.
         LocaleListCompat.getEmptyLocaleList()
     } else {
         LocaleListCompat.forLanguageTags(KilnLocales.desiredLanguageTags(language))
     }
     AppCompatDelegate.setApplicationLocales(desired)
-}
-
-@Composable
-private fun ApplyLanguage(language: KilnLanguage) {
-    LaunchedEffect(language) {
-        applyKilnLanguage(language)
-    }
+    lastAppliedLanguage = language
 }
 
 @Composable
 private fun KilnRoot(themeStyle: KilnThemeStyle, fontStyle: KilnFontStyle) {
     val view = LocalView.current
-    // dynamicColor=false: HyperOS Monet / wallpaper shifts were fighting the
-    // fixed Theme.Kiln windowBackground and flashing the whole surface.
     KilnTheme(themeStyle = themeStyle, fontStyle = fontStyle, dynamicColor = false) {
         val lightBars = themeStyle == KilnThemeStyle.LIGHT
         if (!view.isInEditMode) {
@@ -113,6 +121,11 @@ private fun KilnRoot(themeStyle: KilnThemeStyle, fontStyle: KilnFontStyle) {
                 controller.isAppearanceLightNavigationBars = lightBars
             }
         }
-        KilnApp()
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            KilnApp()
+        }
     }
 }
