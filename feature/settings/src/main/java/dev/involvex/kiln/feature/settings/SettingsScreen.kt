@@ -40,6 +40,7 @@ import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.model.AppearancePrefs
 import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
 import dev.involvex.kiln.core.model.DevPrefs
+import dev.involvex.kiln.core.model.KilnFontStyle
 import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
 import dev.involvex.kiln.core.model.PreferredInstaller
@@ -87,6 +88,7 @@ fun SettingsRoute(
         onCooldownDaysChange = viewModel::setUpdateCooldownDays,
         onThemeChange = viewModel::setTheme,
         onLanguageChange = viewModel::setLanguage,
+        onFontStyleChange = viewModel::setFontStyle,
         onPreferredInstallerChange = viewModel::setPreferredInstaller,
         onDebugLogChange = viewModel::setDebugLogEnabled,
         onCheckNow = viewModel::checkNow,
@@ -107,6 +109,7 @@ fun SettingsScreen(
     onCooldownDaysChange: (Int) -> Unit,
     onThemeChange: (KilnThemeStyle) -> Unit,
     onLanguageChange: (KilnLanguage) -> Unit,
+    onFontStyleChange: (KilnFontStyle) -> Unit,
     onPreferredInstallerChange: (PreferredInstaller) -> Unit,
     onDebugLogChange: (Boolean) -> Unit,
     onCheckNow: () -> Unit,
@@ -150,6 +153,7 @@ fun SettingsScreen(
                 prefs = state.appearance,
                 onThemeChange = onThemeChange,
                 onLanguageChange = onLanguageChange,
+                onFontStyleChange = onFontStyleChange,
             )
             HorizontalDivider()
             InstallerSection(
@@ -355,7 +359,12 @@ private fun DevSection(prefs: DevPrefs, onDebugLogChange: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun AppearanceSection(prefs: AppearancePrefs, onThemeChange: (KilnThemeStyle) -> Unit, onLanguageChange: (KilnLanguage) -> Unit) {
+private fun AppearanceSection(
+    prefs: AppearancePrefs,
+    onThemeChange: (KilnThemeStyle) -> Unit,
+    onLanguageChange: (KilnLanguage) -> Unit,
+    onFontStyleChange: (KilnFontStyle) -> Unit,
+) {
     Text(
         text = stringResource(R.string.settings_appearance_section),
         style = MaterialTheme.typography.titleMedium,
@@ -390,6 +399,26 @@ private fun AppearanceSection(prefs: AppearancePrefs, onThemeChange: (KilnThemeS
         LanguageChip(KilnLanguage.ENGLISH, prefs.language, onLanguageChange, stringResource(R.string.settings_language_english))
         LanguageChip(KilnLanguage.GERMAN, prefs.language, onLanguageChange, stringResource(R.string.settings_language_german))
     }
+    Text(
+        text = stringResource(R.string.settings_font_style),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        FontChip(KilnFontStyle.DEFAULT, prefs.fontStyle, onFontStyleChange, stringResource(R.string.settings_font_default))
+        FontChip(KilnFontStyle.ROUNDED_DISPLAY, prefs.fontStyle, onFontStyleChange, stringResource(R.string.settings_font_rounded))
+    }
+}
+
+@Composable
+private fun FontChip(value: KilnFontStyle, selected: KilnFontStyle, onChange: (KilnFontStyle) -> Unit, label: String) {
+    FilterChip(
+        selected = selected == value,
+        onClick = { onChange(value) },
+        label = { Text(label) },
+    )
 }
 
 @Composable

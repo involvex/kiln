@@ -13,6 +13,7 @@ import dev.involvex.kiln.core.database.InstallJobEntity
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.InstallJobState
 import dev.involvex.kiln.core.model.InstallJobStatus
+import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.LocalInstallRequest
 import dev.involvex.kiln.feature.installer.work.InstallWorker
@@ -24,8 +25,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 @Singleton
-class DefaultInstallQueue @Inject constructor(@ApplicationContext private val context: Context, private val installJobDao: InstallJobDao) :
-    InstallQueue {
+class DefaultInstallQueue @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val installJobDao: InstallJobDao,
+    private val installedAppsReader: InstalledAppsReader,
+) : InstallQueue {
     override fun jobs(): Flow<Map<String, InstallJobState>> = installJobDao.observeAll().map { list ->
         list.associate { entity ->
             entity.packageName to entity.toState()
@@ -35,11 +39,12 @@ class DefaultInstallQueue @Inject constructor(@ApplicationContext private val co
     override suspend fun enqueue(update: AppUpdateInfo): Result<String> {
         val url = update.downloadUrl?.takeIf { it.startsWith("https://") }
             ?: return Result.failure("missing_download_url")
-        if (!update.signatureMatches && update.apkSha256 != null) {
-            // Still allow enqueue only when signatureMatches; WARNUNG updates are blocked in UI.
-        }
         if (!update.signatureMatches) {
-            return Result.failure("signature_mismatch")
+            val installed = installedAppsReader.userApps().any { it.packageName == update.packageName }
+            if (installed) {
+                return Result.failure("signature_mismatch")
+            }
+            // First-time install (e.g. GitHub discovery): worker verifies APK signature at install time.
         }
         return enqueueJob(
             packageName = update.packageName,

@@ -13,6 +13,7 @@ import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.core.model.DebugLogController
 import dev.involvex.kiln.core.model.DevPreferences
 import dev.involvex.kiln.core.model.InstallerPreferences
+import dev.involvex.kiln.core.model.KilnFontStyle
 import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
 import dev.involvex.kiln.core.model.PreferredInstaller
@@ -100,6 +101,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setLanguage(language: KilnLanguage) {
         viewModelScope.launch { appearancePreferences.setLanguage(language) }
+    }
+
+    fun setFontStyle(fontStyle: KilnFontStyle) {
+        viewModelScope.launch { appearancePreferences.setFontStyle(fontStyle) }
     }
 
     fun setPreferredInstaller(preferred: PreferredInstaller) {

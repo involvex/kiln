@@ -12,9 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,6 +26,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -54,6 +62,7 @@ fun AppsListPane(
     onToggleSelection: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var filtersExpanded by rememberSaveable { mutableStateOf(false) }
     Column(modifier = modifier.fillMaxSize()) {
         if (state.batchExportRunning) {
             BatchProgressBar(
@@ -62,15 +71,28 @@ fun AppsListPane(
                 onCancel = onCancelBatch,
             )
         }
-        TextField(
-            value = state.query,
-            onValueChange = onQueryChange,
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            singleLine = true,
-            placeholder = { Text(stringResource(R.string.feature_apps_search_hint)) },
-        )
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextField(
+                value = state.query,
+                onValueChange = onQueryChange,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                singleLine = true,
+                placeholder = { Text(stringResource(R.string.feature_apps_search_hint)) },
+            )
+            IconButton(onClick = { filtersExpanded = !filtersExpanded }) {
+                Icon(
+                    imageVector = Icons.Filled.Menu,
+                    contentDescription = stringResource(R.string.apps_filters_menu),
+                )
+            }
+        }
         TextButton(
             onClick = onCheckUpdates,
             enabled = !state.isCheckingUpdates,
@@ -95,8 +117,10 @@ fun AppsListPane(
                 Text(stringResource(R.string.feature_apps_dismiss))
             }
         }
-        FilterRow(filter = state.filter, onFilterChange = onFilterChange)
-        SortRow(sortField = state.sortField, onSortFieldChange = onSortFieldChange)
+        if (filtersExpanded) {
+            FilterRow(filter = state.filter, onFilterChange = onFilterChange)
+            SortRow(sortField = state.sortField, onSortFieldChange = onSortFieldChange)
+        }
         PullToRefreshBox(
             isRefreshing = state.isLoading || state.isCheckingUpdates,
             onRefresh = onRefresh,

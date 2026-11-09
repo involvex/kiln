@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
+import dev.involvex.kiln.core.model.KilnFontStyle
 import dev.involvex.kiln.core.model.KilnThemeStyle
 
 val LocalAmoledDark = staticCompositionLocalOf { false }
@@ -105,7 +106,12 @@ private fun ColorScheme.amoled(): ColorScheme = copy(
 )
 
 @Composable
-fun KilnTheme(themeStyle: KilnThemeStyle = KilnThemeStyle.DARK, dynamicColor: Boolean = true, content: @Composable () -> Unit) {
+fun KilnTheme(
+    themeStyle: KilnThemeStyle = KilnThemeStyle.DARK,
+    fontStyle: KilnFontStyle = KilnFontStyle.DEFAULT,
+    dynamicColor: Boolean = true,
+    content: @Composable () -> Unit,
+) {
     val amoledDark = themeStyle == KilnThemeStyle.AMOLED
     val colorScheme = when (themeStyle) {
         KilnThemeStyle.LIGHT -> resolveLight(dynamicColor)
@@ -117,7 +123,7 @@ fun KilnTheme(themeStyle: KilnThemeStyle = KilnThemeStyle.DARK, dynamicColor: Bo
     CompositionLocalProvider(LocalAmoledDark provides amoledDark) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = KilnTypography,
+            typography = kilnTypography(fontStyle),
             content = content,
         )
     }

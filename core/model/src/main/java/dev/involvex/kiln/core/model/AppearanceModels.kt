@@ -15,7 +15,16 @@ enum class KilnLanguage {
     GERMAN,
 }
 
-data class AppearancePrefs(val theme: KilnThemeStyle = KilnThemeStyle.DARK, val language: KilnLanguage = KilnLanguage.SYSTEM)
+enum class KilnFontStyle {
+    DEFAULT,
+    ROUNDED_DISPLAY,
+}
+
+data class AppearancePrefs(
+    val theme: KilnThemeStyle = KilnThemeStyle.DARK,
+    val language: KilnLanguage = KilnLanguage.SYSTEM,
+    val fontStyle: KilnFontStyle = KilnFontStyle.DEFAULT,
+)
 
 interface AppearancePreferences {
     fun observe(): Flow<AppearancePrefs>
@@ -25,4 +34,6 @@ interface AppearancePreferences {
     suspend fun setTheme(theme: KilnThemeStyle)
 
     suspend fun setLanguage(language: KilnLanguage)
+
+    suspend fun setFontStyle(fontStyle: KilnFontStyle)
 }

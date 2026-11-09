@@ -57,6 +57,34 @@ interface IndexDao {
     @Query("SELECT * FROM indexed_packages WHERE packageName = :packageName")
     suspend fun packagesFor(packageName: String): List<IndexedPackageEntity>
 
+    @Query(
+        """
+        SELECT * FROM indexed_packages
+        WHERE packageName = :packageName AND repoId = :repoId
+        LIMIT 1
+        """,
+    )
+    suspend fun getPackage(packageName: String, repoId: String): IndexedPackageEntity?
+
+    @Query(
+        """
+        SELECT * FROM indexed_packages
+        WHERE :categoryToken = '' OR categoriesCsv LIKE '%' || :categoryToken || '%'
+        ORDER BY IFNULL(suggestedVersionCode, 0) DESC
+        LIMIT :limit
+        """,
+    )
+    suspend fun packagesByCategory(categoryToken: String, limit: Int): List<IndexedPackageEntity>
+
+    @Query(
+        """
+        SELECT * FROM indexed_packages
+        ORDER BY IFNULL(suggestedVersionCode, 0) DESC
+        LIMIT :limit
+        """,
+    )
+    suspend fun packagesForTrending(limit: Int): List<IndexedPackageEntity>
+
     @Query("SELECT * FROM indexed_packages")
     suspend fun allPackages(): List<IndexedPackageEntity>
 
