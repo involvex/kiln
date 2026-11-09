@@ -26,6 +26,7 @@
     <string name="feature_apps_github_channel_nightly">Nightly</string>
     <string name="feature_apps_github_channel_nightly_needs_pat">Nightly braucht ein GitHub-Token. Unter Quellen hinterlegen.</string>
     <string name="feature_apps_link_source">Quelle verknüpfen…</string>
+    <string name="feature_apps_open_in_play_store">Im Play Store öffnen</string>
     <string name="feature_apps_change_source">Quelle ändern…</string>
     <string name="feature_apps_link_dialog_title">%1$s verknüpfen</string>
     <string name="feature_apps_link_dialog_body">F-Droid-Repo wählen oder GitHub owner/repo eingeben. Die Verknüpfung wird gepinnt.</string>

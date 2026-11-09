@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- App detail: Open in Play Store for unmanaged apps installed via Play or Aurora (`market://` with https fallback)
 - GitHub update channels on App detail: Stable, Pre-release, Nightly (Actions artifacts; PAT required for Nightly)
 - F-Droid anti-feature chips on catalog App details (from index-v2 metadata)
 - Auto-match UX: app icons, confidence chips, match rationale, localized accept feedback

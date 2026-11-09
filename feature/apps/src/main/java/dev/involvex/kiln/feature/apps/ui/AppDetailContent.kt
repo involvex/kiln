@@ -36,6 +36,7 @@ import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.ManagedSourceLink
 import dev.involvex.kiln.core.model.RollbackApkEntry
 import dev.involvex.kiln.feature.apps.R
+import dev.involvex.kiln.feature.apps.data.PlayStoreLinks
 import dev.involvex.kiln.feature.apps.icon.PackageIconModel
 import dev.involvex.kiln.feature.apps.util.formatApkSize
 import java.text.DateFormat
@@ -103,6 +104,13 @@ fun AppDetailContent(
             onOpenLinkSource = onOpenLinkSource,
             onGitHubChannelChange = onGitHubChannelChange,
             hasGitHubToken = hasGitHubToken,
+            showOpenInPlayStore = PlayStoreLinks.shouldOfferOpenInPlayStore(
+                hasManagedLink = managedLink != null,
+                installerPackage = detail.installerPackage,
+            ),
+            onOpenInPlayStore = {
+                PlayStoreLinks.openListing(context, detail.packageName)
+            },
         )
         PathsSection(detail = detail)
         PermissionsSection(detail = detail)
@@ -181,6 +189,8 @@ private fun ManagedSourceSection(
     onOpenLinkSource: () -> Unit,
     onGitHubChannelChange: (GitHubReleaseChannel) -> Unit,
     hasGitHubToken: Boolean,
+    showOpenInPlayStore: Boolean,
+    onOpenInPlayStore: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.feature_apps_managed_source_section), style = MaterialTheme.typography.titleMedium)
@@ -190,6 +200,11 @@ private fun ManagedSourceSection(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (showOpenInPlayStore) {
+                OutlinedButton(onClick = onOpenInPlayStore, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.feature_apps_open_in_play_store))
+                }
+            }
         } else {
             Text(
                 stringResource(
