@@ -26,6 +26,7 @@
     <string name="feature_apps_github_channel_nightly">Nightly</string>
     <string name="feature_apps_github_channel_nightly_needs_pat">Nightly needs a GitHub token. Add one under Sources.</string>
     <string name="feature_apps_link_source">Link source…</string>
+    <string name="feature_apps_open_in_play_store">Open in Play Store</string>
     <string name="feature_apps_change_source">Change source…</string>
     <string name="feature_apps_link_dialog_title">Link %1$s</string>
     <string name="feature_apps_link_dialog_body">Pick an F-Droid-format repo or enter a GitHub owner/repo. The link is pinned.</string>
