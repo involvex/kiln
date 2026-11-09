@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permissions_title">Permission audit</string>
+    <string name="permissions_back">Back</string>
+    <string name="permissions_search">Search apps or permissions</string>
+    <string name="permissions_refresh">Refresh</string>
+    <string name="permissions_empty">No apps with dangerous granted permissions.</string>
+    <string name="permissions_loading">Scanning permissions…</string>
+    <string name="permissions_count_fmt">%1$d dangerous granted</string>
+    <string name="permissions_system_badge">System</string>
+    <string name="permissions_privilege_hint">Revoke and AppOps need Shizuku (MANAGE_APP_OPS). Overview works without privilege.</string>
+    <string name="permissions_open_privilege">Open Privilege setup</string>
+    <string name="permissions_select">Select</string>
+    <string name="permissions_revoke_selected">Revoke selected</string>
+    <string name="permissions_revoke_all_for_app">Revoke all dangerous</string>
+    <string name="permissions_confirm_revoke_title">Revoke permissions?</string>
+    <string name="permissions_confirm_revoke_body">This will call pm revoke for %1$d permission(s). Apps may ask again later.</string>
+    <string name="permissions_confirm">Revoke</string>
+    <string name="permissions_cancel">Cancel</string>
+    <string name="permissions_appops_section">AppOps (allowlisted)</string>
+    <string name="permissions_appops_mode">Mode</string>
+    <string name="permissions_appops_apply">Set AppOp</string>
+    <string name="permissions_confirm_appops_title">Change AppOp?</string>
+    <string name="permissions_confirm_appops_body">Set %1$s to %2$s for %3$s via appops set.</string>
+    <string name="permissions_confirm_appops">Apply</string>
+    <string name="permissions_result_fmt">Done: %1$d ok, %2$d failed</string>
+    <string name="permissions_capability_missing">Privilege required — open setup</string>
+    <string name="permissions_detail_title">Permissions</string>
+    <string name="permissions_close_detail">Close</string>
+</resources>

@@ -41,6 +41,7 @@ import timber.log.Timber
  * RootExecutor deferred (opt-in + libsu) — not activated in M4.
  */
 @Singleton
+@Suppress("TooManyFunctions") // Mirrors PrivilegedExecutor surface across milestones.
 class DefaultPrivilegedExecutor @Inject constructor(
     @ApplicationContext private val context: Context,
     private val managerDetector: ShizukuManagerDetector,
@@ -206,6 +207,52 @@ class DefaultPrivilegedExecutor @Inject constructor(
 
     override suspend fun installExistingPackage(packageName: String): Result<Unit> =
         runDebloatCommand(ShellAllowlist.PM_INSTALL_EXISTING, packageName)
+
+    override suspend fun revokeRuntimePermission(packageName: String, permission: String): Result<Unit> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.MANAGE_APP_OPS !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:MANAGE_APP_OPS")
+        }
+        if (!ShellAllowlist.isSafePackageName(packageName)) {
+            return@withContext Result.failure("invalid_package")
+        }
+        if (!ShellAllowlist.isSafePermissionName(permission)) {
+            return@withContext Result.failure("invalid_permission")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.PM_REVOKE, listOf(packageName, permission))) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    Result.success(Unit)
+                }
+            }
+        }
+    }
+
+    override suspend fun setAppOp(packageName: String, op: String, mode: String): Result<Unit> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.MANAGE_APP_OPS !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:MANAGE_APP_OPS")
+        }
+        if (!ShellAllowlist.isSafePackageName(packageName)) {
+            return@withContext Result.failure("invalid_package")
+        }
+        if (!ShellAllowlist.isAllowedAppOp(op) || !ShellAllowlist.isAllowedAppOpMode(mode)) {
+            return@withContext Result.failure("invalid_appop")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.APPOPS_SET, listOf(packageName, op, mode))) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    Result.success(Unit)
+                }
+            }
+        }
+    }
 
     private suspend fun runDebloatCommand(commandId: String, packageName: String): Result<Unit> = withContext(ioDispatcher) {
         if (PrivilegeCapability.DEBLOAT !in currentStatus().capabilities) {

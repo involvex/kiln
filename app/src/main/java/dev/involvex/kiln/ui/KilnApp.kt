@@ -30,6 +30,7 @@ import dev.involvex.kiln.feature.apps.AppDetailRoute
 import dev.involvex.kiln.feature.debloat.DebloatRoute
 import dev.involvex.kiln.feature.onboarding.AutoMatchRoute
 import dev.involvex.kiln.feature.onboarding.privilege.PrivilegeSetupRoute
+import dev.involvex.kiln.feature.permissions.PermissionAuditRoute
 import dev.involvex.kiln.feature.settings.SettingsRoute
 import dev.involvex.kiln.feature.settings.activity.ActivityLogRoute
 import dev.involvex.kiln.feature.sources.SourcesRoute
@@ -45,6 +46,7 @@ import dev.involvex.kiln.navigation.CatalogDetailKey
 import dev.involvex.kiln.navigation.DebloatKey
 import dev.involvex.kiln.navigation.DiscoveryKey
 import dev.involvex.kiln.navigation.ManageKey
+import dev.involvex.kiln.navigation.PermissionAuditKey
 import dev.involvex.kiln.navigation.PrivilegeSetupKey
 import dev.involvex.kiln.navigation.SettingsKey
 import dev.involvex.kiln.navigation.SourcesKey
@@ -162,6 +164,7 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
         SettingsRoute(
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
             onOpenDebloat = { topLevelBackStack.add(DebloatKey) },
+            onOpenPermissionAudit = { topLevelBackStack.add(PermissionAuditKey) },
             onOpenTermux = { topLevelBackStack.add(TermuxKey) },
             onOpenActivityLog = { topLevelBackStack.add(ActivityLogKey) },
         )
@@ -171,6 +174,12 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
     }
     entry<DebloatKey> {
         DebloatRoute(
+            onBack = { topLevelBackStack.removeLast() },
+            onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
+        )
+    }
+    entry<PermissionAuditKey> {
+        PermissionAuditRoute(
             onBack = { topLevelBackStack.removeLast() },
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
         )

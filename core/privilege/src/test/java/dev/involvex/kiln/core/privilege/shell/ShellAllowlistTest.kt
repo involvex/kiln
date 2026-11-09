@@ -112,4 +112,33 @@ class ShellAllowlistTest {
         )
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_DISABLE_USER, listOf("a;b")))
     }
+
+    @Test
+    fun pm_revoke_accepts_safe_permission() {
+        val pkg = "com.example.app"
+        val perm = "android.permission.CAMERA"
+        assertEquals(
+            listOf("pm", "revoke", pkg, perm),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_REVOKE, listOf(pkg, perm)),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_REVOKE, listOf(pkg)))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_REVOKE, listOf(pkg, "CAMERA;rm")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_REVOKE, listOf("bad;pkg", perm)))
+        assertFalse(ShellAllowlist.isSafePermissionName("short"))
+        assertTrue(ShellAllowlist.isSafePermissionName(perm))
+    }
+
+    @Test
+    fun appops_set_allowlist_only() {
+        val pkg = "com.example.app"
+        assertEquals(
+            listOf("appops", "set", pkg, "CAMERA", "ignore"),
+            ShellAllowlist.buildArgv(ShellAllowlist.APPOPS_SET, listOf(pkg, "CAMERA", "ignore")),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.APPOPS_SET, listOf(pkg, "CAMERA", "deny")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.APPOPS_SET, listOf(pkg, "WAKE_LOCK", "ignore")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.APPOPS_SET, listOf(pkg, "CAMERA")))
+        assertTrue(ShellAllowlist.isAllowedAppOp("RECORD_AUDIO"))
+        assertFalse(ShellAllowlist.isAllowedAppOpMode("deny"))
+    }
 }

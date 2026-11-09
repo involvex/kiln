@@ -1,5 +1,7 @@
 package dev.involvex.kiln.core.privilege.shell
 
+import dev.involvex.kiln.core.model.PermissionAppOpsAllowlist
+
 /**
  * Fixed allowlist for privileged shell invocations.
  * Arguments are validated; never concatenate user input into a shell string.
@@ -14,12 +16,19 @@ object ShellAllowlist {
     const val PM_DISABLE_USER = "pm_disable_user"
     const val PM_ENABLE = "pm_enable"
     const val PM_INSTALL_EXISTING = "pm_install_existing"
+    const val PM_REVOKE = "pm_revoke"
+    const val APPOPS_SET = "appops_set"
 
     private val PACKAGE_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
+    private val PERMISSION_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
     private val APK_PATH = Regex("^/[\\w./\\-+]+\\.apk$", RegexOption.IGNORE_CASE)
 
     /** Desired free-space argument for `pm trim-caches` (digits only, capped length). */
     private val TRIM_BYTES = Regex("^[1-9][0-9]{0,18}$")
+
+    val ALLOWED_APP_OPS: Set<String> get() = PermissionAppOpsAllowlist.OPS
+
+    val ALLOWED_APP_OP_MODES: Set<String> get() = PermissionAppOpsAllowlist.MODES
 
     /**
      * Builds argv for [ProcessBuilder], or null if [commandId]/[args] are rejected.
@@ -94,10 +103,39 @@ object ShellAllowlist {
             }
         }
 
+        PM_REVOKE -> {
+            val packageName = args.getOrNull(0) ?: return null
+            val permission = args.getOrNull(1) ?: return null
+            if (args.size != 2) return null
+            if (!isSafePackageName(packageName) || !isSafePermissionName(permission)) {
+                null
+            } else {
+                listOf("pm", "revoke", packageName, permission)
+            }
+        }
+
+        APPOPS_SET -> {
+            val packageName = args.getOrNull(0) ?: return null
+            val op = args.getOrNull(1) ?: return null
+            val mode = args.getOrNull(2) ?: return null
+            if (args.size != 3) return null
+            if (!isSafePackageName(packageName) || !isAllowedAppOp(op) || !isAllowedAppOpMode(mode)) {
+                null
+            } else {
+                listOf("appops", "set", packageName, op, mode)
+            }
+        }
+
         else -> null
     }
 
     fun isSafePackageName(value: String): Boolean = value.length in 3..255 && PACKAGE_NAME.matches(value)
+
+    fun isSafePermissionName(value: String): Boolean = value.length in 8..255 && PERMISSION_NAME.matches(value)
+
+    fun isAllowedAppOp(value: String): Boolean = value in ALLOWED_APP_OPS
+
+    fun isAllowedAppOpMode(value: String): Boolean = value in ALLOWED_APP_OP_MODES
 
     fun isSafeApkPath(value: String): Boolean {
         if (value.length !in 6..4096) return false

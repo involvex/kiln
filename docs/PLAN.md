@@ -84,6 +84,7 @@ Navigation: **Navigation 3** in `:app` (`NavDisplay`, Bottom Bar mit einem Back-
 :feature:backup           // Backup/Restore
 :feature:onboarding        // Auto-Match installierter Apps + Shizuku-Setup-Assistent
 :feature:debloat           // Debloat-Modus (braucht Privilege-Tier >= SHIZUKU)
+:feature:permissions      // Berechtigungs-Audit (Übersicht Tier NONE; AppOps/revoke ab SHIZUKU)
 :feature:termux           // optional, Feature-Flag
 :feature:settings
 ```
@@ -402,7 +403,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 - **P1 — Rollback / Downgrade**: ~~Die letzten N APK-Versionen lokal cachen…~~ → **shipped M8** (≤3/pkg + Shizuku downgrade); M23 adds age/global size prune; Settings N slider still open.
 - **P1 — Update-Cooldown**: ~~Pro App oder global…~~ → **shipped M8** (global days + major auto-install skip); per-app cooldown still open.
 - **P2 — Anti-Features & Tracker-Info**: F-Droid chips → **shipped M19**; optional Exodus Privacy still open.
-- **P2 — Berechtigungs-Audit**: Übersicht gefährlicher Berechtigungen pro App, per Shizuku AppOps ändern und Berechtigungen in Bulk entziehen (`appops`, `pm revoke`). → **M27**
+- **P2 — Berechtigungs-Audit**: Übersicht gefährlicher Berechtigungen pro App, per Shizuku AppOps ändern und Berechtigungen in Bulk entziehen (`appops`, `pm revoke`). → **M27** (in progress)
 - **P2 — Changelog & Watchlist**: → **shipped M21**
 - **P3 — Mirrors/Proxy**: Alternative Mirror-URLs je Repo, HTTP-/SOCKS-Proxy, Tor-Option.
 
@@ -421,7 +422,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 
 ### UX
 
-- **P2 — Widgets & Quick-Settings-Tile (Glance)**: „X Updates verfügbar", Ein-Klick-Cache-Clean, App-Shortcuts. → **M26**
+- **P2 — Widgets & Quick-Settings-Tile (Glance)**: „X Updates verfügbar", Ein-Klick-Cache-Clean, App-Shortcuts. → **M26** (Done #40)
 - **P2 — Aktivitätsprotokoll**: Lokales, durchsuchbares Log. → **M24** (Done #39; M23 nur Maintenance-Protokoll)
 - **P3 — Tablet-/Foldable-Layouts** (Adaptive Layouts, Navigation Rail).
 

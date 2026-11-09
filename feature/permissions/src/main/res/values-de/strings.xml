@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permissions_title">Berechtigungs-Audit</string>
+    <string name="permissions_back">Zurück</string>
+    <string name="permissions_search">Apps oder Berechtigungen suchen</string>
+    <string name="permissions_refresh">Aktualisieren</string>
+    <string name="permissions_empty">Keine Apps mit gefährlichen erteilten Berechtigungen.</string>
+    <string name="permissions_loading">Berechtigungen werden gelesen…</string>
+    <string name="permissions_count_fmt">%1$d gefährlich erteilt</string>
+    <string name="permissions_system_badge">System</string>
+    <string name="permissions_privilege_hint">Entziehen und AppOps brauchen Shizuku (MANAGE_APP_OPS). Die Übersicht funktioniert ohne Privilegien.</string>
+    <string name="permissions_open_privilege">Privilege-Einrichtung öffnen</string>
+    <string name="permissions_select">Auswählen</string>
+    <string name="permissions_revoke_selected">Auswahl entziehen</string>
+    <string name="permissions_revoke_all_for_app">Alle gefährlichen entziehen</string>
+    <string name="permissions_confirm_revoke_title">Berechtigungen entziehen?</string>
+    <string name="permissions_confirm_revoke_body">Es wird pm revoke für %1$d Berechtigung(en) ausgeführt. Apps können später erneut fragen.</string>
+    <string name="permissions_confirm">Entziehen</string>
+    <string name="permissions_cancel">Abbrechen</string>
+    <string name="permissions_appops_section">AppOps (Allowlist)</string>
+    <string name="permissions_appops_mode">Modus</string>
+    <string name="permissions_appops_apply">AppOp setzen</string>
+    <string name="permissions_confirm_appops_title">AppOp ändern?</string>
+    <string name="permissions_confirm_appops_body">%1$s auf %2$s für %3$s setzen (appops set).</string>
+    <string name="permissions_confirm_appops">Anwenden</string>
+    <string name="permissions_result_fmt">Fertig: %1$d ok, %2$d fehlgeschlagen</string>
+    <string name="permissions_capability_missing">Privilegien nötig — Einrichtung öffnen</string>
+    <string name="permissions_detail_title">Berechtigungen</string>
+    <string name="permissions_close_detail">Schließen</string>
+</resources>
