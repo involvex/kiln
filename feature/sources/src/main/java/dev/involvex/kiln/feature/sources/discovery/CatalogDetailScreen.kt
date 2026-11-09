@@ -66,157 +66,199 @@ fun CatalogDetailScreen(
     onClearMessage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
     KilnScaffold(title = stringResource(R.string.catalog_detail_title), modifier = modifier) { padding ->
         when {
-            state.isLoading -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
+            state.isLoading -> CatalogDetailLoading(padding)
+            state.row == null -> CatalogDetailError(padding, onBack)
+            else -> CatalogDetailContent(
+                row = checkNotNull(state.row),
+                message = state.message,
+                messageIsError = state.messageIsError,
+                padding = padding,
+                onBack = onBack,
+                onInstall = onInstall,
+                onClearMessage = onClearMessage,
+            )
+        }
+    }
+}
 
-            state.row == null -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .padding(16.dp),
-                ) {
-                    Text(text = stringResource(R.string.catalog_detail_missing))
-                    OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.discovery_back))
-                    }
-                }
-            }
+@Composable
+private fun CatalogDetailLoading(padding: PaddingValues) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        CircularProgressIndicator()
+    }
+}
 
-            else -> {
-                val row = checkNotNull(state.row)
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    item {
-                        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-                            Text(stringResource(R.string.discovery_back))
-                        }
-                    }
-                    state.message?.let { msg ->
-                        item {
-                            Text(
-                                text = formatCatalogMessage(msg),
-                                color = if (state.messageIsError) {
-                                    MaterialTheme.colorScheme.error
-                                } else {
-                                    MaterialTheme.colorScheme.primary
-                                },
-                            )
-                            TextButton(onClick = onClearMessage) {
-                                Text(stringResource(R.string.sources_dismiss))
-                            }
-                        }
-                    }
-                    item {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            CatalogIcon(name = row.name, iconUrl = row.iconUrl)
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = row.name, style = MaterialTheme.typography.headlineSmall)
-                                Text(
-                                    text = row.packageName,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    }
-                    item {
-                        row.summary?.takeIf { it.isNotBlank() }?.let { summary ->
-                            Text(text = summary, style = MaterialTheme.typography.bodyLarge)
-                        }
-                    }
-                    if (row.categories.isNotEmpty()) {
-                        item {
-                            CategoryChipsReadOnly(categories = row.categories)
-                        }
-                    }
-                    item {
-                        val version = row.versionName ?: stringResource(R.string.discovery_placeholder)
-                        Text(
-                            text = stringResource(R.string.catalog_detail_version, version),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                    item {
-                        Text(
-                            text = stringResource(R.string.catalog_detail_sources),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                        Text(
-                            text = row.repoName,
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        row.sourceCodeUrl?.takeIf { it.isNotBlank() }?.let { url ->
-                            TextButton(
-                                onClick = {
-                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                                },
-                            ) {
-                                Text(stringResource(R.string.catalog_detail_source_code))
-                            }
-                        }
-                    }
-                    if (row.phoneScreenshotUrls.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = stringResource(R.string.catalog_detail_screenshots),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                for (url in row.phoneScreenshotUrls) {
-                                    AsyncImage(
-                                        model = url,
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .height(240.dp)
-                                            .clip(RoundedCornerShape(8.dp)),
-                                        contentScale = ContentScale.Fit,
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        item {
-                            Text(
-                                text = stringResource(R.string.catalog_detail_no_screenshots),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                    item {
-                        Button(onClick = onInstall, modifier = Modifier.fillMaxWidth()) {
-                            Text(stringResource(R.string.catalog_detail_install))
-                        }
+@Composable
+private fun CatalogDetailError(padding: PaddingValues, onBack: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .padding(16.dp),
+    ) {
+        Text(text = stringResource(R.string.catalog_detail_missing))
+        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.discovery_back))
+        }
+    }
+}
+
+@Composable
+private fun CatalogDetailContent(
+    row: DiscoveryAppRow,
+    message: String?,
+    messageIsError: Boolean,
+    padding: PaddingValues,
+    onBack: () -> Unit,
+    onInstall: () -> Unit,
+    onClearMessage: () -> Unit,
+) {
+    val context = LocalContext.current
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item {
+            OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.discovery_back))
+            }
+        }
+        if (message != null) {
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = formatCatalogMessage(message),
+                        modifier = Modifier.weight(1f),
+                        color = if (messageIsError) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
+                    )
+                    TextButton(onClick = onClearMessage) {
+                        Text(stringResource(R.string.sources_dismiss))
                     }
                 }
             }
         }
+        item {
+            CatalogHeaderSection(row)
+        }
+        item {
+            row.summary?.takeIf { it.isNotBlank() }?.let { summary ->
+                Text(text = summary, style = MaterialTheme.typography.bodyLarge)
+            }
+        }
+        if (row.categories.isNotEmpty()) {
+            item {
+                CategoryChipsReadOnly(categories = row.categories)
+            }
+        }
+        item {
+            val version = row.versionName ?: stringResource(R.string.discovery_placeholder)
+            Text(
+                text = stringResource(R.string.catalog_detail_version, version),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+        item {
+            CatalogSourceSection(row, context)
+        }
+        item {
+            CatalogScreenshotsSection(row.phoneScreenshotUrls)
+        }
+        item {
+            Button(onClick = onInstall, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.catalog_detail_install))
+            }
+        }
+    }
+}
+
+@Composable
+private fun CatalogHeaderSection(row: DiscoveryAppRow) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CatalogIcon(name = row.name, iconUrl = row.iconUrl)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = row.name, style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = row.packageName,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun CatalogSourceSection(row: DiscoveryAppRow, context: android.content.Context) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = stringResource(R.string.catalog_detail_sources),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Text(
+            text = row.repoName,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        row.sourceCodeUrl?.takeIf { it.isNotBlank() }?.let { url ->
+            TextButton(
+                onClick = {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                },
+            ) {
+                Text(stringResource(R.string.catalog_detail_source_code))
+            }
+        }
+    }
+}
+
+@Composable
+private fun CatalogScreenshotsSection(screenshotUrls: List<String>) {
+    if (screenshotUrls.isNotEmpty()) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = stringResource(R.string.catalog_detail_screenshots),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                for (url in screenshotUrls) {
+                    AsyncImage(
+                        model = url,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .height(240.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Fit,
+                    )
+                }
+            }
+        }
+    } else {
+        Text(
+            text = stringResource(R.string.catalog_detail_no_screenshots),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

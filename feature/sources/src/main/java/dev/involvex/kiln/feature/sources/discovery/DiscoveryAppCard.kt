@@ -33,19 +33,17 @@ import dev.involvex.kiln.feature.sources.R
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun DiscoveryAppCard(row: DiscoveryAppRow, onInstall: () -> Unit, modifier: Modifier = Modifier, onOpenDetail: (() -> Unit)? = null) {
+fun DiscoveryAppCard(
+    row: DiscoveryAppRow,
+    onInstall: () -> Unit,
+    modifier: Modifier = Modifier,
+    onOpenDetail: (() -> Unit)? = null,
+) {
     val context = LocalContext.current
-    val openDetail = onOpenDetail
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .then(
-                if (openDetail != null) {
-                    Modifier.clickable(onClick = openDetail)
-                } else {
-                    Modifier
-                },
-            ),
+            .clickable(enabled = onOpenDetail != null) { onOpenDetail?.invoke() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         Row(
@@ -56,65 +54,85 @@ fun DiscoveryAppCard(row: DiscoveryAppRow, onInstall: () -> Unit, modifier: Modi
             verticalAlignment = Alignment.Top,
         ) {
             DiscoveryListIcon(name = row.name, iconUrl = row.iconUrl)
-            Column(
+            DiscoveryAppCardContent(
+                row = row,
+                onInstall = onInstall,
+                onOpenSource = { url ->
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                },
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DiscoveryAppCardContent(
+    row: DiscoveryAppRow,
+    onInstall: () -> Unit,
+    onOpenSource: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = row.name,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = row.packageName,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        row.summary?.takeIf { it.isNotBlank() }?.let { summary ->
+            Text(
+                text = summary,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (row.categories.isNotEmpty()) {
+            DiscoveryCategoryRow(row.categories)
+        }
+        row.sourceCodeUrl?.takeIf { it.isNotBlank() }?.let { url ->
+            TextButton(onClick = { onOpenSource(url) }) {
+                Text(stringResource(R.string.catalog_detail_source_code))
+            }
+        }
+        OutlinedButton(
+            onClick = onInstall,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.discovery_install))
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DiscoveryCategoryRow(categories: List<String>) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        categories.take(4).forEach { category ->
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer,
             ) {
                 Text(
-                    text = row.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                    text = category,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.labelSmall,
                 )
-                Text(
-                    text = row.packageName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                row.summary?.takeIf { it.isNotBlank() }?.let { summary ->
-                    Text(
-                        text = summary,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                if (row.categories.isNotEmpty()) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        row.categories.take(4).forEach { category ->
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                            ) {
-                                Text(
-                                    text = category,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                )
-                            }
-                        }
-                    }
-                }
-                row.sourceCodeUrl?.takeIf { it.isNotBlank() }?.let { url ->
-                    TextButton(
-                        onClick = {
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                        },
-                    ) {
-                        Text(stringResource(R.string.catalog_detail_source_code))
-                    }
-                }
-                OutlinedButton(
-                    onClick = onInstall,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.discovery_install))
-                }
             }
         }
     }
