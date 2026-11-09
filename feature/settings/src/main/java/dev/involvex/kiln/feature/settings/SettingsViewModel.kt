@@ -17,6 +17,9 @@ import dev.involvex.kiln.core.model.InstallerPreferences
 import dev.involvex.kiln.core.model.KilnFontStyle
 import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
+import dev.involvex.kiln.core.model.MaintenancePreferences
+import dev.involvex.kiln.core.model.MaintenanceRunStore
+import dev.involvex.kiln.core.model.MaintenanceScheduler
 import dev.involvex.kiln.core.model.PreferredInstaller
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
@@ -28,16 +31,20 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
+@Suppress("TooManyFunctions") // Settings aggregates many independent preference setters.
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val preferences: BackgroundUpdatePreferences,
     private val automationPreferences: AutomationPreferences,
+    private val maintenancePreferences: MaintenancePreferences,
+    private val maintenanceRunStore: MaintenanceRunStore,
     private val appearancePreferences: AppearancePreferences,
     private val installerPreferences: InstallerPreferences,
     private val devPreferences: DevPreferences,
     private val debugLogController: DebugLogController,
     private val privilegedExecutor: PrivilegedExecutor,
     private val scheduler: BackgroundUpdateScheduler,
+    private val maintenanceScheduler: MaintenanceScheduler,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -53,6 +60,17 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             automationPreferences.observe().collect { prefs ->
                 _uiState.update { it.copy(automation = prefs) }
+            }
+        }
+        viewModelScope.launch {
+            maintenancePreferences.observe().collect { prefs ->
+                _uiState.update { it.copy(maintenance = prefs) }
+                maintenanceScheduler.apply(prefs)
+            }
+        }
+        viewModelScope.launch {
+            maintenanceRunStore.observe().collect { runs ->
+                _uiState.update { it.copy(lastMaintenanceRun = runs.firstOrNull()) }
             }
         }
         viewModelScope.launch {
@@ -92,6 +110,35 @@ class SettingsViewModel @Inject constructor(
 
     fun setAutomationEnabled(enabled: Boolean) {
         viewModelScope.launch { automationPreferences.setEnabled(enabled) }
+    }
+
+    fun setMaintenanceEnabled(enabled: Boolean) {
+        viewModelScope.launch { maintenancePreferences.setEnabled(enabled) }
+    }
+
+    fun setMaintenanceTrimCaches(enabled: Boolean) {
+        viewModelScope.launch { maintenancePreferences.setTrimCaches(enabled) }
+    }
+
+    fun setMaintenancePruneDownloads(enabled: Boolean) {
+        viewModelScope.launch { maintenancePreferences.setPruneDownloads(enabled) }
+    }
+
+    fun setMaintenancePruneRollback(enabled: Boolean) {
+        viewModelScope.launch { maintenancePreferences.setPruneRollback(enabled) }
+    }
+
+    fun setMaintenancePruneBackupTemp(enabled: Boolean) {
+        viewModelScope.launch { maintenancePreferences.setPruneBackupTemp(enabled) }
+    }
+
+    fun runMaintenanceNow() {
+        maintenanceScheduler.enqueueImmediate()
+        _uiState.update { it.copy(maintenanceRunQueued = true) }
+    }
+
+    fun consumeMaintenanceRunQueued() {
+        _uiState.update { it.copy(maintenanceRunQueued = false) }
     }
 
     fun setUnmeteredOnly(unmeteredOnly: Boolean) {

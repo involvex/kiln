@@ -399,35 +399,37 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 
 ### Updates & Sicherheit
 
-- **P1 — Rollback / Downgrade**: Die letzten N APK-Versionen lokal cachen (Größenlimit einstellbar). Downgrade mit Shizuku (`pm install -d`), ohne Privilegien nur mit Hinweis „erst deinstallieren". Update-Fehler lassen sich so rückgängig machen.
-- **P1 — Update-Cooldown**: Pro App oder global „Updates erst nach X Tagen installieren", plus Bestätigung bei Major-Versionssprüngen. Schützt vor kaputten Releases.
-- **P2 — Anti-Features & Tracker-Info**: F-Droid-Anti-Features (z. B. Tracking, NonFreeNet) anzeigen; optional Tracker-Erkennung über Exodus Privacy.
-- **P2 — Berechtigungs-Audit**: Übersicht gefährlicher Berechtigungen pro App, per Shizuku AppOps ändern und Berechtigungen in Bulk entziehen (`appops`, `pm revoke`).
-- **P2 — Changelog & Watchlist**: Release Notes pro Update, „Beobachten ohne Installieren" für Apps, die man nur im Blick behalten will.
+- **P1 — Rollback / Downgrade**: ~~Die letzten N APK-Versionen lokal cachen…~~ → **shipped M8** (≤3/pkg + Shizuku downgrade); M23 adds age/global size prune; Settings N slider still open.
+- **P1 — Update-Cooldown**: ~~Pro App oder global…~~ → **shipped M8** (global days + major auto-install skip); per-app cooldown still open.
+- **P2 — Anti-Features & Tracker-Info**: F-Droid chips → **shipped M19**; optional Exodus Privacy still open.
+- **P2 — Berechtigungs-Audit**: Übersicht gefährlicher Berechtigungen pro App, per Shizuku AppOps ändern und Berechtigungen in Bulk entziehen (`appops`, `pm revoke`). → **M27**
+- **P2 — Changelog & Watchlist**: → **shipped M21**
 - **P3 — Mirrors/Proxy**: Alternative Mirror-URLs je Repo, HTTP-/SOCKS-Proxy, Tor-Option.
 
 ### Dev-Features (passt zu deinem Workflow)
 
-- **P1 — GitHub Actions Artifacts / Nightly / Beta-Kanäle**: Installierbar machen, was nicht als Release veröffentlicht ist (braucht Token). Pro App Kanal wählbar: stable / pre-release / nightly.
-- **P2 — Intent-/Broadcast-API für Automatisierung**: z. B. `am broadcast -a dev.involvex.kiln.CHECK_UPDATES`, `INSTALL_FROM_URL`, `CLEAN_CACHE`; damit können Termux, Tasker und eigene Skripte Kiln steuern. Absichern über Signatur-Permission oder Opt-in-Token.
-- **P2 — Config-Export/-Import und Sync**: Quellenliste und Regeln als JSON (Kiln-Config); optional Sync über einen eigenen Cloudflare Worker (Hono + D1/R2) für Quellen und Backups.
+- **P1 — GitHub Actions Artifacts / Nightly / Beta-Kanäle**: → **shipped M19**
+- **P2 — Intent-/Broadcast-API für Automatisierung**: → **shipped M22**
+- **P2 — Config-Export/-Import und Sync**: Quellenliste und Regeln als JSON (Kiln-Config); optional Sync über einen eigenen Cloudflare Worker (Hono + D1/R2) für Quellen und Backups. → **M25**
 - **P3 — APK-Werkzeuge Phase 2**: Manifest-Viewer, Signaturvergleich zweier APKs, Splits zu einer APK zusammenführen, mit eigenem Schlüssel neu signieren (`apksig`). Bewusst nicht Kern, weil hoher Aufwand.
 
 ### Storage & Wartung
 
-- **P1 — Geplante Wartung**: z. B. wöchentlich Cache leeren, alte APKs aufräumen, Backups rotieren (WorkManager, nur bei Laden/WLAN, immer mit Protokoll).
+- **P1 — Geplante Wartung**: wöchentlich Cache leeren, alte APKs aufräumen, Kiln-Temps (WorkManager, Laden/WLAN, Protokoll). SAF-Nutzer-Backups bewusst später. → **M23**
 - **P2 — Apps einfrieren/hibernieren**: Selten genutzte Apps pausieren statt löschen (spart Akku und Hintergrundaktivität).
 - **P3 — Dual Apps / Zweiter Bereich / Work-Profile**: Installation und Updates pro User-ID (`--user`), relevant für HyperOS „Dual Apps".
 
 ### UX
 
-- **P2 — Widgets & Quick-Settings-Tile (Glance)**: „X Updates verfügbar", Ein-Klick-Cache-Clean, App-Shortcuts (Launcher-Long-Press: Updates prüfen).
-- **P2 — Aktivitätsprotokoll**: Lokales, durchsuchbares Log aller Installationen, Deinstallationen, Backups, Cleaner-Aktionen und Shell-Befehle.
+- **P2 — Widgets & Quick-Settings-Tile (Glance)**: „X Updates verfügbar", Ein-Klick-Cache-Clean, App-Shortcuts. → **M26**
+- **P2 — Aktivitätsprotokoll**: Lokales, durchsuchbares Log. → **M24** (M23 nur Maintenance-Protokoll)
 - **P3 — Tablet-/Foldable-Layouts** (Adaptive Layouts, Navigation Rail).
 
-### Empfohlene Reihenfolge nach M6
+### Empfohlene Reihenfolge (aktuell)
 
-1. Rollback + Update-Cooldown
-2. GitHub-Actions-/Nightly-Kanäle
-3. Geplante Wartung
-4. Intent-/Broadcast-API
+1. **M23** Geplante Wartung
+2. **M24** Aktivitätsprotokoll
+3. **M25** Config-Export/-Import
+4. **M26** Widgets / QS
+5. **M27** Berechtigungs-Audit
+6. **M28** Storage Phase 2
