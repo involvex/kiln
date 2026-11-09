@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** M13–M16 UX plan implemented (settings stability, 4-tab Manage, store-like Discover, Trending). Publishing deferred. M3 HyperOS E2E still open.
+**Current status:** M13–M16 UX merged via [#27](https://github.com/involvex/kiln/pull/27). Next: **M17** HyperOS E2E + release prep (`m17-hyperos-release-prep`). Publishing / F-Droid submit still deferred until device checklists look solid.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -27,10 +27,11 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M10** | Polish & release | Done | [`prompts/M10-polish-release.md`](./prompts/M10-polish-release.md) · [#21](https://github.com/involvex/kiln/pull/21) | About, privacy, fastlane, GitHub Release workflow |
 | **M11** | App Discovery | Done | PLAN §4.2 browse · [#22](https://github.com/involvex/kiln/pull/22) | Search + categories + catalog sync + install enqueue |
 | **M12** | GitHub browse | Done | [`prompts/M12-github-browse.md`](./prompts/M12-github-browse.md) | Discover GitHub tab: lookup + saved sources + install queue |
-| **M13** | Settings stability | Done | [`prompts/M13-settings-stability.md`](./prompts/M13-settings-stability.md) · `m13-settings-stability` | Check-now no crash; EN/DE locales; Termux RequestPermission |
-| **M14** | 4-tab nav + Manage | Done | [`prompts/M14-nav-manage.md`](./prompts/M14-nav-manage.md) | Apps / Sources / Manage / Settings; Storage+Backup under Manage |
-| **M15** | Store-like Discover | Done | [`prompts/M15-store-ui.md`](./prompts/M15-store-ui.md) | Library\|Discover; catalog detail+icons; font pref |
-| **M16** | Trending shelves | Done | [`prompts/M16-trending.md`](./prompts/M16-trending.md) | Topic shelves; no fake download counts |
+| **M13** | Settings stability | Done | [`prompts/M13-settings-stability.md`](./prompts/M13-settings-stability.md) · [#27](https://github.com/involvex/kiln/pull/27) | Check-now no crash; EN/DE locales; Termux RequestPermission |
+| **M14** | 4-tab nav + Manage | Done | [`prompts/M14-nav-manage.md`](./prompts/M14-nav-manage.md) · [#27](https://github.com/involvex/kiln/pull/27) | Apps / Sources / Manage / Settings; Storage+Backup under Manage |
+| **M15** | Store-like Discover | Done | [`prompts/M15-store-ui.md`](./prompts/M15-store-ui.md) · [#27](https://github.com/involvex/kiln/pull/27) | Library\|Discover; catalog detail+icons; font pref |
+| **M16** | Trending shelves | Done | [`prompts/M16-trending.md`](./prompts/M16-trending.md) · [#27](https://github.com/involvex/kiln/pull/27) | Topic shelves; no fake download counts |
+| **M17** | HyperOS E2E + release prep | Planned | [`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md) · `m17-hyperos-release-prep` | Device checklists for M13–M16; CHANGELOG; version bump toward `0.2.0`; no store submit yet |
 
 ---
 
@@ -38,7 +39,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 Update after each milestone. Tier = active `PrivilegedExecutor`.
 
-| Feature | Now (M4 branch) | Needs tier |
+| Feature | Now (main, post-M16) | Needs tier |
 | --- | --- | --- |
 | Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
 | List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
@@ -160,9 +161,26 @@ Deferred in this PR: treemap, orphaned `Android/data`, APK leftover scanner.
 
 ---
 
+## M17 manual acceptance (HyperOS) — next agent
+
+Owns the post-#27 device pass before a `0.2.0` tag. Prompt: [`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md).
+
+- [ ] Language EN/DE chips: first frame + bottom nav labels switch
+- [ ] Settings → Check now: no crash; update notification / empty-result path OK
+- [ ] Termux: Request RUN_COMMAND → grant → checklist refresh
+- [ ] Exactly 4 tabs; Manage → Storage | Backup only
+- [ ] Apps → Library | Discover | Trending
+- [ ] Catalog refresh: icons + detail (+ screenshots when index has media)
+- [ ] Trending ≥3 shelves with honest copy (no fake download charts)
+- [ ] CHANGELOG / optional `0.2.0` bump only after the above look solid
+
+Older M1/M3/M4/M5 checklists below remain open for a fuller pass when convenient.
+
+---
+
 ## M4 manual acceptance (HyperOS)
 
-Code on `m4-privilege`. Needs Shizuku or ShizukuPlus installed for privileged path; Tier NONE must still work:
+Code on `main`. Needs Shizuku or ShizukuPlus installed for privileged path; Tier NONE must still work:
 
 - [ ] Settings → Privilege setup opens A→D assistant; status re-checks on resume
 - [ ] Phase A when manager missing; install link opens Shizuku releases
@@ -225,14 +243,13 @@ flowchart LR
   M13 --> M14[M14 Manage]
   M14 --> M15[M15 Store UI]
   M15 --> M16[M16 Trending]
+  M16 --> M17[M17 HyperOS E2E]
 ```
 
-1. Finish **M0** → merge → install debug APK on HyperOS phone.
-2. **M1** for immediate personal value (list + export) — code Done; finish device checklist above.
-3. **M2–M3** for updates without leaving Kiln.
-4. **M4** unlocks silent install, cache clear, later debloat/backup depth.
-5. Ship when M0–M5 feel solid; treat M6+ as stretch.
-6. **M13–M16** UX plan: verify language / Check now / Termux grant / 4-tab / Discover+Trending on HyperOS.
+1. **M13–M16** shipped on main via [#27](https://github.com/involvex/kiln/pull/27) — do not re-open that UX plan.
+2. Next agent: **M17** only ([`prompts/M17-hyperos-release-prep.md`](./prompts/M17-hyperos-release-prep.md)).
+3. After M17 device confidence: optional tag `v0.2.0` (publishing / F-Droid still deferred unless explicitly requested).
+4. Backlog P1 candidates after M17 (pick one milestone, do not mix): GitHub Actions nightlies (§12), anti-features/tracker info, changelog/watchlist — see [`PLAN.md`](./PLAN.md) §12.
 
 Backlog ideas (P1–P3) live in [`PLAN.md`](./PLAN.md) §12 — do not pull them into the current milestone.
 
