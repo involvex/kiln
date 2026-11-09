@@ -52,7 +52,8 @@ class TopLevelBackStack<T : Any>(startKey: T) {
 
         if (alreadySelected && existing.size > 1) {
             while (existing.size > 1) {
-                existing.removeLast()
+                // Prefer removeAt over List.removeLast() (API 35+ / NewApi on minSdk 26).
+                existing.removeAt(existing.lastIndex)
             }
             updateBackStack()
             return false
