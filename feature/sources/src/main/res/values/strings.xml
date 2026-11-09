@@ -15,7 +15,10 @@
     <string name="trending_empty">Refresh the catalog under Discover to load trending shelves.</string>
     <string name="catalog_detail_title">App details</string>
     <string name="catalog_detail_install">Install</string>
+    <string name="catalog_detail_share">Share</string>
     <string name="catalog_detail_sources">Sources</string>
+    <string name="catalog_detail_links">Links</string>
+    <string name="catalog_detail_store_page">Store page</string>
     <string name="catalog_detail_source_code">Source code</string>
     <string name="catalog_detail_version">Version %1$s</string>
     <string name="catalog_detail_screenshots">Screenshots</string>

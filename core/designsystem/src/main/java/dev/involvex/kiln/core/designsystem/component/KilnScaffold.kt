@@ -1,6 +1,7 @@
 package dev.involvex.kiln.core.designsystem.component
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,6 +22,8 @@ fun KilnScaffold(
     title: String,
     modifier: Modifier = Modifier,
     showTopBar: Boolean = true,
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -31,6 +34,8 @@ fun KilnScaffold(
             if (showTopBar) {
                 TopAppBar(
                     title = { Text(text = title) },
+                    navigationIcon = navigationIcon,
+                    actions = actions,
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface,
                         titleContentColor = MaterialTheme.colorScheme.onSurface,

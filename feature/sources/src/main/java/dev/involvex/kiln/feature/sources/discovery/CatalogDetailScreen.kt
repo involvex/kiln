@@ -2,11 +2,16 @@ package dev.involvex.kiln.feature.sources.discovery
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,10 +20,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -66,20 +81,79 @@ fun CatalogDetailScreen(
     onClearMessage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    KilnScaffold(title = stringResource(R.string.catalog_detail_title), modifier = modifier) { padding ->
+    val context = LocalContext.current
+    val row = state.row
+    KilnScaffold(
+        title = stringResource(R.string.catalog_detail_title),
+        modifier = modifier,
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.discovery_back),
+                )
+            }
+        },
+        actions = {
+            if (row != null) {
+                IconButton(
+                    onClick = {
+                        val body = CatalogShareLinks.shareBody(
+                            name = row.name,
+                            packageName = row.packageName,
+                            repoId = row.repoId,
+                            repoAddress = row.repoAddress,
+                            sourceCodeUrl = row.sourceCodeUrl,
+                            repoName = row.repoName,
+                        )
+                        val share = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_SUBJECT, row.name)
+                            putExtra(Intent.EXTRA_TEXT, body)
+                        }
+                        context.startActivity(
+                            Intent.createChooser(share, context.getString(R.string.catalog_detail_share)),
+                        )
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Share,
+                        contentDescription = stringResource(R.string.catalog_detail_share),
+                    )
+                }
+            }
+        },
+    ) { padding ->
         when {
             state.isLoading -> CatalogDetailLoading(padding)
 
-            state.row == null -> CatalogDetailError(padding, onBack)
+            row == null -> CatalogDetailError(padding, onBack)
 
             else -> CatalogDetailContent(
-                row = checkNotNull(state.row),
+                row = row,
                 message = state.message,
                 messageIsError = state.messageIsError,
                 padding = padding,
-                onBack = onBack,
                 onInstall = onInstall,
                 onClearMessage = onClearMessage,
+                onShare = {
+                    val body = CatalogShareLinks.shareBody(
+                        name = row.name,
+                        packageName = row.packageName,
+                        repoId = row.repoId,
+                        repoAddress = row.repoAddress,
+                        sourceCodeUrl = row.sourceCodeUrl,
+                        repoName = row.repoName,
+                    )
+                    val share = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, row.name)
+                        putExtra(Intent.EXTRA_TEXT, body)
+                    }
+                    context.startActivity(
+                        Intent.createChooser(share, context.getString(R.string.catalog_detail_share)),
+                    )
+                },
             )
         }
     }
@@ -105,6 +179,7 @@ private fun CatalogDetailError(padding: PaddingValues, onBack: () -> Unit) {
             .fillMaxSize()
             .padding(padding)
             .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(text = stringResource(R.string.catalog_detail_missing))
         OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
@@ -119,9 +194,9 @@ private fun CatalogDetailContent(
     message: String?,
     messageIsError: Boolean,
     padding: PaddingValues,
-    onBack: () -> Unit,
     onInstall: () -> Unit,
     onClearMessage: () -> Unit,
+    onShare: () -> Unit,
 ) {
     val context = LocalContext.current
     LazyColumn(
@@ -129,13 +204,8 @@ private fun CatalogDetailContent(
             .fillMaxSize()
             .padding(padding),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item {
-            OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.discovery_back))
-            }
-        }
         if (message != null) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -154,76 +224,161 @@ private fun CatalogDetailContent(
                 }
             }
         }
-        item {
-            CatalogHeaderSection(row)
-        }
-        item {
-            row.summary?.takeIf { it.isNotBlank() }?.let { summary ->
-                Text(text = summary, style = MaterialTheme.typography.bodyLarge)
+        item { CatalogHeroCard(row) }
+        row.summary?.takeIf { it.isNotBlank() }?.let { summary ->
+            item {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
             }
         }
         if (row.categories.isNotEmpty()) {
-            item {
-                CategoryChipsReadOnly(categories = row.categories)
-            }
+            item { CategoryChipsReadOnly(categories = row.categories) }
         }
+        item { CatalogMetaCard(row) }
+        item { CatalogLinksCard(row = row, context = context) }
+        item { CatalogScreenshotsSection(row.phoneScreenshotUrls) }
         item {
-            val version = row.versionName ?: stringResource(R.string.discovery_placeholder)
-            Text(
-                text = stringResource(R.string.catalog_detail_version, version),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-        item {
-            CatalogSourceSection(row, context)
-        }
-        item {
-            CatalogScreenshotsSection(row.phoneScreenshotUrls)
-        }
-        item {
-            Button(onClick = onInstall, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.catalog_detail_install))
-            }
-        }
-    }
-}
-
-@Composable
-private fun CatalogHeaderSection(row: DiscoveryAppRow) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CatalogIcon(name = row.name, iconUrl = row.iconUrl)
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = row.name, style = MaterialTheme.typography.headlineSmall)
-            Text(
-                text = row.packageName,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun CatalogSourceSection(row: DiscoveryAppRow, context: android.content.Context) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = stringResource(R.string.catalog_detail_sources),
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Text(
-            text = row.repoName,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        row.sourceCodeUrl?.takeIf { it.isNotBlank() }?.let { url ->
-            TextButton(
-                onClick = {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                },
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Text(stringResource(R.string.catalog_detail_source_code))
+                FilledTonalButton(
+                    onClick = onShare,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Share,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.size(8.dp))
+                    Text(stringResource(R.string.catalog_detail_share))
+                }
+                Button(
+                    onClick = onInstall,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.catalog_detail_install))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CatalogHeroCard(row: DiscoveryAppRow) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CatalogIcon(name = row.name, iconUrl = row.iconUrl, size = 88)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = row.name,
+                    style = MaterialTheme.typography.headlineSmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = row.packageName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                val version = row.versionName ?: stringResource(R.string.discovery_placeholder)
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Text(
+                        text = stringResource(R.string.catalog_detail_version, version),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CatalogMetaCard(row: DiscoveryAppRow) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.catalog_detail_sources),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = row.repoName,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            if (row.repoAddress.isNotBlank()) {
+                Text(
+                    text = row.repoAddress,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CatalogLinksCard(row: DiscoveryAppRow, context: android.content.Context) {
+    val storeUrl = CatalogShareLinks.storePageUrl(row.packageName, row.repoId, row.repoAddress)
+    val sourceUrl = row.sourceCodeUrl?.takeIf { it.isNotBlank() }
+    if (storeUrl == null && sourceUrl == null) return
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.catalog_detail_links),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+            )
+            storeUrl?.let { url ->
+                TextButton(
+                    onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) },
+                ) {
+                    Text(stringResource(R.string.catalog_detail_store_page))
+                }
+            }
+            sourceUrl?.let { url ->
+                TextButton(
+                    onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) },
+                ) {
+                    Text(stringResource(R.string.catalog_detail_source_code))
+                }
             }
         }
     }
@@ -231,12 +386,12 @@ private fun CatalogSourceSection(row: DiscoveryAppRow, context: android.content.
 
 @Composable
 private fun CatalogScreenshotsSection(screenshotUrls: List<String>) {
-    if (screenshotUrls.isNotEmpty()) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = stringResource(R.string.catalog_detail_screenshots),
-                style = MaterialTheme.typography.titleMedium,
-            )
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(R.string.catalog_detail_screenshots),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        if (screenshotUrls.isNotEmpty()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -249,57 +404,78 @@ private fun CatalogScreenshotsSection(screenshotUrls: List<String>) {
                         contentDescription = null,
                         modifier = Modifier
                             .height(240.dp)
-                            .clip(RoundedCornerShape(8.dp)),
+                            .clip(RoundedCornerShape(12.dp)),
                         contentScale = ContentScale.Fit,
                     )
                 }
             }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(96.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.catalog_detail_no_screenshots),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
-    } else {
-        Text(
-            text = stringResource(R.string.catalog_detail_no_screenshots),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
 @Composable
-private fun CatalogIcon(name: String, iconUrl: String?) {
+private fun CatalogIcon(name: String, iconUrl: String?, size: Int) {
+    val shape = RoundedCornerShape(20.dp)
     if (iconUrl != null) {
         AsyncImage(
             model = iconUrl,
             contentDescription = null,
             modifier = Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(12.dp)),
+                .size(size.dp)
+                .clip(shape),
             contentScale = ContentScale.Crop,
         )
     } else {
-        Text(
-            text = name.firstOrNull()?.uppercase() ?: "?",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier
-                .size(64.dp)
-                .padding(12.dp),
-        )
+        Surface(
+            modifier = Modifier.size(size.dp),
+            shape = shape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+        ) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                Text(
+                    text = name.firstOrNull()?.uppercase() ?: "?",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            }
+        }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CategoryChipsReadOnly(categories: List<String>) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
+    FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         categories.forEach { category ->
-            Text(
-                text = category,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+            ) {
+                Text(
+                    text = category,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
         }
     }
 }

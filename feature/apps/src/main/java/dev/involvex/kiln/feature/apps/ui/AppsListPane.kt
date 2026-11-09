@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.AssistChip
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.involvex.kiln.core.designsystem.component.EmptyState
+import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.core.model.AppListFilter
 import dev.involvex.kiln.core.model.AppSortField
 import dev.involvex.kiln.core.model.InstalledAppSummary
@@ -236,6 +238,8 @@ private fun AppsListBody(
     onLongPress: (String) -> Unit,
     onToggleSelection: (String) -> Unit,
 ) {
+    val listState = rememberLazyListState()
+    ScrollToTopEffect(listState)
     when {
         state.errorMessage != null && state.visibleApps.isEmpty() -> {
             EmptyState(
@@ -253,6 +257,7 @@ private fun AppsListBody(
 
         else -> {
             LazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 24.dp),
             ) {
