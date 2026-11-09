@@ -13,6 +13,7 @@ import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ActivityLogEvents
 import dev.involvex.kiln.core.model.ActivityLogRecorder
 import dev.involvex.kiln.core.model.ActivityLogType
+import dev.involvex.kiln.core.model.AndroidSharedRoot
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegeStatus
 import dev.involvex.kiln.core.model.PrivilegeTier
@@ -254,6 +255,76 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
+    override suspend fun listAndroidSharedPackageDirs(root: AndroidSharedRoot): Result<List<String>> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.ACCESS_ANDROID_DATA !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:ACCESS_ANDROID_DATA")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.LS_ANDROID_ROOT, listOf(root.pathKey))) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    val names = out.value.lineSequence()
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+                        .toList()
+                    Result.success(names)
+                }
+            }
+        }
+    }
+
+    override suspend fun measureAndroidSharedPackageDir(root: AndroidSharedRoot, packageName: String): Result<Long> =
+        withContext(ioDispatcher) {
+            if (PrivilegeCapability.ACCESS_ANDROID_DATA !in currentStatus().capabilities) {
+                return@withContext Result.failure("capability_missing:ACCESS_ANDROID_DATA")
+            }
+            if (!ShellAllowlist.isSafePackageName(packageName)) {
+                return@withContext Result.failure("invalid_package")
+            }
+            when (val out = invokeAllowlisted(ShellAllowlist.DU_ANDROID_PKG, listOf(root.pathKey, packageName))) {
+                is Result.Failure -> out
+
+                is Result.Success -> {
+                    if (out.value.startsWith("ERR:")) {
+                        Result.failure(out.value)
+                    } else {
+                        // `du -s` prints "<kib>\t<path>" (or spaces); treat first token as KiB.
+                        val token = out.value.trim().split(Regex("\\s+")).firstOrNull()
+                        val kib = token?.toLongOrNull()
+                        if (kib == null) {
+                            Result.failure("du_parse")
+                        } else {
+                            Result.success(kib * 1024L)
+                        }
+                    }
+                }
+            }
+        }
+
+    override suspend fun deleteAndroidSharedPackageDir(root: AndroidSharedRoot, packageName: String): Result<Unit> =
+        withContext(ioDispatcher) {
+            if (PrivilegeCapability.ACCESS_ANDROID_DATA !in currentStatus().capabilities) {
+                return@withContext Result.failure("capability_missing:ACCESS_ANDROID_DATA")
+            }
+            if (!ShellAllowlist.isSafePackageName(packageName)) {
+                return@withContext Result.failure("invalid_package")
+            }
+            when (val out = invokeAllowlisted(ShellAllowlist.RM_ANDROID_PKG, listOf(root.pathKey, packageName))) {
+                is Result.Failure -> out
+
+                is Result.Success -> {
+                    if (out.value.startsWith("ERR:")) {
+                        Result.failure(out.value)
+                    } else {
+                        Result.success(Unit)
+                    }
+                }
+            }
+        }
+
     private suspend fun runDebloatCommand(commandId: String, packageName: String): Result<Unit> = withContext(ioDispatcher) {
         if (PrivilegeCapability.DEBLOAT !in currentStatus().capabilities) {
             return@withContext Result.failure("capability_missing:DEBLOAT")
@@ -299,13 +370,18 @@ class DefaultPrivilegedExecutor @Inject constructor(
     }
 
     private suspend fun recordShell(commandId: String, args: List<String>, success: Boolean, detailKey: String?) {
-        // Never log APK paths; only package-shaped first args for package commands.
+        // Never log APK paths or absolute FS paths; only package-shaped args.
         val packageName = when (commandId) {
             ShellAllowlist.PM_INSTALL,
             ShellAllowlist.PM_INSTALL_DOWNGRADE,
             ShellAllowlist.PM_TRIM_CACHES,
             ShellAllowlist.ID,
+            ShellAllowlist.LS_ANDROID_ROOT,
             -> null
+
+            ShellAllowlist.DU_ANDROID_PKG,
+            ShellAllowlist.RM_ANDROID_PKG,
+            -> args.getOrNull(1)?.takeIf { ShellAllowlist.isSafePackageName(it) }
 
             else -> args.firstOrNull()?.takeIf { ShellAllowlist.isSafePackageName(it) }
         }

@@ -113,4 +113,22 @@ interface PrivilegedExecutor {
      * Requires [PrivilegeCapability.MANAGE_APP_OPS].
      */
     suspend fun setAppOp(packageName: String, op: String, mode: String): Result<Unit>
+
+    /**
+     * List immediate child names under a fixed Android shared root (`data` / `obb`).
+     * Requires [PrivilegeCapability.ACCESS_ANDROID_DATA].
+     */
+    suspend fun listAndroidSharedPackageDirs(root: AndroidSharedRoot): Result<List<String>>
+
+    /**
+     * Measure disk usage of `root/<packageName>` via allowlisted `du -s`.
+     * Requires [PrivilegeCapability.ACCESS_ANDROID_DATA].
+     */
+    suspend fun measureAndroidSharedPackageDir(root: AndroidSharedRoot, packageName: String): Result<Long>
+
+    /**
+     * Delete `root/<packageName>` via allowlisted `rm -rf` (validated path only).
+     * Requires [PrivilegeCapability.ACCESS_ANDROID_DATA].
+     */
+    suspend fun deleteAndroidSharedPackageDir(root: AndroidSharedRoot, packageName: String): Result<Unit>
 }

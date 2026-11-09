@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Storage phase 2 (Manage): size bars, APK leftover scan/delete (SAF), orphaned Android/data+obb list/delete via Shizuku
 - Permission audit (Settings): dangerous-permission overview; privilege-gated bulk `pm revoke` and basic AppOps set (fixed allowlists)
 - Home-screen Glance widget + QS tile: update count, Check now (WorkManager), widget Trim caches (Shizuku or open Manage)
 - Activity log (Settings): searchable local Room log of installs, backups, cache clears, maintenance, privilege shell, debloat, Termux, and automation (cap 500; no paths/tokens)

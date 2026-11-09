@@ -159,7 +159,11 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
             },
         )
     }
-    entry<ManageKey> { ManageRoute() }
+    entry<ManageKey> {
+        ManageRoute(
+            onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
+        )
+    }
     entry<SettingsKey> {
         SettingsRoute(
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },

@@ -1,5 +1,6 @@
 package dev.involvex.kiln.feature.storage
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -8,8 +9,12 @@ import dev.involvex.kiln.core.model.ActivityLogEvents
 import dev.involvex.kiln.core.model.ActivityLogRecorder
 import dev.involvex.kiln.core.model.ActivityLogType
 import dev.involvex.kiln.core.model.AppStorageStats
+import dev.involvex.kiln.core.model.OrphanStorageDir
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
+import dev.involvex.kiln.core.model.StorageOrphanGate
+import dev.involvex.kiln.feature.storage.data.ApkLeftoverRepository
+import dev.involvex.kiln.feature.storage.data.OrphanStorageRepository
 import dev.involvex.kiln.feature.storage.data.StorageStatsRepository
 import dev.involvex.kiln.feature.storage.data.UsageAccessChecker
 import javax.inject.Inject
@@ -22,6 +27,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class StorageViewModel @Inject constructor(
     private val repository: StorageStatsRepository,
+    private val leftoverRepository: ApkLeftoverRepository,
+    private val orphanRepository: OrphanStorageRepository,
     private val usageAccessChecker: UsageAccessChecker,
     private val privilegedExecutor: PrivilegedExecutor,
     private val activityLog: ActivityLogRecorder,
@@ -33,7 +40,10 @@ class StorageViewModel @Inject constructor(
         viewModelScope.launch {
             privilegedExecutor.observeStatus().collect { status ->
                 _uiState.update {
-                    it.copy(canClearPrivileged = PrivilegeCapability.CLEAR_CACHE in status.capabilities)
+                    it.copy(
+                        canClearPrivileged = PrivilegeCapability.CLEAR_CACHE in status.capabilities,
+                        canAccessAndroidData = StorageOrphanGate.canAccessAndroidData(status.capabilities),
+                    )
                 }
             }
         }
@@ -54,6 +64,9 @@ class StorageViewModel @Inject constructor(
         }
         if (granted) {
             load()
+        }
+        if (_uiState.value.canAccessAndroidData) {
+            loadOrphans()
         }
     }
 
@@ -181,4 +194,140 @@ class StorageViewModel @Inject constructor(
             }
         }
     }
+
+    fun scanLeftovers(treeUri: Uri) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(leftoversLoading = true, message = null) }
+            when (val result = leftoverRepository.scanTree(treeUri)) {
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(leftoversLoading = false, message = result.message, leftovers = emptyList())
+                    }
+                }
+
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            leftoversLoading = false,
+                            leftovers = result.value,
+                            selectedLeftoverIds = emptySet(),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun toggleLeftover(id: String) {
+        _uiState.update { state ->
+            val next = state.selectedLeftoverIds.toMutableSet()
+            if (!next.add(id)) next.remove(id)
+            state.copy(selectedLeftoverIds = next)
+        }
+    }
+
+    fun requestDeleteSelectedLeftovers() {
+        val state = _uiState.value
+        val items = state.leftovers.filter { it.id in state.selectedLeftoverIds }
+        if (items.isEmpty()) return
+        _uiState.update { it.copy(pendingDelete = PendingStorageDelete.Leftovers(items)) }
+    }
+
+    fun loadOrphans() {
+        if (!_uiState.value.canAccessAndroidData) {
+            _uiState.update {
+                it.copy(orphans = emptyList(), orphansError = "capability_missing", orphansLoading = false)
+            }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(orphansLoading = true, orphansError = null) }
+            when (val result = orphanRepository.loadOrphans()) {
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            orphansLoading = false,
+                            orphans = emptyList(),
+                            orphansError = result.message,
+                        )
+                    }
+                }
+
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            orphansLoading = false,
+                            orphans = result.value,
+                            selectedOrphans = emptySet(),
+                            orphansError = null,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun toggleOrphan(orphan: OrphanStorageDir) {
+        val key = _uiState.value.orphanKey(orphan)
+        _uiState.update { state ->
+            val next = state.selectedOrphans.toMutableSet()
+            if (!next.add(key)) next.remove(key)
+            state.copy(selectedOrphans = next)
+        }
+    }
+
+    fun requestDeleteSelectedOrphans() {
+        val state = _uiState.value
+        if (!state.canAccessAndroidData) {
+            _uiState.update { it.copy(message = "capability_missing") }
+            return
+        }
+        val items = state.orphans.filter { state.orphanKey(it) in state.selectedOrphans }
+        if (items.isEmpty()) return
+        _uiState.update { it.copy(pendingDelete = PendingStorageDelete.Orphans(items)) }
+    }
+
+    fun dismissDelete() {
+        _uiState.update { it.copy(pendingDelete = null) }
+    }
+
+    fun confirmDelete() {
+        val pending = _uiState.value.pendingDelete ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(deleting = true, pendingDelete = null, message = null) }
+            when (pending) {
+                is PendingStorageDelete.Leftovers -> {
+                    val results = leftoverRepository.delete(pending.items)
+                    val ok = results.count { it.second }
+                    val fail = results.size - ok
+                    _uiState.update {
+                        it.copy(
+                            deleting = false,
+                            selectedLeftoverIds = emptySet(),
+                            message = "done:$ok:$fail",
+                        )
+                    }
+                    // Refresh leftover list without requiring a new tree pick if empties remain.
+                    val remaining = results.filterNot { it.second }.map { it.first }
+                    _uiState.update { it.copy(leftovers = remaining) }
+                }
+
+                is PendingStorageDelete.Orphans -> {
+                    val results = orphanRepository.delete(pending.items)
+                    val ok = results.count { it.second }
+                    val fail = results.size - ok
+                    _uiState.update {
+                        it.copy(
+                            deleting = false,
+                            selectedOrphans = emptySet(),
+                            message = "done:$ok:$fail",
+                        )
+                    }
+                    loadOrphans()
+                }
+            }
+        }
+    }
+
+    fun clearMessage() = _uiState.update { it.copy(message = null) }
 }
