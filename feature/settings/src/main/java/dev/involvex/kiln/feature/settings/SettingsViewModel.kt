@@ -178,6 +178,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { appearancePreferences.setFontStyle(fontStyle) }
     }
 
+    fun setDynamicColor(enabled: Boolean) {
+        viewModelScope.launch { appearancePreferences.setDynamicColor(enabled) }
+    }
+
     fun setPreferredInstaller(preferred: PreferredInstaller) {
         viewModelScope.launch { installerPreferences.setPreferred(preferred) }
     }

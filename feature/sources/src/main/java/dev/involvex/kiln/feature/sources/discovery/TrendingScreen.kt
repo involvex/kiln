@@ -3,6 +3,8 @@ package dev.involvex.kiln.feature.sources.discovery
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,7 +23,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.involvex.kiln.core.designsystem.component.EmptyState
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.component.SectionHeader
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.feature.sources.R
 
@@ -71,14 +75,15 @@ fun TrendingScreen(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item {
                     Text(
                         text = stringResource(R.string.trending_honesty),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp),
                     )
                 }
                 state.message?.let { msg ->
@@ -90,19 +95,28 @@ fun TrendingScreen(
                             } else {
                                 MaterialTheme.colorScheme.primary
                             },
+                            modifier = Modifier.padding(horizontal = 16.dp),
                         )
-                        TextButton(onClick = onClearMessage) {
+                        TextButton(
+                            onClick = onClearMessage,
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                        ) {
                             Text(stringResource(R.string.sources_dismiss))
                         }
                     }
                 }
                 if (state.isLoading && state.shelves.isEmpty()) {
-                    item { CircularProgressIndicator() }
+                    item {
+                        CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+                    }
                 } else if (state.shelves.isEmpty()) {
                     item {
-                        Text(
-                            text = stringResource(R.string.trending_empty),
-                            style = MaterialTheme.typography.bodyMedium,
+                        EmptyState(
+                            title = stringResource(R.string.trending_empty_title),
+                            description = stringResource(R.string.trending_empty),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 240.dp),
                         )
                     }
                 } else {
@@ -125,15 +139,16 @@ private fun TrendingShelfSection(
     onOpenCatalogDetail: (String, String) -> Unit,
     onInstall: (DiscoveryAppRow) -> Unit,
 ) {
-    ColumnSectionTitle(shelf.id)
+    SectionHeader(title = shelfTitle(shelf.id))
     LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
     ) {
         items(shelf.apps, key = { "${it.repoId}:${it.packageName}" }) { row ->
             DiscoveryAppCard(
                 row = row,
-                modifier = Modifier.width(300.dp),
+                compact = true,
+                modifier = Modifier.width(268.dp),
                 onOpenDetail = { onOpenCatalogDetail(row.packageName, row.repoId) },
                 onInstall = { onInstall(row) },
             )
@@ -142,15 +157,12 @@ private fun TrendingShelfSection(
 }
 
 @Composable
-private fun ColumnSectionTitle(id: TrendingShelfId) {
-    val title = when (id) {
-        TrendingShelfId.PRIVACY -> stringResource(R.string.trending_shelf_privacy)
-        TrendingShelfId.INTERNET -> stringResource(R.string.trending_shelf_internet)
-        TrendingShelfId.MEDIA -> stringResource(R.string.trending_shelf_media)
-        TrendingShelfId.SYSTEM -> stringResource(R.string.trending_shelf_system)
-        TrendingShelfId.AI -> stringResource(R.string.trending_shelf_ai)
-    }
-    Text(text = title, style = MaterialTheme.typography.titleMedium)
+private fun shelfTitle(id: TrendingShelfId): String = when (id) {
+    TrendingShelfId.PRIVACY -> stringResource(R.string.trending_shelf_privacy)
+    TrendingShelfId.INTERNET -> stringResource(R.string.trending_shelf_internet)
+    TrendingShelfId.MEDIA -> stringResource(R.string.trending_shelf_media)
+    TrendingShelfId.SYSTEM -> stringResource(R.string.trending_shelf_system)
+    TrendingShelfId.AI -> stringResource(R.string.trending_shelf_ai)
 }
 
 @Composable

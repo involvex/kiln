@@ -433,4 +433,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 3. **M25** Config-Export/-Import
 4. **M26** Widgets / QS
 5. **M27** Berechtigungs-Audit (Done #41)
-6. **M28** Storage Phase 2 (in progress)
+6. **M28** Storage Phase 2 (Done #44)

@@ -153,6 +153,7 @@ class DefaultKilnConfigRepository @Inject constructor(
                     theme = appearance.theme.name,
                     language = appearance.language.name,
                     fontStyle = appearance.fontStyle.name,
+                    dynamicColor = appearance.dynamicColor,
                 ),
                 installer = KilnConfigInstallerV1(preferred = installer.name),
                 termux = KilnConfigTermuxV1(
@@ -189,6 +190,7 @@ class DefaultKilnConfigRepository @Inject constructor(
             appearancePreferences.setTheme(enumOrDefault(section.theme, KilnThemeStyle.DARK))
             appearancePreferences.setLanguage(enumOrDefault(section.language, KilnLanguage.SYSTEM))
             appearancePreferences.setFontStyle(enumOrDefault(section.fontStyle, KilnFontStyle.DEFAULT))
+            appearancePreferences.setDynamicColor(section.dynamicColor)
             applied++
         }
         prefs.installer?.let { section ->

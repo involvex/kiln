@@ -9,6 +9,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,6 +42,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
+import dev.involvex.kiln.core.designsystem.theme.allowsDynamicColor
 import dev.involvex.kiln.core.model.AppearancePrefs
 import dev.involvex.kiln.core.model.AutomationPrefs
 import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
@@ -132,6 +135,7 @@ fun SettingsRoute(
         onThemeChange = viewModel::setTheme,
         onLanguageChange = viewModel::setLanguage,
         onFontStyleChange = viewModel::setFontStyle,
+        onDynamicColorChange = viewModel::setDynamicColor,
         onPreferredInstallerChange = viewModel::setPreferredInstaller,
         onDebugLogChange = viewModel::setDebugLogEnabled,
         onCheckNow = viewModel::checkNow,
@@ -169,6 +173,7 @@ fun SettingsScreen(
     onThemeChange: (KilnThemeStyle) -> Unit,
     onLanguageChange: (KilnLanguage) -> Unit,
     onFontStyleChange: (KilnFontStyle) -> Unit,
+    onDynamicColorChange: (Boolean) -> Unit,
     onPreferredInstallerChange: (PreferredInstaller) -> Unit,
     onDebugLogChange: (Boolean) -> Unit,
     onCheckNow: () -> Unit,
@@ -227,6 +232,7 @@ fun SettingsScreen(
                 onThemeChange = onThemeChange,
                 onLanguageChange = onLanguageChange,
                 onFontStyleChange = onFontStyleChange,
+                onDynamicColorChange = onDynamicColorChange,
             )
             HorizontalDivider()
             InstallerSection(
@@ -689,12 +695,14 @@ private fun DevSection(prefs: DevPrefs, onDebugLogChange: (Boolean) -> Unit) {
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AppearanceSection(
     prefs: AppearancePrefs,
     onThemeChange: (KilnThemeStyle) -> Unit,
     onLanguageChange: (KilnLanguage) -> Unit,
     onFontStyleChange: (KilnFontStyle) -> Unit,
+    onDynamicColorChange: (Boolean) -> Unit,
 ) {
     Text(
         text = stringResource(R.string.settings_appearance_section),
@@ -704,20 +712,31 @@ private fun AppearanceSection(
         text = stringResource(R.string.settings_theme),
         style = MaterialTheme.typography.bodyLarge,
     )
-    Row(
+    FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        ThemeChip(KilnThemeStyle.SYSTEM, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_system))
         ThemeChip(KilnThemeStyle.LIGHT, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_light))
         ThemeChip(KilnThemeStyle.DARK, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_dark))
-    }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
         ThemeChip(KilnThemeStyle.AMOLED, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_amoled))
         ThemeChip(KilnThemeStyle.MONOKAI, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_monokai))
+        ThemeChip(KilnThemeStyle.OCEAN, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_ocean))
     }
+    val dynamicSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val dynamicAllowed = prefs.theme.allowsDynamicColor()
+    SettingsSwitchRow(
+        title = stringResource(R.string.settings_dynamic_color),
+        checked = prefs.dynamicColor && dynamicAllowed,
+        onCheckedChange = onDynamicColorChange,
+        enabled = dynamicSupported && dynamicAllowed,
+    )
+    Text(
+        text = stringResource(R.string.settings_dynamic_color_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     Text(
         text = stringResource(R.string.settings_language),
         style = MaterialTheme.typography.bodyLarge,

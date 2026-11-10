@@ -234,6 +234,7 @@ private fun AppsListBody(
             EmptyState(
                 title = stringResource(R.string.feature_apps_error_title),
                 description = state.errorMessage,
+                modifier = Modifier.fillMaxSize(),
             )
         }
 
@@ -241,6 +242,7 @@ private fun AppsListBody(
             EmptyState(
                 title = stringResource(R.string.feature_apps_empty_title),
                 description = stringResource(R.string.feature_apps_empty_description),
+                modifier = Modifier.fillMaxSize(),
             )
         }
 

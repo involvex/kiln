@@ -176,7 +176,9 @@ fun AppDetailScreen(
                 EmptyState(
                     title = stringResource(R.string.feature_apps_error_title),
                     description = state.errorMessage.orEmpty(),
-                    modifier = Modifier.padding(padding),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
                 )
             }
 
