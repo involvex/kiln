@@ -434,3 +434,5 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 4. **M26** Widgets / QS
 5. **M27** Berechtigungs-Audit (Done #41)
 6. **M28** Storage Phase 2 (Done #44)
+7. **M29** APK tools phase 2 (inspect + compare; in progress)
+8. **M30** Mirrors / proxy (planned)

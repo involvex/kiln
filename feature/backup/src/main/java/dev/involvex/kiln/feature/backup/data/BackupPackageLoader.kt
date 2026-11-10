@@ -5,8 +5,8 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.involvex.kiln.core.common.ApkSigningReader
 import dev.involvex.kiln.core.common.IoDispatcher
-import dev.involvex.kiln.core.common.sha256CertificateFingerprint
 import dev.involvex.kiln.core.model.BackupAppCandidate
 import java.io.File
 import javax.inject.Inject
@@ -88,20 +88,6 @@ class BackupPackageLoader @Inject constructor(
         }
     }
 
-    private fun readSigners(pm: PackageManager, packageName: String): List<String> {
-        return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                val info = pm.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES)
-                val signers = info.signingInfo?.apkContentsSigners ?: return emptyList()
-                signers.map { sha256CertificateFingerprint(it.toByteArray()) }
-            } else {
-                @Suppress("DEPRECATION")
-                val info = pm.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
-                @Suppress("DEPRECATION")
-                info.signatures?.map { sha256CertificateFingerprint(it.toByteArray()) }.orEmpty()
-            }
-        } catch (_: Exception) {
-            emptyList()
-        }
-    }
+    private fun readSigners(pm: PackageManager, packageName: String): List<String> =
+        ApkSigningReader.fingerprintsFromInstalled(pm, packageName)
 }

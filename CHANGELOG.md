@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Manage → APK tools: inspect SAF-picked `.apk`/`.apks`/`.xapk` (meta, permissions, signers, members); compare signatures (APK vs APK or vs installed)
+- Shared `ApkSigningReader` (X.509 SHA-256) for installer gate and apps detail
 - Appearance: System theme, Ocean palette, optional Material You Dynamic Color (API 31+; ignored for Monokai/Ocean)
 - Storage phase 2 (Manage): size bars, APK leftover scan/delete (SAF), orphaned Android/data+obb list/delete via Shizuku
 
