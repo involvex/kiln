@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -14,6 +15,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -27,10 +30,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.involvex.kiln.core.designsystem.component.EmptyState
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.component.SectionHeader
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.feature.sources.R
 
@@ -223,9 +229,12 @@ private fun LazyListScope.fdroidItems(
     }
     if (!state.isSearching && state.results.isEmpty() && state.packageCount == 0) {
         item {
-            Text(
-                text = stringResource(R.string.discovery_empty_catalog),
-                style = MaterialTheme.typography.bodyMedium,
+            EmptyState(
+                title = stringResource(R.string.discovery_empty_title),
+                description = stringResource(R.string.discovery_empty_catalog),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 200.dp),
             )
         }
     }
@@ -282,9 +291,9 @@ private fun LazyListScope.githubItems(
     }
     if (state.savedGithub.isNotEmpty()) {
         item {
-            Text(
-                text = stringResource(R.string.discovery_github_saved),
-                style = MaterialTheme.typography.titleMedium,
+            SectionHeader(
+                title = stringResource(R.string.discovery_github_saved),
+                modifier = Modifier.padding(horizontal = 0.dp),
             )
         }
         items(state.savedGithub, key = { "saved:${it.ownerRepo}:${it.packageName}" }) { row ->
@@ -296,9 +305,12 @@ private fun LazyListScope.githubItems(
         }
     } else if (!state.isLookingUpGithub && state.githubResults.isEmpty()) {
         item {
-            Text(
-                text = stringResource(R.string.discovery_github_empty),
-                style = MaterialTheme.typography.bodyMedium,
+            EmptyState(
+                title = stringResource(R.string.discovery_github_empty_title),
+                description = stringResource(R.string.discovery_github_empty),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 200.dp),
             )
         }
     }
@@ -350,37 +362,53 @@ private fun CategoryChips(categories: List<String>, selected: String, onSelect: 
 
 @Composable
 private fun GithubAppCard(row: DiscoveryGithubRow, onInstall: () -> Unit, onLookup: (() -> Unit)?) {
-    Column(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
-        Text(text = row.displayName, style = MaterialTheme.typography.titleMedium)
-        Text(
-            text = row.packageName,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        val placeholder = stringResource(R.string.discovery_placeholder)
-        Text(
-            text = stringResource(
-                R.string.discovery_github_meta,
-                row.tagName ?: placeholder,
-                row.assetName ?: placeholder,
-            ),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (onLookup != null && row.downloadUrl == null) {
-            OutlinedButton(onClick = onLookup, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.discovery_github_lookup))
-            }
-        }
-        OutlinedButton(
-            onClick = onInstall,
-            enabled = row.downloadUrl != null || onLookup != null,
-            modifier = Modifier.fillMaxWidth(),
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text(stringResource(R.string.discovery_install))
+            Text(
+                text = row.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = row.packageName,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            val placeholder = stringResource(R.string.discovery_placeholder)
+            Text(
+                text = stringResource(
+                    R.string.discovery_github_meta,
+                    row.tagName ?: placeholder,
+                    row.assetName ?: placeholder,
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (onLookup != null && row.downloadUrl == null) {
+                OutlinedButton(onClick = onLookup, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.discovery_github_lookup))
+                }
+            }
+            OutlinedButton(
+                onClick = onInstall,
+                enabled = row.downloadUrl != null || onLookup != null,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.discovery_install))
+            }
         }
     }
 }

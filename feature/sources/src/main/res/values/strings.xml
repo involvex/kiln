@@ -12,7 +12,10 @@
     <string name="trending_shelf_media">Media</string>
     <string name="trending_shelf_system">System &amp; tools</string>
     <string name="trending_shelf_ai">AI-related</string>
+    <string name="trending_empty_title">No shelves yet</string>
     <string name="trending_empty">Pull to refresh to sync the catalog and load shelves.</string>
+    <string name="discovery_empty_title">Catalog empty</string>
+    <string name="discovery_github_empty_title">No GitHub sources</string>
     <string name="catalog_detail_title">App details</string>
     <string name="catalog_detail_install">Install</string>
     <string name="catalog_detail_watch">Watch</string>

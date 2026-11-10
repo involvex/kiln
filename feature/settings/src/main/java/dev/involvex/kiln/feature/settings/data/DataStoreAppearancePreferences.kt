@@ -3,6 +3,7 @@ package dev.involvex.kiln.feature.settings.data
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -42,6 +43,10 @@ class DataStoreAppearancePreferences @Inject constructor(@ApplicationContext con
         store.edit { it[KEY_FONT] = fontStyle.name }
     }
 
+    override suspend fun setDynamicColor(enabled: Boolean) {
+        store.edit { it[KEY_DYNAMIC] = enabled }
+    }
+
     private fun Preferences.toPrefs() = AppearancePrefs(
         theme = this[KEY_THEME]?.let { runCatching { KilnThemeStyle.valueOf(it) }.getOrNull() }
             ?: KilnThemeStyle.DARK,
@@ -49,11 +54,13 @@ class DataStoreAppearancePreferences @Inject constructor(@ApplicationContext con
             ?: KilnLanguage.SYSTEM,
         fontStyle = this[KEY_FONT]?.let { runCatching { KilnFontStyle.valueOf(it) }.getOrNull() }
             ?: KilnFontStyle.DEFAULT,
+        dynamicColor = this[KEY_DYNAMIC] ?: false,
     )
 
     private companion object {
         val KEY_THEME = stringPreferencesKey("theme")
         val KEY_LANGUAGE = stringPreferencesKey("language")
         val KEY_FONT = stringPreferencesKey("font_style")
+        val KEY_DYNAMIC = booleanPreferencesKey("dynamic_color")
     }
 }

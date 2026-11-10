@@ -33,7 +33,13 @@ import dev.involvex.kiln.feature.sources.R
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun DiscoveryAppCard(row: DiscoveryAppRow, onInstall: () -> Unit, modifier: Modifier = Modifier, onOpenDetail: (() -> Unit)? = null) {
+fun DiscoveryAppCard(
+    row: DiscoveryAppRow,
+    onInstall: () -> Unit,
+    modifier: Modifier = Modifier,
+    onOpenDetail: (() -> Unit)? = null,
+    compact: Boolean = false,
+) {
     val context = LocalContext.current
     Card(
         modifier = modifier
@@ -44,17 +50,22 @@ fun DiscoveryAppCard(row: DiscoveryAppRow, onInstall: () -> Unit, modifier: Modi
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(if (compact) 10.dp else 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 12.dp),
             verticalAlignment = Alignment.Top,
         ) {
-            DiscoveryListIcon(name = row.name, iconUrl = row.iconUrl)
+            DiscoveryListIcon(
+                name = row.name,
+                iconUrl = row.iconUrl,
+                sizeDp = if (compact) 40 else 48,
+            )
             DiscoveryAppCardContent(
                 row = row,
                 onInstall = onInstall,
                 onOpenSource = { url ->
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                 },
+                compact = compact,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -67,6 +78,7 @@ private fun DiscoveryAppCardContent(
     row: DiscoveryAppRow,
     onInstall: () -> Unit,
     onOpenSource: (String) -> Unit,
+    compact: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -75,7 +87,7 @@ private fun DiscoveryAppCardContent(
     ) {
         Text(
             text = row.name,
-            style = MaterialTheme.typography.titleMedium,
+            style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
@@ -90,35 +102,49 @@ private fun DiscoveryAppCardContent(
             Text(
                 text = summary,
                 style = MaterialTheme.typography.bodyMedium,
-                maxLines = 3,
+                maxLines = if (compact) 2 else 3,
                 overflow = TextOverflow.Ellipsis,
             )
         }
         if (row.categories.isNotEmpty()) {
-            DiscoveryCategoryRow(row.categories)
+            DiscoveryCategoryRow(
+                categories = row.categories,
+                limit = if (compact) 2 else 4,
+            )
         }
-        row.sourceCodeUrl?.takeIf { it.isNotBlank() }?.let { url ->
-            TextButton(onClick = { onOpenSource(url) }) {
-                Text(stringResource(R.string.catalog_detail_source_code))
+        if (!compact) {
+            row.sourceCodeUrl?.takeIf { it.isNotBlank() }?.let { url ->
+                TextButton(onClick = { onOpenSource(url) }) {
+                    Text(stringResource(R.string.catalog_detail_source_code))
+                }
             }
         }
-        OutlinedButton(
-            onClick = onInstall,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.discovery_install))
+        if (compact) {
+            TextButton(
+                onClick = onInstall,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.discovery_install))
+            }
+        } else {
+            OutlinedButton(
+                onClick = onInstall,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.discovery_install))
+            }
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DiscoveryCategoryRow(categories: List<String>) {
+private fun DiscoveryCategoryRow(categories: List<String>, limit: Int = 4) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        categories.take(4).forEach { category ->
+        categories.take(limit).forEach { category ->
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.secondaryContainer,
@@ -134,26 +160,31 @@ private fun DiscoveryCategoryRow(categories: List<String>) {
 }
 
 @Composable
-private fun DiscoveryListIcon(name: String, iconUrl: String?) {
+private fun DiscoveryListIcon(name: String, iconUrl: String?, sizeDp: Int = 48) {
+    val size = sizeDp.dp
     if (iconUrl != null) {
         AsyncImage(
             model = iconUrl,
             contentDescription = null,
             modifier = Modifier
-                .size(48.dp)
+                .size(size)
                 .clip(RoundedCornerShape(10.dp)),
             contentScale = ContentScale.Crop,
         )
     } else {
         Surface(
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(size),
             shape = RoundedCornerShape(10.dp),
             color = MaterialTheme.colorScheme.primaryContainer,
         ) {
             Text(
                 text = name.firstOrNull()?.uppercase() ?: "?",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(10.dp),
+                style = if (sizeDp <= 40) {
+                    MaterialTheme.typography.titleMedium
+                } else {
+                    MaterialTheme.typography.titleLarge
+                },
+                modifier = Modifier.padding(if (sizeDp <= 40) 8.dp else 10.dp),
             )
         }
     }

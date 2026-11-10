@@ -12,7 +12,10 @@
     <string name="trending_shelf_media">Medien</string>
     <string name="trending_shelf_system">System &amp; Tools</string>
     <string name="trending_shelf_ai">KI-bezogen</string>
+    <string name="trending_empty_title">Noch keine Regale</string>
     <string name="trending_empty">Zum Synchronisieren und Laden der Regale nach unten ziehen.</string>
+    <string name="discovery_empty_title">Katalog leer</string>
+    <string name="discovery_github_empty_title">Keine GitHub-Quellen</string>
     <string name="catalog_detail_title">App-Details</string>
     <string name="catalog_detail_install">Installieren</string>
     <string name="catalog_detail_watch">Beobachten</string>

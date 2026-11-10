@@ -95,6 +95,32 @@ private val MonokaiColorScheme = darkColorScheme(
     outline = MonokaiOutline,
 )
 
+private val OceanColorScheme = darkColorScheme(
+    primary = OceanPrimary,
+    onPrimary = OceanOnPrimary,
+    primaryContainer = OceanPrimaryContainer,
+    onPrimaryContainer = OceanOnPrimaryContainer,
+    secondary = OceanSecondary,
+    onSecondary = OceanOnSecondary,
+    secondaryContainer = OceanSecondaryContainer,
+    onSecondaryContainer = OceanOnSecondaryContainer,
+    tertiary = OceanTertiary,
+    onTertiary = OceanOnTertiary,
+    tertiaryContainer = OceanTertiaryContainer,
+    onTertiaryContainer = OceanOnTertiaryContainer,
+    error = OceanError,
+    onError = OceanOnError,
+    errorContainer = OceanErrorContainer,
+    onErrorContainer = OceanOnErrorContainer,
+    background = OceanBackground,
+    onBackground = OceanOnBackground,
+    surface = OceanSurface,
+    onSurface = OceanOnSurface,
+    surfaceVariant = OceanSurfaceVariant,
+    onSurfaceVariant = OceanOnSurfaceVariant,
+    outline = OceanOutline,
+)
+
 private fun ColorScheme.amoled(): ColorScheme = copy(
     background = AmoledBlack,
     surface = AmoledBlack,
@@ -105,19 +131,60 @@ private fun ColorScheme.amoled(): ColorScheme = copy(
     surfaceContainerHighest = AmoledSurfaceContainerHighest,
 )
 
+/** True when status/nav bars should use dark icons (light surfaces). */
+fun KilnThemeStyle.usesLightSystemBars(systemDark: Boolean): Boolean = when (this) {
+    KilnThemeStyle.LIGHT -> true
+
+    KilnThemeStyle.SYSTEM -> !systemDark
+
+    KilnThemeStyle.DARK,
+    KilnThemeStyle.AMOLED,
+    KilnThemeStyle.MONOKAI,
+    KilnThemeStyle.OCEAN,
+    -> false
+}
+
+/** Fixed palettes ignore Material You Dynamic Color. */
+fun KilnThemeStyle.allowsDynamicColor(): Boolean = when (this) {
+    KilnThemeStyle.MONOKAI,
+    KilnThemeStyle.OCEAN,
+    -> false
+
+    KilnThemeStyle.SYSTEM,
+    KilnThemeStyle.LIGHT,
+    KilnThemeStyle.DARK,
+    KilnThemeStyle.AMOLED,
+    -> true
+}
+
 @Composable
 fun KilnTheme(
     themeStyle: KilnThemeStyle = KilnThemeStyle.DARK,
     fontStyle: KilnFontStyle = KilnFontStyle.DEFAULT,
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    val systemDark = isSystemInDarkTheme()
     val amoledDark = themeStyle == KilnThemeStyle.AMOLED
+    val useDynamic = dynamicColor && themeStyle.allowsDynamicColor()
     val colorScheme = when (themeStyle) {
-        KilnThemeStyle.LIGHT -> resolveLight(dynamicColor)
-        KilnThemeStyle.DARK -> resolveDark(dynamicColor, amoled = false)
-        KilnThemeStyle.AMOLED -> resolveDark(dynamicColor, amoled = true)
+        KilnThemeStyle.SYSTEM -> {
+            if (systemDark) {
+                resolveDark(useDynamic, amoled = false)
+            } else {
+                resolveLight(useDynamic)
+            }
+        }
+
+        KilnThemeStyle.LIGHT -> resolveLight(useDynamic)
+
+        KilnThemeStyle.DARK -> resolveDark(useDynamic, amoled = false)
+
+        KilnThemeStyle.AMOLED -> resolveDark(useDynamic, amoled = true)
+
         KilnThemeStyle.MONOKAI -> MonokaiColorScheme
+
+        KilnThemeStyle.OCEAN -> OceanColorScheme
     }
 
     CompositionLocalProvider(LocalAmoledDark provides amoledDark) {
@@ -133,7 +200,7 @@ fun KilnTheme(
 @Composable
 fun KilnTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     amoledDark: Boolean = false,
     content: @Composable () -> Unit,
 ) {
@@ -147,6 +214,7 @@ fun KilnTheme(
 
 @Composable
 private fun resolveLight(dynamicColor: Boolean): ColorScheme {
+    // Dynamic Color requires Android 12+ (API 31).
     if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         return dynamicLightColorScheme(LocalContext.current)
     }

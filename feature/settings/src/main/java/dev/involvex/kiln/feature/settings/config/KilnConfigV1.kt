@@ -69,7 +69,12 @@ data class KilnConfigMaintenanceV1(
 )
 
 @Serializable
-data class KilnConfigAppearanceV1(val theme: String = "DARK", val language: String = "SYSTEM", val fontStyle: String = "DEFAULT")
+data class KilnConfigAppearanceV1(
+    val theme: String = "DARK",
+    val language: String = "SYSTEM",
+    val fontStyle: String = "DEFAULT",
+    val dynamicColor: Boolean = false,
+)
 
 @Serializable
 data class KilnConfigInstallerV1(val preferred: String = "SYSTEM")

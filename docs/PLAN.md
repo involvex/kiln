@@ -377,7 +377,7 @@ Lokale Checkouts und SPDX-IDs: [`reference.md`](./reference.md) (früher Repo-Ro
 - Auto-Match: F-Droid signiert nicht reproduzierbare Builds mit eigenem Schlüssel → Fehlmatches/Signaturfehler müssen als WARNUNG sichtbar sein
 - Debloat: falsche Entfernung kann Funktionen oder den Bootvorgang beeinträchtigen → Sperrliste, Snapshot und Standard „Deaktivieren" sind Pflicht; Lizenz der Paketdatenbank-Quelle klären
 - Shizuku-Assistent: Verhalten von Wireless Debugging und Autostart unterscheidet sich je Android-Version und ROM (HyperOS gesondert testen)
-- Namenskonflikte für „Kiln" (GitHub, F-Droid, Play) vor dem ersten Release prüfen; Package-ID `dev.involvex.kiln` ist gesetzt
+- Namenskonflikt „Kiln": bekanntes anderes Produkt [NKS1608/kiln-android-emulator](https://github.com/NKS1608/kiln-android-emulator) (macOS-Android-Emulator, proprietär) — siehe [#46](https://github.com/involvex/kiln/issues/46). Unser Produkt bleibt der Android-Paket-/Speicher-Manager mit Package-ID `dev.involvex.kiln`. Vor F-Droid/Play: Store-Beschreibung klar halten; Display-Rename nur bei Markenrisiko.
 - KSP ↔ Kotlin-Kompatibilität bei AGP-9-Built-in-Kotlin / KSP-2.3.x vor dem ersten M0-Build verifizieren
 - Navigation 3 vs. ältere Tutorials: keine Navigation-2-APIs einführen
 
@@ -433,4 +433,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 3. **M25** Config-Export/-Import
 4. **M26** Widgets / QS
 5. **M27** Berechtigungs-Audit (Done #41)
-6. **M28** Storage Phase 2 (in progress)
+6. **M28** Storage Phase 2 (Done #44)

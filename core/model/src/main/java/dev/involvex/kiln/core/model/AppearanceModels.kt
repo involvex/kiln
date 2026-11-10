@@ -3,10 +3,12 @@ package dev.involvex.kiln.core.model
 import kotlinx.coroutines.flow.Flow
 
 enum class KilnThemeStyle {
+    SYSTEM,
     LIGHT,
     DARK,
     AMOLED,
     MONOKAI,
+    OCEAN,
 }
 
 enum class KilnLanguage {
@@ -24,6 +26,7 @@ data class AppearancePrefs(
     val theme: KilnThemeStyle = KilnThemeStyle.DARK,
     val language: KilnLanguage = KilnLanguage.SYSTEM,
     val fontStyle: KilnFontStyle = KilnFontStyle.DEFAULT,
+    val dynamicColor: Boolean = false,
 )
 
 interface AppearancePreferences {
@@ -36,4 +39,6 @@ interface AppearancePreferences {
     suspend fun setLanguage(language: KilnLanguage)
 
     suspend fun setFontStyle(fontStyle: KilnFontStyle)
+
+    suspend fun setDynamicColor(enabled: Boolean)
 }

@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,6 +20,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import dev.involvex.kiln.core.designsystem.theme.KilnTheme
+import dev.involvex.kiln.core.designsystem.theme.usesLightSystemBars
 import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.AppearancePrefs
 import dev.involvex.kiln.core.model.KilnFontStyle
@@ -57,6 +59,7 @@ class MainActivity : AppCompatActivity() {
             KilnRoot(
                 themeStyle = appearance.theme,
                 fontStyle = appearance.fontStyle,
+                dynamicColor = appearance.dynamicColor,
                 manageDeepLinkStore = manageDeepLinkStore,
             )
         }
@@ -119,10 +122,16 @@ internal fun applyKilnLanguage(language: KilnLanguage) {
 }
 
 @Composable
-private fun KilnRoot(themeStyle: KilnThemeStyle, fontStyle: KilnFontStyle, manageDeepLinkStore: ManageDeepLinkStore) {
+private fun KilnRoot(
+    themeStyle: KilnThemeStyle,
+    fontStyle: KilnFontStyle,
+    dynamicColor: Boolean,
+    manageDeepLinkStore: ManageDeepLinkStore,
+) {
     val view = LocalView.current
-    KilnTheme(themeStyle = themeStyle, fontStyle = fontStyle, dynamicColor = false) {
-        val lightBars = themeStyle == KilnThemeStyle.LIGHT
+    val systemDark = isSystemInDarkTheme()
+    KilnTheme(themeStyle = themeStyle, fontStyle = fontStyle, dynamicColor = dynamicColor) {
+        val lightBars = themeStyle.usesLightSystemBars(systemDark)
         if (!view.isInEditMode) {
             SideEffect {
                 val controller = WindowCompat.getInsetsController(

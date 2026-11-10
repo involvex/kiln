@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Appearance: System theme, Ocean palette, optional Material You Dynamic Color (API 31+; ignored for Monokai/Ocean)
 - Storage phase 2 (Manage): size bars, APK leftover scan/delete (SAF), orphaned Android/data+obb list/delete via Shizuku
+
+### Changed
+
+- Docs/About/store copy: clarify Kiln is the Android package manager (`dev.involvex.kiln`), unrelated to the macOS Kiln emulator (#46)
+- Discover / Trending: SectionHeader shelves, EmptyState, compact Trending cards, GitHub results use Card layout
 - Permission audit (Settings): dangerous-permission overview; privilege-gated bulk `pm revoke` and basic AppOps set (fixed allowlists)
 - Home-screen Glance widget + QS tile: update count, Check now (WorkManager), widget Trim caches (Shizuku or open Manage)
 - Activity log (Settings): searchable local Room log of installs, backups, cache clears, maintenance, privilege shell, debloat, Termux, and automation (cap 500; no paths/tokens)
