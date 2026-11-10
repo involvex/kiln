@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M29** Done (#47). **M30** Mirrors / proxy in progress (`m30-mirrors-proxy`). App version **0.2.2** (code 5). Publishing / F-Droid submit still deferred.
+**Current status:** **M31** Done (APK resign + split export; PR #49). App version **0.2.2** (code 5). Publishing / F-Droid submit still deferred.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -44,7 +44,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M27** | Permission audit | Done | [`prompts/M27-permission-audit.md`](./prompts/M27-permission-audit.md) · [#41](https://github.com/involvex/kiln/pull/41) | Dangerous perms overview; AppOps / bulk revoke via privilege |
 | **M28** | Storage phase 2 | Done | [`prompts/M28-storage-phase2.md`](./prompts/M28-storage-phase2.md) · [#44](https://github.com/involvex/kiln/pull/44) | Size bars, APK leftovers, orphaned Android/data+obb |
 | **M29** | APK tools phase 2 | Done | [`prompts/M29-apk-tools.md`](./prompts/M29-apk-tools.md) · [#47](https://github.com/involvex/kiln/pull/47) | Inspect + signature compare; shared signing reader (merge/resign deferred) |
-| **M30** | Mirrors / proxy | In progress | [`prompts/M30-mirrors-proxy.md`](./prompts/M30-mirrors-proxy.md) · `m30-mirrors-proxy` | Per-repo mirrors + HTTP/SOCKS/Orbot proxy |
+| **M30** | Mirrors / proxy | Done | [`prompts/M30-mirrors-proxy.md`](./prompts/M30-mirrors-proxy.md) · [#48](https://github.com/involvex/kiln/pull/48) | Per-repo mirrors + HTTP/SOCKS/Orbot proxy |
+| **M31** | APK tools resign / split export | Done | [`prompts/M31-apk-tools-resign.md`](./prompts/M31-apk-tools-resign.md) · [#49](https://github.com/involvex/kiln/pull/49) | Resign via apksig + export splits from `.apks`/`.xapk` |
 
 ---
 
@@ -65,8 +66,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Permission audit | Done | M27 #41 |
 | Storage phase 2 | Done | M28 #44 |
 | SAF backup rotation / data tiers / encryption | Open | Unscheduled |
-| APK tools 2 (inspect + compare) | Partial | M29 Done (#47); merge/resign still open (2b) |
-| Mirrors / proxy | In progress | M30 |
+| APK tools 2 (inspect + compare) | Partial | M29 Done (#47); M31 resign/split export Done (#49); universal merge still open |
+| Mirrors / proxy | Done | M30 #48 |
 | Freeze/hibernate, dual-user, tablet | Open | Unscheduled |
 | Publishing / F-Droid submit | Partial | Fastlane + tag workflow ready; screenshots / submit deferred |
 | HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
@@ -85,7 +86,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | APK export (single / batch) | ✅ `.apk` / `.apks` STORED / `.xapk`; SAF + share + WorkManager batch | NONE |
 | Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
 | Sources / updates | ✅ F-Droid/Izzy/Guardian defaults + FP upsert; `fdroidrepo(s):` / `?fingerprint=` deep links; index-v2 + entry.jar verify; GitHub; Obtainium import; Room cache; per-repo mirrors (M30) | NONE (+ network) |
-| Network proxy | 🟡 M30: HTTP/SOCKS + Orbot SOCKS via `KilnHttpClient` | NONE |
+| Network proxy | ✅ HTTP/SOCKS + Orbot SOCKS via `KilnHttpClient` (M30) | NONE |
 | Auto-match | ✅ Confidence tiers; icons/chips/rationale; signer-preferring multi-repo pick; WARNING confirm + manual F-Droid/GitHub link (pinned) | NONE |
 | GitHub channels | ✅ Stable / Pre-release / Nightly (Actions artifacts; PAT required for Nightly) | NONE (+ network; PAT for Nightly) |
 | Anti-features | ✅ F-Droid `metadata.antiFeatures` chips on catalog detail | NONE (+ catalog) |
@@ -100,7 +101,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; splits deferred | NONE / SHIZUKU |
 | Storage / cleaner | ✅ Size bars; APK leftovers; orphan Android/data+obb; cache clear | NONE / SHIZUKU (`CLEAR_CACHE`, `ACCESS_ANDROID_DATA`) |
-| APK tools (inspect / compare) | ✅ M29: SAF inspect + signature compare; merge/resign deferred | NONE |
+| APK tools (inspect / compare / resign) | ✅ M29 inspect+compare; ✅ M31 resign + split export | NONE |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
 | Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg) | NONE (+ network; silent install/downgrade if SHIZUKU) |
@@ -291,10 +292,11 @@ flowchart LR
   M27 --> M28[M28 Storage phase 2]
   M28 --> M29[M29 APK tools]
   M29 --> M30[M30 Mirrors proxy]
+  M30 --> M31[M31 APK resign]
 ```
 
-1. **M0–M28** + polish [#45](https://github.com/involvex/kiln/pull/45) on main.
-2. Current: **M30** only ([`prompts/M30-mirrors-proxy.md`](./prompts/M30-mirrors-proxy.md)). Do not mix later backlog into this PR.
+1. **M0–M30** on main (#48).
+2. Next: backlog only (universal APK merge still open). Do not mix unscheduled items into feature PRs.
 3. Publishing / F-Droid still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

@@ -405,14 +405,14 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 - **P2 — Anti-Features & Tracker-Info**: F-Droid chips → **shipped M19**; optional Exodus Privacy still open.
 - **P2 — Berechtigungs-Audit**: Übersicht gefährlicher Berechtigungen pro App, per Shizuku AppOps ändern und Berechtigungen in Bulk entziehen (`appops`, `pm revoke`). → **M27** (Done #41)
 - **P2 — Changelog & Watchlist**: → **shipped M21**
-- **P3 — Mirrors/Proxy**: Alternative Mirror-URLs je Repo, HTTP-/SOCKS-Proxy, Tor-Option (Orbot SOCKS). → **M30** (in progress)
+- **P3 — Mirrors/Proxy**: Alternative Mirror-URLs je Repo, HTTP-/SOCKS-Proxy, Tor-Option (Orbot SOCKS). → **shipped M30** (#48)
 
 ### Dev-Features (passt zu deinem Workflow)
 
 - **P1 — GitHub Actions Artifacts / Nightly / Beta-Kanäle**: → **shipped M19**
 - **P2 — Intent-/Broadcast-API für Automatisierung**: → **shipped M22**
 - **P2 — Config-Export/-Import und Sync**: Quellenliste und Regeln als JSON (Kiln-Config) via SAF → **M25** (Done #38); optional Sync über Cloudflare Worker (Hono + D1/R2) später.
-- **P3 — APK-Werkzeuge Phase 2**: Manifest-Viewer, Signaturvergleich zweier APKs, Splits zu einer APK zusammenführen, mit eigenem Schlüssel neu signieren (`apksig`). Bewusst nicht Kern, weil hoher Aufwand.
+- **P3 — APK-Werkzeuge Phase 2**: Manifest-Viewer + Signaturvergleich → **shipped M29**; Resign (`apksig`) + Split-Export → **M31** (in progress); echtes Universal-Merge (apktool-Klasse) weiter offen.
 
 ### Storage & Wartung
 
@@ -435,4 +435,5 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 5. **M27** Berechtigungs-Audit (Done #41)
 6. **M28** Storage Phase 2 (Done #44)
 7. **M29** APK tools phase 2 (inspect + compare; Done #47)
-8. **M30** Mirrors / proxy (in progress)
+8. **M30** Mirrors / proxy (Done #48)
+9. **M31** APK tools resign / split export (in progress)
