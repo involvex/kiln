@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Manage → APK tools: resign SAF APK with user PKCS12/keystore (apksig); export split `.apk` members from `.apks`/`.xapk` (no universal merge)
 - Per-repo HTTPS mirrors (Sources) with sync/download failover; Settings → Network HTTP/SOCKS proxy + Orbot preset; Kiln-Config schema v2 (mirrors + proxy prefs, no password)
 - Manage → APK tools: inspect SAF-picked `.apk`/`.apks`/`.xapk` (meta, permissions, signers, members); compare signatures (APK vs APK or vs installed)
 - Shared `ApkSigningReader` (X.509 SHA-256) for installer gate and apps detail
