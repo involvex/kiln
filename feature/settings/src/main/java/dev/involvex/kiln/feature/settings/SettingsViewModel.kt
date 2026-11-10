@@ -26,6 +26,8 @@ import dev.involvex.kiln.core.model.KilnThemeStyle
 import dev.involvex.kiln.core.model.MaintenancePreferences
 import dev.involvex.kiln.core.model.MaintenanceRunStore
 import dev.involvex.kiln.core.model.MaintenanceScheduler
+import dev.involvex.kiln.core.model.NetworkProxyPreferences
+import dev.involvex.kiln.core.model.NetworkProxyType
 import dev.involvex.kiln.core.model.PreferredInstaller
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
@@ -46,6 +48,7 @@ import timber.log.Timber
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val preferences: BackgroundUpdatePreferences,
+    private val networkProxyPreferences: NetworkProxyPreferences,
     private val automationPreferences: AutomationPreferences,
     private val maintenancePreferences: MaintenancePreferences,
     private val maintenanceRunStore: MaintenanceRunStore,
@@ -68,6 +71,11 @@ class SettingsViewModel @Inject constructor(
             preferences.observe().collect { prefs ->
                 _uiState.update { it.copy(backgroundUpdates = prefs) }
                 scheduler.apply(prefs)
+            }
+        }
+        viewModelScope.launch {
+            networkProxyPreferences.observe().collect { prefs ->
+                _uiState.update { it.copy(networkProxy = prefs) }
             }
         }
         viewModelScope.launch {
@@ -156,6 +164,30 @@ class SettingsViewModel @Inject constructor(
 
     fun setUnmeteredOnly(unmeteredOnly: Boolean) {
         viewModelScope.launch { preferences.setUnmeteredOnly(unmeteredOnly) }
+    }
+
+    fun setProxyType(type: NetworkProxyType) {
+        viewModelScope.launch { networkProxyPreferences.setType(type) }
+    }
+
+    fun setProxyHost(host: String) {
+        viewModelScope.launch { networkProxyPreferences.setHost(host) }
+    }
+
+    fun setProxyPort(port: Int) {
+        viewModelScope.launch { networkProxyPreferences.setPort(port) }
+    }
+
+    fun setProxyUsername(username: String) {
+        viewModelScope.launch { networkProxyPreferences.setUsername(username) }
+    }
+
+    fun setProxyPassword(password: String) {
+        viewModelScope.launch { networkProxyPreferences.setPassword(password) }
+    }
+
+    fun setOrbotPreset(enabled: Boolean) {
+        viewModelScope.launch { networkProxyPreferences.setOrbotPreset(enabled) }
     }
 
     fun setAutoInstallMatching(autoInstall: Boolean) {

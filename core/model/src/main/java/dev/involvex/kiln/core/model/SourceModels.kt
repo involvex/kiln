@@ -32,6 +32,8 @@ data class RepoConfig(
     val kind: SourceKind = SourceKind.FDROID,
     val enabled: Boolean = true,
     val lastSyncedAtEpochMs: Long? = null,
+    /** Comma-separated alternate HTTPS repo bases (failover after [address]). */
+    val mirrorsCsv: String = "",
 )
 
 data class IndexedPackage(

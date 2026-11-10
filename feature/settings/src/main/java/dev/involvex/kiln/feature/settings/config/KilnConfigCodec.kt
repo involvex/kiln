@@ -6,7 +6,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 object KilnConfigCodec {
-    const val SCHEMA_VERSION = 1
+    /** Current write version. Import accepts [MIN_SCHEMA_VERSION]..[SCHEMA_VERSION]. */
+    const val SCHEMA_VERSION = 2
+    const val MIN_SCHEMA_VERSION = 1
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -26,7 +28,7 @@ object KilnConfigCodec {
         }
         return try {
             val doc = json.decodeFromString<KilnConfigV1>(trimmed)
-            if (doc.schemaVersion != SCHEMA_VERSION) {
+            if (doc.schemaVersion !in MIN_SCHEMA_VERSION..SCHEMA_VERSION) {
                 Result.failure("kiln_config_unsupported_schema:${doc.schemaVersion}")
             } else {
                 Result.success(doc)

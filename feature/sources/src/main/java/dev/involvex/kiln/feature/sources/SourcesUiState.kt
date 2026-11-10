@@ -10,6 +10,8 @@ data class RepoUiModel(
     val enabled: Boolean,
     val lastSyncedLabel: String?,
     val priority: Int,
+    val mirrorsCsv: String = "",
+    val mirrorCount: Int = 0,
 )
 
 data class SourcesUiState(

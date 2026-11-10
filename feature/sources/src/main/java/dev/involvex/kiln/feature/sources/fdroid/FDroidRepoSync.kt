@@ -1,5 +1,6 @@
 package dev.involvex.kiln.feature.sources.fdroid
 
+import dev.involvex.kiln.core.common.RepoMirrorUrls
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.common.normalizeFingerprint
 import dev.involvex.kiln.core.database.IndexDao
@@ -27,27 +28,35 @@ class FDroidRepoSync @Inject constructor(
 ) {
     /** Updates index rows for installed/managed packages without wiping the catalog. */
     suspend fun sync(repo: RepoEntity): Result<Unit> {
-        val base = repo.address.trimEnd('/')
         val wanted = wantedPackageNames()
         Timber.i("Syncing repo %s for %d installed/managed packages", repo.id, wanted.size)
-        val parsedResult = http.getBytes("$base/entry.jar")
-            .flatMap { entryBytes ->
-                val verified = EntryJarVerifier.verify(entryBytes, repo.fingerprint)
-                if (verified is Result.Failure) {
-                    Timber.w("Rejecting repo %s: signature verify failed (%s)", repo.id, verified.message)
+        val bases = RepoMirrorUrls.candidates(repo.address, repo.mirrorsCsv)
+        if (bases.isEmpty()) return Result.failure("invalid_repo_address")
+        var lastFailure: Result.Failure? = null
+        for (base in bases) {
+            val parsedResult = http.getBytes("$base/entry.jar")
+                .flatMap { entryBytes ->
+                    val verified = EntryJarVerifier.verify(entryBytes, repo.fingerprint)
+                    if (verified is Result.Failure) {
+                        Timber.w("Rejecting repo %s: signature verify failed (%s)", repo.id, verified.message)
+                    }
+                    verified
                 }
-                verified
-            }
-            .flatMap { entryJson -> IndexV2Parser.parseEntryPointer(entryJson) }
-            .flatMap { pointer -> loadAndParseWanted(base, pointer, wanted) }
-        return when (parsedResult) {
-            is Result.Failure -> parsedResult
+                .flatMap { entryJson -> IndexV2Parser.parseEntryPointer(entryJson) }
+                .flatMap { pointer -> loadAndParseWanted(base, pointer, wanted) }
+            when (parsedResult) {
+                is Result.Failure -> {
+                    lastFailure = parsedResult
+                    Timber.w("Sync base %s failed (%s); trying next mirror", base, parsedResult.message)
+                }
 
-            is Result.Success -> {
-                persistUpsert(repo, parsedResult.value)
-                Result.success(Unit)
+                is Result.Success -> {
+                    persistUpsert(repo, parsedResult.value)
+                    return Result.success(Unit)
+                }
             }
         }
+        return lastFailure ?: Result.failure("network_error")
     }
 
     /**
@@ -55,12 +64,25 @@ class FDroidRepoSync @Inject constructor(
      * and replaces this repo's indexed rows.
      */
     suspend fun syncCatalog(repo: RepoEntity): Result<Int> {
-        val base = repo.address.trimEnd('/')
         Timber.i("Catalog sync for repo %s", repo.id)
-        return http.getBytes("$base/entry.jar")
-            .flatMap { entryBytes -> EntryJarVerifier.verify(entryBytes, repo.fingerprint) }
-            .flatMap { entryJson -> IndexV2Parser.parseEntryPointer(entryJson) }
-            .flatMap { pointer -> loadAndPersistCatalog(base, pointer, repo) }
+        val bases = RepoMirrorUrls.candidates(repo.address, repo.mirrorsCsv)
+        if (bases.isEmpty()) return Result.failure("invalid_repo_address")
+        var lastFailure: Result.Failure? = null
+        for (base in bases) {
+            val result = http.getBytes("$base/entry.jar")
+                .flatMap { entryBytes -> EntryJarVerifier.verify(entryBytes, repo.fingerprint) }
+                .flatMap { entryJson -> IndexV2Parser.parseEntryPointer(entryJson) }
+                .flatMap { pointer -> loadAndPersistCatalog(base, pointer, repo) }
+            when (result) {
+                is Result.Failure -> {
+                    lastFailure = result
+                    Timber.w("Catalog base %s failed (%s); trying next mirror", base, result.message)
+                }
+
+                is Result.Success -> return result
+            }
+        }
+        return lastFailure ?: Result.failure("network_error")
     }
 
     private suspend fun wantedPackageNames(): Set<String> {

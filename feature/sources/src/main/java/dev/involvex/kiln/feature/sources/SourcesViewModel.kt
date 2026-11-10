@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.common.IoDispatcher
+import dev.involvex.kiln.core.common.RepoMirrorUrls
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.common.normalizeFingerprint
 import dev.involvex.kiln.core.database.ManagedAppDao
@@ -320,6 +321,17 @@ class SourcesViewModel @Inject constructor(
         _uiState.update { it.copy(message = null) }
     }
 
+    fun saveRepoMirrors(repoId: String, mirrorsRaw: String) {
+        viewModelScope.launch {
+            withContext(ioDispatcher) {
+                val existing = repoDao.getAll().firstOrNull { it.id == repoId } ?: return@withContext
+                val csv = RepoMirrorUrls.parseMirrorsInput(mirrorsRaw)
+                repoDao.upsert(existing.copy(mirrorsCsv = csv))
+            }
+            _uiState.update { it.copy(message = "mirrors_saved") }
+        }
+    }
+
     private fun RepoEntity.toUi(): RepoUiModel = RepoUiModel(
         id = id,
         name = name,
@@ -330,6 +342,8 @@ class SourcesViewModel @Inject constructor(
             DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(it))
         },
         priority = priority,
+        mirrorsCsv = mirrorsCsv,
+        mirrorCount = RepoMirrorUrls.mirrorsList(mirrorsCsv).size,
     )
 
     private companion object {

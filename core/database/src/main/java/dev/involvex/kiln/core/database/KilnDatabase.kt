@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
         InstallJobEntity::class,
         ActivityLogEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = false,
 )
 abstract class KilnDatabase : RoomDatabase() {

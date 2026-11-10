@@ -84,6 +84,13 @@
     <string name="sources_repo_fingerprint">Fingerprint: %1$s</string>
     <string name="sources_repo_last_sync">Letzte Sync: %1$s</string>
     <string name="sources_never_synced">Nie</string>
+    <string name="sources_repo_mirrors_count">Spiegel: %1$d</string>
+    <string name="sources_repo_edit_mirrors">Spiegel bearbeiten</string>
+    <string name="sources_repo_mirrors_title">Repo-Spiegel</string>
+    <string name="sources_repo_mirrors_hint">Eine HTTPS-Basis-URL pro Zeile (oder kommagetrennt). Nach der Primäradresse bei Sync-/Download-Fehlern.</string>
+    <string name="sources_repo_mirrors_save">Speichern</string>
+    <string name="sources_repo_mirrors_cancel">Abbrechen</string>
+    <string name="sources_msg_mirrors_saved">Spiegel gespeichert.</string>
     <string name="sources_add_repo">F-Droid-Repo hinzufügen</string>
     <string name="sources_repo_name">Name</string>
     <string name="sources_repo_url">Adresse oder fdroidrepos:// / https://…?fingerprint=</string>

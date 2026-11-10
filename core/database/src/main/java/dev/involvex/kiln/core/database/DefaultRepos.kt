@@ -76,6 +76,7 @@ suspend fun ensureKnownRepos(repoDao: RepoDao) {
                 enabled = spec.enabledByDefault,
                 lastSyncedAtEpochMs = null,
                 priority = spec.priority,
+                mirrorsCsv = "",
             )
         } else {
             prior.copy(
@@ -84,6 +85,7 @@ suspend fun ensureKnownRepos(repoDao: RepoDao) {
                 fingerprint = spec.fingerprint,
                 kind = "FDROID",
                 priority = spec.priority,
+                // Preserve user mirrors when repairing known address/fingerprint.
             )
         }
     }

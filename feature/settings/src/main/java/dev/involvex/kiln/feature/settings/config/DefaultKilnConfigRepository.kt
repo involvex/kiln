@@ -18,6 +18,8 @@ import dev.involvex.kiln.core.model.KilnFontStyle
 import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
 import dev.involvex.kiln.core.model.MaintenancePreferences
+import dev.involvex.kiln.core.model.NetworkProxyPreferences
+import dev.involvex.kiln.core.model.NetworkProxyType
 import dev.involvex.kiln.core.model.PreferredInstaller
 import dev.involvex.kiln.core.model.TermuxPreferences
 import javax.inject.Inject
@@ -35,6 +37,7 @@ class DefaultKilnConfigRepository @Inject constructor(
     private val appearancePreferences: AppearancePreferences,
     private val installerPreferences: InstallerPreferences,
     private val termuxPreferences: TermuxPreferences,
+    private val networkProxyPreferences: NetworkProxyPreferences,
     private val gitHubAuth: GitHubAuthHeaderProvider,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : KilnConfigRepository {
@@ -103,6 +106,7 @@ class DefaultKilnConfigRepository @Inject constructor(
         val appearance = appearancePreferences.current()
         val installer = installerPreferences.current()
         val termux = termuxPreferences.current()
+        val network = networkProxyPreferences.current()
         // hasToken() only — never getToken() / never serialize the secret.
         val patConfigured = gitHubAuth.hasToken()
         return KilnConfigV1(
@@ -119,6 +123,7 @@ class DefaultKilnConfigRepository @Inject constructor(
                     kind = repo.kind,
                     enabled = repo.enabled,
                     priority = repo.priority,
+                    mirrors = repo.mirrorsCsv,
                 )
             },
             managedApps = managedAppDao.getAll().map { app ->
@@ -159,6 +164,14 @@ class DefaultKilnConfigRepository @Inject constructor(
                 termux = KilnConfigTermuxV1(
                     enabled = termux.enabled,
                     packageId = termux.packageId,
+                ),
+                // Never export proxy password.
+                network = KilnConfigNetworkV1(
+                    type = network.type.name,
+                    host = network.host,
+                    port = network.port,
+                    username = network.username,
+                    orbotPreset = network.orbotPreset,
                 ),
             ),
             hints = KilnConfigHintsV1(githubPatWasConfigured = patConfigured),
@@ -204,6 +217,15 @@ class DefaultKilnConfigRepository @Inject constructor(
             }
             applied++
         }
+        prefs.network?.let { section ->
+            networkProxyPreferences.setType(enumOrDefault(section.type, NetworkProxyType.NONE))
+            networkProxyPreferences.setHost(section.host)
+            networkProxyPreferences.setPort(section.port)
+            networkProxyPreferences.setUsername(section.username)
+            networkProxyPreferences.setOrbotPreset(section.orbotPreset)
+            // Password is never in config; leave existing local password unchanged.
+            applied++
+        }
         return applied
     }
 
@@ -218,6 +240,7 @@ class DefaultKilnConfigRepository @Inject constructor(
             enabled = enabled,
             lastSyncedAtEpochMs = null,
             priority = priority,
+            mirrorsCsv = mirrors.trim(),
         )
     }
 
