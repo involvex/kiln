@@ -1,4 +1,4 @@
-Kiln unifies F-Droid and GitHub update sources, APK export/backup, storage cleanup, and optional debloat in one Apache-2.0 Android app.
+Kiln (package id dev.involvex.kiln) unifies F-Droid and GitHub update sources, APK export/backup, storage cleanup, and optional debloat in one Apache-2.0 Android app. It is not related to the macOS “Kiln” Android emulator.
 
 • List and export installed apps (.apk / .apks / .xapk)
 • Sync F-Droid-compatible repos and GitHub Releases; auto-match installed apps

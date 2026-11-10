@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Docs/About/store copy: clarify Kiln is the Android package manager (`dev.involvex.kiln`), unrelated to the macOS Kiln emulator (#46)
 - Discover / Trending: SectionHeader shelves, EmptyState, compact Trending cards, GitHub results use Card layout
 - Permission audit (Settings): dangerous-permission overview; privilege-gated bulk `pm revoke` and basic AppOps set (fixed allowlists)
 - Home-screen Glance widget + QS tile: update count, Check now (WorkManager), widget Trim caches (Shizuku or open Manage)

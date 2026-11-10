@@ -1,4 +1,4 @@
-Kiln vereint F-Droid- und GitHub-Updatequellen, APK-Export/Backup, Speicherbereinigung und optionalen Debloat in einer Apache-2.0-Android-App.
+Kiln (Paket-ID dev.involvex.kiln) vereint F-Droid- und GitHub-Updatequellen, APK-Export/Backup, Speicherbereinigung und optionalen Debloat in einer Apache-2.0-Android-App. Nicht verwandt mit dem macOS-„Kiln“-Android-Emulator.
 
 • Installierte Apps listen und exportieren (.apk / .apks / .xapk)
 • F-Droid-kompatible Repos und GitHub Releases synchronisieren; Auto-Match
