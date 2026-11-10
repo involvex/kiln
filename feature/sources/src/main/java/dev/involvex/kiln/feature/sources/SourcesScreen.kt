@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,6 +24,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -40,6 +44,7 @@ fun SourcesRoute(onOpenAutoMatch: () -> Unit, modifier: Modifier = Modifier, vie
         onSyncAll = viewModel::syncAll,
         onAddFieldsChange = viewModel::onAddFieldsChange,
         onAddRepo = viewModel::addRepo,
+        onSaveRepoMirrors = viewModel::saveRepoMirrors,
         onObtainiumTextChange = viewModel::onObtainiumTextChange,
         onImportObtainium = viewModel::importObtainium,
         onImportObtainiumUri = viewModel::importObtainiumFromUri,
@@ -59,6 +64,7 @@ fun SourcesScreen(
     onSyncAll: () -> Unit,
     onAddFieldsChange: (name: String?, address: String?, fingerprint: String?) -> Unit,
     onAddRepo: () -> Unit,
+    onSaveRepoMirrors: (repoId: String, mirrorsRaw: String) -> Unit,
     onObtainiumTextChange: (String) -> Unit,
     onImportObtainium: () -> Unit,
     onImportObtainiumUri: (Uri) -> Unit,
@@ -83,7 +89,7 @@ fun SourcesScreen(
         ) {
             sourcesHeader(state.isSyncing, onSyncAll, onOpenAutoMatch)
             sourcesWatchlist(state.watchlist, onUnwatch)
-            sourcesRepoList(state.repos)
+            sourcesRepoList(state.repos, onSaveRepoMirrors)
             item { AddRepoSection(state, onAddFieldsChange, onAddRepo) }
             item { GithubPatSection(state, onGithubTokenInputChange, onSaveGithubToken, onClearGithubToken) }
             item {
@@ -113,21 +119,23 @@ private fun formatSourcesMessage(code: String): String {
     return formatPrefixedMessage(code) ?: code
 }
 
-private fun exactMessageRes(code: String): Int? = when (code) {
-    "invalid_repo" -> R.string.sources_msg_invalid_repo
-    "repo_added" -> R.string.sources_msg_repo_added
-    "repo_uri_filled" -> R.string.sources_msg_repo_uri_filled
-    "repo_http_warn" -> R.string.sources_msg_repo_http_warn
-    "token_saved" -> R.string.sources_msg_token_saved
-    "token_cleared" -> R.string.sources_msg_token_cleared
-    "obtainium_empty" -> R.string.sources_msg_obtainium_empty
-    "obtainium_too_short" -> R.string.sources_msg_obtainium_too_short
-    "obtainium_no_apps" -> R.string.sources_msg_obtainium_no_apps
-    "obtainium_file_read_failed" -> R.string.sources_msg_obtainium_file_read_failed
-    "index_oom" -> R.string.sources_msg_index_oom
-    "share_unrecognized" -> R.string.sources_msg_share_unrecognized
-    else -> null
-}
+private fun exactMessageRes(code: String): Int? = EXACT_MESSAGE_RES[code]
+
+private val EXACT_MESSAGE_RES = mapOf(
+    "invalid_repo" to R.string.sources_msg_invalid_repo,
+    "repo_added" to R.string.sources_msg_repo_added,
+    "repo_uri_filled" to R.string.sources_msg_repo_uri_filled,
+    "repo_http_warn" to R.string.sources_msg_repo_http_warn,
+    "mirrors_saved" to R.string.sources_msg_mirrors_saved,
+    "token_saved" to R.string.sources_msg_token_saved,
+    "token_cleared" to R.string.sources_msg_token_cleared,
+    "obtainium_empty" to R.string.sources_msg_obtainium_empty,
+    "obtainium_too_short" to R.string.sources_msg_obtainium_too_short,
+    "obtainium_no_apps" to R.string.sources_msg_obtainium_no_apps,
+    "obtainium_file_read_failed" to R.string.sources_msg_obtainium_file_read_failed,
+    "index_oom" to R.string.sources_msg_index_oom,
+    "share_unrecognized" to R.string.sources_msg_share_unrecognized,
+)
 
 @Composable
 private fun formatPrefixedMessage(code: String): String? = when {
@@ -247,14 +255,18 @@ private fun LazyListScope.sourcesHeader(isSyncing: Boolean, onSyncAll: () -> Uni
     }
 }
 
-private fun LazyListScope.sourcesRepoList(repos: List<RepoUiModel>) {
+private fun LazyListScope.sourcesRepoList(repos: List<RepoUiModel>, onSaveRepoMirrors: (repoId: String, mirrorsRaw: String) -> Unit) {
     items(repos, key = { it.id }) { repo ->
-        RepoCard(repo)
+        RepoCard(repo, onSaveRepoMirrors)
     }
 }
 
 @Composable
-private fun RepoCard(repo: RepoUiModel) {
+private fun RepoCard(repo: RepoUiModel, onSaveRepoMirrors: (repoId: String, mirrorsRaw: String) -> Unit) {
+    var editingMirrors by remember(repo.id) { mutableStateOf(false) }
+    var mirrorsDraft by remember(repo.id, repo.mirrorsCsv) {
+        mutableStateOf(repo.mirrorsCsv.replace(',', '\n'))
+    }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(repo.name, style = MaterialTheme.typography.titleMedium)
@@ -270,7 +282,49 @@ private fun RepoCard(repo: RepoUiModel) {
                 ),
                 style = MaterialTheme.typography.bodySmall,
             )
+            Text(
+                stringResource(R.string.sources_repo_mirrors_count, repo.mirrorCount),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            TextButton(onClick = { editingMirrors = true }) {
+                Text(stringResource(R.string.sources_repo_edit_mirrors))
+            }
         }
+    }
+    if (editingMirrors) {
+        AlertDialog(
+            onDismissRequest = { editingMirrors = false },
+            title = { Text(stringResource(R.string.sources_repo_mirrors_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = stringResource(R.string.sources_repo_mirrors_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    OutlinedTextField(
+                        value = mirrorsDraft,
+                        onValueChange = { mirrorsDraft = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onSaveRepoMirrors(repo.id, mirrorsDraft)
+                        editingMirrors = false
+                    },
+                ) {
+                    Text(stringResource(R.string.sources_repo_mirrors_save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { editingMirrors = false }) {
+                    Text(stringResource(R.string.sources_repo_mirrors_cancel))
+                }
+            },
+        )
     }
 }
 

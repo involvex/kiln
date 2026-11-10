@@ -14,6 +14,8 @@ data class RepoEntity(
     val enabled: Boolean,
     val lastSyncedAtEpochMs: Long?,
     val priority: Int,
+    /** Comma-separated alternate HTTPS bases; empty when none. */
+    val mirrorsCsv: String = "",
 )
 
 @Entity(

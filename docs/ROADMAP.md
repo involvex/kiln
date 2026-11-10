@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M28** Done (#44); polish [#45](https://github.com/involvex/kiln/pull/45) on main. **M29** APK tools phase 2 in progress (`m29-apk-tools`). App version **0.2.2** (code 5). Publishing / F-Droid submit still deferred.
+**Current status:** **M29** Done (#47). **M30** Mirrors / proxy in progress (`m30-mirrors-proxy`). App version **0.2.2** (code 5). Publishing / F-Droid submit still deferred.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -43,8 +43,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M26** | Widgets / QS tile | Done | [`prompts/M26-widgets-qs.md`](./prompts/M26-widgets-qs.md) · [#40](https://github.com/involvex/kiln/pull/40) | Glance: update count, check-now, cache shortcut; thin QS tile |
 | **M27** | Permission audit | Done | [`prompts/M27-permission-audit.md`](./prompts/M27-permission-audit.md) · [#41](https://github.com/involvex/kiln/pull/41) | Dangerous perms overview; AppOps / bulk revoke via privilege |
 | **M28** | Storage phase 2 | Done | [`prompts/M28-storage-phase2.md`](./prompts/M28-storage-phase2.md) · [#44](https://github.com/involvex/kiln/pull/44) | Size bars, APK leftovers, orphaned Android/data+obb |
-| **M29** | APK tools phase 2 | In progress | [`prompts/M29-apk-tools.md`](./prompts/M29-apk-tools.md) · `m29-apk-tools` | Inspect + signature compare; shared signing reader (merge/resign deferred) |
-| **M30** | Mirrors / proxy | Planned | — | Per-repo mirrors + HTTP/SOCKS proxy (after M29) |
+| **M29** | APK tools phase 2 | Done | [`prompts/M29-apk-tools.md`](./prompts/M29-apk-tools.md) · [#47](https://github.com/involvex/kiln/pull/47) | Inspect + signature compare; shared signing reader (merge/resign deferred) |
+| **M30** | Mirrors / proxy | In progress | [`prompts/M30-mirrors-proxy.md`](./prompts/M30-mirrors-proxy.md) · `m30-mirrors-proxy` | Per-repo mirrors + HTTP/SOCKS/Orbot proxy |
 
 ---
 
@@ -65,8 +65,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Permission audit | Done | M27 #41 |
 | Storage phase 2 | Done | M28 #44 |
 | SAF backup rotation / data tiers / encryption | Open | Unscheduled |
-| APK tools 2 (inspect + compare) | In progress | M29 — merge/resign still open (2b) |
-| Mirrors / proxy | Planned | M30 |
+| APK tools 2 (inspect + compare) | Partial | M29 Done (#47); merge/resign still open (2b) |
+| Mirrors / proxy | In progress | M30 |
 | Freeze/hibernate, dual-user, tablet | Open | Unscheduled |
 | Publishing / F-Droid submit | Partial | Fastlane + tag workflow ready; screenshots / submit deferred |
 | HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
@@ -84,7 +84,8 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | App detail | ✅ Version, installer, SHA-256, paths, permissions; rollback list + Shizuku downgrade confirm | NONE / SHIZUKU |
 | APK export (single / batch) | ✅ `.apk` / `.apks` STORED / `.xapk`; SAF + share + WorkManager batch | NONE |
 | Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
-| Sources / updates | ✅ F-Droid/Izzy/Guardian defaults + FP upsert; `fdroidrepo(s):` / `?fingerprint=` deep links; index-v2 + entry.jar verify; GitHub; Obtainium import; Room cache | NONE (+ network) |
+| Sources / updates | ✅ F-Droid/Izzy/Guardian defaults + FP upsert; `fdroidrepo(s):` / `?fingerprint=` deep links; index-v2 + entry.jar verify; GitHub; Obtainium import; Room cache; per-repo mirrors (M30) | NONE (+ network) |
+| Network proxy | 🟡 M30: HTTP/SOCKS + Orbot SOCKS via `KilnHttpClient` | NONE |
 | Auto-match | ✅ Confidence tiers; icons/chips/rationale; signer-preferring multi-repo pick; WARNING confirm + manual F-Droid/GitHub link (pinned) | NONE |
 | GitHub channels | ✅ Stable / Pre-release / Nightly (Actions artifacts; PAT required for Nightly) | NONE (+ network; PAT for Nightly) |
 | Anti-features | ✅ F-Droid `metadata.antiFeatures` chips on catalog detail | NONE (+ catalog) |
@@ -99,7 +100,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; splits deferred | NONE / SHIZUKU |
 | Storage / cleaner | ✅ Size bars; APK leftovers; orphan Android/data+obb; cache clear | NONE / SHIZUKU (`CLEAR_CACHE`, `ACCESS_ANDROID_DATA`) |
-| APK tools (inspect / compare) | 🟡 M29: SAF inspect + signature compare; merge/resign deferred | NONE |
+| APK tools (inspect / compare) | ✅ M29: SAF inspect + signature compare; merge/resign deferred | NONE |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
 | Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg) | NONE (+ network; silent install/downgrade if SHIZUKU) |
@@ -293,7 +294,7 @@ flowchart LR
 ```
 
 1. **M0–M28** + polish [#45](https://github.com/involvex/kiln/pull/45) on main.
-2. Current: **M29** only ([`prompts/M29-apk-tools.md`](./prompts/M29-apk-tools.md)). Do not mix M30+ into this PR.
+2. Current: **M30** only ([`prompts/M30-mirrors-proxy.md`](./prompts/M30-mirrors-proxy.md)). Do not mix later backlog into this PR.
 3. Publishing / F-Droid still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

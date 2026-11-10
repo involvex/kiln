@@ -405,7 +405,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 - **P2 — Anti-Features & Tracker-Info**: F-Droid chips → **shipped M19**; optional Exodus Privacy still open.
 - **P2 — Berechtigungs-Audit**: Übersicht gefährlicher Berechtigungen pro App, per Shizuku AppOps ändern und Berechtigungen in Bulk entziehen (`appops`, `pm revoke`). → **M27** (Done #41)
 - **P2 — Changelog & Watchlist**: → **shipped M21**
-- **P3 — Mirrors/Proxy**: Alternative Mirror-URLs je Repo, HTTP-/SOCKS-Proxy, Tor-Option.
+- **P3 — Mirrors/Proxy**: Alternative Mirror-URLs je Repo, HTTP-/SOCKS-Proxy, Tor-Option (Orbot SOCKS). → **M30** (in progress)
 
 ### Dev-Features (passt zu deinem Workflow)
 
@@ -434,5 +434,5 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 4. **M26** Widgets / QS
 5. **M27** Berechtigungs-Audit (Done #41)
 6. **M28** Storage Phase 2 (Done #44)
-7. **M29** APK tools phase 2 (inspect + compare; in progress)
-8. **M30** Mirrors / proxy (planned)
+7. **M29** APK tools phase 2 (inspect + compare; Done #47)
+8. **M30** Mirrors / proxy (in progress)

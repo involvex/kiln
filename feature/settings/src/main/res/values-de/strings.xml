@@ -57,7 +57,7 @@
     <string name="settings_maintenance_last_run_partial">Teilweise / Fehler</string>
     <string name="settings_maintenance_last_run">Letzter Lauf %1$s — %2$s: %3$s</string>
     <string name="settings_config_section">Kiln-Konfiguration</string>
-    <string name="settings_config_explain">Repos, verwaltete Apps (inkl. Watchlist) und Einstellungen als kiln-config.json exportieren oder importieren. Merge löscht keine bestehenden Einträge. GitHub-PAT wird nie exportiert — nach dem Import unter Quellen neu eingeben. Danach Quellen synchronisieren. Das ist nicht das Obtainium-Format.</string>
+    <string name="settings_config_explain">Repos (inkl. Spiegel), verwaltete Apps (inkl. Watchlist) und Einstellungen als kiln-config.json exportieren oder importieren (Schema v2). Merge löscht keine bestehenden Einträge. GitHub-PAT und Proxy-Passwort werden nie exportiert. Danach Quellen synchronisieren. Das ist nicht das Obtainium-Format.</string>
     <string name="settings_config_export">Kiln-Konfiguration exportieren</string>
     <string name="settings_config_import">Kiln-Konfiguration importieren</string>
     <string name="settings_config_busy">Wird ausgeführt…</string>
@@ -90,6 +90,17 @@
     <string name="settings_font_style">Schriftstil</string>
     <string name="settings_font_default">Standard</string>
     <string name="settings_font_rounded">Abgerundet</string>
+    <string name="settings_network_section">Netzwerk</string>
+    <string name="settings_network_explain">Optionaler HTTP- oder SOCKS-Proxy für Kiln-HTTPS-Downloads (F-Droid-Index, GitHub, APKs). Orbot nutzt SOCKS auf 127.0.0.1:9050 — Orbot zuerst installieren und starten. Proxy-Passwort wird nie in der Kiln-Config exportiert.</string>
+    <string name="settings_network_orbot">Orbot nutzen (Tor SOCKS)</string>
+    <string name="settings_network_orbot_hint">Verkehr läuft über Orbot auf 127.0.0.1:9050. Orbot vor dem Sync starten.</string>
+    <string name="settings_network_type_none">Aus</string>
+    <string name="settings_network_type_http">HTTP</string>
+    <string name="settings_network_type_socks">SOCKS</string>
+    <string name="settings_network_host">Proxy-Host</string>
+    <string name="settings_network_port">Port</string>
+    <string name="settings_network_username">Benutzername (optional)</string>
+    <string name="settings_network_password">Passwort (optional)</string>
     <string name="settings_installer_section">Installer</string>
     <string name="settings_installer_explain">Standard nutzt den System-PackageInstaller-Dialog. Shizuku installiert still, wenn Privilege bereit ist, sonst Fallback auf den Systemdialog.</string>
     <string name="settings_installer_system">Standard</string>

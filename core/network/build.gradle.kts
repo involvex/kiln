@@ -10,6 +10,7 @@ android {
 
 dependencies {
     implementation(project(":core:common"))
+    implementation(project(":core:model"))
 
     implementation(libs.okhttp)
     implementation(libs.kotlinx.coroutines.core)

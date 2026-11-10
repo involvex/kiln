@@ -23,6 +23,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -36,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -54,6 +56,8 @@ import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
 import dev.involvex.kiln.core.model.MaintenancePrefs
 import dev.involvex.kiln.core.model.MaintenanceRunRecord
+import dev.involvex.kiln.core.model.NetworkProxyPrefs
+import dev.involvex.kiln.core.model.NetworkProxyType
 import dev.involvex.kiln.core.model.PreferredInstaller
 import java.text.DateFormat
 import java.util.Date
@@ -117,6 +121,12 @@ fun SettingsRoute(
         onUnmeteredOnlyChange = viewModel::setUnmeteredOnly,
         onAutoInstallChange = viewModel::setAutoInstallMatching,
         onCooldownDaysChange = viewModel::setUpdateCooldownDays,
+        onProxyTypeChange = viewModel::setProxyType,
+        onProxyHostChange = viewModel::setProxyHost,
+        onProxyPortChange = viewModel::setProxyPort,
+        onProxyUsernameChange = viewModel::setProxyUsername,
+        onProxyPasswordChange = viewModel::setProxyPassword,
+        onOrbotPresetChange = viewModel::setOrbotPreset,
         onAutomationEnabledChange = viewModel::setAutomationEnabled,
         onMaintenanceEnabledChange = viewModel::setMaintenanceEnabled,
         onMaintenanceTrimChange = viewModel::setMaintenanceTrimCaches,
@@ -157,6 +167,12 @@ fun SettingsScreen(
     onUnmeteredOnlyChange: (Boolean) -> Unit,
     onAutoInstallChange: (Boolean) -> Unit,
     onCooldownDaysChange: (Int) -> Unit,
+    onProxyTypeChange: (NetworkProxyType) -> Unit,
+    onProxyHostChange: (String) -> Unit,
+    onProxyPortChange: (Int) -> Unit,
+    onProxyUsernameChange: (String) -> Unit,
+    onProxyPasswordChange: (String) -> Unit,
+    onOrbotPresetChange: (Boolean) -> Unit,
     onAutomationEnabledChange: (Boolean) -> Unit,
     onMaintenanceEnabledChange: (Boolean) -> Unit,
     onMaintenanceTrimChange: (Boolean) -> Unit,
@@ -239,6 +255,16 @@ fun SettingsScreen(
                 preferred = state.preferredInstaller,
                 shizukuSilentAvailable = state.shizukuSilentAvailable,
                 onPreferredChange = onPreferredInstallerChange,
+            )
+            HorizontalDivider()
+            NetworkProxySection(
+                prefs = state.networkProxy,
+                onTypeChange = onProxyTypeChange,
+                onHostChange = onProxyHostChange,
+                onPortChange = onProxyPortChange,
+                onUsernameChange = onProxyUsernameChange,
+                onPasswordChange = onProxyPasswordChange,
+                onOrbotChange = onOrbotPresetChange,
             )
             HorizontalDivider()
             DevSection(
@@ -635,6 +661,91 @@ private fun BackgroundUpdatesBlock(
             delay(2_000)
             onConsumeCheckNow()
         }
+    }
+}
+
+@Composable
+private fun NetworkProxySection(
+    prefs: NetworkProxyPrefs,
+    onTypeChange: (NetworkProxyType) -> Unit,
+    onHostChange: (String) -> Unit,
+    onPortChange: (Int) -> Unit,
+    onUsernameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onOrbotChange: (Boolean) -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.settings_network_section),
+        style = MaterialTheme.typography.titleMedium,
+    )
+    Text(
+        text = stringResource(R.string.settings_network_explain),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    SettingsSwitchRow(
+        title = stringResource(R.string.settings_network_orbot),
+        checked = prefs.orbotPreset,
+        onCheckedChange = onOrbotChange,
+    )
+    if (!prefs.orbotPreset) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FilterChip(
+                selected = prefs.type == NetworkProxyType.NONE,
+                onClick = { onTypeChange(NetworkProxyType.NONE) },
+                label = { Text(stringResource(R.string.settings_network_type_none)) },
+            )
+            FilterChip(
+                selected = prefs.type == NetworkProxyType.HTTP,
+                onClick = { onTypeChange(NetworkProxyType.HTTP) },
+                label = { Text(stringResource(R.string.settings_network_type_http)) },
+            )
+            FilterChip(
+                selected = prefs.type == NetworkProxyType.SOCKS,
+                onClick = { onTypeChange(NetworkProxyType.SOCKS) },
+                label = { Text(stringResource(R.string.settings_network_type_socks)) },
+            )
+        }
+        if (prefs.type != NetworkProxyType.NONE) {
+            OutlinedTextField(
+                value = prefs.host,
+                onValueChange = onHostChange,
+                label = { Text(stringResource(R.string.settings_network_host)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = if (prefs.port == 0) "" else prefs.port.toString(),
+                onValueChange = { raw -> onPortChange(raw.filter { it.isDigit() }.toIntOrNull() ?: 0) },
+                label = { Text(stringResource(R.string.settings_network_port)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = prefs.username,
+                onValueChange = onUsernameChange,
+                label = { Text(stringResource(R.string.settings_network_username)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = prefs.password,
+                onValueChange = onPasswordChange,
+                label = { Text(stringResource(R.string.settings_network_password)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+            )
+        }
+    } else {
+        Text(
+            text = stringResource(R.string.settings_network_orbot_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

@@ -10,7 +10,7 @@ class KilnConfigCodecTest {
     @Test
     fun round_trip_preserves_repos_and_managed_apps() {
         val original = KilnConfigV1(
-            schemaVersion = 1,
+            schemaVersion = 2,
             exportedAtEpochMs = 1_700_000_000_000L,
             kilnVersionName = "0.2.2",
             kilnVersionCode = 5,
@@ -22,6 +22,7 @@ class KilnConfigCodecTest {
                     fingerprint = "abc",
                     enabled = true,
                     priority = 0,
+                    mirrors = "https://mirror.example/repo",
                 ),
             ),
             managedApps = listOf(
@@ -34,6 +35,12 @@ class KilnConfigCodecTest {
             ),
             preferences = KilnConfigPreferencesV1(
                 automation = KilnConfigAutomationV1(enabled = true),
+                network = KilnConfigNetworkV1(
+                    type = "SOCKS",
+                    host = "127.0.0.1",
+                    port = 9050,
+                    orbotPreset = true,
+                ),
             ),
             hints = KilnConfigHintsV1(githubPatWasConfigured = true),
         )
@@ -48,15 +55,19 @@ class KilnConfigCodecTest {
                 assertEquals(original.repos, decoded.value.repos)
                 assertEquals(original.managedApps, decoded.value.managedApps)
                 assertEquals(true, decoded.value.preferences.automation?.enabled)
+                assertEquals(true, decoded.value.preferences.network?.orbotPreset)
+                assertFalse(encoded.contains("\"password\"", ignoreCase = true))
                 assertTrue(decoded.value.hints.githubPatWasConfigured)
             }
         }
     }
 
     @Test
-    fun rejects_wrong_schema_and_non_object() {
+    fun accepts_schema_v1_and_rejects_unknown() {
         assertTrue(KilnConfigCodec.decode("") is Result.Failure)
         assertTrue(KilnConfigCodec.decode("[]") is Result.Failure)
+        val v1 = """{"schemaVersion":1,"repos":[]}"""
+        assertTrue(KilnConfigCodec.decode(v1) is Result.Success)
         val badSchema = """{"schemaVersion":99,"repos":[]}"""
         val result = KilnConfigCodec.decode(badSchema)
         assertTrue(result is Result.Failure)

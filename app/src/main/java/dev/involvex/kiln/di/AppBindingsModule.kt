@@ -24,6 +24,7 @@ import dev.involvex.kiln.core.model.KilnConfigRepository
 import dev.involvex.kiln.core.model.MaintenancePreferences
 import dev.involvex.kiln.core.model.MaintenanceRunStore
 import dev.involvex.kiln.core.model.MaintenanceScheduler
+import dev.involvex.kiln.core.model.NetworkProxyPreferences
 import dev.involvex.kiln.core.model.TermuxPreferences
 import dev.involvex.kiln.core.model.UpdateObservationStore
 import dev.involvex.kiln.core.model.WatchlistRepository
@@ -42,6 +43,7 @@ import dev.involvex.kiln.feature.settings.data.DataStoreBackgroundUpdatePreferen
 import dev.involvex.kiln.feature.settings.data.DataStoreDevPreferences
 import dev.involvex.kiln.feature.settings.data.DataStoreInstallerPreferences
 import dev.involvex.kiln.feature.settings.data.DataStoreMaintenancePreferences
+import dev.involvex.kiln.feature.settings.data.DataStoreNetworkProxyPreferences
 import dev.involvex.kiln.feature.sources.DefaultAppUpdateRepository
 import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.updatecheck.DefaultBackgroundUpdateScheduler
@@ -83,6 +85,10 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindBackgroundUpdatePreferences(impl: DataStoreBackgroundUpdatePreferences): BackgroundUpdatePreferences
+
+    @Binds
+    @Singleton
+    abstract fun bindNetworkProxyPreferences(impl: DataStoreNetworkProxyPreferences): NetworkProxyPreferences
 
     @Binds
     @Singleton

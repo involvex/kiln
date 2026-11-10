@@ -13,8 +13,10 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import dev.involvex.kiln.core.common.RepoMirrorUrls
 import dev.involvex.kiln.core.common.Result as KilnResult
 import dev.involvex.kiln.core.database.InstallJobDao
+import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.model.ActivityLogEvents
 import dev.involvex.kiln.core.model.ActivityLogRecorder
 import dev.involvex.kiln.core.model.ActivityLogType
@@ -42,6 +44,7 @@ class InstallWorker @AssistedInject constructor(
     @Assisted private val appContext: Context,
     @Assisted params: WorkerParameters,
     private val installJobDao: InstallJobDao,
+    private val repoDao: RepoDao,
     private val http: KilnHttpClient,
     private val sessionRunner: PackageInstallerSessionRunner,
     private val privilegedExecutor: PrivilegedExecutor,
@@ -83,9 +86,10 @@ class InstallWorker @AssistedInject constructor(
                 emptyMap()
             }
             val isZip = ArtifactZipExtractor.looksLikeArtifactZip(job.downloadUrl, job.requiresGitHubAuth)
+            val downloadUrls = resolveDownloadUrls(job.downloadUrl)
             if (isZip) {
                 val zipFile = File(downloadDir, "$jobId.zip")
-                when (val download = http.downloadToFile(job.downloadUrl, zipFile, headers)) {
+                when (val download = http.downloadToFileFirstSuccess(downloadUrls, zipFile, headers)) {
                     is KilnResult.Failure -> {
                         mark(jobId, InstallJobStatus.FAILED, 100, download.message, null)
                         return Result.failure(workDataOf(KEY_ERROR to download.message))
@@ -106,7 +110,7 @@ class InstallWorker @AssistedInject constructor(
                     is KilnResult.Success -> zipFile.delete()
                 }
             } else {
-                when (val download = http.downloadToFile(job.downloadUrl, apkFile, headers)) {
+                when (val download = http.downloadToFileFirstSuccess(downloadUrls, apkFile, headers)) {
                     is KilnResult.Failure -> {
                         mark(jobId, InstallJobStatus.FAILED, 100, download.message, null)
                         return Result.failure(workDataOf(KEY_ERROR to download.message))
@@ -240,6 +244,14 @@ class InstallWorker @AssistedInject constructor(
         } else {
             ForegroundInfo(NOTIFICATION_ID, notification)
         }
+    }
+
+    private suspend fun resolveDownloadUrls(primaryUrl: String): List<String> {
+        val repos = repoDao.getAll().filter { it.kind == "FDROID" }
+        val match = repos.firstOrNull { repo ->
+            primaryUrl.startsWith(repo.address.trimEnd('/'))
+        } ?: return listOf(primaryUrl)
+        return RepoMirrorUrls.alternateDownloadUrls(primaryUrl, match.address, match.mirrorsCsv)
     }
 
     companion object {

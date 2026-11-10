@@ -21,5 +21,6 @@ object KilnConfigMerge {
         if (prefs.appearance != null) add("appearance")
         if (prefs.installer != null) add("installer")
         if (prefs.termux != null) add("termux")
+        if (prefs.network != null) add("network")
     }
 }

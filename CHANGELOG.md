@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Per-repo HTTPS mirrors (Sources) with sync/download failover; Settings → Network HTTP/SOCKS proxy + Orbot preset; Kiln-Config schema v2 (mirrors + proxy prefs, no password)
 - Manage → APK tools: inspect SAF-picked `.apk`/`.apks`/`.xapk` (meta, permissions, signers, members); compare signatures (APK vs APK or vs installed)
 - Shared `ApkSigningReader` (X.509 SHA-256) for installer gate and apps detail
 - Appearance: System theme, Ocean palette, optional Material You Dynamic Color (API 31+; ignored for Monokai/Ocean)

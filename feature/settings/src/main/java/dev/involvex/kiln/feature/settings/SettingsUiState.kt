@@ -7,12 +7,14 @@ import dev.involvex.kiln.core.model.DevPrefs
 import dev.involvex.kiln.core.model.KilnConfigImportPreview
 import dev.involvex.kiln.core.model.MaintenancePrefs
 import dev.involvex.kiln.core.model.MaintenanceRunRecord
+import dev.involvex.kiln.core.model.NetworkProxyPrefs
 import dev.involvex.kiln.core.model.PreferredInstaller
 
 data class SettingsUiState(
     val title: String = "",
     val description: String = "",
     val backgroundUpdates: BackgroundUpdatePrefs = BackgroundUpdatePrefs(),
+    val networkProxy: NetworkProxyPrefs = NetworkProxyPrefs(),
     val automation: AutomationPrefs = AutomationPrefs(),
     val maintenance: MaintenancePrefs = MaintenancePrefs(),
     val lastMaintenanceRun: MaintenanceRunRecord? = null,

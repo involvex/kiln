@@ -23,6 +23,8 @@ data class KilnConfigRepoV1(
     val kind: String = "FDROID",
     val enabled: Boolean = true,
     val priority: Int = 0,
+    /** Comma-separated HTTPS mirror bases (schema v2+). */
+    val mirrors: String = "",
 )
 
 @Serializable
@@ -46,6 +48,17 @@ data class KilnConfigPreferencesV1(
     val appearance: KilnConfigAppearanceV1? = null,
     val installer: KilnConfigInstallerV1? = null,
     val termux: KilnConfigTermuxV1? = null,
+    /** Global HTTP/SOCKS proxy (no password). Schema v2+. */
+    val network: KilnConfigNetworkV1? = null,
+)
+
+@Serializable
+data class KilnConfigNetworkV1(
+    val type: String = "NONE",
+    val host: String = "",
+    val port: Int = 0,
+    val username: String = "",
+    val orbotPreset: Boolean = false,
 )
 
 @Serializable
