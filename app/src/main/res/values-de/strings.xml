@@ -8,6 +8,7 @@
     <string name="nav_manage">Verwalten</string>
     <string name="manage_tab_storage">Speicher</string>
     <string name="manage_tab_backup">Backup</string>
+    <string name="manage_tab_apk_tools">APK-Werkzeuge</string>
     <string name="nav_settings">Einstellungen</string>
     <string name="apps_segment_library">Bibliothek</string>
     <string name="apps_segment_discover">Entdecken</string>

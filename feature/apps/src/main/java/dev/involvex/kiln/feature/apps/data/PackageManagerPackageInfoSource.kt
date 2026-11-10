@@ -7,13 +7,12 @@ import android.content.pm.PackageManager
 import android.content.pm.PermissionInfo
 import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.involvex.kiln.core.common.ApkSigningReader
 import dev.involvex.kiln.core.model.ApkPathEntry
 import dev.involvex.kiln.core.model.AppPermissionEntry
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.InstalledAppSummary
 import java.io.File
-import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -175,32 +174,7 @@ class PackageManagerPackageInfoSource @Inject constructor(@ApplicationContext pr
         }
     }
 
-    private fun signerFingerprints(info: PackageInfo): List<String> {
-        val certificates = mutableListOf<ByteArray>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            val signingInfo = info.signingInfo ?: return emptyList()
-            val current = if (signingInfo.hasMultipleSigners()) {
-                signingInfo.apkContentsSigners
-            } else {
-                signingInfo.signingCertificateHistory
-            }
-            current?.forEach { signature ->
-                certificates += signature.toByteArray()
-            }
-        } else {
-            @Suppress("DEPRECATION")
-            info.signatures?.forEach { signature ->
-                certificates += signature.toByteArray()
-            }
-        }
-        return certificates.mapNotNull { bytes ->
-            runCatching {
-                val factory = CertificateFactory.getInstance("X.509")
-                val cert = factory.generateCertificate(bytes.inputStream()) as X509Certificate
-                sha256CertificateFingerprint(cert.encoded)
-            }.getOrNull()
-        }
-    }
+    private fun signerFingerprints(info: PackageInfo): List<String> = ApkSigningReader.fingerprintsFromPackageInfo(info)
 
     private fun permissionsOf(info: PackageInfo): List<AppPermissionEntry> {
         val names = info.requestedPermissions ?: return emptyList()

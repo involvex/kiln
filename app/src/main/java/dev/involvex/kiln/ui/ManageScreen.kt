@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import dev.involvex.kiln.R
+import dev.involvex.kiln.feature.apps.apktools.ApkToolsRoute
 import dev.involvex.kiln.feature.backup.BackupRoute
 import dev.involvex.kiln.feature.storage.StorageRoute
 
@@ -47,6 +48,11 @@ fun ManageRoute(modifier: Modifier = Modifier, onOpenPrivilegeSetup: () -> Unit 
                     onClick = { selectedTab = 1 },
                     text = { Text(stringResource(R.string.manage_tab_backup)) },
                 )
+                Tab(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    text = { Text(stringResource(R.string.manage_tab_apk_tools)) },
+                )
             }
             when (selectedTab) {
                 0 -> StorageRoute(
@@ -57,7 +63,14 @@ fun ManageRoute(modifier: Modifier = Modifier, onOpenPrivilegeSetup: () -> Unit 
                         .weight(1f),
                 )
 
-                else -> BackupRoute(
+                1 -> BackupRoute(
+                    showTopBar = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                )
+
+                else -> ApkToolsRoute(
                     showTopBar = false,
                     modifier = Modifier
                         .fillMaxWidth()
