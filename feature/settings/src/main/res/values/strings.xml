@@ -90,6 +90,17 @@
     <string name="settings_font_style">Font style</string>
     <string name="settings_font_default">Default</string>
     <string name="settings_font_rounded">Rounded display</string>
+    <string name="settings_exodus_section">Privacy (Exodus)</string>
+    <string name="settings_exodus_explain">Deep-links to the public Exodus site always work. Optional: set a self-hosted Exodus API base URL (HTTPS) and Token to show tracker name chips in app details. Official Exodus does not issue API keys for end-user apps. Token is stored encrypted and never exported.</string>
+    <string name="settings_exodus_base_url">Exodus API base URL</string>
+    <string name="settings_exodus_token">API token</string>
+    <string name="settings_exodus_token_set">Token is set</string>
+    <string name="settings_exodus_token_unset">No token saved</string>
+    <string name="settings_exodus_save">Save Exodus API</string>
+    <string name="settings_exodus_clear_token">Clear token</string>
+    <string name="settings_exodus_saved">Exodus API settings saved</string>
+    <string name="settings_exodus_token_cleared">Exodus token cleared</string>
+    <string name="settings_exodus_https_required">Exodus API URL must use HTTPS</string>
     <string name="settings_network_section">Network</string>
     <string name="settings_network_explain">Optional HTTP or SOCKS proxy for Kiln HTTPS downloads (F-Droid index, GitHub, APKs). Orbot uses SOCKS on 127.0.0.1:9050 — install and start Orbot first. Proxy password is never exported in Kiln config.</string>
     <string name="settings_network_orbot">Use Orbot (Tor SOCKS)</string>

@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M32** Done (#50). App version **0.2.3** (code 6), tag `v0.2.3`. Next: **M33** Exodus privacy chips (PLAN §12). HyperOS M1–M8 checklist remains a separate release gate. Publishing / F-Droid submit still deferred.
+**Current status:** **M33** Exodus privacy chips in progress (`m33-exodus-privacy`). App version **0.2.3** (code 6), tag `v0.2.3`. HyperOS M1–M8 checklist remains a separate release gate. Publishing / F-Droid submit still deferred.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -47,6 +47,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M30** | Mirrors / proxy | Done | [`prompts/M30-mirrors-proxy.md`](./prompts/M30-mirrors-proxy.md) · [#48](https://github.com/involvex/kiln/pull/48) | Per-repo mirrors + HTTP/SOCKS/Orbot proxy |
 | **M31** | APK tools resign / split export | Done | [`prompts/M31-apk-tools-resign.md`](./prompts/M31-apk-tools-resign.md) · [#49](https://github.com/involvex/kiln/pull/49) | Resign via apksig + export splits from `.apks`/`.xapk` |
 | **M32** | Update-check responsiveness | Done | [`prompts/M32-update-check-perf.md`](./prompts/M32-update-check-perf.md) · [#50](https://github.com/involvex/kiln/pull/50) | Room-only badge refresh; progress/cancel; mirror fail-fast; parallel repo sync |
+| **M33** | Exodus privacy chips | In progress | [`prompts/M33-exodus-privacy.md`](./prompts/M33-exodus-privacy.md) · `m33-exodus-privacy` | Deep-link + optional self-hosted API tracker chips |
 
 ---
 
@@ -57,7 +58,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Rollback / Downgrade | Done (core) | ≤3/pkg cache; M23 adds age/1 GiB prune; Settings N slider later |
 | Update cooldown | Done (core) | Global days + major auto-install skip; per-app later |
 | GitHub Nightly channels | Done | M19 #33 |
-| Anti-feature chips | Done | M19; Exodus trackers still open |
+| Anti-feature chips | Done | M19; Exodus deep-link + optional API in M33 |
 | Changelog & Watchlist | Done | M21 #35 |
 | Intent / Broadcast API | Done | M22 #36 |
 | Scheduled maintenance | Done | M23 #37 |
@@ -299,7 +300,7 @@ flowchart LR
 ```
 
 1. **M0–M32** on main (#50); polish View updates / Update all (#51); **`v0.2.3`** tagged.
-2. Next: **M33** Exodus privacy chips only. Do not mix freeze/hibernate or universal APK merge.
+2. Current: **M33** Exodus privacy chips only. Do not mix freeze/hibernate or universal APK merge.
 3. Publishing / F-Droid still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

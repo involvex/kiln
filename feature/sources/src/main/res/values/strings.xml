@@ -43,6 +43,11 @@
     <string name="catalog_detail_no_screenshots">No screenshots in the index.</string>
     <string name="catalog_detail_missing">Package not found in the local catalog.</string>
     <string name="catalog_detail_anti_features">Anti-features</string>
+    <string name="catalog_detail_exodus_section">Privacy (Exodus)</string>
+    <string name="catalog_detail_exodus_open">Open Exodus report</string>
+    <string name="catalog_detail_exodus_hint">Opens the public Exodus report in a browser. Optional tracker chips need a self-hosted Exodus API under Settings → Privacy.</string>
+    <string name="catalog_detail_exodus_no_trackers">No trackers in the latest Exodus report (or no report yet).</string>
+    <string name="catalog_detail_exodus_attribution">Tracker names from Exodus Privacy (ODbL). Presence ≠ proof of runtime activity.</string>
     <string name="anti_feature_ads">Ads</string>
     <string name="anti_feature_tracking">Tracking</string>
     <string name="anti_feature_non_free_net">Non-free network services</string>

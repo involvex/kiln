@@ -10,6 +10,8 @@ import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.AppUpdateRepository
+import dev.involvex.kiln.core.model.ExodusPrivacyPreferences
+import dev.involvex.kiln.core.model.ExodusReportRepository
 import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallQueue
@@ -34,6 +36,8 @@ class AppDetailViewModel @AssistedInject constructor(
     private val rollbackCache: ApkRollbackCache,
     private val privilegedExecutor: PrivilegedExecutor,
     private val gitHubAuth: GitHubAuthHeaderProvider,
+    private val exodusReportRepository: ExodusReportRepository,
+    private val exodusPrivacyPreferences: ExodusPrivacyPreferences,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppDetailUiState())
     val uiState: StateFlow<AppDetailUiState> = _uiState.asStateFlow()
@@ -76,6 +80,25 @@ class AppDetailViewModel @AssistedInject constructor(
             privilegedExecutor.observeStatus().collect { status ->
                 _uiState.update {
                     it.copy(canSilentDowngrade = PrivilegeCapability.SILENT_INSTALL in status.capabilities)
+                }
+            }
+        }
+        viewModelScope.launch {
+            val configured = exodusPrivacyPreferences.current().isApiConfigured()
+            _uiState.update { it.copy(exodusApiConfigured = configured, exodusLoading = configured) }
+            if (!configured) {
+                _uiState.update { it.copy(exodusLoading = false) }
+                return@launch
+            }
+            when (val result = exodusReportRepository.reportFor(packageName)) {
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(exodusLoading = false, exodusTrackerNames = result.value.trackerNames)
+                    }
+                }
+
+                is Result.Failure -> {
+                    _uiState.update { it.copy(exodusLoading = false, exodusTrackerNames = emptyList()) }
                 }
             }
         }

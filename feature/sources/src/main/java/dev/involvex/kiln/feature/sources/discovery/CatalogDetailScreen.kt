@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,6 +51,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.model.ExodusReportUrls
 import dev.involvex.kiln.feature.sources.R
 
 @Composable
@@ -75,6 +77,7 @@ fun CatalogDetailRoute(
 }
 
 @Composable
+@Suppress("LongMethod")
 fun CatalogDetailScreen(
     state: CatalogDetailUiState,
     onBack: () -> Unit,
@@ -137,6 +140,9 @@ fun CatalogDetailScreen(
                 message = state.message,
                 messageIsError = state.messageIsError,
                 isWatching = state.isWatching,
+                exodusTrackerNames = state.exodusTrackerNames,
+                exodusApiConfigured = state.exodusApiConfigured,
+                exodusLoading = state.exodusLoading,
                 padding = padding,
                 onInstall = onInstall,
                 onToggleWatch = onToggleWatch,
@@ -194,11 +200,15 @@ private fun CatalogDetailError(padding: PaddingValues, onBack: () -> Unit) {
 }
 
 @Composable
+@Suppress("LongMethod")
 private fun CatalogDetailContent(
     row: DiscoveryAppRow,
     message: String?,
     messageIsError: Boolean,
     isWatching: Boolean,
+    exodusTrackerNames: List<String>,
+    exodusApiConfigured: Boolean,
+    exodusLoading: Boolean,
     padding: PaddingValues,
     onInstall: () -> Unit,
     onToggleWatch: () -> Unit,
@@ -206,6 +216,7 @@ private fun CatalogDetailContent(
     onShare: () -> Unit,
 ) {
     val context = LocalContext.current
+    val languageTag = LocalLocale.current.platformLocale.toLanguageTag()
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -246,6 +257,16 @@ private fun CatalogDetailContent(
         }
         if (row.antiFeatures.isNotEmpty()) {
             item { AntiFeatureChips(antiFeatures = row.antiFeatures) }
+        }
+        item {
+            ExodusPrivacySection(
+                packageName = row.packageName,
+                languageTag = languageTag,
+                trackerNames = exodusTrackerNames,
+                apiConfigured = exodusApiConfigured,
+                loading = exodusLoading,
+                context = context,
+            )
         }
         item { CatalogMetaCard(row) }
         item { CatalogLinksCard(row = row, context = context) }
@@ -380,6 +401,77 @@ private fun CatalogMetaCard(row: DiscoveryAppRow) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ExodusPrivacySection(
+    packageName: String,
+    languageTag: String,
+    trackerNames: List<String>,
+    apiConfigured: Boolean,
+    loading: Boolean,
+    context: android.content.Context,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(R.string.catalog_detail_exodus_section),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        OutlinedButton(
+            onClick = {
+                val url = ExodusReportUrls.reportPageUrl(packageName, languageTag)
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.catalog_detail_exodus_open))
+        }
+        when {
+            loading -> CircularProgressIndicator(modifier = Modifier.size(24.dp))
+
+            trackerNames.isNotEmpty() -> {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    trackerNames.forEach { name ->
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.errorContainer,
+                        ) {
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            )
+                        }
+                    }
+                }
+                Text(
+                    text = stringResource(R.string.catalog_detail_exodus_attribution),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            apiConfigured -> {
+                Text(
+                    text = stringResource(R.string.catalog_detail_exodus_no_trackers),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            else -> {
+                Text(
+                    text = stringResource(R.string.catalog_detail_exodus_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

@@ -49,6 +49,7 @@ import dev.involvex.kiln.core.model.AppearancePrefs
 import dev.involvex.kiln.core.model.AutomationPrefs
 import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
 import dev.involvex.kiln.core.model.DevPrefs
+import dev.involvex.kiln.core.model.ExodusPrivacyPrefs
 import dev.involvex.kiln.core.model.KilnConfigFilenames
 import dev.involvex.kiln.core.model.KilnConfigImportPreview
 import dev.involvex.kiln.core.model.KilnFontStyle
@@ -65,6 +66,7 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
 @Composable
+@Suppress("LongMethod")
 fun SettingsRoute(
     onOpenPrivilegeSetup: () -> Unit,
     onOpenDebloat: () -> Unit,
@@ -127,6 +129,10 @@ fun SettingsRoute(
         onProxyUsernameChange = viewModel::setProxyUsername,
         onProxyPasswordChange = viewModel::setProxyPassword,
         onOrbotPresetChange = viewModel::setOrbotPreset,
+        onExodusBaseUrlChange = viewModel::onExodusBaseUrlInputChange,
+        onExodusTokenChange = viewModel::onExodusTokenInputChange,
+        onSaveExodusApi = viewModel::saveExodusApi,
+        onClearExodusToken = viewModel::clearExodusToken,
         onAutomationEnabledChange = viewModel::setAutomationEnabled,
         onMaintenanceEnabledChange = viewModel::setMaintenanceEnabled,
         onMaintenanceTrimChange = viewModel::setMaintenanceTrimCaches,
@@ -173,6 +179,10 @@ fun SettingsScreen(
     onProxyUsernameChange: (String) -> Unit,
     onProxyPasswordChange: (String) -> Unit,
     onOrbotPresetChange: (Boolean) -> Unit,
+    onExodusBaseUrlChange: (String) -> Unit,
+    onExodusTokenChange: (String) -> Unit,
+    onSaveExodusApi: () -> Unit,
+    onClearExodusToken: () -> Unit,
     onAutomationEnabledChange: (Boolean) -> Unit,
     onMaintenanceEnabledChange: (Boolean) -> Unit,
     onMaintenanceTrimChange: (Boolean) -> Unit,
@@ -265,6 +275,16 @@ fun SettingsScreen(
                 onUsernameChange = onProxyUsernameChange,
                 onPasswordChange = onProxyPasswordChange,
                 onOrbotChange = onOrbotPresetChange,
+            )
+            HorizontalDivider()
+            ExodusPrivacySection(
+                prefs = state.exodusPrivacy,
+                baseUrlInput = state.exodusBaseUrlInput,
+                tokenInput = state.exodusTokenInput,
+                onBaseUrlChange = onExodusBaseUrlChange,
+                onTokenChange = onExodusTokenChange,
+                onSave = onSaveExodusApi,
+                onClearToken = onClearExodusToken,
             )
             HorizontalDivider()
             DevSection(
@@ -468,6 +488,12 @@ private fun configMessageText(key: String): String = when {
             parts.getOrNull(2) ?: "0",
         )
     }
+
+    key == "exodus_saved" -> stringResource(R.string.settings_exodus_saved)
+
+    key == "exodus_token_cleared" -> stringResource(R.string.settings_exodus_token_cleared)
+
+    key == "exodus_https_required" -> stringResource(R.string.settings_exodus_https_required)
 
     else -> key
 }

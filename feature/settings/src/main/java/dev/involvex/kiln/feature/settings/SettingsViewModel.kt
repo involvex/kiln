@@ -17,6 +17,7 @@ import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.core.model.DebugLogController
 import dev.involvex.kiln.core.model.DevPreferences
+import dev.involvex.kiln.core.model.ExodusPrivacyPreferences
 import dev.involvex.kiln.core.model.InstallerPreferences
 import dev.involvex.kiln.core.model.KilnConfigFilenames
 import dev.involvex.kiln.core.model.KilnConfigRepository
@@ -49,6 +50,7 @@ class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val preferences: BackgroundUpdatePreferences,
     private val networkProxyPreferences: NetworkProxyPreferences,
+    private val exodusPrivacyPreferences: ExodusPrivacyPreferences,
     private val automationPreferences: AutomationPreferences,
     private val maintenancePreferences: MaintenancePreferences,
     private val maintenanceRunStore: MaintenanceRunStore,
@@ -76,6 +78,16 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             networkProxyPreferences.observe().collect { prefs ->
                 _uiState.update { it.copy(networkProxy = prefs) }
+            }
+        }
+        viewModelScope.launch {
+            exodusPrivacyPreferences.observe().collect { prefs ->
+                _uiState.update {
+                    it.copy(
+                        exodusPrivacy = prefs,
+                        exodusBaseUrlInput = prefs.apiBaseUrl,
+                    )
+                }
             }
         }
         viewModelScope.launch {
@@ -188,6 +200,38 @@ class SettingsViewModel @Inject constructor(
 
     fun setOrbotPreset(enabled: Boolean) {
         viewModelScope.launch { networkProxyPreferences.setOrbotPreset(enabled) }
+    }
+
+    fun onExodusBaseUrlInputChange(value: String) {
+        _uiState.update { it.copy(exodusBaseUrlInput = value) }
+    }
+
+    fun onExodusTokenInputChange(value: String) {
+        _uiState.update { it.copy(exodusTokenInput = value) }
+    }
+
+    fun saveExodusApi() {
+        viewModelScope.launch {
+            val url = _uiState.value.exodusBaseUrlInput.trim()
+            if (url.isNotEmpty() && !url.startsWith("https://")) {
+                _uiState.update { it.copy(configMessage = "exodus_https_required") }
+                return@launch
+            }
+            exodusPrivacyPreferences.setApiBaseUrl(url)
+            val token = _uiState.value.exodusTokenInput
+            if (token.isNotBlank()) {
+                exodusPrivacyPreferences.setToken(token)
+                _uiState.update { it.copy(exodusTokenInput = "") }
+            }
+            _uiState.update { it.copy(configMessage = "exodus_saved") }
+        }
+    }
+
+    fun clearExodusToken() {
+        viewModelScope.launch {
+            exodusPrivacyPreferences.setToken(null)
+            _uiState.update { it.copy(exodusTokenInput = "", configMessage = "exodus_token_cleared") }
+        }
     }
 
     fun setAutoInstallMatching(autoInstall: Boolean) {

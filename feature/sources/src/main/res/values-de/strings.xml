@@ -43,6 +43,11 @@
     <string name="catalog_detail_no_screenshots">Keine Screenshots im Index.</string>
     <string name="catalog_detail_missing">Paket nicht im lokalen Katalog gefunden.</string>
     <string name="catalog_detail_anti_features">Anti-Features</string>
+    <string name="catalog_detail_exodus_section">Datenschutz (Exodus)</string>
+    <string name="catalog_detail_exodus_open">Exodus-Report öffnen</string>
+    <string name="catalog_detail_exodus_hint">Öffnet den öffentlichen Exodus-Report im Browser. Tracker-Chips brauchen optional eine selbst gehostete Exodus-API unter Einstellungen → Datenschutz.</string>
+    <string name="catalog_detail_exodus_no_trackers">Keine Tracker im neuesten Exodus-Report (oder noch kein Report).</string>
+    <string name="catalog_detail_exodus_attribution">Tracker-Namen von Exodus Privacy (ODbL). Nachweis ≠ Laufzeitaktivität.</string>
     <string name="anti_feature_ads">Werbung</string>
     <string name="anti_feature_tracking">Tracking</string>
     <string name="anti_feature_non_free_net">Nicht-freie Netzdienste</string>

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Catalog / App detail: Open Exodus report (browser); optional self-hosted Exodus API in Settings for tracker name chips (ODbL attribution)
+
 ## [0.2.3] — 2026-11-15
 
 ### Added
