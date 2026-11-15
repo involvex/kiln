@@ -18,6 +18,8 @@
 
 ## Done when
 
-- [ ] Freeze suspends app; Unfreeze restores; honest gate without privilege
-- [ ] Confirm dialog before freeze; empty filter state
-- [ ] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green
+- [x] Freeze suspends app; Unfreeze restores; honest gate without privilege
+- [x] Confirm dialog before freeze; empty filter state
+- [x] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green
+
+Shipped in [#58](https://github.com/involvex/kiln/pull/58).
