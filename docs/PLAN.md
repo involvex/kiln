@@ -402,7 +402,8 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 
 - **P1 — Rollback / Downgrade**: ~~Die letzten N APK-Versionen lokal cachen…~~ → **shipped M8** (≤3/pkg + Shizuku downgrade); M23 adds age/global size prune; Settings N slider still open.
 - **P1 — Update-Cooldown**: ~~Pro App oder global…~~ → **shipped M8** (global days + major auto-install skip); per-app cooldown still open.
-- **P2 — Anti-Features & Tracker-Info**: F-Droid chips → **shipped M19**; Exodus deep-link + optional self-hosted API → **M33**.
+- **P2 — Anti-Features & Tracker-Info**: F-Droid chips → **shipped M19**; Exodus deep-link + optional self-hosted API → **shipped M33** (#52).
+- **P2 — HyperOS Autostart / battery**: Settings Autostart UI often broken; manage via Shizuku AppOps + AOSP battery tristate. → **M34**.
 - **P2 — Berechtigungs-Audit**: Übersicht gefährlicher Berechtigungen pro App, per Shizuku AppOps ändern und Berechtigungen in Bulk entziehen (`appops`, `pm revoke`). → **M27** (Done #41)
 - **P2 — Changelog & Watchlist**: → **shipped M21**
 - **P3 — Mirrors/Proxy**: Alternative Mirror-URLs je Repo, HTTP-/SOCKS-Proxy, Tor-Option (Orbot SOCKS). → **shipped M30** (#48)
@@ -438,4 +439,5 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 8. **M30** Mirrors / proxy (Done #48)
 9. **M31** APK tools resign / split export (Done #49)
 10. **M32** Update-check responsiveness (Done #50); `v0.2.3` tagged
-11. **M33** Exodus privacy chips (in progress)
+11. **M33** Exodus privacy chips (Done #52)
+12. **M34** HyperOS Autostart + battery controls

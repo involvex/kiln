@@ -143,6 +143,45 @@ class ShellAllowlistTest {
     }
 
     @Test
+    fun appops_get_and_numeric_background_ops() {
+        val pkg = "com.example.app"
+        assertEquals(
+            listOf("appops", "get", pkg, "10008"),
+            ShellAllowlist.buildArgv(ShellAllowlist.APPOPS_GET, listOf(pkg, "10008")),
+        )
+        assertEquals(
+            listOf("appops", "set", pkg, "10021", "allow"),
+            ShellAllowlist.buildArgv(ShellAllowlist.APPOPS_SET, listOf(pkg, "10021", "allow")),
+        )
+        assertEquals(
+            listOf("appops", "set", pkg, "RUN_ANY_IN_BACKGROUND", "ignore"),
+            ShellAllowlist.buildArgv(ShellAllowlist.APPOPS_SET, listOf(pkg, "RUN_ANY_IN_BACKGROUND", "ignore")),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.APPOPS_GET, listOf(pkg, "99999")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.APPOPS_GET, listOf(pkg)))
+        assertTrue(ShellAllowlist.isAllowedAppOp("10008"))
+    }
+
+    @Test
+    fun deviceidle_whitelist_allowlist() {
+        val pkg = "com.example.app"
+        assertEquals(
+            listOf("dumpsys", "deviceidle", "whitelist", "+$pkg"),
+            ShellAllowlist.buildArgv(ShellAllowlist.DEVICEIDLE_WHITELIST, listOf("+", pkg)),
+        )
+        assertEquals(
+            listOf("dumpsys", "deviceidle", "whitelist", "-$pkg"),
+            ShellAllowlist.buildArgv(ShellAllowlist.DEVICEIDLE_WHITELIST, listOf("-", pkg)),
+        )
+        assertEquals(
+            listOf("dumpsys", "deviceidle", "whitelist", "=$pkg"),
+            ShellAllowlist.buildArgv(ShellAllowlist.DEVICEIDLE_WHITELIST, listOf("=", pkg)),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.DEVICEIDLE_WHITELIST, listOf("*", pkg)))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.DEVICEIDLE_WHITELIST, listOf("+", "bad;pkg")))
+    }
+
+    @Test
     fun android_shared_fs_allowlist() {
         val pkg = "com.example.gone"
         assertEquals(
