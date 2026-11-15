@@ -10,7 +10,7 @@
 - Shorter timeout budget for mirror failover after the first failed base
 - Bounded concurrency (~2) when syncing enabled F-Droid repos
 - Unit tests; DE + EN strings
-- Docs: ROADMAP M32 In progress → Done on merge
+- Docs: ROADMAP M32 Done (#50)
 
 ## Out of scope
 
