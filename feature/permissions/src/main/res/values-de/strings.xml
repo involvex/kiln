@@ -30,13 +30,17 @@
     <string name="permissions_dismiss">Schließen</string>
 
     <string name="background_controls_title">Hintergrund-Steuerung</string>
-    <string name="background_controls_explain">HyperOS-Autostart und AOSP-Akkuverbrauch über Shizuku steuern. Die System-Autostart-Liste auf HyperOS ignoriert den Schalter oft; Kiln schreibt die AppOps, die die Richtlinie wirklich durchsetzen.</string>
+    <string name="background_controls_explain">HyperOS-Autostart (AppOps) und AOSP-Akkuverbrauch über Shizuku. Autostart An = allow oder default — wie in den Einstellungen; Aus = ignore.</string>
     <string name="background_controls_need_shizuku">Shizuku mit MANAGE_APP_OPS ist nötig, um diese Einstellungen zu ändern.</string>
     <string name="background_controls_open_setup">Privilege-Einrichtung öffnen</string>
     <string name="background_controls_autostart_xiaomi_only">Autostart-Schalter gibt es nur auf Xiaomi HyperOS / MIUI. Akku-Steuerung funktioniert auf allen Geräten.</string>
     <string name="background_controls_search">Apps suchen</string>
     <string name="background_controls_filter_user">Nutzer-Apps</string>
     <string name="background_controls_filter_all">Alle Apps</string>
+    <string name="background_controls_filter_autostart_all">Autostart: alle</string>
+    <string name="background_controls_filter_autostart_on">Autostart an</string>
+    <string name="background_controls_filter_autostart_off">Autostart aus</string>
+    <string name="background_controls_empty">Keine Apps passen zu diesem Filter.</string>
     <string name="background_controls_refresh">Aktualisieren</string>
     <string name="background_controls_autostart">Autostart</string>
     <string name="background_controls_battery">Akkuverbrauch</string>

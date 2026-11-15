@@ -73,7 +73,24 @@ object AppOpOutputParser {
         }
     }
 
+    /** Strict allow (e.g. RUN_ANY_IN_BACKGROUND). */
     fun isAllowed(raw: String): Boolean = parseMode(raw) == "allow"
+
+    /**
+     * HyperOS Autostart Settings treats anything other than explicit `ignore` as enabled
+     * (including `default`). Matching that avoids Kiln showing Off while Settings shows On.
+     */
+    fun isAutostartAllowed(raw: String): Boolean {
+        val mode = parseMode(raw) ?: return false
+        return !mode.equals("ignore", ignoreCase = true)
+    }
+}
+
+/** List filter for Autostart state on Background controls. */
+enum class AutostartListFilter {
+    ALL,
+    ENABLED,
+    DISABLED,
 }
 
 /** Parse `dumpsys deviceidle whitelist =pkg` — true when package is on the allowlist. */

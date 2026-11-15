@@ -1,6 +1,11 @@
 package dev.involvex.kiln.feature.permissions.background
 
+import android.graphics.drawable.Drawable
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,8 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -19,14 +27,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.model.AutostartListFilter
 import dev.involvex.kiln.core.model.BackgroundControlsApp
 import dev.involvex.kiln.core.model.BatteryUsageMode
 import dev.involvex.kiln.feature.permissions.R
@@ -46,6 +59,7 @@ fun BackgroundControlsRoute(
         onRefresh = viewModel::refresh,
         onQueryChange = viewModel::setQuery,
         onIncludeSystemChange = viewModel::setIncludeSystem,
+        onAutostartFilterChange = viewModel::setAutostartFilter,
         onAutostartChange = viewModel::setAutostart,
         onBatteryModeChange = viewModel::setBatteryMode,
         onClearMessage = viewModel::clearMessage,
@@ -54,6 +68,7 @@ fun BackgroundControlsRoute(
 }
 
 @Composable
+@Suppress("LongParameterList")
 fun BackgroundControlsScreen(
     state: BackgroundControlsUiState,
     onBack: () -> Unit,
@@ -61,6 +76,7 @@ fun BackgroundControlsScreen(
     onRefresh: () -> Unit,
     onQueryChange: (String) -> Unit,
     onIncludeSystemChange: (Boolean) -> Unit,
+    onAutostartFilterChange: (AutostartListFilter) -> Unit,
     onAutostartChange: (String, Boolean) -> Unit,
     onBatteryModeChange: (String, BatteryUsageMode) -> Unit,
     onClearMessage: () -> Unit,
@@ -106,21 +122,12 @@ fun BackgroundControlsScreen(
                 singleLine = true,
                 label = { Text(stringResource(R.string.background_controls_search)) },
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
-                    selected = !state.includeSystem,
-                    onClick = { onIncludeSystemChange(false) },
-                    label = { Text(stringResource(R.string.background_controls_filter_user)) },
-                )
-                FilterChip(
-                    selected = state.includeSystem,
-                    onClick = { onIncludeSystemChange(true) },
-                    label = { Text(stringResource(R.string.background_controls_filter_all)) },
-                )
-                TextButton(onClick = onRefresh) {
-                    Text(stringResource(R.string.background_controls_refresh))
-                }
-            }
+            FilterBars(
+                state = state,
+                onIncludeSystemChange = onIncludeSystemChange,
+                onAutostartFilterChange = onAutostartFilterChange,
+                onRefresh = onRefresh,
+            )
             if (state.message != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -139,11 +146,15 @@ fun BackgroundControlsScreen(
             }
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            } else if (state.filteredApps.isEmpty()) {
+                Text(
+                    stringResource(R.string.background_controls_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 24.dp),
+                )
             } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize(),
-                ) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(state.filteredApps, key = { it.packageName }) { app ->
                         BackgroundControlsRow(
                             app = app,
@@ -153,9 +164,64 @@ fun BackgroundControlsScreen(
                             onAutostartChange = { onAutostartChange(app.packageName, it) },
                             onBatteryModeChange = { onBatteryModeChange(app.packageName, it) },
                         )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun FilterBars(
+    state: BackgroundControlsUiState,
+    onIncludeSystemChange: (Boolean) -> Unit,
+    onAutostartFilterChange: (AutostartListFilter) -> Unit,
+    onRefresh: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        FilterChip(
+            selected = !state.includeSystem,
+            onClick = { onIncludeSystemChange(false) },
+            label = { Text(stringResource(R.string.background_controls_filter_user)) },
+        )
+        FilterChip(
+            selected = state.includeSystem,
+            onClick = { onIncludeSystemChange(true) },
+            label = { Text(stringResource(R.string.background_controls_filter_all)) },
+        )
+        TextButton(onClick = onRefresh) {
+            Text(stringResource(R.string.background_controls_refresh))
+        }
+    }
+    if (state.isHyperOs) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FilterChip(
+                selected = state.autostartFilter == AutostartListFilter.ALL,
+                onClick = { onAutostartFilterChange(AutostartListFilter.ALL) },
+                label = { Text(stringResource(R.string.background_controls_filter_autostart_all)) },
+            )
+            FilterChip(
+                selected = state.autostartFilter == AutostartListFilter.ENABLED,
+                onClick = { onAutostartFilterChange(AutostartListFilter.ENABLED) },
+                label = { Text(stringResource(R.string.background_controls_filter_autostart_on)) },
+            )
+            FilterChip(
+                selected = state.autostartFilter == AutostartListFilter.DISABLED,
+                onClick = { onAutostartFilterChange(AutostartListFilter.DISABLED) },
+                label = { Text(stringResource(R.string.background_controls_filter_autostart_off)) },
+            )
         }
     }
 }
@@ -169,35 +235,63 @@ private fun BackgroundControlsRow(
     onAutostartChange: (Boolean) -> Unit,
     onBatteryModeChange: (BatteryUsageMode) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-        Text(app.label, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(
-            app.packageName,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (showAutostart) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(stringResource(R.string.background_controls_autostart))
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            PackageIcon(packageName = app.packageName)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    app.label,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    app.packageName,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (showAutostart) {
                 if (busy) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
-                    Switch(
-                        checked = app.autostartAllowed == true,
-                        onCheckedChange = onAutostartChange,
-                        enabled = canMutate && app.autostartAllowed != null,
-                    )
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            stringResource(R.string.background_controls_autostart),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Switch(
+                            checked = app.autostartAllowed == true,
+                            onCheckedChange = onAutostartChange,
+                            enabled = canMutate && app.autostartAllowed != null,
+                        )
+                    }
                 }
             }
         }
-        Text(stringResource(R.string.background_controls_battery), style = MaterialTheme.typography.labelLarge)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            stringResource(R.string.background_controls_battery),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
             BatteryUsageMode.entries.forEach { mode ->
                 FilterChip(
                     selected = app.batteryMode == mode,
@@ -207,6 +301,30 @@ private fun BackgroundControlsRow(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun PackageIcon(packageName: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val bitmap = remember(packageName) {
+        runCatching {
+            val drawable: Drawable = context.packageManager.getApplicationIcon(packageName)
+            drawable.toBitmap().asImageBitmap()
+        }.getOrNull()
+    }
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap,
+            contentDescription = null,
+            modifier = modifier.size(40.dp),
+        )
+    } else {
+        Box(
+            modifier = modifier
+                .size(40.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)),
+        )
     }
 }
 
