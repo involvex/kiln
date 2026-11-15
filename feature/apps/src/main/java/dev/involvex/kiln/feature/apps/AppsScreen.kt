@@ -146,6 +146,7 @@ fun AppsScreen(
             onFilterChange = { onEvent(AppsEvent.FilterChanged(it)) },
             onSortFieldChange = { onEvent(AppsEvent.SortFieldChanged(it)) },
             onCheckUpdates = { onEvent(AppsEvent.CheckUpdates) },
+            onCancelCheckUpdates = { onEvent(AppsEvent.CancelCheckUpdates) },
             onDismissUpdateCheckMessage = { onEvent(AppsEvent.DismissUpdateCheckMessage) },
             onCancelBatch = { onEvent(AppsEvent.CancelBatch) },
             onOpenDetail = onOpenDetail,

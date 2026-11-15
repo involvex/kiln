@@ -15,6 +15,7 @@ import dev.involvex.kiln.core.model.ManagedSourceLink
 import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.RepoConfig
 import dev.involvex.kiln.core.model.SourceKind
+import dev.involvex.kiln.core.model.UpdateCheckProgress
 import dev.involvex.kiln.core.model.UpdateCheckResult
 import dev.involvex.kiln.core.model.WatchlistEntry
 import dev.involvex.kiln.core.model.WatchlistRepository
@@ -26,6 +27,8 @@ import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.github.GitHubVersionCode
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,6 +38,7 @@ import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 @Singleton
+@Suppress("TooManyFunctions") // Update badges, GitHub/F-Droid matching, and watchlist share one repo.
 class DefaultAppUpdateRepository @Inject constructor(
     private val managedAppDao: ManagedAppDao,
     private val indexDao: IndexDao,
@@ -51,16 +55,21 @@ class DefaultAppUpdateRepository @Inject constructor(
     override fun updates(): Flow<Map<String, AppUpdateInfo>> = updatesState.asStateFlow()
 
     override suspend fun refreshUpdates() {
+        recomputeUpdates(includeGitHub = false)
+    }
+
+    private suspend fun recomputeUpdates(includeGitHub: Boolean) {
         val installed = installedAppsReader.userApps().associateBy { it.packageName }
         val repos = repoDao.getAll().associateBy { it.id }
         val out = linkedMapOf<String, AppUpdateInfo>()
         for (app in managedAppDao.getAll().filter { !it.ignoreUpdates }) {
+            coroutineContext.ensureActive()
             val local = installed[app.packageName]
             if (local != null) {
                 if (app.watchOnly) {
                     managedAppDao.upsert(app.copy(watchOnly = false))
                 }
-                putBestUpdate(out, app, local, repos, watchOnly = false)
+                putBestUpdate(out, app, local, repos, watchOnly = false, includeGitHub = includeGitHub)
             } else if (app.watchOnly) {
                 val synthetic = InstalledAppMatchInput(
                     packageName = app.packageName,
@@ -69,7 +78,7 @@ class DefaultAppUpdateRepository @Inject constructor(
                     versionCode = 0L,
                     signerSha256 = emptyList(),
                 )
-                putBestUpdate(out, app, synthetic, repos, watchOnly = true)
+                putBestUpdate(out, app, synthetic, repos, watchOnly = true, includeGitHub = includeGitHub)
             }
         }
         updatesState.value = out
@@ -81,6 +90,7 @@ class DefaultAppUpdateRepository @Inject constructor(
         local: InstalledAppMatchInput,
         repos: Map<String, dev.involvex.kiln.core.database.RepoEntity>,
         watchOnly: Boolean,
+        includeGitHub: Boolean,
     ) {
         val fromIndex = findFdroidUpdate(
             app.packageName,
@@ -92,7 +102,7 @@ class DefaultAppUpdateRepository @Inject constructor(
             watchOnly = watchOnly,
         )
         val ownerRepo = app.githubOwnerRepo
-        val fromGitHub = if (ownerRepo != null) {
+        val fromGitHub = if (includeGitHub && ownerRepo != null) {
             findGitHubUpdate(
                 packageName = app.packageName,
                 ownerRepo = ownerRepo,
@@ -115,17 +125,22 @@ class DefaultAppUpdateRepository @Inject constructor(
         }
     }
 
-    override suspend fun checkForUpdates(): Result<UpdateCheckResult> {
+    override suspend fun checkForUpdates(onProgress: suspend (UpdateCheckProgress) -> Unit): Result<UpdateCheckResult> {
         val repos = repoDao.getAll().filter { it.enabled }
-        var ok = 0
-        var fail = 0
-        for (repo in repos) {
-            when (fdroidRepoSync.sync(repo)) {
-                is Result.Success -> ok++
-                is Result.Failure -> fail++
-            }
-        }
-        refreshUpdates()
+        val (ok, fail) = EnabledRepoSync.syncAll(
+            repos = repos,
+            onProgress = onProgress,
+            syncOne = { repo -> fdroidRepoSync.sync(repo) },
+        )
+        coroutineContext.ensureActive()
+        onProgress(
+            UpdateCheckProgress(
+                current = repos.size.coerceAtLeast(1),
+                total = repos.size.coerceAtLeast(1),
+                label = "github",
+            ),
+        )
+        recomputeUpdates(includeGitHub = true)
         return Result.success(
             UpdateCheckResult(
                 reposSynced = ok,

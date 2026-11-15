@@ -124,6 +124,9 @@ data class InstalledAppMatchInput(
 
 data class UpdateCheckResult(val reposSynced: Int, val reposFailed: Int, val updatesFound: Int)
 
+/** Progress for explicit Check updates / Sync all (not for silent badge refresh). */
+data class UpdateCheckProgress(val current: Int, val total: Int, val label: String)
+
 /** Persisted update-source binding for an installed package. */
 data class ManagedSourceLink(
     val sourceId: String,
@@ -140,14 +143,17 @@ data class ManagedSourceLink(
 interface AppUpdateRepository {
     fun updates(): kotlinx.coroutines.flow.Flow<Map<String, AppUpdateInfo>>
 
-    /** Recompute update map from the local index + GitHub (no repo download). */
+    /**
+     * Recompute update map from the local F-Droid index only (no network).
+     * Live GitHub probes happen only inside [checkForUpdates].
+     */
     suspend fun refreshUpdates()
 
     /**
-     * Sync enabled F-Droid-format repos, then [refreshUpdates].
-     * Use from the Apps “Check for updates” action.
+     * Sync enabled F-Droid-format repos (bounded parallelism), probe GitHub for managed
+     * apps, then refresh badges. Reports [onProgress] for UI; cancellable via coroutine Job.
      */
-    suspend fun checkForUpdates(): Result<UpdateCheckResult>
+    suspend fun checkForUpdates(onProgress: suspend (UpdateCheckProgress) -> Unit = {}): Result<UpdateCheckResult>
 
     /** `null` if the package is not a managed app yet. */
     fun observeIgnoreUpdates(packageName: String): kotlinx.coroutines.flow.Flow<Boolean?>

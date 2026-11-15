@@ -42,6 +42,7 @@ fun SourcesRoute(onOpenAutoMatch: () -> Unit, modifier: Modifier = Modifier, vie
     SourcesScreen(
         state = state,
         onSyncAll = viewModel::syncAll,
+        onCancelSyncAll = viewModel::cancelSyncAll,
         onAddFieldsChange = viewModel::onAddFieldsChange,
         onAddRepo = viewModel::addRepo,
         onSaveRepoMirrors = viewModel::saveRepoMirrors,
@@ -62,6 +63,7 @@ fun SourcesRoute(onOpenAutoMatch: () -> Unit, modifier: Modifier = Modifier, vie
 fun SourcesScreen(
     state: SourcesUiState,
     onSyncAll: () -> Unit,
+    onCancelSyncAll: () -> Unit,
     onAddFieldsChange: (name: String?, address: String?, fingerprint: String?) -> Unit,
     onAddRepo: () -> Unit,
     onSaveRepoMirrors: (repoId: String, mirrorsRaw: String) -> Unit,
@@ -87,7 +89,7 @@ fun SourcesScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            sourcesHeader(state.isSyncing, onSyncAll, onOpenAutoMatch)
+            sourcesHeader(state, onSyncAll, onCancelSyncAll, onOpenAutoMatch)
             sourcesWatchlist(state.watchlist, onUnwatch)
             sourcesRepoList(state.repos, onSaveRepoMirrors)
             item { AddRepoSection(state, onAddFieldsChange, onAddRepo) }
@@ -135,6 +137,7 @@ private val EXACT_MESSAGE_RES = mapOf(
     "obtainium_file_read_failed" to R.string.sources_msg_obtainium_file_read_failed,
     "index_oom" to R.string.sources_msg_index_oom,
     "share_unrecognized" to R.string.sources_msg_share_unrecognized,
+    "sync_cancelled" to R.string.sources_msg_sync_cancelled,
 )
 
 @Composable
@@ -232,7 +235,12 @@ private fun LazyListScope.sourcesWatchlist(entries: List<WatchlistEntry>, onUnwa
     }
 }
 
-private fun LazyListScope.sourcesHeader(isSyncing: Boolean, onSyncAll: () -> Unit, onOpenAutoMatch: () -> Unit) {
+private fun LazyListScope.sourcesHeader(
+    state: SourcesUiState,
+    onSyncAll: () -> Unit,
+    onCancelSyncAll: () -> Unit,
+    onOpenAutoMatch: () -> Unit,
+) {
     item {
         Text(
             text = stringResource(R.string.feature_sources_description),
@@ -240,11 +248,22 @@ private fun LazyListScope.sourcesHeader(isSyncing: Boolean, onSyncAll: () -> Uni
         )
     }
     item {
-        Button(onClick = onSyncAll, enabled = !isSyncing, modifier = Modifier.fillMaxWidth()) {
-            if (isSyncing) {
+        Button(onClick = onSyncAll, enabled = !state.isSyncing, modifier = Modifier.fillMaxWidth()) {
+            if (state.isSyncing) {
                 CircularProgressIndicator()
             } else {
                 Text(stringResource(R.string.sources_sync_all))
+            }
+        }
+    }
+    if (state.isSyncing) {
+        item {
+            Text(
+                text = formatSyncProgress(state),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            TextButton(onClick = onCancelSyncAll) {
+                Text(stringResource(R.string.sources_cancel_sync))
             }
         }
     }
@@ -252,6 +271,26 @@ private fun LazyListScope.sourcesHeader(isSyncing: Boolean, onSyncAll: () -> Uni
         Button(onClick = onOpenAutoMatch, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.sources_open_auto_match))
         }
+    }
+}
+
+@Composable
+private fun formatSyncProgress(state: SourcesUiState): String {
+    val label = state.syncProgressLabel
+    val display = when (label) {
+        null, "" -> stringResource(R.string.sources_syncing)
+        "github" -> stringResource(R.string.sources_syncing_github)
+        else -> label
+    }
+    return if (state.syncProgressTotal > 0) {
+        stringResource(
+            R.string.sources_syncing_progress,
+            state.syncProgressCurrent,
+            state.syncProgressTotal,
+            display,
+        )
+    } else {
+        display
     }
 }
 

@@ -12,6 +12,10 @@
     <string name="feature_apps_filter_updates">Updates</string>
     <string name="feature_apps_check_updates">Check for updates</string>
     <string name="feature_apps_checking_updates">Checking updates…</string>
+    <string name="feature_apps_checking_progress">Checking %1$d/%2$d: %3$s</string>
+    <string name="feature_apps_checking_github">Checking GitHub releases…</string>
+    <string name="feature_apps_cancel_check_updates">Cancel check</string>
+    <string name="feature_apps_update_check_cancelled">Update check cancelled.</string>
     <string name="feature_apps_update_check_ok">Found %1$d update(s). Repos synced: %2$d, failed: %3$d.</string>
     <string name="feature_apps_update_check_error">Update check failed: %1$s</string>
     <string name="feature_apps_ignore_updates">Check for updates for this app</string>
