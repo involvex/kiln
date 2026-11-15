@@ -31,6 +31,8 @@ import dev.involvex.kiln.core.model.WatchlistRepository
 import dev.involvex.kiln.core.model.WidgetPreferences
 import dev.involvex.kiln.core.model.WidgetUpdatePublisher
 import dev.involvex.kiln.feature.apps.data.DefaultInstalledAppsReader
+import dev.involvex.kiln.feature.apps.data.PackageInfoSource
+import dev.involvex.kiln.feature.apps.data.PackageManagerPackageInfoSource
 import dev.involvex.kiln.feature.installer.DefaultInstallQueue
 import dev.involvex.kiln.feature.installer.rollback.DefaultApkDownloadJanitor
 import dev.involvex.kiln.feature.installer.rollback.FileApkRollbackCache
@@ -65,6 +67,14 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindInstalledAppsReader(impl: DefaultInstalledAppsReader): InstalledAppsReader
+
+    /**
+     * Bound in `:app` so [DefaultInstalledAppsReader] stays resolvable even when library-module
+     * Hilt aggregation is flaky under parallel `lint` (seen on main after M30).
+     */
+    @Binds
+    @Singleton
+    abstract fun bindPackageInfoSource(impl: PackageManagerPackageInfoSource): PackageInfoSource
 
     @Binds
     @Singleton

@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -24,8 +26,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -46,6 +51,12 @@ private val ApkMimeTypes = arrayOf(
     "*/*",
 )
 
+private val KeystoreMimeTypes = arrayOf(
+    "application/x-pkcs12",
+    "application/octet-stream",
+    "*/*",
+)
+
 @Composable
 fun ApkToolsRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, viewModel: ApkToolsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -57,6 +68,12 @@ fun ApkToolsRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, vie
         onCompare = viewModel::compare,
         onCompareToInstalled = viewModel::compareToInstalled,
         onPackageQuery = viewModel::setComparePackageQuery,
+        onResignApk = viewModel::setResignApk,
+        onResignKeystore = viewModel::setResignKeystore,
+        onResignAlias = viewModel::setResignAlias,
+        onResignConfirmed = viewModel::setResignConfirmed,
+        onResignOutput = viewModel::resignTo,
+        onExportSplits = viewModel::exportSplits,
         onClearMessage = viewModel::clearMessage,
         modifier = modifier,
     )
@@ -71,6 +88,12 @@ fun ApkToolsScreen(
     onCompare: (Uri, Uri) -> Unit,
     onCompareToInstalled: (Uri) -> Unit,
     onPackageQuery: (String) -> Unit,
+    onResignApk: (Uri) -> Unit,
+    onResignKeystore: (Uri) -> Unit,
+    onResignAlias: (String) -> Unit,
+    onResignConfirmed: (Boolean) -> Unit,
+    onResignOutput: (Uri, CharArray, CharArray) -> Unit,
+    onExportSplits: (Uri, Uri) -> Unit,
     onClearMessage: () -> Unit,
     showTopBar: Boolean = true,
     modifier: Modifier = Modifier,
@@ -112,6 +135,20 @@ fun ApkToolsScreen(
                     onCompareToInstalled = onCompareToInstalled,
                     onPackageQuery = onPackageQuery,
                 )
+
+                ApkToolsMode.RESIGN -> ResignPane(
+                    state = state,
+                    onResignApk = onResignApk,
+                    onResignKeystore = onResignKeystore,
+                    onResignAlias = onResignAlias,
+                    onResignConfirmed = onResignConfirmed,
+                    onResignOutput = onResignOutput,
+                )
+
+                ApkToolsMode.EXPORT_SPLITS -> ExportSplitsPane(
+                    state = state,
+                    onExportSplits = onExportSplits,
+                )
             }
         }
     }
@@ -119,17 +156,31 @@ fun ApkToolsScreen(
 
 @Composable
 private fun ModeChips(mode: ApkToolsMode, onMode: (ApkToolsMode) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(
-            selected = mode == ApkToolsMode.INSPECT,
-            onClick = { onMode(ApkToolsMode.INSPECT) },
-            label = { Text(stringResource(R.string.apk_tools_mode_inspect)) },
-        )
-        FilterChip(
-            selected = mode == ApkToolsMode.COMPARE,
-            onClick = { onMode(ApkToolsMode.COMPARE) },
-            label = { Text(stringResource(R.string.apk_tools_mode_compare)) },
-        )
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = mode == ApkToolsMode.INSPECT,
+                onClick = { onMode(ApkToolsMode.INSPECT) },
+                label = { Text(stringResource(R.string.apk_tools_mode_inspect)) },
+            )
+            FilterChip(
+                selected = mode == ApkToolsMode.COMPARE,
+                onClick = { onMode(ApkToolsMode.COMPARE) },
+                label = { Text(stringResource(R.string.apk_tools_mode_compare)) },
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = mode == ApkToolsMode.RESIGN,
+                onClick = { onMode(ApkToolsMode.RESIGN) },
+                label = { Text(stringResource(R.string.apk_tools_mode_resign)) },
+            )
+            FilterChip(
+                selected = mode == ApkToolsMode.EXPORT_SPLITS,
+                onClick = { onMode(ApkToolsMode.EXPORT_SPLITS) },
+                label = { Text(stringResource(R.string.apk_tools_mode_export)) },
+            )
+        }
     }
 }
 
@@ -137,7 +188,7 @@ private fun ModeChips(mode: ApkToolsMode, onMode: (ApkToolsMode) -> Unit) {
 private fun MessageBanner(state: ApkToolsUiState, onClearMessage: () -> Unit) {
     val code = state.message ?: return
     Text(
-        text = formatApkToolsMessage(code),
+        text = formatApkToolsMessage(code, state.exportCount),
         color = if (state.messageIsError) {
             MaterialTheme.colorScheme.error
         } else {
@@ -246,6 +297,182 @@ private fun ComparePane(
 }
 
 @Composable
+@Suppress("LongParameterList")
+private fun ResignPane(
+    state: ApkToolsUiState,
+    onResignApk: (Uri) -> Unit,
+    onResignKeystore: (Uri) -> Unit,
+    onResignAlias: (String) -> Unit,
+    onResignConfirmed: (Boolean) -> Unit,
+    onResignOutput: (Uri, CharArray, CharArray) -> Unit,
+) {
+    // Keep keystore secrets in ephemeral Compose state only (never UiState / DataStore).
+    var storeSecret by remember { mutableStateOf("") }
+    var keySecret by remember { mutableStateOf("") }
+    val openApk = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) onResignApk(uri)
+    }
+    val openKeystore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) onResignKeystore(uri)
+    }
+    val apkMime = "application/vnd.android.package-archive"
+    val createOutput = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(apkMime),
+    ) { uri ->
+        if (uri != null) {
+            onResignOutput(uri, storeSecret.toCharArray(), keySecret.toCharArray())
+            storeSecret = ""
+            keySecret = ""
+        }
+    }
+    Text(
+        text = stringResource(R.string.apk_tools_resign_warning),
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.bodySmall,
+    )
+    ResignFilePickers(
+        state = state,
+        openApk = { openApk.launch(ApkMimeTypes) },
+        openKeystore = { openKeystore.launch(KeystoreMimeTypes) },
+    )
+    ResignCredentialFields(
+        state = state,
+        storeSecret = storeSecret,
+        keySecret = keySecret,
+        onStoreSecret = { storeSecret = it },
+        onKeySecret = { keySecret = it },
+        onResignAlias = onResignAlias,
+        onResignConfirmed = onResignConfirmed,
+    )
+    OutlinedButton(
+        onClick = { createOutput.launch("kiln-resigned.apk") },
+        enabled = !state.isBusy &&
+            state.resignApkUri != null &&
+            state.resignKeystoreUri != null &&
+            state.resignAlias.isNotBlank() &&
+            state.resignConfirmed,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.apk_tools_resign_save))
+    }
+}
+
+@Composable
+private fun ResignFilePickers(state: ApkToolsUiState, openApk: () -> Unit, openKeystore: () -> Unit) {
+    OutlinedButton(
+        onClick = openApk,
+        enabled = !state.isBusy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            state.resignApkLabel?.let { stringResource(R.string.apk_tools_resign_apk_picked, it) }
+                ?: stringResource(R.string.apk_tools_resign_pick_apk),
+        )
+    }
+    OutlinedButton(
+        onClick = openKeystore,
+        enabled = !state.isBusy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            state.resignKeystoreLabel?.let {
+                stringResource(R.string.apk_tools_resign_keystore_picked, it)
+            } ?: stringResource(R.string.apk_tools_resign_pick_keystore),
+        )
+    }
+}
+
+@Composable
+@Suppress("LongParameterList")
+private fun ResignCredentialFields(
+    state: ApkToolsUiState,
+    storeSecret: String,
+    keySecret: String,
+    onStoreSecret: (String) -> Unit,
+    onKeySecret: (String) -> Unit,
+    onResignAlias: (String) -> Unit,
+    onResignConfirmed: (Boolean) -> Unit,
+) {
+    OutlinedTextField(
+        value = state.resignAlias,
+        onValueChange = onResignAlias,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        label = { Text(stringResource(R.string.apk_tools_resign_alias)) },
+    )
+    OutlinedTextField(
+        value = storeSecret,
+        onValueChange = onStoreSecret,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        visualTransformation = PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        label = { Text(stringResource(R.string.apk_tools_resign_store_password)) },
+    )
+    OutlinedTextField(
+        value = keySecret,
+        onValueChange = onKeySecret,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        visualTransformation = PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        label = { Text(stringResource(R.string.apk_tools_resign_key_password)) },
+    )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Checkbox(
+            checked = state.resignConfirmed,
+            onCheckedChange = onResignConfirmed,
+            enabled = !state.isBusy,
+        )
+        Text(
+            text = stringResource(R.string.apk_tools_resign_confirm),
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+}
+
+@Composable
+private fun ExportSplitsPane(state: ApkToolsUiState, onExportSplits: (Uri, Uri) -> Unit) {
+    var pendingBundle by remember { mutableStateOf<Uri?>(null) }
+    val openTree = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { tree ->
+        val bundle = pendingBundle
+        if (tree != null && bundle != null) {
+            onExportSplits(bundle, tree)
+            pendingBundle = null
+        }
+    }
+    val openBundle = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            pendingBundle = uri
+            openTree.launch(null)
+        }
+    }
+    Text(
+        text = stringResource(R.string.apk_tools_export_hint),
+        style = MaterialTheme.typography.bodySmall,
+    )
+    OutlinedButton(
+        onClick = { openBundle.launch(ApkMimeTypes) },
+        enabled = !state.isBusy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.apk_tools_export_pick))
+    }
+    state.exportCount?.let { count ->
+        Text(
+            text = stringResource(R.string.apk_tools_export_done, count),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    } ?: EmptyState(
+        title = stringResource(R.string.apk_tools_empty_title),
+        description = stringResource(R.string.apk_tools_empty_export),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 160.dp),
+    )
+}
+
+@Composable
 private fun InspectReport(report: ApkInspectReport) {
     SectionHeader(title = stringResource(R.string.apk_tools_section_summary), modifier = Modifier.padding(0.dp))
     MetaLine(stringResource(R.string.apk_tools_field_file), report.displayName)
@@ -347,16 +574,35 @@ private fun kindLabel(kind: ApkArchiveKind): String = when (kind) {
     ApkArchiveKind.UNKNOWN -> stringResource(R.string.apk_tools_kind_unknown)
 }
 
+private val ApkToolsMessageIds = mapOf(
+    "copy_failed" to R.string.apk_tools_msg_copy_failed,
+    "unsupported_archive" to R.string.apk_tools_msg_unsupported,
+    "apk_unreadable" to R.string.apk_tools_msg_apk_unreadable,
+    "bundle_unreadable" to R.string.apk_tools_msg_bundle_unreadable,
+    "bundle_no_apk" to R.string.apk_tools_msg_bundle_no_apk,
+    "bundle_extract_failed" to R.string.apk_tools_msg_bundle_extract,
+    "signer_unreadable" to R.string.apk_tools_msg_signer_unreadable,
+    "package_not_installed" to R.string.apk_tools_msg_package_missing,
+    "package_query_empty" to R.string.apk_tools_msg_package_empty,
+    "resign_ok" to R.string.apk_tools_msg_resign_ok,
+    "resign_inputs_missing" to R.string.apk_tools_msg_resign_inputs,
+    "resign_confirm_required" to R.string.apk_tools_msg_resign_confirm,
+    "alias_empty" to R.string.apk_tools_msg_alias_empty,
+    "alias_missing" to R.string.apk_tools_msg_alias_missing,
+    "keystore_password" to R.string.apk_tools_msg_keystore_password,
+    "keystore_unreadable" to R.string.apk_tools_msg_keystore_unreadable,
+    "key_unreadable" to R.string.apk_tools_msg_key_unreadable,
+    "cert_chain_missing" to R.string.apk_tools_msg_cert_chain,
+    "resign_failed" to R.string.apk_tools_msg_resign_failed,
+    "output_write_failed" to R.string.apk_tools_msg_output_write,
+    "dest_unwritable" to R.string.apk_tools_msg_dest_unwritable,
+)
+
 @Composable
-private fun formatApkToolsMessage(code: String): String = when (code) {
-    "copy_failed" -> stringResource(R.string.apk_tools_msg_copy_failed)
-    "unsupported_archive" -> stringResource(R.string.apk_tools_msg_unsupported)
-    "apk_unreadable" -> stringResource(R.string.apk_tools_msg_apk_unreadable)
-    "bundle_unreadable" -> stringResource(R.string.apk_tools_msg_bundle_unreadable)
-    "bundle_no_apk" -> stringResource(R.string.apk_tools_msg_bundle_no_apk)
-    "bundle_extract_failed" -> stringResource(R.string.apk_tools_msg_bundle_extract)
-    "signer_unreadable" -> stringResource(R.string.apk_tools_msg_signer_unreadable)
-    "package_not_installed" -> stringResource(R.string.apk_tools_msg_package_missing)
-    "package_query_empty" -> stringResource(R.string.apk_tools_msg_package_empty)
-    else -> code
+private fun formatApkToolsMessage(code: String, exportCount: Int?): String {
+    if (code == "export_ok") {
+        return stringResource(R.string.apk_tools_msg_export_ok, exportCount ?: 0)
+    }
+    val id = ApkToolsMessageIds[code] ?: return code
+    return stringResource(id)
 }
