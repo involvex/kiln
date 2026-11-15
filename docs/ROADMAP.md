@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M34** HyperOS Autostart + battery controls in progress (`m34-autostart-battery`). **M33** Done (#52). App version **0.2.3** (code 6), tag `v0.2.3`. HyperOS M1–M8 checklist remains a separate release gate. Publishing / F-Droid submit still deferred.
+**Current status:** **M34** Done (#53). App version **0.2.3** (code 6), tag `v0.2.3`. Next milestone unscheduled (freeze/hibernate, universal merge, publishing still open). HyperOS M1–M8 checklist remains a separate release gate.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -48,7 +48,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M31** | APK tools resign / split export | Done | [`prompts/M31-apk-tools-resign.md`](./prompts/M31-apk-tools-resign.md) · [#49](https://github.com/involvex/kiln/pull/49) | Resign via apksig + export splits from `.apks`/`.xapk` |
 | **M32** | Update-check responsiveness | Done | [`prompts/M32-update-check-perf.md`](./prompts/M32-update-check-perf.md) · [#50](https://github.com/involvex/kiln/pull/50) | Room-only badge refresh; progress/cancel; mirror fail-fast; parallel repo sync |
 | **M33** | Exodus privacy chips | Done | [`prompts/M33-exodus-privacy.md`](./prompts/M33-exodus-privacy.md) · [#52](https://github.com/involvex/kiln/pull/52) | Deep-link + optional self-hosted API tracker chips |
-| **M34** | Autostart + battery | In progress | [`prompts/M34-autostart-battery.md`](./prompts/M34-autostart-battery.md) · `m34-autostart-battery` | HyperOS Autostart AppOps + AOSP battery tristate via Shizuku |
+| **M34** | Autostart + battery | Done | [`prompts/M34-autostart-battery.md`](./prompts/M34-autostart-battery.md) · [#53](https://github.com/involvex/kiln/pull/53) | HyperOS Autostart AppOps + AOSP battery tristate via Shizuku |
 
 ---
 
@@ -60,7 +60,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Update cooldown | Done (core) | Global days + major auto-install skip; per-app later |
 | GitHub Nightly channels | Done | M19 #33 |
 | Anti-feature chips | Done | M19; Exodus deep-link + optional API in M33 (#52) |
-| HyperOS Autostart / battery | In progress | M34 — AppOps 10008/10021 + deviceidle whitelist |
+| HyperOS Autostart / battery | Done | M34 (#53) — AppOps 10008/10021 + deviceidle whitelist |
 | Changelog & Watchlist | Done | M21 #35 |
 | Intent / Broadcast API | Done | M22 #36 |
 | Scheduled maintenance | Done | M23 #37 |
@@ -102,7 +102,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Activity log | ✅ Room-backed searchable log (install/backup/cache/maintenance/shell/…) | NONE |
 | Widgets / QS | ✅ Glance update count + Check now + Trim; QS tile Check now | NONE (+ privilege for Trim) |
 | Permission audit | ✅ Dangerous overview; `pm revoke` + basic AppOps set | NONE / SHIZUKU (`MANAGE_APP_OPS`) |
-| Background controls | 🔄 M34 — HyperOS Autostart + battery Unrestricted/Optimized/Restricted | SHIZUKU (`MANAGE_APP_OPS`) |
+| Background controls | ✅ HyperOS Autostart + battery Unrestricted/Optimized/Restricted | SHIZUKU (`MANAGE_APP_OPS`) |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; splits deferred | NONE / SHIZUKU |
 | Storage / cleaner | ✅ Size bars; APK leftovers; orphan Android/data+obb; cache clear | NONE / SHIZUKU (`CLEAR_CACHE`, `ACCESS_ANDROID_DATA`) |
@@ -303,8 +303,8 @@ flowchart LR
   M33 --> M34[M34 Autostart battery]
 ```
 
-1. **M0–M33** on main (#52); **`v0.2.3`** tagged.
-2. Current: **M34** HyperOS Autostart + battery controls only. Do not mix freeze/hibernate or universal APK merge.
+1. **M0–M34** on main (#53); **`v0.2.3`** tagged.
+2. Next: pick from open backlog (freeze/hibernate, universal APK merge, publishing) — do not mix into an unplanned branch.
 3. Publishing / F-Droid still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

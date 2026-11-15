@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Settings → Background controls: HyperOS Autostart (AppOps) + AOSP battery Unrestricted/Optimized/Restricted via Shizuku (M34)
+- Settings → Background controls: HyperOS Autostart (AppOps) + AOSP battery Unrestricted/Optimized/Restricted via Shizuku (#53)
 - Catalog / App detail: Open Exodus report (browser); optional self-hosted Exodus API in Settings for tracker name chips (ODbL attribution) (#52)
 
 ## [0.2.3] — 2026-11-15
