@@ -15,6 +15,11 @@ sealed interface AppsEvent {
 
     data object CancelCheckUpdates : AppsEvent
     data object DismissUpdateCheckMessage : AppsEvent
+    data object ToggleUpdatesFilter : AppsEvent
+    data object RequestUpdateAll : AppsEvent
+    data object ConfirmUpdateAll : AppsEvent
+    data object DismissUpdateAllDialog : AppsEvent
+    data object DismissUpdateAllMessage : AppsEvent
     data class LongPressed(val packageName: String) : AppsEvent
     data class SelectionToggled(val packageName: String) : AppsEvent
     data object ClearSelection : AppsEvent

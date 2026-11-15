@@ -10,7 +10,9 @@ import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.AppListFilter
 import dev.involvex.kiln.core.model.AppSortField
+import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.AppUpdateRepository
+import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.InstalledAppSummary
 import dev.involvex.kiln.core.model.SortDirection
@@ -29,6 +31,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @HiltViewModel
 class AppsViewModel @Inject constructor(
@@ -36,6 +39,7 @@ class AppsViewModel @Inject constructor(
     private val batchExportScheduler: BatchExportScheduler,
     private val apkExporter: ApkExporter,
     private val appUpdateRepository: AppUpdateRepository,
+    private val installQueue: InstallQueue,
 ) : ViewModel() {
     private val query = MutableStateFlow("")
     private val filter = MutableStateFlow(AppListFilter.USER)
@@ -53,7 +57,11 @@ class AppsViewModel @Inject constructor(
     private val isCheckingUpdates = MutableStateFlow(false)
     private val updateCheckProgress = MutableStateFlow<CheckProgressUi?>(null)
     private val updateCheckMessage = MutableStateFlow<String?>(null)
+    private val availableUpdates = MutableStateFlow<Map<String, AppUpdateInfo>>(emptyMap())
+    private val updateAllDialog = MutableStateFlow<UpdateAllDialogState?>(null)
+    private val updateAllMessage = MutableStateFlow<String?>(null)
     private var checkUpdatesJob: Job? = null
+    private var filterBeforeUpdates: AppListFilter = AppListFilter.USER
 
     private val listControls = combine(query, filter, sortField, sortDirection) { q, f, sf, sd ->
         ListControls(q, f, sf, sd)
@@ -93,7 +101,11 @@ class AppsViewModel @Inject constructor(
         isCheckingUpdates,
         updateCheckMessage,
         updateCheckProgress,
-    ) { badges, checking, message, progress ->
+        combine(availableUpdates, updateAllDialog, updateAllMessage) { updates, dialog, allMsg ->
+            Triple(updates, dialog, allMsg)
+        },
+    ) { badges, checking, message, progress, extras ->
+        val partition = UpdateAllSelection.partition(extras.first.values)
         UpdateControls(
             badges = badges,
             checking = checking,
@@ -101,6 +113,9 @@ class AppsViewModel @Inject constructor(
             progressCurrent = progress?.current ?: 0,
             progressTotal = progress?.total ?: 0,
             progressLabel = progress?.label,
+            installableUpdateCount = partition.installable.size,
+            updateAllDialog = extras.second,
+            updateAllMessage = extras.third,
         )
     }
 
@@ -143,6 +158,9 @@ class AppsViewModel @Inject constructor(
             updateCheckProgressTotal = updates.progressTotal,
             updateCheckProgressLabel = updates.progressLabel,
             updateCheckMessage = updates.message,
+            installableUpdateCount = updates.installableUpdateCount,
+            updateAllDialog = updates.updateAllDialog,
+            updateAllMessage = updates.updateAllMessage,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -159,6 +177,7 @@ class AppsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             appUpdateRepository.updates().collect { map ->
+                availableUpdates.value = map
                 updateBadges.value = map.mapValues { (_, info) ->
                     UpdateBadgeUi(
                         versionLabel = info.availableVersionName,
@@ -179,10 +198,17 @@ class AppsViewModel @Inject constructor(
             is AppsEvent.SortFieldChanged,
             AppsEvent.SortDirectionToggled,
             AppsEvent.Refresh,
+            -> handleListEvent(event)
+
             AppsEvent.CheckUpdates,
             AppsEvent.CancelCheckUpdates,
             AppsEvent.DismissUpdateCheckMessage,
-            -> handleListEvent(event)
+            AppsEvent.ToggleUpdatesFilter,
+            AppsEvent.RequestUpdateAll,
+            AppsEvent.ConfirmUpdateAll,
+            AppsEvent.DismissUpdateAllDialog,
+            AppsEvent.DismissUpdateAllMessage,
+            -> handleUpdateEvent(event)
 
             is AppsEvent.LongPressed,
             is AppsEvent.SelectionToggled,
@@ -221,13 +247,66 @@ class AppsViewModel @Inject constructor(
                 viewModelScope.launch { appUpdateRepository.refreshUpdates() }
             }
 
-            AppsEvent.CheckUpdates -> checkUpdates()
-
-            AppsEvent.CancelCheckUpdates -> cancelCheckUpdates()
-
-            AppsEvent.DismissUpdateCheckMessage -> updateCheckMessage.value = null
-
             else -> Unit
+        }
+    }
+
+    private fun handleUpdateEvent(event: AppsEvent) {
+        when (event) {
+            AppsEvent.CheckUpdates -> checkUpdates()
+            AppsEvent.CancelCheckUpdates -> cancelCheckUpdates()
+            AppsEvent.DismissUpdateCheckMessage -> updateCheckMessage.value = null
+            AppsEvent.ToggleUpdatesFilter -> toggleUpdatesFilter()
+            AppsEvent.RequestUpdateAll -> requestUpdateAll()
+            AppsEvent.ConfirmUpdateAll -> confirmUpdateAll()
+            AppsEvent.DismissUpdateAllDialog -> updateAllDialog.value = null
+            AppsEvent.DismissUpdateAllMessage -> updateAllMessage.value = null
+            else -> Unit
+        }
+    }
+
+    private fun toggleUpdatesFilter() {
+        if (filter.value == AppListFilter.UPDATES) {
+            filter.value = filterBeforeUpdates
+        } else {
+            filterBeforeUpdates = filter.value
+            filter.value = AppListFilter.UPDATES
+        }
+    }
+
+    private fun requestUpdateAll() {
+        val partition = UpdateAllSelection.partition(availableUpdates.value.values)
+        if (partition.installable.isEmpty()) {
+            updateAllMessage.value = "update_all_none"
+            return
+        }
+        updateAllDialog.value = UpdateAllDialogState(
+            enqueueCount = partition.installable.size,
+            skippedCount = partition.skippedCount,
+        )
+    }
+
+    private fun confirmUpdateAll() {
+        val partition = UpdateAllSelection.partition(availableUpdates.value.values)
+        updateAllDialog.value = null
+        if (partition.installable.isEmpty()) {
+            updateAllMessage.value = "update_all_none"
+            return
+        }
+        viewModelScope.launch {
+            var ok = 0
+            var fail = 0
+            for (update in partition.installable) {
+                when (val result = installQueue.enqueue(update)) {
+                    is Result.Success -> ok++
+
+                    is Result.Failure -> {
+                        fail++
+                        Timber.w("Update-all enqueue failed for %s: %s", update.packageName, result.message)
+                    }
+                }
+            }
+            updateAllMessage.value = "update_all:$ok:$fail"
         }
     }
 
@@ -414,6 +493,9 @@ class AppsViewModel @Inject constructor(
         val progressCurrent: Int,
         val progressTotal: Int,
         val progressLabel: String?,
+        val installableUpdateCount: Int,
+        val updateAllDialog: UpdateAllDialogState?,
+        val updateAllMessage: String?,
     )
 
     private data class CheckProgressUi(val current: Int, val total: Int, val label: String?)
