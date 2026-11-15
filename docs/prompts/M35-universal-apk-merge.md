@@ -16,7 +16,9 @@
 
 ## Done when
 
-- [ ] Merge + resign flow: pick bundle + keystore → signed universal APK saved
-- [ ] Plain `.apk` rejected; errors for unsupported/protected/OOM are clear
-- [ ] Confirmation that resign breaks original update path
-- [ ] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green
+- [x] Merge + resign flow: pick bundle + keystore → signed universal APK saved
+- [x] Plain `.apk` rejected; errors for unsupported/protected/OOM are clear
+- [x] Confirmation that resign breaks original update path
+- [x] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green
+
+Shipped in [#56](https://github.com/involvex/kiln/pull/56).
