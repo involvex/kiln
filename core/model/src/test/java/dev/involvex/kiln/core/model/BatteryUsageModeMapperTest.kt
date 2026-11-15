@@ -38,6 +38,16 @@ class BatteryUsageModeMapperTest {
     }
 
     @Test
+    fun appOpOutputParser_autostartMatchesHyperOsSettings() {
+        assertTrue(AppOpOutputParser.isAutostartAllowed("10008: mode=allow"))
+        assertTrue(AppOpOutputParser.isAutostartAllowed("10008: mode=default; override"))
+        assertFalse(AppOpOutputParser.isAutostartAllowed("10008: mode=ignore"))
+        assertFalse(AppOpOutputParser.isAutostartAllowed(""))
+        // Strict allow still requires explicit allow (battery / other ops).
+        assertFalse(AppOpOutputParser.isAllowed("mode: default"))
+    }
+
+    @Test
     fun deviceIdleWhitelistParser() {
         assertTrue(DeviceIdleWhitelistParser.isWhitelisted("com.example.app", "true"))
         assertFalse(DeviceIdleWhitelistParser.isWhitelisted("com.example.app", "false"))

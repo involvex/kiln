@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.involvex.kiln.core.common.Result
+import dev.involvex.kiln.core.model.AutostartListFilter
 import dev.involvex.kiln.core.model.BackgroundControlsApp
 import dev.involvex.kiln.core.model.BackgroundControlsGate
 import dev.involvex.kiln.core.model.BatteryUsageMode
@@ -48,7 +49,7 @@ class BackgroundControlsViewModel @Inject constructor(
                 state.copy(
                     isLoading = false,
                     apps = apps,
-                    filteredApps = filterApps(apps, state.query),
+                    filteredApps = filterApps(apps, state.query, state.autostartFilter, state.isHyperOs),
                     isHyperOs = repository.isHyperOs(),
                     canMutate = repository.canMutate(),
                 )
@@ -58,7 +59,10 @@ class BackgroundControlsViewModel @Inject constructor(
 
     fun setQuery(query: String) {
         _uiState.update { state ->
-            state.copy(query = query, filteredApps = filterApps(state.apps, query))
+            state.copy(
+                query = query,
+                filteredApps = filterApps(state.apps, query, state.autostartFilter, state.isHyperOs),
+            )
         }
     }
 
@@ -66,6 +70,15 @@ class BackgroundControlsViewModel @Inject constructor(
         if (_uiState.value.includeSystem == include) return
         _uiState.update { it.copy(includeSystem = include) }
         refresh()
+    }
+
+    fun setAutostartFilter(filter: AutostartListFilter) {
+        _uiState.update { state ->
+            state.copy(
+                autostartFilter = filter,
+                filteredApps = filterApps(state.apps, state.query, filter, state.isHyperOs),
+            )
+        }
     }
 
     fun setAutostart(packageName: String, allowed: Boolean) {
@@ -117,15 +130,39 @@ class BackgroundControlsViewModel @Inject constructor(
     private fun patchApp(packageName: String, transform: (BackgroundControlsApp) -> BackgroundControlsApp) {
         _uiState.update { state ->
             val apps = state.apps.map { if (it.packageName == packageName) transform(it) else it }
-            state.copy(apps = apps, filteredApps = filterApps(apps, state.query))
+            state.copy(
+                apps = apps,
+                filteredApps = filterApps(apps, state.query, state.autostartFilter, state.isHyperOs),
+            )
         }
     }
 
-    private fun filterApps(apps: List<BackgroundControlsApp>, query: String): List<BackgroundControlsApp> {
-        val q = query.trim()
-        if (q.isEmpty()) return apps
-        return apps.filter {
-            it.label.contains(q, ignoreCase = true) || it.packageName.contains(q, ignoreCase = true)
+    companion object {
+        internal fun filterApps(
+            apps: List<BackgroundControlsApp>,
+            query: String,
+            autostartFilter: AutostartListFilter,
+            isHyperOs: Boolean,
+        ): List<BackgroundControlsApp> {
+            val q = query.trim()
+            return apps.asSequence()
+                .filter { app ->
+                    q.isEmpty() ||
+                        app.label.contains(q, ignoreCase = true) ||
+                        app.packageName.contains(q, ignoreCase = true)
+                }
+                .filter { app ->
+                    if (!isHyperOs || autostartFilter == AutostartListFilter.ALL) {
+                        true
+                    } else {
+                        when (autostartFilter) {
+                            AutostartListFilter.ENABLED -> app.autostartAllowed == true
+                            AutostartListFilter.DISABLED -> app.autostartAllowed == false
+                            AutostartListFilter.ALL -> true
+                        }
+                    }
+                }
+                .toList()
         }
     }
 }

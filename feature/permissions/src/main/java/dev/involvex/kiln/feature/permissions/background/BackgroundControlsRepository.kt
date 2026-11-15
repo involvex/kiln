@@ -158,7 +158,8 @@ class BackgroundControlsRepository @Inject constructor(
                 null
             }
 
-            is Result.Success -> AppOpOutputParser.isAllowed(out.value)
+            // HyperOS Settings shows On for allow and default; only ignore is Off.
+            is Result.Success -> AppOpOutputParser.isAutostartAllowed(out.value)
         }
 
     private suspend fun readBattery(packageName: String): BatteryUsageMode? {
