@@ -47,4 +47,26 @@
     <string name="background_controls_battery_unrestricted">Uneingeschränkt</string>
     <string name="background_controls_battery_optimized">Optimiert</string>
     <string name="background_controls_battery_restricted">Eingeschränkt</string>
+
+    <string name="freeze_title">Apps einfrieren</string>
+    <string name="freeze_explain">Selten genutzte Apps mit pm suspend pausieren. Die App bleibt installiert inkl. Daten; leichter als Debloat disable-user. Braucht Shizuku (DEBLOAT).</string>
+    <string name="freeze_need_shizuku">Shizuku mit DEBLOAT-Capability ist nötig, um Apps einzufrieren oder aufzutauen.</string>
+    <string name="freeze_open_setup">Privilege-Einrichtung öffnen</string>
+    <string name="freeze_search">Apps suchen</string>
+    <string name="freeze_filter_user">Nutzer-Apps</string>
+    <string name="freeze_filter_all_apps">Alle Apps</string>
+    <string name="freeze_filter_all">Alle</string>
+    <string name="freeze_filter_frozen">Eingefroren</string>
+    <string name="freeze_filter_active">Aktiv</string>
+    <string name="freeze_refresh">Aktualisieren</string>
+    <string name="freeze_empty">Keine Apps passen zu diesem Filter.</string>
+    <string name="freeze_status_frozen">Eingefroren</string>
+    <string name="freeze_status_active">Aktiv</string>
+    <string name="freeze_confirm_title">App einfrieren?</string>
+    <string name="freeze_confirm_body">%1$s wird pausiert. Sie bleibt installiert, läuft aber erst nach dem Auftauen wieder.</string>
+    <string name="freeze_confirm_action">Einfrieren</string>
+    <string name="freeze_confirm_cancel">Abbrechen</string>
+    <string name="freeze_msg_capability">DEBLOAT-Privilege fehlt. Privilege-Einrichtung öffnen.</string>
+    <string name="freeze_msg_invalid_package">Ungültiger Paketname.</string>
+    <string name="freeze_msg_service">Shizuku UserService nicht verfügbar. Shizuku neu verbinden.</string>
 </resources>

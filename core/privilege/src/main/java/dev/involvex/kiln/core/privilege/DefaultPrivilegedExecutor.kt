@@ -209,6 +209,10 @@ class DefaultPrivilegedExecutor @Inject constructor(
     override suspend fun installExistingPackage(packageName: String): Result<Unit> =
         runDebloatCommand(ShellAllowlist.PM_INSTALL_EXISTING, packageName)
 
+    override suspend fun suspendPackage(packageName: String): Result<Unit> = runDebloatCommand(ShellAllowlist.PM_SUSPEND, packageName)
+
+    override suspend fun unsuspendPackage(packageName: String): Result<Unit> = runDebloatCommand(ShellAllowlist.PM_UNSUSPEND, packageName)
+
     override suspend fun revokeRuntimePermission(packageName: String, permission: String): Result<Unit> = withContext(ioDispatcher) {
         if (PrivilegeCapability.MANAGE_APP_OPS !in currentStatus().capabilities) {
             return@withContext Result.failure("capability_missing:MANAGE_APP_OPS")

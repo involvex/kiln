@@ -47,4 +47,26 @@
     <string name="background_controls_battery_unrestricted">Unrestricted</string>
     <string name="background_controls_battery_optimized">Optimized</string>
     <string name="background_controls_battery_restricted">Restricted</string>
+
+    <string name="freeze_title">Freeze apps</string>
+    <string name="freeze_explain">Suspend rarely used apps with pm suspend. The app stays installed with its data; this is lighter than Debloat disable-user. Requires Shizuku (DEBLOAT).</string>
+    <string name="freeze_need_shizuku">Shizuku with DEBLOAT capability is required to freeze or unfreeze apps.</string>
+    <string name="freeze_open_setup">Open Privilege setup</string>
+    <string name="freeze_search">Search apps</string>
+    <string name="freeze_filter_user">User apps</string>
+    <string name="freeze_filter_all_apps">All apps</string>
+    <string name="freeze_filter_all">All</string>
+    <string name="freeze_filter_frozen">Frozen</string>
+    <string name="freeze_filter_active">Active</string>
+    <string name="freeze_refresh">Refresh</string>
+    <string name="freeze_empty">No apps match this filter.</string>
+    <string name="freeze_status_frozen">Frozen</string>
+    <string name="freeze_status_active">Active</string>
+    <string name="freeze_confirm_title">Freeze this app?</string>
+    <string name="freeze_confirm_body">%1$s will be suspended. It stays installed but cannot run until you unfreeze it.</string>
+    <string name="freeze_confirm_action">Freeze</string>
+    <string name="freeze_confirm_cancel">Cancel</string>
+    <string name="freeze_msg_capability">DEBLOAT privilege is missing. Open Privilege setup.</string>
+    <string name="freeze_msg_invalid_package">Invalid package name.</string>
+    <string name="freeze_msg_service">Shizuku UserService unavailable. Reconnect Shizuku.</string>
 </resources>

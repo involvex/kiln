@@ -32,6 +32,7 @@ import dev.involvex.kiln.feature.onboarding.AutoMatchRoute
 import dev.involvex.kiln.feature.onboarding.privilege.PrivilegeSetupRoute
 import dev.involvex.kiln.feature.permissions.PermissionAuditRoute
 import dev.involvex.kiln.feature.permissions.background.BackgroundControlsRoute
+import dev.involvex.kiln.feature.permissions.freeze.FreezeRoute
 import dev.involvex.kiln.feature.settings.SettingsRoute
 import dev.involvex.kiln.feature.settings.activity.ActivityLogRoute
 import dev.involvex.kiln.feature.sources.SourcesRoute
@@ -47,6 +48,7 @@ import dev.involvex.kiln.navigation.BackgroundControlsKey
 import dev.involvex.kiln.navigation.CatalogDetailKey
 import dev.involvex.kiln.navigation.DebloatKey
 import dev.involvex.kiln.navigation.DiscoveryKey
+import dev.involvex.kiln.navigation.FreezeKey
 import dev.involvex.kiln.navigation.ManageKey
 import dev.involvex.kiln.navigation.PermissionAuditKey
 import dev.involvex.kiln.navigation.PrivilegeSetupKey
@@ -173,6 +175,7 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
             onOpenDebloat = { topLevelBackStack.add(DebloatKey) },
             onOpenPermissionAudit = { topLevelBackStack.add(PermissionAuditKey) },
             onOpenBackgroundControls = { topLevelBackStack.add(BackgroundControlsKey) },
+            onOpenFreeze = { topLevelBackStack.add(FreezeKey) },
             onOpenTermux = { topLevelBackStack.add(TermuxKey) },
             onOpenActivityLog = { topLevelBackStack.add(ActivityLogKey) },
         )
@@ -194,6 +197,12 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
     }
     entry<BackgroundControlsKey> {
         BackgroundControlsRoute(
+            onBack = { topLevelBackStack.removeLast() },
+            onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
+        )
+    }
+    entry<FreezeKey> {
+        FreezeRoute(
             onBack = { topLevelBackStack.removeLast() },
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
         )

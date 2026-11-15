@@ -418,7 +418,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 ### Storage & Wartung
 
 - **P1 — Geplante Wartung**: wöchentlich Cache leeren, alte APKs aufräumen, Kiln-Temps (WorkManager, Laden/WLAN, Protokoll). SAF-Nutzer-Backups bewusst später. → **M23**
-- **P2 — Apps einfrieren/hibernieren**: Selten genutzte Apps pausieren statt löschen (spart Akku und Hintergrundaktivität).
+- **P2 — Apps einfrieren/hibernieren**: Selten genutzte Apps pausieren statt löschen (spart Akku und Hintergrundaktivität). → **M36** (In progress).
 - **P3 — Dual Apps / Zweiter Bereich / Work-Profile**: Installation und Updates pro User-ID (`--user`), relevant für HyperOS „Dual Apps".
 
 ### UX
@@ -442,4 +442,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 11. **M33** Exodus privacy chips (Done #52)
 12. **M34** HyperOS Autostart + battery controls (Done #53)
 13. **M35** Universal APK merge (Done #56)
-14. **M36** Freeze / hibernate (next)
+14. **M36** Freeze / hibernate (In progress)
