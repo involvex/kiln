@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M32** Done (#50). Next: **M33** Exodus privacy chips (PLAN §12) or release gate (HyperOS M1–M8 + optional `0.2.3`). App version **0.2.2** (code 5). Publishing / F-Droid submit still deferred.
+**Current status:** **M32** Done (#50). App version **0.2.3** (code 6), tag `v0.2.3`. Next: **M33** Exodus privacy chips (PLAN §12). HyperOS M1–M8 checklist remains a separate release gate. Publishing / F-Droid submit still deferred.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -108,7 +108,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg) | NONE (+ network; silent install/downgrade if SHIZUKU) |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
-| Release / store prep | ✅ version `0.2.2` (code 5); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG moved; F-Droid submit deferred | — |
+| Release / store prep | ✅ version `0.2.3` (code 6); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG; F-Droid submit deferred | — |
 | App Discovery | ✅ Apps → Discover; catalog refresh; icons; detail; search/categories; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
 | Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage | NONE |
@@ -298,8 +298,8 @@ flowchart LR
   M32 --> M33[M33 Exodus chips]
 ```
 
-1. **M0–M32** on main (#50).
-2. Next: **M33** Exodus privacy chips, or HyperOS release gate / `0.2.3` — pick one; do not mix.
+1. **M0–M32** on main (#50); polish View updates / Update all (#51); **`v0.2.3`** tagged.
+2. Next: **M33** Exodus privacy chips only. Do not mix freeze/hibernate or universal APK merge.
 3. Publishing / F-Droid still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

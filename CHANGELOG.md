@@ -7,52 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] — 2026-11-15
+
 ### Added
 
 - Apps: after Check updates / pull-to-refresh, View updates toggles the Updates filter; Update all confirms then queues signature-safe installs
-- Update check: per-repo progress + cancel; parallel F-Droid sync; faster mirror failover after first failure
-- Manage → APK tools: resign SAF APK with user PKCS12/keystore (apksig); export split `.apk` members from `.apks`/`.xapk` (no universal merge)
+- Update check: per-repo progress + cancel; parallel F-Droid sync; faster mirror failover after first failure (#50)
+- Manage → APK tools: resign SAF APK with user PKCS12/keystore (apksig); export split `.apk` members from `.apks`/`.xapk` (no universal merge) (#49)
+- Per-repo HTTPS mirrors + Settings Network HTTP/SOCKS/Orbot proxy; Kiln-Config schema v2 (#48)
+- Manage → APK tools: inspect / signature compare (#47)
+- Storage phase 2: size bars, APK leftovers, orphaned data/obb (#44)
+- Permission audit; widgets / QS; activity log; config export; scheduled maintenance; automation intents (#36–#41)
+- Watchlist, release notes, Play deep-link, GitHub channels, F-Droid anti-feature chips (#33–#35)
+- Auto-match UX, Discover/Trending polish, Ocean/Dynamic Color themes
 
 ### Fixed
 
-- Apps badge refresh no longer hits GitHub on every open/refresh (live probes only on Check updates / Sync all)
-- Per-repo HTTPS mirrors (Sources) with sync/download failover; Settings → Network HTTP/SOCKS proxy + Orbot preset; Kiln-Config schema v2 (mirrors + proxy prefs, no password)
-- Manage → APK tools: inspect SAF-picked `.apk`/`.apks`/`.xapk` (meta, permissions, signers, members); compare signatures (APK vs APK or vs installed)
-- Shared `ApkSigningReader` (X.509 SHA-256) for installer gate and apps detail
-- Appearance: System theme, Ocean palette, optional Material You Dynamic Color (API 31+; ignored for Monokai/Ocean)
-- Storage phase 2 (Manage): size bars, APK leftover scan/delete (SAF), orphaned Android/data+obb list/delete via Shizuku
+- Apps badge refresh no longer hits GitHub on every open/refresh (live probes only on Check updates / Sync all) (#50)
+- Update-check hang: Room-only refresh, fail-fast mirrors, bounded parallel repo sync (#50)
 
 ### Changed
 
-- Docs/About/store copy: clarify Kiln is the Android package manager (`dev.involvex.kiln`), unrelated to the macOS Kiln emulator (#46)
-- Discover / Trending: SectionHeader shelves, EmptyState, compact Trending cards, GitHub results use Card layout
-- Permission audit (Settings): dangerous-permission overview; privilege-gated bulk `pm revoke` and basic AppOps set (fixed allowlists)
-- Home-screen Glance widget + QS tile: update count, Check now (WorkManager), widget Trim caches (Shizuku or open Manage)
-- Activity log (Settings): searchable local Room log of installs, backups, cache clears, maintenance, privilege shell, debloat, Termux, and automation (cap 500; no paths/tokens)
-- Kiln-Config export/import (Settings): SAF JSON of repos, managed apps/watchlist, and non-secret prefs; merge import; GitHub PAT never exported
-- Scheduled maintenance (Settings → Maintenance, off by default): weekly WorkManager on Wi‑Fi + charging; optional system cache trim (Shizuku), prune download/rollback/backup temps; Run now + last-run protocol
-- Intent/Broadcast automation API (Settings → Automation, off by default): signature permission `dev.involvex.kiln.permission.AUTOMATION`; actions `CHECK_UPDATES`, `INSTALL_UPDATE`, `INSTALL_FROM_URL`, `CLEAN_CACHE`; result broadcast + optional failure notification
-- Release notes on App detail updates (GitHub release body / F-Droid whatsNew, plain text)
-- Watchlist: Watch uninstalled catalog apps (and GitHub lookups); Sources list with new-version badge; background notify, no auto-install
-- App detail: Open in Play Store for unmanaged apps installed via Play or Aurora (`market://` with https fallback)
-- GitHub update channels on App detail: Stable, Pre-release, Nightly (Actions artifacts; PAT required for Nightly)
-- F-Droid anti-feature chips on catalog App details (from index-v2 metadata)
-- Auto-match UX: app icons, confidence chips, match rationale, localized accept feedback
-- Manual source link from Match installed apps and App detail (F-Droid repo or GitHub `owner/repo`, pinned)
-- WARNING matches can be accepted with an explicit confirm dialog (pinned)
-- Catalog App details: share button (store / source URLs); re-tap active bottom tab scrolls to top (and pops nested screens)
-- Pull-to-refresh on Discover and Trending (catalog sync)
-
-### Changed
-
-- Managed GitHub apps store `githubChannel` instead of a boolean pre-release flag (Obtainium `includePrereleases` maps to Pre-release)
-- Auto-match prefers a signer-matching index repo over a higher-priority repo with a mismatched certificate
-- Catalog App details layout (hero card, chips, links, top-bar back/share)
-- Library pull-to-refresh runs a full update check (repo sync); Discover refresh-catalog control is a compact TextButton
-
-### Fixed
-
-- Lint: share chooser title via `stringResource`; `List.removeLast` NewApi on minSdk 26
+- Docs/About/store copy: clarify Kiln vs macOS Kiln emulator (#46)
+- Library pull-to-refresh runs a full update check; Discover refresh is a compact TextButton
 
 ## [0.2.2] — 2026-11-09
 
@@ -117,8 +94,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - No telemetry; HTTPS-only network; signature checks on updates; tokens not logged
 
-[Unreleased]: https://github.com/involvex/kiln/compare/v0.2.2...HEAD
-[0.2.2]: https://github.com/involvex/kiln/compare/v0.2.1...v0.2.2
-[0.2.1]: https://github.com/involvex/kiln/compare/v0.2.0...v0.2.1
+[Unreleased]: https://github.com/involvex/kiln/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/involvex/kiln/compare/v0.2.0...v0.2.3
+[0.2.2]: https://github.com/involvex/kiln/compare/v0.2.0...v0.2.3
+[0.2.1]: https://github.com/involvex/kiln/compare/v0.2.0...v0.2.3
 [0.2.0]: https://github.com/involvex/kiln/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/involvex/kiln/releases/tag/v0.1.0
