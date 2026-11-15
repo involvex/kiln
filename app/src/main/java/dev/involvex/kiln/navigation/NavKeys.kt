@@ -42,6 +42,9 @@ data object PermissionAuditKey
 data object BackgroundControlsKey
 
 @Serializable
+data object FreezeKey
+
+@Serializable
 data object TermuxKey
 
 @Serializable

@@ -114,6 +114,21 @@ class ShellAllowlistTest {
     }
 
     @Test
+    fun suspendAndUnsuspend_requireSafePackage() {
+        val pkg = "com.example.app"
+        assertEquals(
+            listOf("pm", "suspend", "--user", "0", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_SUSPEND, listOf(pkg)),
+        )
+        assertEquals(
+            listOf("pm", "unsuspend", "--user", "0", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_UNSUSPEND, listOf(pkg)),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_SUSPEND, listOf("bad;pkg")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_UNSUSPEND, listOf("a")))
+    }
+
+    @Test
     fun pm_revoke_accepts_safe_permission() {
         val pkg = "com.example.app"
         val perm = "android.permission.CAMERA"

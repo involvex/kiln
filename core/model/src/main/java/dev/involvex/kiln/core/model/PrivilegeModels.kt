@@ -102,6 +102,12 @@ interface PrivilegedExecutor {
     /** `pm install-existing --user 0` after user uninstall. Requires [PrivilegeCapability.DEBLOAT]. */
     suspend fun installExistingPackage(packageName: String): Result<Unit>
 
+    /** `pm suspend --user 0` — app stays installed; reversible. Requires [PrivilegeCapability.DEBLOAT]. */
+    suspend fun suspendPackage(packageName: String): Result<Unit>
+
+    /** `pm unsuspend --user 0`. Requires [PrivilegeCapability.DEBLOAT]. */
+    suspend fun unsuspendPackage(packageName: String): Result<Unit>
+
     /**
      * Revoke a runtime permission via allowlisted `pm revoke`.
      * Requires [PrivilegeCapability.MANAGE_APP_OPS].

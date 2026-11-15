@@ -18,6 +18,8 @@ object ShellAllowlist {
     const val PM_DISABLE_USER = "pm_disable_user"
     const val PM_ENABLE = "pm_enable"
     const val PM_INSTALL_EXISTING = "pm_install_existing"
+    const val PM_SUSPEND = "pm_suspend"
+    const val PM_UNSUSPEND = "pm_unsuspend"
     const val PM_REVOKE = "pm_revoke"
     const val APPOPS_SET = "appops_set"
     const val APPOPS_GET = "appops_get"
@@ -108,6 +110,24 @@ object ShellAllowlist {
                 null
             } else {
                 listOf("pm", "install-existing", "--user", "0", packageName)
+            }
+        }
+
+        PM_SUSPEND -> {
+            val packageName = args.singleOrNull() ?: return null
+            if (!isSafePackageName(packageName)) {
+                null
+            } else {
+                listOf("pm", "suspend", "--user", "0", packageName)
+            }
+        }
+
+        PM_UNSUSPEND -> {
+            val packageName = args.singleOrNull() ?: return null
+            if (!isSafePackageName(packageName)) {
+                null
+            } else {
+                listOf("pm", "unsuspend", "--user", "0", packageName)
             }
         }
 
