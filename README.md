@@ -4,7 +4,7 @@ All-in-one package, APK, and storage manager for Android (`dev.involvex.kiln`).
 
 - **Package:** `dev.involvex.kiln`
 - **License:** [Apache-2.0](./LICENSE)
-- **Status:** `0.2.3` released. M35 Universal APK merge in progress. See [docs/ROADMAP.md](./docs/ROADMAP.md)
+- **Status:** `0.2.3` released. M35 Universal APK merge Done (#56). Next: M36 freeze/hibernate. See [docs/ROADMAP.md](./docs/ROADMAP.md)
 - **Version:** `0.2.3` (versionCode 6)
 
 Kiln unifies F-Droid/GitHub sources, APK tools, app backup, storage cleanup, optional debloat, optional Termux hooks, and F-Droid catalog discovery. Privileged actions run through Shizuku/ShizukuPlus or Root when available; Tier NONE stays useful without them.
