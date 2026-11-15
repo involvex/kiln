@@ -9,6 +9,7 @@ enum class ApkToolsMode {
     COMPARE,
     RESIGN,
     EXPORT_SPLITS,
+    MERGE,
 }
 
 data class ApkToolsUiState(
@@ -23,6 +24,8 @@ data class ApkToolsUiState(
     val resignKeystoreLabel: String? = null,
     val resignAlias: String = "",
     val resignConfirmed: Boolean = false,
+    val mergeBundleUri: Uri? = null,
+    val mergeBundleLabel: String? = null,
     val exportCount: Int? = null,
     val message: String? = null,
     val messageIsError: Boolean = false,

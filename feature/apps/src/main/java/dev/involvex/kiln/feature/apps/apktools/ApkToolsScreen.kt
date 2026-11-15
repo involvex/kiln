@@ -74,6 +74,11 @@ fun ApkToolsRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, vie
         onResignConfirmed = viewModel::setResignConfirmed,
         onResignOutput = viewModel::resignTo,
         onExportSplits = viewModel::exportSplits,
+        onMergeBundle = viewModel::setMergeBundle,
+        onMergeKeystore = viewModel::setResignKeystore,
+        onMergeAlias = viewModel::setResignAlias,
+        onMergeConfirmed = viewModel::setResignConfirmed,
+        onMergeOutput = viewModel::mergeAndResignTo,
         onClearMessage = viewModel::clearMessage,
         modifier = modifier,
     )
@@ -94,6 +99,11 @@ fun ApkToolsScreen(
     onResignConfirmed: (Boolean) -> Unit,
     onResignOutput: (Uri, CharArray, CharArray) -> Unit,
     onExportSplits: (Uri, Uri) -> Unit,
+    onMergeBundle: (Uri) -> Unit,
+    onMergeKeystore: (Uri) -> Unit,
+    onMergeAlias: (String) -> Unit,
+    onMergeConfirmed: (Boolean) -> Unit,
+    onMergeOutput: (Uri, CharArray, CharArray) -> Unit,
     onClearMessage: () -> Unit,
     showTopBar: Boolean = true,
     modifier: Modifier = Modifier,
@@ -149,6 +159,15 @@ fun ApkToolsScreen(
                     state = state,
                     onExportSplits = onExportSplits,
                 )
+
+                ApkToolsMode.MERGE -> MergePane(
+                    state = state,
+                    onMergeBundle = onMergeBundle,
+                    onMergeKeystore = onMergeKeystore,
+                    onMergeAlias = onMergeAlias,
+                    onMergeConfirmed = onMergeConfirmed,
+                    onMergeOutput = onMergeOutput,
+                )
             }
         }
     }
@@ -179,6 +198,13 @@ private fun ModeChips(mode: ApkToolsMode, onMode: (ApkToolsMode) -> Unit) {
                 selected = mode == ApkToolsMode.EXPORT_SPLITS,
                 onClick = { onMode(ApkToolsMode.EXPORT_SPLITS) },
                 label = { Text(stringResource(R.string.apk_tools_mode_export)) },
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = mode == ApkToolsMode.MERGE,
+                onClick = { onMode(ApkToolsMode.MERGE) },
+                label = { Text(stringResource(R.string.apk_tools_mode_merge)) },
             )
         }
     }
@@ -432,6 +458,95 @@ private fun ResignCredentialFields(
 }
 
 @Composable
+@Suppress("LongParameterList")
+private fun MergePane(
+    state: ApkToolsUiState,
+    onMergeBundle: (Uri) -> Unit,
+    onMergeKeystore: (Uri) -> Unit,
+    onMergeAlias: (String) -> Unit,
+    onMergeConfirmed: (Boolean) -> Unit,
+    onMergeOutput: (Uri, CharArray, CharArray) -> Unit,
+) {
+    var storeSecret by remember { mutableStateOf("") }
+    var keySecret by remember { mutableStateOf("") }
+    val openBundle = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) onMergeBundle(uri)
+    }
+    val openKeystore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) onMergeKeystore(uri)
+    }
+    val apkMime = "application/vnd.android.package-archive"
+    val createOutput = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(apkMime),
+    ) { uri ->
+        if (uri != null) {
+            onMergeOutput(uri, storeSecret.toCharArray(), keySecret.toCharArray())
+            storeSecret = ""
+            keySecret = ""
+        }
+    }
+    Text(
+        text = stringResource(R.string.apk_tools_merge_hint),
+        style = MaterialTheme.typography.bodySmall,
+    )
+    Text(
+        text = stringResource(R.string.apk_tools_resign_warning),
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.bodySmall,
+    )
+    OutlinedButton(
+        onClick = { openBundle.launch(ApkMimeTypes) },
+        enabled = !state.isBusy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            state.mergeBundleLabel?.let { stringResource(R.string.apk_tools_merge_bundle_picked, it) }
+                ?: stringResource(R.string.apk_tools_merge_pick_bundle),
+        )
+    }
+    OutlinedButton(
+        onClick = { openKeystore.launch(KeystoreMimeTypes) },
+        enabled = !state.isBusy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            state.resignKeystoreLabel?.let {
+                stringResource(R.string.apk_tools_resign_keystore_picked, it)
+            } ?: stringResource(R.string.apk_tools_resign_pick_keystore),
+        )
+    }
+    ResignCredentialFields(
+        state = state,
+        storeSecret = storeSecret,
+        keySecret = keySecret,
+        onStoreSecret = { storeSecret = it },
+        onKeySecret = { keySecret = it },
+        onResignAlias = onMergeAlias,
+        onResignConfirmed = onMergeConfirmed,
+    )
+    OutlinedButton(
+        onClick = { createOutput.launch("kiln-universal.apk") },
+        enabled = !state.isBusy &&
+            state.mergeBundleUri != null &&
+            state.resignKeystoreUri != null &&
+            state.resignAlias.isNotBlank() &&
+            state.resignConfirmed,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.apk_tools_merge_save))
+    }
+    if (state.mergeBundleUri == null) {
+        EmptyState(
+            title = stringResource(R.string.apk_tools_empty_title),
+            description = stringResource(R.string.apk_tools_empty_merge),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 120.dp),
+        )
+    }
+}
+
+@Composable
 private fun ExportSplitsPane(state: ApkToolsUiState, onExportSplits: (Uri, Uri) -> Unit) {
     var pendingBundle by remember { mutableStateOf<Uri?>(null) }
     val openTree = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { tree ->
@@ -571,6 +686,7 @@ private fun kindLabel(kind: ApkArchiveKind): String = when (kind) {
     ApkArchiveKind.APK -> stringResource(R.string.apk_tools_kind_apk)
     ApkArchiveKind.APKS -> stringResource(R.string.apk_tools_kind_apks)
     ApkArchiveKind.XAPK -> stringResource(R.string.apk_tools_kind_xapk)
+    ApkArchiveKind.APKM -> stringResource(R.string.apk_tools_kind_apkm)
     ApkArchiveKind.UNKNOWN -> stringResource(R.string.apk_tools_kind_unknown)
 }
 
@@ -596,6 +712,11 @@ private val ApkToolsMessageIds = mapOf(
     "resign_failed" to R.string.apk_tools_msg_resign_failed,
     "output_write_failed" to R.string.apk_tools_msg_output_write,
     "dest_unwritable" to R.string.apk_tools_msg_dest_unwritable,
+    "merge_ok" to R.string.apk_tools_msg_merge_ok,
+    "merge_inputs_missing" to R.string.apk_tools_msg_merge_inputs,
+    "merge_failed" to R.string.apk_tools_msg_merge_failed,
+    "merge_protected" to R.string.apk_tools_msg_merge_protected,
+    "merge_oom" to R.string.apk_tools_msg_merge_oom,
 )
 
 @Composable

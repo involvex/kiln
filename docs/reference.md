@@ -24,6 +24,13 @@ Keep reference checkouts **outside** this repository. Do not commit machine-loca
 - SPDX: **GPL-3.0-or-later**
 - For Kiln: **read behaviour only**
 
+## REAndroid (APK merge)
+
+- Upstream: [REAndroid/ARSCLib](https://github.com/REAndroid/ARSCLib) (Maven `io.github.reandroid:ARSCLib`) and [REAndroid/APKEditor](https://github.com/REAndroid/APKEditor) merge behaviour
+- SPDX: **Apache-2.0**
+- Kiln uses ARSCLib for in-app universal split merge (M35) and attributes APKEditor-style META-INF clearing / merge flow in `NOTICE`
+- Do **not** copy GPL AntiSplit-M or other GPL merge UIs
+
 ## Other public references
 
 - [APK Explorer & Editor](https://github.com/apk-editor/APK-Explorer-Editor)

@@ -27,6 +27,16 @@ class ApkToolsViewModel @Inject constructor(private val repository: ApkToolsRepo
         }
     }
 
+    fun setMergeBundle(uri: Uri) {
+        _uiState.update {
+            it.copy(
+                mergeBundleUri = uri,
+                mergeBundleLabel = repository.displayName(uri),
+                message = null,
+            )
+        }
+    }
+
     fun setComparePackageQuery(value: String) {
         _uiState.update { it.copy(comparePackageQuery = value) }
     }
@@ -207,6 +217,59 @@ class ApkToolsViewModel @Inject constructor(private val repository: ApkToolsRepo
                 is dev.involvex.kiln.core.common.Result.Failure ->
                     _uiState.update {
                         it.copy(isBusy = false, message = result.message, messageIsError = true)
+                    }
+            }
+        }
+    }
+
+    /**
+     * [storeSecret] / [keySecret] ephemeral only; cleared by the UI after launch.
+     */
+    fun mergeAndResignTo(outputUri: Uri, storeSecret: CharArray, keySecret: CharArray) {
+        val state = _uiState.value
+        val bundle = state.mergeBundleUri
+        val keystore = state.resignKeystoreUri
+        if (bundle == null || keystore == null) {
+            _uiState.update { it.copy(message = "merge_inputs_missing", messageIsError = true) }
+            return
+        }
+        if (!state.resignConfirmed) {
+            _uiState.update { it.copy(message = "resign_confirm_required", messageIsError = true) }
+            return
+        }
+        if (state.resignAlias.isBlank()) {
+            _uiState.update { it.copy(message = "alias_empty", messageIsError = true) }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isBusy = true, message = null) }
+            when (
+                val result = repository.mergeAndResign(
+                    bundleUri = bundle,
+                    keystoreUri = keystore,
+                    outputUri = outputUri,
+                    alias = state.resignAlias,
+                    storePassword = storeSecret,
+                    keyPassword = keySecret,
+                )
+            ) {
+                is dev.involvex.kiln.core.common.Result.Success ->
+                    _uiState.update {
+                        it.copy(
+                            isBusy = false,
+                            resignConfirmed = false,
+                            message = "merge_ok",
+                            messageIsError = false,
+                        )
+                    }
+
+                is dev.involvex.kiln.core.common.Result.Failure ->
+                    _uiState.update {
+                        it.copy(
+                            isBusy = false,
+                            message = result.message,
+                            messageIsError = true,
+                        )
                     }
             }
         }
