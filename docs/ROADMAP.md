@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M36** Freeze/hibernate In progress (`m36-freeze-hibernate`). M35 Done (#56). App version **0.2.3** (code 6), tag `v0.2.3`. HyperOS M1–M8 checklist remains a separate release gate.
+**Current status:** **M36** Freeze/hibernate Done (#58). App version **0.2.3** (code 6), tag `v0.2.3`. Next: publishing / dual-user (unscheduled). HyperOS M1–M8 checklist remains a separate release gate.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -50,7 +50,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M33** | Exodus privacy chips | Done | [`prompts/M33-exodus-privacy.md`](./prompts/M33-exodus-privacy.md) · [#52](https://github.com/involvex/kiln/pull/52) | Deep-link + optional self-hosted API tracker chips |
 | **M34** | Autostart + battery | Done | [`prompts/M34-autostart-battery.md`](./prompts/M34-autostart-battery.md) · [#53](https://github.com/involvex/kiln/pull/53) | HyperOS Autostart AppOps + AOSP battery tristate via Shizuku |
 | **M35** | Universal APK merge | Done | [`prompts/M35-universal-apk-merge.md`](./prompts/M35-universal-apk-merge.md) · [#56](https://github.com/involvex/kiln/pull/56) | Merge `.apks`/`.xapk`/`.apkm` via ARSCLib + always resign (M31 keystore) |
-| **M36** | Freeze / hibernate | In progress | [`prompts/M36-freeze-hibernate.md`](./prompts/M36-freeze-hibernate.md) · `m36-freeze-hibernate` | `pm suspend`/`unsuspend` via privilege; Settings list separate from Debloat |
+| **M36** | Freeze / hibernate | Done | [`prompts/M36-freeze-hibernate.md`](./prompts/M36-freeze-hibernate.md) · [#58](https://github.com/involvex/kiln/pull/58) | `pm suspend`/`unsuspend` via privilege; Settings list separate from Debloat |
 
 ---
 
@@ -74,7 +74,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | SAF backup rotation / data tiers / encryption | Open | Unscheduled |
 | APK tools 2 (inspect + compare) | Done | M29 (#47); M31 (#49); universal merge M35 (#56) |
 | Mirrors / proxy | Done | M30 #48 |
-| Freeze/hibernate, dual-user, tablet | Partial | M36 freeze/hibernate In progress; dual-user / tablet unscheduled |
+| Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); dual-user / tablet unscheduled |
 | Publishing / F-Droid submit | Partial | Fastlane + tag workflow ready; screenshots / submit deferred |
 | HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
 
@@ -109,7 +109,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; splits deferred | NONE / SHIZUKU |
 | Storage / cleaner | ✅ Size bars; APK leftovers; orphan Android/data+obb; cache clear | NONE / SHIZUKU (`CLEAR_CACHE`, `ACCESS_ANDROID_DATA`) |
 | APK tools (inspect / compare / resign / merge) | ✅ M29 inspect+compare; ✅ M31 resign + split export; ✅ M35 universal merge (#56) | NONE |
-| Freeze / hibernate | ⏳ M36 — `pm suspend`/`unsuspend`; Settings list (separate from Debloat) | ≥ SHIZUKU (`DEBLOAT`) |
+| Freeze / hibernate | ✅ M36 (#58) — `pm suspend`/`unsuspend`; Settings list (separate from Debloat) | ≥ SHIZUKU (`DEBLOAT`) |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
 | Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg) | NONE (+ network; silent install/downgrade if SHIZUKU) |
@@ -308,8 +308,8 @@ flowchart LR
   M35 --> M36[M36 Freeze hibernate]
 ```
 
-1. **M0–M35** on main (#56); Background controls polish (#55); **`v0.2.3`** tagged. **M36** in progress (`m36-freeze-hibernate`).
-2. Next after M36: publishing / dual-user — do not mix into an unplanned branch.
+1. **M0–M36** on main (#58); Background controls polish (#55); **`v0.2.3`** tagged.
+2. Next: publishing / dual-user — do not mix into an unplanned branch.
 3. Publishing / F-Droid still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 
