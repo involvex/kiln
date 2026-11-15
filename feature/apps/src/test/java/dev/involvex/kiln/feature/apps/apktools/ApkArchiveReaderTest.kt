@@ -15,6 +15,7 @@ class ApkArchiveReaderTest {
         assertEquals(ApkArchiveKind.APK, ApkArchiveReader.kindOf("app.apk"))
         assertEquals(ApkArchiveKind.APKS, ApkArchiveReader.kindOf("app.APKS"))
         assertEquals(ApkArchiveKind.XAPK, ApkArchiveReader.kindOf("bundle.xapk"))
+        assertEquals(ApkArchiveKind.APKM, ApkArchiveReader.kindOf("app.apkm"))
         assertEquals(ApkArchiveKind.UNKNOWN, ApkArchiveReader.kindOf("notes.txt"))
     }
 

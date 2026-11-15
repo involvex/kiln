@@ -110,10 +110,99 @@ class ApkToolsRepository @Inject constructor(
         }
     }
 
+    /**
+     * Merges a split bundle into one APK, then resigns with the user keystore.
+     * Passwords stay on the call stack; cleared in [finally].
+     */
+    suspend fun mergeAndResign(
+        bundleUri: Uri,
+        keystoreUri: Uri,
+        outputUri: Uri,
+        alias: String,
+        storePassword: CharArray,
+        keyPassword: CharArray,
+    ): Result<Unit> = withContext(ioDispatcher) {
+        val credentials = ApkResign.Credentials(
+            storePassword = storePassword,
+            keyAlias = alias,
+            keyPassword = keyPassword,
+        )
+        when (val prepared = prepareMergeInputs(bundleUri, keystoreUri, credentials)) {
+            is Result.Failure -> return@withContext prepared
+
+            is Result.Success -> {
+                val inputs = prepared.value
+                val mergedFile = File(inputs.workDir, "merged.apk")
+                val signedFile = File(inputs.workDir, "signed.apk")
+                try {
+                    return@withContext mergeSignAndWrite(
+                        inputs.bundleFile,
+                        inputs.workDir,
+                        mergedFile,
+                        signedFile,
+                        inputs.keyFile,
+                        credentials,
+                        outputUri,
+                    )
+                } finally {
+                    ApkResign.clearCredentials(credentials)
+                    inputs.bundleFile.delete()
+                    inputs.keyFile.delete()
+                    inputs.workDir.deleteRecursively()
+                }
+            }
+        }
+    }
+
+    private data class MergeInputs(val bundleFile: File, val keyFile: File, val workDir: File)
+
+    private fun prepareMergeInputs(bundleUri: Uri, keystoreUri: Uri, credentials: ApkResign.Credentials): Result<MergeInputs> {
+        val bundleName = queryDisplayName(bundleUri) ?: "bundle.apks"
+        if (!UniversalApkMerger.isMergeableKind(ApkArchiveReader.kindOf(bundleName))) {
+            ApkResign.clearCredentials(credentials)
+            return Result.failure("unsupported_archive")
+        }
+        val keyName = queryDisplayName(keystoreUri) ?: "keystore.p12"
+        val bundleFile = copyUriToCache(bundleUri, bundleName) ?: run {
+            ApkResign.clearCredentials(credentials)
+            return Result.failure("copy_failed")
+        }
+        val keyFile = copyUriToCache(keystoreUri, keyName) ?: run {
+            ApkResign.clearCredentials(credentials)
+            bundleFile.delete()
+            return Result.failure("copy_failed")
+        }
+        val workDir = File(context.cacheDir, "apk_tools/merge-${System.currentTimeMillis()}").apply { mkdirs() }
+        return Result.success(MergeInputs(bundleFile, keyFile, workDir))
+    }
+
+    private fun mergeSignAndWrite(
+        bundleFile: File,
+        workDir: File,
+        mergedFile: File,
+        signedFile: File,
+        keyFile: File,
+        credentials: ApkResign.Credentials,
+        outputUri: Uri,
+    ): Result<Unit> {
+        val merged = UniversalApkMerger.mergeBundleToApk(bundleFile, workDir, mergedFile)
+        if (merged.isFailure) {
+            return Result.failure(merged.exceptionOrNull()?.message ?: "merge_failed")
+        }
+        val signed = ApkResign.sign(mergedFile, signedFile, keyFile, credentials)
+        if (signed.isFailure) {
+            return Result.failure(signed.exceptionOrNull()?.message ?: "resign_failed")
+        }
+        context.contentResolver.openOutputStream(outputUri)?.use { output ->
+            signedFile.inputStream().use { input -> input.copyTo(output) }
+        } ?: return Result.failure("output_write_failed")
+        return Result.success(Unit)
+    }
+
     suspend fun exportSplits(bundleUri: Uri, treeUri: Uri): Result<Int> = withContext(ioDispatcher) {
         val name = queryDisplayName(bundleUri) ?: "bundle.apks"
         val kind = ApkArchiveReader.kindOf(name)
-        if (kind != ApkArchiveKind.APKS && kind != ApkArchiveKind.XAPK) {
+        if (!UniversalApkMerger.isMergeableKind(kind)) {
             return@withContext Result.failure("unsupported_archive")
         }
         val bundle = copyUriToCache(bundleUri, name) ?: return@withContext Result.failure("copy_failed")

@@ -413,7 +413,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 - **P1 — GitHub Actions Artifacts / Nightly / Beta-Kanäle**: → **shipped M19**
 - **P2 — Intent-/Broadcast-API für Automatisierung**: → **shipped M22**
 - **P2 — Config-Export/-Import und Sync**: Quellenliste und Regeln als JSON (Kiln-Config) via SAF → **M25** (Done #38); optional Sync über Cloudflare Worker (Hono + D1/R2) später.
-- **P3 — APK-Werkzeuge Phase 2**: Manifest-Viewer + Signaturvergleich → **shipped M29**; Resign (`apksig`) + Split-Export → **shipped M31** (#49); echtes Universal-Merge (apktool-Klasse) weiter offen.
+- **P3 — APK-Werkzeuge Phase 2**: Manifest-Viewer + Signaturvergleich → **shipped M29**; Resign (`apksig`) + Split-Export → **shipped M31** (#49); Universal-Merge (REAndroid ARSCLib + Resign) → **M35**.
 
 ### Storage & Wartung
 
@@ -441,3 +441,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 10. **M32** Update-check responsiveness (Done #50); `v0.2.3` tagged
 11. **M33** Exodus privacy chips (Done #52)
 12. **M34** HyperOS Autostart + battery controls (Done #53)
+13. **M35** Universal APK merge (In progress)

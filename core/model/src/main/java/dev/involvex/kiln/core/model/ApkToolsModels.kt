@@ -5,6 +5,7 @@ enum class ApkArchiveKind {
     APK,
     APKS,
     XAPK,
+    APKM,
     UNKNOWN,
 }
 

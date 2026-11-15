@@ -139,20 +139,26 @@
     <string name="feature_apps_rollback_empty">No older APKs cached yet.</string>
     <string name="feature_apps_rollback_busy">Downgrading…</string>
     <string name="apk_tools_title">APK tools</string>
-    <string name="apk_tools_description">Inspect APK metadata, compare signatures, resign with your keystore, or export split APKs from a bundle.</string>
+    <string name="apk_tools_description">Inspect APK metadata, compare signatures, resign with your keystore, export split APKs, or merge a split bundle into one universal APK.</string>
     <string name="apk_tools_mode_inspect">Inspect</string>
     <string name="apk_tools_mode_compare">Compare</string>
     <string name="apk_tools_mode_resign">Resign</string>
     <string name="apk_tools_mode_export">Export splits</string>
+    <string name="apk_tools_mode_merge">Merge</string>
     <string name="apk_tools_pick_inspect">Open APK or bundle</string>
     <string name="apk_tools_pick_compare_left">Pick first APK</string>
     <string name="apk_tools_pick_compare_right">Pick second APK</string>
     <string name="apk_tools_package_query">Installed package name</string>
     <string name="apk_tools_compare_installed">Compare APK to installed package</string>
     <string name="apk_tools_empty_title">Nothing selected</string>
-    <string name="apk_tools_empty_inspect">Open an .apk, .apks, or .xapk to see package info, permissions, and signers.</string>
+    <string name="apk_tools_empty_inspect">Open an .apk, .apks, .xapk, or .apkm to see package info, permissions, and signers.</string>
     <string name="apk_tools_empty_compare">Compare two archives, or an archive against an installed package name.</string>
-    <string name="apk_tools_empty_export">Pick an .apks or .xapk, then choose a folder to write each member .apk.</string>
+    <string name="apk_tools_empty_export">Pick an .apks, .xapk, or .apkm, then choose a folder to write each member .apk.</string>
+    <string name="apk_tools_empty_merge">Pick a split bundle (.apks / .xapk / .apkm), your keystore, then save a signed universal APK.</string>
+    <string name="apk_tools_merge_hint">Merges all split APKs into one installable APK, then resigns with your keystore. Large bundles need free storage and memory.</string>
+    <string name="apk_tools_merge_pick_bundle">Pick .apks / .xapk / .apkm</string>
+    <string name="apk_tools_merge_bundle_picked">Bundle: %1$s</string>
+    <string name="apk_tools_merge_save">Merge, sign, and save</string>
     <string name="apk_tools_resign_warning">Resigning replaces the APK signature. Updates from the original developer will no longer install over this build.</string>
     <string name="apk_tools_resign_pick_apk">Pick APK to resign</string>
     <string name="apk_tools_resign_apk_picked">APK: %1$s</string>
@@ -163,8 +169,8 @@
     <string name="apk_tools_resign_key_password">Key password</string>
     <string name="apk_tools_resign_confirm">I understand resign breaks original update signatures</string>
     <string name="apk_tools_resign_save">Sign and save APK</string>
-    <string name="apk_tools_export_hint">Exports each .apk inside the bundle. This does not merge splits into one universal APK.</string>
-    <string name="apk_tools_export_pick">Pick .apks / .xapk and folder</string>
+    <string name="apk_tools_export_hint">Exports each .apk inside the bundle. For a single installable APK, use Merge instead.</string>
+    <string name="apk_tools_export_pick">Pick .apks / .xapk / .apkm and folder</string>
     <string name="apk_tools_export_done">Exported %1$d APK file(s).</string>
     <string name="apk_tools_dismiss">Dismiss</string>
     <string name="apk_tools_section_summary">Summary</string>
@@ -185,6 +191,7 @@
     <string name="apk_tools_kind_apk">APK</string>
     <string name="apk_tools_kind_apks">APKS</string>
     <string name="apk_tools_kind_xapk">XAPK</string>
+    <string name="apk_tools_kind_apkm">APKM</string>
     <string name="apk_tools_kind_unknown">Unknown</string>
     <string name="apk_tools_no_signers">No signing certificates readable.</string>
     <string name="apk_tools_no_permissions">No requested permissions listed.</string>
@@ -193,7 +200,7 @@
     <string name="apk_tools_compare_match">Signatures match</string>
     <string name="apk_tools_compare_mismatch">Signatures do not match</string>
     <string name="apk_tools_msg_copy_failed">Could not read the selected file.</string>
-    <string name="apk_tools_msg_unsupported">Unsupported file type. Use .apk, .apks, or .xapk.</string>
+    <string name="apk_tools_msg_unsupported">Unsupported file type. Use .apk, .apks, .xapk, or .apkm.</string>
     <string name="apk_tools_msg_apk_unreadable">PackageManager could not parse this APK.</string>
     <string name="apk_tools_msg_bundle_unreadable">Could not read the zip bundle.</string>
     <string name="apk_tools_msg_bundle_no_apk">Bundle has no .apk members.</string>
@@ -214,4 +221,9 @@
     <string name="apk_tools_msg_resign_failed">Resign failed.</string>
     <string name="apk_tools_msg_output_write">Could not write the output file.</string>
     <string name="apk_tools_msg_dest_unwritable">Could not write into the selected folder.</string>
+    <string name="apk_tools_msg_merge_ok">Merged and signed APK saved.</string>
+    <string name="apk_tools_msg_merge_inputs">Pick both a split bundle and a keystore first.</string>
+    <string name="apk_tools_msg_merge_failed">Merge failed. The bundle may be incomplete or corrupted.</string>
+    <string name="apk_tools_msg_merge_protected">This APK uses protection that blocks merge.</string>
+    <string name="apk_tools_msg_merge_oom">Not enough memory to merge this bundle. Try a smaller split set or free RAM.</string>
 </resources>

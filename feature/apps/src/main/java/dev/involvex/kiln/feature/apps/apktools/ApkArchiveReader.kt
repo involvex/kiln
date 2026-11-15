@@ -21,6 +21,7 @@ object ApkArchiveReader {
         return when {
             lower.endsWith(".apks") -> ApkArchiveKind.APKS
             lower.endsWith(".xapk") -> ApkArchiveKind.XAPK
+            lower.endsWith(".apkm") -> ApkArchiveKind.APKM
             lower.endsWith(".apk") -> ApkArchiveKind.APK
             else -> ApkArchiveKind.UNKNOWN
         }
@@ -33,6 +34,7 @@ object ApkArchiveReader {
 
             ApkArchiveKind.APKS,
             ApkArchiveKind.XAPK,
+            ApkArchiveKind.APKM,
             -> inspectBundle(packageManager, file, displayName, kind)
 
             ApkArchiveKind.UNKNOWN -> ApkInspectReport(
@@ -141,6 +143,7 @@ object ApkArchiveReader {
 
             ApkArchiveKind.APKS,
             ApkArchiveKind.XAPK,
+            ApkArchiveKind.APKM,
             -> {
                 val members = listZipMembers(file)
                 val base = pickBaseApkMember(members) ?: return emptyList()

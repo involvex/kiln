@@ -139,20 +139,26 @@
     <string name="feature_apps_rollback_empty">Noch keine älteren APKs im Cache.</string>
     <string name="feature_apps_rollback_busy">Downgrade läuft…</string>
     <string name="apk_tools_title">APK-Werkzeuge</string>
-    <string name="apk_tools_description">APK-Metadaten prüfen, Signaturen vergleichen, mit eigenem Keystore neu signieren oder Split-APKs aus einem Bundle exportieren.</string>
+    <string name="apk_tools_description">APK-Metadaten prüfen, Signaturen vergleichen, mit eigenem Keystore neu signieren, Split-APKs exportieren oder ein Split-Bundle zu einer Universal-APK zusammenführen.</string>
     <string name="apk_tools_mode_inspect">Prüfen</string>
     <string name="apk_tools_mode_compare">Vergleichen</string>
     <string name="apk_tools_mode_resign">Neu signieren</string>
     <string name="apk_tools_mode_export">Splits exportieren</string>
+    <string name="apk_tools_mode_merge">Zusammenführen</string>
     <string name="apk_tools_pick_inspect">APK oder Bundle öffnen</string>
     <string name="apk_tools_pick_compare_left">Erste APK wählen</string>
     <string name="apk_tools_pick_compare_right">Zweite APK wählen</string>
     <string name="apk_tools_package_query">Installierter Paketname</string>
     <string name="apk_tools_compare_installed">APK mit installiertem Paket vergleichen</string>
     <string name="apk_tools_empty_title">Nichts ausgewählt</string>
-    <string name="apk_tools_empty_inspect">Öffne eine .apk, .apks oder .xapk für Paketinfo, Berechtigungen und Signierer.</string>
+    <string name="apk_tools_empty_inspect">Öffne eine .apk, .apks, .xapk oder .apkm für Paketinfo, Berechtigungen und Signierer.</string>
     <string name="apk_tools_empty_compare">Zwei Archive vergleichen oder ein Archiv gegen einen installierten Paketnamen.</string>
-    <string name="apk_tools_empty_export">Wähle eine .apks oder .xapk und einen Ordner, um jede enthaltene .apk zu speichern.</string>
+    <string name="apk_tools_empty_export">Wähle eine .apks, .xapk oder .apkm und einen Ordner, um jede enthaltene .apk zu speichern.</string>
+    <string name="apk_tools_empty_merge">Wähle ein Split-Bundle (.apks / .xapk / .apkm), deinen Keystore und speichere eine signierte Universal-APK.</string>
+    <string name="apk_tools_merge_hint">Führt alle Split-APKs zu einer installierbaren APK zusammen und signiert sie mit deinem Keystore. Große Bundles brauchen freien Speicher und RAM.</string>
+    <string name="apk_tools_merge_pick_bundle">.apks / .xapk / .apkm wählen</string>
+    <string name="apk_tools_merge_bundle_picked">Bundle: %1$s</string>
+    <string name="apk_tools_merge_save">Zusammenführen, signieren und speichern</string>
     <string name="apk_tools_resign_warning">Neu-Signieren ersetzt die APK-Signatur. Updates vom Original-Entwickler lassen sich danach nicht mehr darüber installieren.</string>
     <string name="apk_tools_resign_pick_apk">APK zum Neu-Signieren wählen</string>
     <string name="apk_tools_resign_apk_picked">APK: %1$s</string>
@@ -163,8 +169,8 @@
     <string name="apk_tools_resign_key_password">Schlüssel-Passwort</string>
     <string name="apk_tools_resign_confirm">Ich verstehe, dass Neu-Signieren Original-Update-Signaturen bricht</string>
     <string name="apk_tools_resign_save">Signieren und APK speichern</string>
-    <string name="apk_tools_export_hint">Exportiert jede .apk im Bundle. Splits werden nicht zu einer Universal-APK zusammengeführt.</string>
-    <string name="apk_tools_export_pick">.apks / .xapk und Ordner wählen</string>
+    <string name="apk_tools_export_hint">Exportiert jede .apk im Bundle. Für eine einzelne installierbare APK nutze Zusammenführen.</string>
+    <string name="apk_tools_export_pick">.apks / .xapk / .apkm und Ordner wählen</string>
     <string name="apk_tools_export_done">%1$d APK-Datei(en) exportiert.</string>
     <string name="apk_tools_dismiss">Schließen</string>
     <string name="apk_tools_section_summary">Übersicht</string>
@@ -185,6 +191,7 @@
     <string name="apk_tools_kind_apk">APK</string>
     <string name="apk_tools_kind_apks">APKS</string>
     <string name="apk_tools_kind_xapk">XAPK</string>
+    <string name="apk_tools_kind_apkm">APKM</string>
     <string name="apk_tools_kind_unknown">Unbekannt</string>
     <string name="apk_tools_no_signers">Keine Signaturzertifikate lesbar.</string>
     <string name="apk_tools_no_permissions">Keine angeforderten Berechtigungen gelistet.</string>
@@ -193,7 +200,7 @@
     <string name="apk_tools_compare_match">Signaturen stimmen überein</string>
     <string name="apk_tools_compare_mismatch">Signaturen stimmen nicht überein</string>
     <string name="apk_tools_msg_copy_failed">Ausgewählte Datei konnte nicht gelesen werden.</string>
-    <string name="apk_tools_msg_unsupported">Dateityp nicht unterstützt. Nutze .apk, .apks oder .xapk.</string>
+    <string name="apk_tools_msg_unsupported">Dateityp nicht unterstützt. Nutze .apk, .apks, .xapk oder .apkm.</string>
     <string name="apk_tools_msg_apk_unreadable">PackageManager konnte diese APK nicht parsen.</string>
     <string name="apk_tools_msg_bundle_unreadable">Zip-Bundle konnte nicht gelesen werden.</string>
     <string name="apk_tools_msg_bundle_no_apk">Bundle enthält keine .apk-Einträge.</string>
@@ -214,4 +221,9 @@
     <string name="apk_tools_msg_resign_failed">Neu-Signieren fehlgeschlagen.</string>
     <string name="apk_tools_msg_output_write">Ausgabedatei konnte nicht geschrieben werden.</string>
     <string name="apk_tools_msg_dest_unwritable">Gewählter Ordner ist nicht beschreibbar.</string>
+    <string name="apk_tools_msg_merge_ok">Zusammengeführte und signierte APK gespeichert.</string>
+    <string name="apk_tools_msg_merge_inputs">Zuerst Split-Bundle und Keystore wählen.</string>
+    <string name="apk_tools_msg_merge_failed">Zusammenführen fehlgeschlagen. Bundle unvollständig oder beschädigt.</string>
+    <string name="apk_tools_msg_merge_protected">Diese APK nutzt einen Schutz, der Zusammenführen blockiert.</string>
+    <string name="apk_tools_msg_merge_oom">Nicht genug Speicher für dieses Bundle. Kleinere Splits oder mehr freies RAM versuchen.</string>
 </resources>
