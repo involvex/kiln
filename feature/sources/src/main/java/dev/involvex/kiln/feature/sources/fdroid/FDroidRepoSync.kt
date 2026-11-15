@@ -33,8 +33,9 @@ class FDroidRepoSync @Inject constructor(
         val bases = RepoMirrorUrls.candidates(repo.address, repo.mirrorsCsv)
         if (bases.isEmpty()) return Result.failure("invalid_repo_address")
         var lastFailure: Result.Failure? = null
-        for (base in bases) {
-            val parsedResult = http.getBytes("$base/entry.jar")
+        for ((index, base) in bases.withIndex()) {
+            val failFast = index > 0
+            val parsedResult = http.getBytes("$base/entry.jar", failFast = failFast)
                 .flatMap { entryBytes ->
                     val verified = EntryJarVerifier.verify(entryBytes, repo.fingerprint)
                     if (verified is Result.Failure) {
@@ -43,7 +44,7 @@ class FDroidRepoSync @Inject constructor(
                     verified
                 }
                 .flatMap { entryJson -> IndexV2Parser.parseEntryPointer(entryJson) }
-                .flatMap { pointer -> loadAndParseWanted(base, pointer, wanted) }
+                .flatMap { pointer -> loadAndParseWanted(base, pointer, wanted, failFast) }
             when (parsedResult) {
                 is Result.Failure -> {
                     lastFailure = parsedResult
@@ -68,11 +69,12 @@ class FDroidRepoSync @Inject constructor(
         val bases = RepoMirrorUrls.candidates(repo.address, repo.mirrorsCsv)
         if (bases.isEmpty()) return Result.failure("invalid_repo_address")
         var lastFailure: Result.Failure? = null
-        for (base in bases) {
-            val result = http.getBytes("$base/entry.jar")
+        for ((index, base) in bases.withIndex()) {
+            val failFast = index > 0
+            val result = http.getBytes("$base/entry.jar", failFast = failFast)
                 .flatMap { entryBytes -> EntryJarVerifier.verify(entryBytes, repo.fingerprint) }
                 .flatMap { entryJson -> IndexV2Parser.parseEntryPointer(entryJson) }
-                .flatMap { pointer -> loadAndPersistCatalog(base, pointer, repo) }
+                .flatMap { pointer -> loadAndPersistCatalog(base, pointer, repo, failFast) }
             when (result) {
                 is Result.Failure -> {
                     lastFailure = result
@@ -95,11 +97,12 @@ class FDroidRepoSync @Inject constructor(
         base: String,
         pointer: EntryIndexPointer,
         wanted: Set<String>,
+        failFast: Boolean,
     ): Result<List<ParsedIndexPackage>> {
         val indexPath = pointer.name.trimStart('/')
         val tmp = Files.createTempFile("kiln-index-", ".json").toFile()
         return try {
-            http.downloadToFile("$base/$indexPath", tmp).flatMap { file ->
+            http.downloadToFile("$base/$indexPath", tmp, failFast = failFast).flatMap { file ->
                 verifyIndexShaFile(file, pointer.sha256).flatMap {
                     file.inputStream().use { input ->
                         IndexV2StreamParser.parseWantedPackages(input, wanted)
@@ -113,11 +116,11 @@ class FDroidRepoSync @Inject constructor(
         }
     }
 
-    private suspend fun loadAndPersistCatalog(base: String, pointer: EntryIndexPointer, repo: RepoEntity): Result<Int> {
+    private suspend fun loadAndPersistCatalog(base: String, pointer: EntryIndexPointer, repo: RepoEntity, failFast: Boolean): Result<Int> {
         val indexPath = pointer.name.trimStart('/')
         val tmp = Files.createTempFile("kiln-catalog-", ".json").toFile()
         return try {
-            http.downloadToFile("$base/$indexPath", tmp).flatMap { file ->
+            http.downloadToFile("$base/$indexPath", tmp, failFast = failFast).flatMap { file ->
                 verifyIndexShaFile(file, pointer.sha256).flatMap {
                     val packages = ArrayList<IndexedPackageEntity>(4_096)
                     val releases = ArrayList<IndexedReleaseEntity>(4_096)

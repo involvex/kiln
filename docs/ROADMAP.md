@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M31** Done (APK resign + split export; PR #49). App version **0.2.2** (code 5). Publishing / F-Droid submit still deferred.
+**Current status:** **M31** Done (#49). **M32** Update-check responsiveness in progress (`m32-update-check-perf`). App version **0.2.2** (code 5). Publishing / F-Droid submit still deferred.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -46,6 +46,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M29** | APK tools phase 2 | Done | [`prompts/M29-apk-tools.md`](./prompts/M29-apk-tools.md) · [#47](https://github.com/involvex/kiln/pull/47) | Inspect + signature compare; shared signing reader (merge/resign deferred) |
 | **M30** | Mirrors / proxy | Done | [`prompts/M30-mirrors-proxy.md`](./prompts/M30-mirrors-proxy.md) · [#48](https://github.com/involvex/kiln/pull/48) | Per-repo mirrors + HTTP/SOCKS/Orbot proxy |
 | **M31** | APK tools resign / split export | Done | [`prompts/M31-apk-tools-resign.md`](./prompts/M31-apk-tools-resign.md) · [#49](https://github.com/involvex/kiln/pull/49) | Resign via apksig + export splits from `.apks`/`.xapk` |
+| **M32** | Update-check responsiveness | In progress | [`prompts/M32-update-check-perf.md`](./prompts/M32-update-check-perf.md) · `m32-update-check-perf` | Room-only badge refresh; progress/cancel; mirror fail-fast; parallel repo sync |
 
 ---
 
@@ -293,10 +294,11 @@ flowchart LR
   M28 --> M29[M29 APK tools]
   M29 --> M30[M30 Mirrors proxy]
   M30 --> M31[M31 APK resign]
+  M31 --> M32[M32 Update check perf]
 ```
 
-1. **M0–M30** on main (#48).
-2. Next: backlog only (universal APK merge still open). Do not mix unscheduled items into feature PRs.
+1. **M0–M31** on main (#49).
+2. Current: **M32** only ([`prompts/M32-update-check-perf.md`](./prompts/M32-update-check-perf.md)). Do not mix later backlog into this PR.
 3. Publishing / F-Droid still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

@@ -12,6 +12,10 @@
     <string name="feature_apps_filter_updates">Updates</string>
     <string name="feature_apps_check_updates">Nach Updates suchen</string>
     <string name="feature_apps_checking_updates">Suche Updates…</string>
+    <string name="feature_apps_checking_progress">Prüfe %1$d/%2$d: %3$s</string>
+    <string name="feature_apps_checking_github">Prüfe GitHub-Releases…</string>
+    <string name="feature_apps_cancel_check_updates">Suche abbrechen</string>
+    <string name="feature_apps_update_check_cancelled">Update-Suche abgebrochen.</string>
     <string name="feature_apps_update_check_ok">%1$d Update(s) gefunden. Repos synchronisiert: %2$d, fehlgeschlagen: %3$d.</string>
     <string name="feature_apps_update_check_error">Update-Prüfung fehlgeschlagen: %1$s</string>
     <string name="feature_apps_ignore_updates">Updates für diese App prüfen</string>

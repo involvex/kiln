@@ -175,7 +175,9 @@ class AppsViewModelTest {
 
         override suspend fun refreshUpdates() = Unit
 
-        override suspend fun checkForUpdates(): Result<UpdateCheckResult> = Result.success(UpdateCheckResult(1, 0, state.value.size))
+        override suspend fun checkForUpdates(
+            onProgress: suspend (dev.involvex.kiln.core.model.UpdateCheckProgress) -> Unit,
+        ): Result<UpdateCheckResult> = Result.success(UpdateCheckResult(1, 0, state.value.size))
 
         override fun observeIgnoreUpdates(packageName: String): Flow<Boolean?> = flowOf(false)
 

@@ -26,6 +26,7 @@ import java.text.DateFormat
 import java.util.Date
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,6 +49,7 @@ class SourcesViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SourcesUiState(githubTokenSet = tokenStore.getToken() != null))
     val uiState: StateFlow<SourcesUiState> = _uiState.asStateFlow()
+    private var syncJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -217,32 +219,71 @@ class SourcesViewModel @Inject constructor(
     }
 
     fun syncAll() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSyncing = true, message = null) }
-            val repos = withContext(ioDispatcher) { repoDao.getAll().filter { it.enabled } }
-            var ok = 0
-            var fail = 0
-            val errors = mutableListOf<String>()
-            for (repo in repos) {
-                when (val result = withContext(ioDispatcher) { sync.sync(repo) }) {
-                    is Result.Success -> ok++
+        if (_uiState.value.isSyncing) return
+        syncJob?.cancel()
+        syncJob = viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isSyncing = true,
+                    message = null,
+                    syncProgressCurrent = 0,
+                    syncProgressTotal = 0,
+                    syncProgressLabel = null,
+                )
+            }
+            try {
+                when (
+                    val result = withContext(ioDispatcher) {
+                        appUpdateRepository.checkForUpdates { progress ->
+                            _uiState.update {
+                                it.copy(
+                                    syncProgressCurrent = progress.current,
+                                    syncProgressTotal = progress.total,
+                                    syncProgressLabel = progress.label,
+                                )
+                            }
+                        }
+                    }
+                ) {
+                    is Result.Success -> {
+                        val summary = result.value
+                        val detail = when {
+                            summary.reposFailed == 0 -> "sync_ok:${summary.reposSynced}"
+                            summary.reposSynced == 0 -> "sync_fail:${summary.reposFailed}"
+                            else -> "sync_partial:${summary.reposSynced}:${summary.reposFailed}"
+                        }
+                        _uiState.update { it.copy(message = detail) }
+                    }
 
                     is Result.Failure -> {
-                        fail++
-                        errors += "${repo.name}: ${result.message}"
-                        Timber.w("Sync failed for %s: %s", repo.id, result.message)
+                        Timber.w("Sync all failed: %s", result.message)
+                        _uiState.update { it.copy(message = "sync_fail:1:${result.message}") }
                     }
                 }
+            } finally {
+                _uiState.update {
+                    it.copy(
+                        isSyncing = false,
+                        syncProgressCurrent = 0,
+                        syncProgressTotal = 0,
+                        syncProgressLabel = null,
+                    )
+                }
             }
-            withContext(ioDispatcher) { appUpdateRepository.refreshUpdates() }
-            val detail = when {
-                fail == 0 -> "sync_ok:$ok"
-                ok == 0 -> "sync_fail:$fail:${errors.firstOrNull().orEmpty()}"
-                else -> "sync_partial:$ok:$fail:${errors.firstOrNull().orEmpty()}"
-            }
-            _uiState.update {
-                it.copy(isSyncing = false, message = detail)
-            }
+        }
+    }
+
+    fun cancelSyncAll() {
+        syncJob?.cancel()
+        syncJob = null
+        _uiState.update {
+            it.copy(
+                isSyncing = false,
+                syncProgressCurrent = 0,
+                syncProgressTotal = 0,
+                syncProgressLabel = null,
+                message = "sync_cancelled",
+            )
         }
     }
 

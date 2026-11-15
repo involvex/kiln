@@ -30,6 +30,9 @@ data class AppsUiState(
     /** packageName → badge for available update */
     val updateBadges: Map<String, UpdateBadgeUi> = emptyMap(),
     val isCheckingUpdates: Boolean = false,
+    val updateCheckProgressCurrent: Int = 0,
+    val updateCheckProgressTotal: Int = 0,
+    val updateCheckProgressLabel: String? = null,
     val updateCheckMessage: String? = null,
 )
 

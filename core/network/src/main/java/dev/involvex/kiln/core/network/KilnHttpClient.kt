@@ -31,25 +31,29 @@ class KilnHttpClient @Inject constructor(private val proxyPreferences: NetworkPr
     @Volatile
     private var cached: Pair<NetworkProxyPrefs, OkHttpClient>? = null
 
-    suspend fun getBytes(url: String, headers: Map<String, String> = emptyMap()): Result<ByteArray> = withContext(Dispatchers.IO) {
-        try {
-            requireHttps(url)
-            val request = buildGet(url, headers)
-            client().newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    return@withContext Result.failure("HTTP ${response.code}")
+    @Volatile
+    private var cachedFailFast: Pair<NetworkProxyPrefs, OkHttpClient>? = null
+
+    suspend fun getBytes(url: String, headers: Map<String, String> = emptyMap(), failFast: Boolean = false): Result<ByteArray> =
+        withContext(Dispatchers.IO) {
+            try {
+                requireHttps(url)
+                val request = buildGet(url, headers)
+                client(failFast).newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure("HTTP ${response.code}")
+                    }
+                    val body = response.body?.bytes()
+                        ?: return@withContext Result.failure("Empty response body")
+                    Result.success(body)
                 }
-                val body = response.body?.bytes()
-                    ?: return@withContext Result.failure("Empty response body")
-                Result.success(body)
+            } catch (error: IOException) {
+                Timber.w(error, "HTTP GET failed")
+                Result.failure(error.message ?: "network_error", error)
+            } catch (error: IllegalArgumentException) {
+                Result.failure(error.message ?: "invalid_url", error)
             }
-        } catch (error: IOException) {
-            Timber.w(error, "HTTP GET failed")
-            Result.failure(error.message ?: "network_error", error)
-        } catch (error: IllegalArgumentException) {
-            Result.failure(error.message ?: "invalid_url", error)
         }
-    }
 
     suspend fun getText(url: String, headers: Map<String, String> = emptyMap()): Result<String> =
         when (val bytes = getBytes(url, headers)) {
@@ -65,6 +69,7 @@ class KilnHttpClient @Inject constructor(private val proxyPreferences: NetworkPr
         url: String,
         target: File,
         headers: Map<String, String> = emptyMap(),
+        failFast: Boolean = false,
         onProgress: (bytesWritten: Long, totalBytes: Long) -> Unit = { _, _ -> },
     ): Result<File> = withContext(Dispatchers.IO) {
         try {
@@ -75,7 +80,7 @@ class KilnHttpClient @Inject constructor(private val proxyPreferences: NetworkPr
             if (existing > 0L) {
                 requestHeaders["Range"] = "bytes=$existing-"
             }
-            client().newCall(buildGet(url, requestHeaders)).execute().use { response ->
+            client(failFast).newCall(buildGet(url, requestHeaders)).execute().use { response ->
                 handleDownloadResponse(response, target, existing, onProgress)
             }
         } catch (error: IOException) {
@@ -102,7 +107,15 @@ class KilnHttpClient @Inject constructor(private val proxyPreferences: NetworkPr
             if (index > 0 && target.exists()) {
                 target.delete()
             }
-            when (val result = downloadToFile(url, target, headers, onProgress)) {
+            when (
+                val result = downloadToFile(
+                    url = url,
+                    target = target,
+                    headers = headers,
+                    failFast = index > 0,
+                    onProgress = onProgress,
+                )
+            ) {
                 is Result.Success -> return result
 
                 is Result.Failure -> {
@@ -189,17 +202,23 @@ class KilnHttpClient @Inject constructor(private val proxyPreferences: NetworkPr
         require(url.startsWith("https://")) { "Only HTTPS is allowed" }
     }
 
-    private suspend fun client(): OkHttpClient {
+    private suspend fun client(failFast: Boolean): OkHttpClient {
         val prefs = proxyPreferences.current()
-        cached?.let { (cachedPrefs, cachedClient) ->
+        val existing = if (failFast) cachedFailFast else cached
+        existing?.let { (cachedPrefs, cachedClient) ->
             if (cachedPrefs == prefs) return cachedClient
         }
         return clientMutex.withLock {
-            cached?.let { (cachedPrefs, cachedClient) ->
+            val locked = if (failFast) cachedFailFast else cached
+            locked?.let { (cachedPrefs, cachedClient) ->
                 if (cachedPrefs == prefs) return cachedClient
             }
-            val built = NetworkDefaults.okHttpClient(prefs)
-            cached = prefs to built
+            val built = NetworkDefaults.okHttpClient(prefs, failFast = failFast)
+            if (failFast) {
+                cachedFailFast = prefs to built
+            } else {
+                cached = prefs to built
+            }
             built
         }
     }
@@ -217,11 +236,19 @@ object NetworkDefaults {
     private const val READ_TIMEOUT_SECONDS = 300L
     private const val CALL_TIMEOUT_SECONDS = 600L
 
-    fun okHttpClient(proxyPrefs: NetworkProxyPrefs = NetworkProxyPrefs()): OkHttpClient {
+    // Mirror / proxy failover: fail dead hosts quickly instead of 10 minutes × mirrors.
+    private const val FAIL_FAST_CONNECT_TIMEOUT_SECONDS = 10L
+    private const val FAIL_FAST_READ_TIMEOUT_SECONDS = 45L
+    private const val FAIL_FAST_CALL_TIMEOUT_SECONDS = 60L
+
+    fun okHttpClient(proxyPrefs: NetworkProxyPrefs = NetworkProxyPrefs(), failFast: Boolean = false): OkHttpClient {
+        val connect = if (failFast) FAIL_FAST_CONNECT_TIMEOUT_SECONDS else CONNECT_TIMEOUT_SECONDS
+        val read = if (failFast) FAIL_FAST_READ_TIMEOUT_SECONDS else READ_TIMEOUT_SECONDS
+        val call = if (failFast) FAIL_FAST_CALL_TIMEOUT_SECONDS else CALL_TIMEOUT_SECONDS
         val builder = OkHttpClient.Builder()
-            .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .readTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .callTimeout(CALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .connectTimeout(connect, TimeUnit.SECONDS)
+            .readTimeout(read, TimeUnit.SECONDS)
+            .callTimeout(call, TimeUnit.SECONDS)
             .followRedirects(true)
         if (proxyPrefs.isActive()) {
             val proxyType = when (proxyPrefs.effectiveType()) {

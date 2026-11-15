@@ -21,6 +21,7 @@ import dev.involvex.kiln.feature.apps.export.BatchExportScheduler
 import dev.involvex.kiln.feature.apps.export.BatchExportWorker
 import java.io.File
 import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -50,7 +51,9 @@ class AppsViewModel @Inject constructor(
     private val batchSummary = MutableStateFlow<String?>(null)
     private val showNotificationRationale = MutableStateFlow(false)
     private val isCheckingUpdates = MutableStateFlow(false)
+    private val updateCheckProgress = MutableStateFlow<CheckProgressUi?>(null)
     private val updateCheckMessage = MutableStateFlow<String?>(null)
+    private var checkUpdatesJob: Job? = null
 
     private val listControls = combine(query, filter, sortField, sortDirection) { q, f, sf, sd ->
         ListControls(q, f, sf, sd)
@@ -85,8 +88,20 @@ class AppsViewModel @Inject constructor(
 
     private val updateBadges = MutableStateFlow<Map<String, UpdateBadgeUi>>(emptyMap())
 
-    private val updateControls = combine(updateBadges, isCheckingUpdates, updateCheckMessage) { badges, checking, message ->
-        UpdateControls(badges, checking, message)
+    private val updateControls = combine(
+        updateBadges,
+        isCheckingUpdates,
+        updateCheckMessage,
+        updateCheckProgress,
+    ) { badges, checking, message, progress ->
+        UpdateControls(
+            badges = badges,
+            checking = checking,
+            message = message,
+            progressCurrent = progress?.current ?: 0,
+            progressTotal = progress?.total ?: 0,
+            progressLabel = progress?.label,
+        )
     }
 
     val uiState: StateFlow<AppsUiState> = combine(
@@ -124,6 +139,9 @@ class AppsViewModel @Inject constructor(
             showNotificationPermissionRationale = batch.rationale,
             updateBadges = updates.badges,
             isCheckingUpdates = updates.checking,
+            updateCheckProgressCurrent = updates.progressCurrent,
+            updateCheckProgressTotal = updates.progressTotal,
+            updateCheckProgressLabel = updates.progressLabel,
             updateCheckMessage = updates.message,
         )
     }.stateIn(
@@ -162,6 +180,7 @@ class AppsViewModel @Inject constructor(
             AppsEvent.SortDirectionToggled,
             AppsEvent.Refresh,
             AppsEvent.CheckUpdates,
+            AppsEvent.CancelCheckUpdates,
             AppsEvent.DismissUpdateCheckMessage,
             -> handleListEvent(event)
 
@@ -204,6 +223,8 @@ class AppsViewModel @Inject constructor(
 
             AppsEvent.CheckUpdates -> checkUpdates()
 
+            AppsEvent.CancelCheckUpdates -> cancelCheckUpdates()
+
             AppsEvent.DismissUpdateCheckMessage -> updateCheckMessage.value = null
 
             else -> Unit
@@ -212,23 +233,45 @@ class AppsViewModel @Inject constructor(
 
     private fun checkUpdates() {
         if (isCheckingUpdates.value) return
-        viewModelScope.launch {
+        checkUpdatesJob?.cancel()
+        checkUpdatesJob = viewModelScope.launch {
             isCheckingUpdates.value = true
             updateCheckMessage.value = null
-            repository.refresh()
-            when (val result = appUpdateRepository.checkForUpdates()) {
-                is Result.Success -> {
-                    val summary = result.value
-                    updateCheckMessage.value =
-                        "updates:${summary.updatesFound}:${summary.reposSynced}:${summary.reposFailed}"
-                }
+            updateCheckProgress.value = null
+            try {
+                repository.refresh()
+                when (
+                    val result = appUpdateRepository.checkForUpdates { progress ->
+                        updateCheckProgress.value = CheckProgressUi(
+                            current = progress.current,
+                            total = progress.total,
+                            label = progress.label,
+                        )
+                    }
+                ) {
+                    is Result.Success -> {
+                        val summary = result.value
+                        updateCheckMessage.value =
+                            "updates:${summary.updatesFound}:${summary.reposSynced}:${summary.reposFailed}"
+                    }
 
-                is Result.Failure -> {
-                    updateCheckMessage.value = "updates_error:${result.message}"
+                    is Result.Failure -> {
+                        updateCheckMessage.value = "updates_error:${result.message}"
+                    }
                 }
+            } finally {
+                isCheckingUpdates.value = false
+                updateCheckProgress.value = null
             }
-            isCheckingUpdates.value = false
         }
+    }
+
+    private fun cancelCheckUpdates() {
+        checkUpdatesJob?.cancel()
+        checkUpdatesJob = null
+        isCheckingUpdates.value = false
+        updateCheckProgress.value = null
+        updateCheckMessage.value = "updates_cancelled"
     }
 
     private fun handleSelectionEvent(event: AppsEvent) {
@@ -364,5 +407,14 @@ class AppsViewModel @Inject constructor(
 
     private data class RepoControls(val apps: List<InstalledAppSummary>, val loading: Boolean, val error: String?)
 
-    private data class UpdateControls(val badges: Map<String, UpdateBadgeUi>, val checking: Boolean, val message: String?)
+    private data class UpdateControls(
+        val badges: Map<String, UpdateBadgeUi>,
+        val checking: Boolean,
+        val message: String?,
+        val progressCurrent: Int,
+        val progressTotal: Int,
+        val progressLabel: String?,
+    )
+
+    private data class CheckProgressUi(val current: Int, val total: Int, val label: String?)
 }

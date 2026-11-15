@@ -56,6 +56,7 @@ fun AppsListPane(
     onFilterChange: (AppListFilter) -> Unit,
     onSortFieldChange: (AppSortField) -> Unit,
     onCheckUpdates: () -> Unit,
+    onCancelCheckUpdates: () -> Unit,
     onDismissUpdateCheckMessage: () -> Unit,
     onCancelBatch: () -> Unit,
     onOpenDetail: (String) -> Unit,
@@ -90,6 +91,16 @@ fun AppsListPane(
                     imageVector = Icons.Filled.Menu,
                     contentDescription = stringResource(R.string.apps_filters_menu),
                 )
+            }
+        }
+        if (state.isCheckingUpdates) {
+            Text(
+                text = formatUpdateCheckProgress(state),
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            )
+            TextButton(onClick = onCancelCheckUpdates, modifier = Modifier.padding(horizontal = 8.dp)) {
+                Text(stringResource(R.string.feature_apps_cancel_check_updates))
             }
         }
         state.updateCheckMessage?.let { code ->
@@ -174,7 +185,29 @@ private fun FilterRow(filter: AppListFilter, onFilterChange: (AppListFilter) -> 
 }
 
 @Composable
+private fun formatUpdateCheckProgress(state: AppsUiState): String {
+    val label = state.updateCheckProgressLabel
+    val display = when (label) {
+        null, "" -> stringResource(R.string.feature_apps_checking_updates)
+        "github" -> stringResource(R.string.feature_apps_checking_github)
+        else -> label
+    }
+    return if (state.updateCheckProgressTotal > 0) {
+        stringResource(
+            R.string.feature_apps_checking_progress,
+            state.updateCheckProgressCurrent,
+            state.updateCheckProgressTotal,
+            display,
+        )
+    } else {
+        display
+    }
+}
+
+@Composable
 private fun formatUpdateCheckMessage(code: String): String = when {
+    code == "updates_cancelled" -> stringResource(R.string.feature_apps_update_check_cancelled)
+
     code.startsWith("updates_error:") ->
         stringResource(R.string.feature_apps_update_check_error, code.removePrefix("updates_error:"))
 

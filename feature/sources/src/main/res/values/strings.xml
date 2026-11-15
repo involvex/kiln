@@ -3,6 +3,11 @@
     <string name="feature_sources_title">Sources</string>
     <string name="feature_sources_description">Sync F-Droid-format repos, manage GitHub PAT, and import Obtainium/Discoverium exports. Updates are shown in Apps.</string>
     <string name="sources_sync_all">Sync all repos</string>
+    <string name="sources_cancel_sync">Cancel sync</string>
+    <string name="sources_syncing">Syncing repos…</string>
+    <string name="sources_syncing_progress">Syncing %1$d/%2$d: %3$s</string>
+    <string name="sources_syncing_github">Checking GitHub releases…</string>
+    <string name="sources_msg_sync_cancelled">Sync cancelled.</string>
     <string name="sources_open_auto_match">Match installed apps</string>
     <string name="sources_open_discovery">Discover apps</string>
     <string name="trending_title">Trending</string>
