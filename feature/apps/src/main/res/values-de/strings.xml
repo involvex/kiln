@@ -43,6 +43,11 @@
     <string name="feature_apps_link_ok">Quelle verknüpft.</string>
     <string name="feature_apps_link_bad_github">Format owner/repo (ein Slash).</string>
     <string name="feature_apps_dismiss">Schließen</string>
+    <string name="feature_apps_exodus_section">Datenschutz (Exodus)</string>
+    <string name="feature_apps_exodus_open">Exodus-Report öffnen</string>
+    <string name="feature_apps_exodus_hint">Öffnet den öffentlichen Exodus-Report im Browser. Tracker-Chips brauchen optional eine selbst gehostete Exodus-API unter Einstellungen → Datenschutz.</string>
+    <string name="feature_apps_exodus_no_trackers">Keine Tracker im neuesten Exodus-Report (oder noch kein Report).</string>
+    <string name="feature_apps_exodus_attribution">Tracker-Namen von Exodus Privacy (ODbL). Nachweis ≠ Laufzeitaktivität.</string>
     <string name="feature_apps_view_updates">Updates anzeigen</string>
     <string name="feature_apps_hide_updates_filter">Alle Apps anzeigen</string>
     <string name="feature_apps_update_all">Alle aktualisieren</string>

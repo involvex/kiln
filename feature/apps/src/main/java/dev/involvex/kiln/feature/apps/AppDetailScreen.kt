@@ -207,6 +207,9 @@ fun AppDetailScreen(
                     canSilentDowngrade = state.canSilentDowngrade,
                     rollbackInProgress = state.rollbackInProgress,
                     onRequestRollback = { onEvent(AppDetailEvent.RequestRollback(it)) },
+                    exodusTrackerNames = state.exodusTrackerNames,
+                    exodusApiConfigured = state.exodusApiConfigured,
+                    exodusLoading = state.exodusLoading,
                     modifier = Modifier.padding(padding),
                 )
             }

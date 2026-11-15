@@ -29,6 +29,9 @@ data class AppDetailUiState(
     val canSilentDowngrade: Boolean = false,
     val pendingRollback: RollbackApkEntry? = null,
     val rollbackInProgress: Boolean = false,
+    val exodusTrackerNames: List<String> = emptyList(),
+    val exodusApiConfigured: Boolean = false,
+    val exodusLoading: Boolean = false,
 )
 
 sealed interface AppDetailEvent {
