@@ -255,6 +255,49 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
+    override suspend fun getAppOp(packageName: String, op: String): Result<String> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.MANAGE_APP_OPS !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:MANAGE_APP_OPS")
+        }
+        if (!ShellAllowlist.isSafePackageName(packageName)) {
+            return@withContext Result.failure("invalid_package")
+        }
+        if (!ShellAllowlist.isAllowedAppOp(op)) {
+            return@withContext Result.failure("invalid_appop")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.APPOPS_GET, listOf(packageName, op))) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    Result.success(out.value)
+                }
+            }
+        }
+    }
+
+    override suspend fun deviceIdleWhitelist(action: String, packageName: String): Result<String> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.MANAGE_APP_OPS !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:MANAGE_APP_OPS")
+        }
+        if (!ShellAllowlist.isSafePackageName(packageName)) {
+            return@withContext Result.failure("invalid_package")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.DEVICEIDLE_WHITELIST, listOf(action, packageName))) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    Result.success(out.value)
+                }
+            }
+        }
+    }
+
     override suspend fun listAndroidSharedPackageDirs(root: AndroidSharedRoot): Result<List<String>> = withContext(ioDispatcher) {
         if (PrivilegeCapability.ACCESS_ANDROID_DATA !in currentStatus().capabilities) {
             return@withContext Result.failure("capability_missing:ACCESS_ANDROID_DATA")
@@ -381,6 +424,7 @@ class DefaultPrivilegedExecutor @Inject constructor(
 
             ShellAllowlist.DU_ANDROID_PKG,
             ShellAllowlist.RM_ANDROID_PKG,
+            ShellAllowlist.DEVICEIDLE_WHITELIST,
             -> args.getOrNull(1)?.takeIf { ShellAllowlist.isSafePackageName(it) }
 
             else -> args.firstOrNull()?.takeIf { ShellAllowlist.isSafePackageName(it) }

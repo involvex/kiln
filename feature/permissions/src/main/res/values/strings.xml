@@ -27,4 +27,20 @@
     <string name="permissions_capability_missing">Privilege required — open setup</string>
     <string name="permissions_detail_title">Permissions</string>
     <string name="permissions_close_detail">Close</string>
+    <string name="permissions_dismiss">Dismiss</string>
+
+    <string name="background_controls_title">Background controls</string>
+    <string name="background_controls_explain">Toggle HyperOS Autostart and AOSP battery usage via Shizuku. System Autostart settings on HyperOS often ignore the UI switch; Kiln writes the AppOps that actually enforce the policy.</string>
+    <string name="background_controls_need_shizuku">Shizuku with MANAGE_APP_OPS is required to change these settings.</string>
+    <string name="background_controls_open_setup">Open Privilege setup</string>
+    <string name="background_controls_autostart_xiaomi_only">Autostart toggles are available only on Xiaomi HyperOS / MIUI. Battery controls work on all devices.</string>
+    <string name="background_controls_search">Search apps</string>
+    <string name="background_controls_filter_user">User apps</string>
+    <string name="background_controls_filter_all">All apps</string>
+    <string name="background_controls_refresh">Refresh</string>
+    <string name="background_controls_autostart">Autostart</string>
+    <string name="background_controls_battery">Battery usage</string>
+    <string name="background_controls_battery_unrestricted">Unrestricted</string>
+    <string name="background_controls_battery_optimized">Optimized</string>
+    <string name="background_controls_battery_restricted">Restricted</string>
 </resources>

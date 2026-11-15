@@ -1,6 +1,7 @@
 package dev.involvex.kiln.core.privilege.shell
 
 import dev.involvex.kiln.core.model.AndroidSharedRoot
+import dev.involvex.kiln.core.model.BackgroundControlsOps
 import dev.involvex.kiln.core.model.PermissionAppOpsAllowlist
 
 /**
@@ -19,6 +20,8 @@ object ShellAllowlist {
     const val PM_INSTALL_EXISTING = "pm_install_existing"
     const val PM_REVOKE = "pm_revoke"
     const val APPOPS_SET = "appops_set"
+    const val APPOPS_GET = "appops_get"
+    const val DEVICEIDLE_WHITELIST = "deviceidle_whitelist"
     const val LS_ANDROID_ROOT = "ls_android_root"
     const val DU_ANDROID_PKG = "du_android_pkg"
     const val RM_ANDROID_PKG = "rm_android_pkg"
@@ -26,13 +29,14 @@ object ShellAllowlist {
     private val PACKAGE_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
     private val PERMISSION_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
     private val APK_PATH = Regex("^/[\\w./\\-+]+\\.apk$", RegexOption.IGNORE_CASE)
+    private val DEVICEIDLE_ACTIONS: Set<String> = setOf("+", "-", "=")
 
     /** Desired free-space argument for `pm trim-caches` (digits only, capped length). */
     private val TRIM_BYTES = Regex("^[1-9][0-9]{0,18}$")
 
-    val ALLOWED_APP_OPS: Set<String> get() = PermissionAppOpsAllowlist.OPS
+    val ALLOWED_APP_OPS: Set<String> get() = PermissionAppOpsAllowlist.OPS + BackgroundControlsOps.ALL_OPS
 
-    val ALLOWED_APP_OP_MODES: Set<String> get() = PermissionAppOpsAllowlist.MODES
+    val ALLOWED_APP_OP_MODES: Set<String> get() = PermissionAppOpsAllowlist.MODES + BackgroundControlsOps.MODES
 
     /**
      * Builds argv for [ProcessBuilder], or null if [commandId]/[args] are rejected.
@@ -127,6 +131,29 @@ object ShellAllowlist {
                 null
             } else {
                 listOf("appops", "set", packageName, op, mode)
+            }
+        }
+
+        APPOPS_GET -> {
+            val packageName = args.getOrNull(0) ?: return null
+            val op = args.getOrNull(1) ?: return null
+            if (args.size != 2) return null
+            if (!isSafePackageName(packageName) || !isAllowedAppOp(op)) {
+                null
+            } else {
+                listOf("appops", "get", packageName, op)
+            }
+        }
+
+        DEVICEIDLE_WHITELIST -> {
+            val action = args.getOrNull(0) ?: return null
+            val packageName = args.getOrNull(1) ?: return null
+            if (args.size != 2) return null
+            if (action !in DEVICEIDLE_ACTIONS || !isSafePackageName(packageName)) {
+                null
+            } else {
+                // Single token "+pkg" / "-pkg" / "=pkg" — never concatenate user strings into a shell.
+                listOf("dumpsys", "deviceidle", "whitelist", action + packageName)
             }
         }
 

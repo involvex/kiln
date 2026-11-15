@@ -31,6 +31,7 @@ import dev.involvex.kiln.feature.debloat.DebloatRoute
 import dev.involvex.kiln.feature.onboarding.AutoMatchRoute
 import dev.involvex.kiln.feature.onboarding.privilege.PrivilegeSetupRoute
 import dev.involvex.kiln.feature.permissions.PermissionAuditRoute
+import dev.involvex.kiln.feature.permissions.background.BackgroundControlsRoute
 import dev.involvex.kiln.feature.settings.SettingsRoute
 import dev.involvex.kiln.feature.settings.activity.ActivityLogRoute
 import dev.involvex.kiln.feature.sources.SourcesRoute
@@ -42,6 +43,7 @@ import dev.involvex.kiln.navigation.ActivityLogKey
 import dev.involvex.kiln.navigation.AppDetailKey
 import dev.involvex.kiln.navigation.AppsKey
 import dev.involvex.kiln.navigation.AutoMatchKey
+import dev.involvex.kiln.navigation.BackgroundControlsKey
 import dev.involvex.kiln.navigation.CatalogDetailKey
 import dev.involvex.kiln.navigation.DebloatKey
 import dev.involvex.kiln.navigation.DiscoveryKey
@@ -119,6 +121,7 @@ fun KilnApp(modifier: Modifier = Modifier, manageDeepLinkStore: ManageDeepLinkSt
     }
 }
 
+@Suppress("LongMethod")
 private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBackStack<Any>) {
     entry<AppsKey> {
         AppsShellRoute(
@@ -169,6 +172,7 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
             onOpenDebloat = { topLevelBackStack.add(DebloatKey) },
             onOpenPermissionAudit = { topLevelBackStack.add(PermissionAuditKey) },
+            onOpenBackgroundControls = { topLevelBackStack.add(BackgroundControlsKey) },
             onOpenTermux = { topLevelBackStack.add(TermuxKey) },
             onOpenActivityLog = { topLevelBackStack.add(ActivityLogKey) },
         )
@@ -184,6 +188,12 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
     }
     entry<PermissionAuditKey> {
         PermissionAuditRoute(
+            onBack = { topLevelBackStack.removeLast() },
+            onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
+        )
+    }
+    entry<BackgroundControlsKey> {
+        BackgroundControlsRoute(
             onBack = { topLevelBackStack.removeLast() },
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
         )

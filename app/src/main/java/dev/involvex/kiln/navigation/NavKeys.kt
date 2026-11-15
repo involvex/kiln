@@ -39,6 +39,9 @@ data object DebloatKey
 data object PermissionAuditKey
 
 @Serializable
+data object BackgroundControlsKey
+
+@Serializable
 data object TermuxKey
 
 @Serializable

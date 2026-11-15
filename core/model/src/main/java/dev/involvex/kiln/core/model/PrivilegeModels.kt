@@ -115,6 +115,18 @@ interface PrivilegedExecutor {
     suspend fun setAppOp(packageName: String, op: String, mode: String): Result<Unit>
 
     /**
+     * Read an AppOp via allowlisted `appops get` (fixed op allowlist).
+     * Requires [PrivilegeCapability.MANAGE_APP_OPS]. Returns raw stdout on success.
+     */
+    suspend fun getAppOp(packageName: String, op: String): Result<String>
+
+    /**
+     * `dumpsys deviceidle whitelist` with action `+` / `-` / `=` and a package name.
+     * Requires [PrivilegeCapability.MANAGE_APP_OPS]. Returns raw stdout on success.
+     */
+    suspend fun deviceIdleWhitelist(action: String, packageName: String): Result<String>
+
+    /**
      * List immediate child names under a fixed Android shared root (`data` / `obb`).
      * Requires [PrivilegeCapability.ACCESS_ANDROID_DATA].
      */

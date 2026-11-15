@@ -71,6 +71,7 @@ fun SettingsRoute(
     onOpenPrivilegeSetup: () -> Unit,
     onOpenDebloat: () -> Unit,
     onOpenPermissionAudit: () -> Unit,
+    onOpenBackgroundControls: () -> Unit,
     onOpenTermux: () -> Unit,
     onOpenActivityLog: () -> Unit,
     modifier: Modifier = Modifier,
@@ -106,6 +107,7 @@ fun SettingsRoute(
         onOpenPrivilegeSetup = onOpenPrivilegeSetup,
         onOpenDebloat = onOpenDebloat,
         onOpenPermissionAudit = onOpenPermissionAudit,
+        onOpenBackgroundControls = onOpenBackgroundControls,
         onOpenTermux = onOpenTermux,
         onOpenActivityLog = onOpenActivityLog,
         onBackgroundEnabledChange = { enabled ->
@@ -167,6 +169,7 @@ fun SettingsScreen(
     onOpenPrivilegeSetup: () -> Unit,
     onOpenDebloat: () -> Unit,
     onOpenPermissionAudit: () -> Unit,
+    onOpenBackgroundControls: () -> Unit,
     onOpenTermux: () -> Unit,
     onOpenActivityLog: () -> Unit,
     onBackgroundEnabledChange: (Boolean) -> Unit,
@@ -239,6 +242,12 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.settings_permission_audit))
+            }
+            OutlinedButton(
+                onClick = onOpenBackgroundControls,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.settings_background_controls))
             }
             OutlinedButton(
                 onClick = onOpenTermux,
