@@ -7,8 +7,11 @@ import dev.involvex.kiln.core.model.AppListFilter
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
+import dev.involvex.kiln.core.model.InstallJobState
+import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.InstalledAppSummary
+import dev.involvex.kiln.core.model.LocalInstallRequest
 import dev.involvex.kiln.core.model.ManagedSourceLink
 import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.RepoConfig
@@ -34,6 +37,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -60,7 +64,7 @@ class AppsViewModelTest {
                 summary("com.sys", "System App", isSystem = true),
             ),
         )
-        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), FakeUpdates())
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), FakeUpdates(), FakeInstallQueue())
 
         viewModel.uiState.test {
             var state = awaitItem()
@@ -102,7 +106,7 @@ class AppsViewModelTest {
                 ),
             ),
         )
-        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), updates)
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), updates, FakeInstallQueue())
         advanceUntilIdle()
 
         viewModel.onEvent(AppsEvent.FilterChanged(AppListFilter.UPDATES))
@@ -113,9 +117,75 @@ class AppsViewModelTest {
     }
 
     @Test
+    fun `toggle updates filter restores previous filter`() = runTest {
+        val repo = FakeRepository(listOf(summary("com.user", "User App", isSystem = false)))
+        val updates = FakeUpdates(
+            mapOf(
+                "com.user" to AppUpdateInfo(
+                    packageName = "com.user",
+                    availableVersionName = "2.0",
+                    availableVersionCode = 2,
+                    sourceId = "fdroid",
+                    sourceLabel = "F-Droid",
+                    confidence = MatchConfidence.HIGH,
+                    signatureMatches = true,
+                    downloadUrl = "https://example.com/app.apk",
+                ),
+            ),
+        )
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), updates, FakeInstallQueue())
+        advanceUntilIdle()
+
+        viewModel.onEvent(AppsEvent.FilterChanged(AppListFilter.ALL))
+        advanceUntilIdle()
+        assertEquals(AppListFilter.ALL, viewModel.uiState.value.filter)
+
+        viewModel.onEvent(AppsEvent.ToggleUpdatesFilter)
+        advanceUntilIdle()
+        assertEquals(AppListFilter.UPDATES, viewModel.uiState.value.filter)
+
+        viewModel.onEvent(AppsEvent.ToggleUpdatesFilter)
+        advanceUntilIdle()
+        assertEquals(AppListFilter.ALL, viewModel.uiState.value.filter)
+    }
+
+    @Test
+    fun `request update all opens confirm dialog then enqueue`() = runTest {
+        val repo = FakeRepository(listOf(summary("com.user", "User App", isSystem = false)))
+        val updates = FakeUpdates(
+            mapOf(
+                "com.user" to AppUpdateInfo(
+                    packageName = "com.user",
+                    availableVersionName = "2.0",
+                    availableVersionCode = 2,
+                    sourceId = "fdroid",
+                    sourceLabel = "F-Droid",
+                    confidence = MatchConfidence.HIGH,
+                    signatureMatches = true,
+                    downloadUrl = "https://example.com/app.apk",
+                ),
+            ),
+        )
+        val queue = FakeInstallQueue()
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), updates, queue)
+        advanceUntilIdle()
+
+        viewModel.onEvent(AppsEvent.RequestUpdateAll)
+        advanceUntilIdle()
+        assertEquals(1, viewModel.uiState.value.updateAllDialog?.enqueueCount)
+        assertEquals(0, viewModel.uiState.value.updateAllDialog?.skippedCount)
+
+        viewModel.onEvent(AppsEvent.ConfirmUpdateAll)
+        advanceUntilIdle()
+        assertNull(viewModel.uiState.value.updateAllDialog)
+        assertEquals(1, queue.enqueued.size)
+        assertEquals("update_all:1:0", viewModel.uiState.value.updateAllMessage)
+    }
+
+    @Test
     fun `selection mode toggles and opens export dialog`() = runTest {
         val repo = FakeRepository(listOf(summary("com.user", "User App", isSystem = false)))
-        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), FakeUpdates())
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), FakeUpdates(), FakeInstallQueue())
         advanceUntilIdle()
 
         viewModel.onEvent(AppsEvent.LongPressed("com.user"))
@@ -198,5 +268,20 @@ class AppsViewModelTest {
         ): Result<Unit> = Result.success(Unit)
 
         override suspend fun setGitHubChannel(packageName: String, channel: GitHubReleaseChannel): Result<Unit> = Result.success(Unit)
+    }
+
+    private class FakeInstallQueue : InstallQueue {
+        val enqueued = mutableListOf<AppUpdateInfo>()
+
+        override fun jobs(): Flow<Map<String, InstallJobState>> = flowOf(emptyMap())
+
+        override suspend fun enqueue(update: AppUpdateInfo): Result<String> {
+            enqueued += update
+            return Result.success("job-${update.packageName}")
+        }
+
+        override suspend fun enqueueLocal(request: LocalInstallRequest): Result<String> = Result.failure("unused")
+
+        override suspend fun cancel(jobId: String) = Unit
     }
 }

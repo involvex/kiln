@@ -43,6 +43,16 @@
     <string name="feature_apps_link_ok">Source linked.</string>
     <string name="feature_apps_link_bad_github">Use owner/repo (one slash).</string>
     <string name="feature_apps_dismiss">Dismiss</string>
+    <string name="feature_apps_view_updates">View updates</string>
+    <string name="feature_apps_hide_updates_filter">Show all apps</string>
+    <string name="feature_apps_update_all">Update all</string>
+    <string name="feature_apps_update_all_confirm_title">Update all apps?</string>
+    <string name="feature_apps_update_all_confirm_body">Queue updates for %1$d app(s). Each install may ask for confirmation.</string>
+    <string name="feature_apps_update_all_confirm_body_skipped">Queue updates for %1$d app(s). %2$d skipped (signature mismatch or no download URL). Each install may ask for confirmation.</string>
+    <string name="feature_apps_update_all_confirm">Update all</string>
+    <string name="feature_apps_update_all_cancel">Cancel</string>
+    <string name="feature_apps_update_all_none">No updates can be installed automatically (signature or download URL missing).</string>
+    <string name="feature_apps_update_all_result">Queued %1$d update(s). Failed: %2$d.</string>
     <string name="feature_apps_sort_name">Name</string>
     <string name="feature_apps_sort_size">Size</string>
     <string name="feature_apps_sort_install">Installed</string>

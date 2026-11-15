@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Apps: after Check updates / pull-to-refresh, View updates toggles the Updates filter; Update all confirms then queues signature-safe installs
 - Update check: per-repo progress + cancel; parallel F-Droid sync; faster mirror failover after first failure
 - Manage → APK tools: resign SAF APK with user PKCS12/keystore (apksig); export split `.apk` members from `.apks`/`.xapk` (no universal merge)
 

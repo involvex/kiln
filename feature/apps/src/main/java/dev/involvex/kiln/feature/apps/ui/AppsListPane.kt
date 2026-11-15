@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -44,6 +45,7 @@ import dev.involvex.kiln.core.model.AppSortField
 import dev.involvex.kiln.core.model.InstalledAppSummary
 import dev.involvex.kiln.feature.apps.AppsUiState
 import dev.involvex.kiln.feature.apps.R
+import dev.involvex.kiln.feature.apps.UpdateAllDialogState
 import dev.involvex.kiln.feature.apps.UpdateBadgeUi
 import dev.involvex.kiln.feature.apps.icon.PackageIconModel
 import dev.involvex.kiln.feature.apps.util.formatApkSize
@@ -58,6 +60,11 @@ fun AppsListPane(
     onCheckUpdates: () -> Unit,
     onCancelCheckUpdates: () -> Unit,
     onDismissUpdateCheckMessage: () -> Unit,
+    onToggleUpdatesFilter: () -> Unit,
+    onRequestUpdateAll: () -> Unit,
+    onConfirmUpdateAll: () -> Unit,
+    onDismissUpdateAllDialog: () -> Unit,
+    onDismissUpdateAllMessage: () -> Unit,
     onCancelBatch: () -> Unit,
     onOpenDetail: (String) -> Unit,
     onLongPress: (String) -> Unit,
@@ -93,27 +100,16 @@ fun AppsListPane(
                 )
             }
         }
-        if (state.isCheckingUpdates) {
-            Text(
-                text = formatUpdateCheckProgress(state),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            )
-            TextButton(onClick = onCancelCheckUpdates, modifier = Modifier.padding(horizontal = 8.dp)) {
-                Text(stringResource(R.string.feature_apps_cancel_check_updates))
-            }
-        }
-        state.updateCheckMessage?.let { code ->
-            Text(
-                text = formatUpdateCheckMessage(code),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            )
-            TextButton(onClick = onDismissUpdateCheckMessage, modifier = Modifier.padding(horizontal = 8.dp)) {
-                Text(stringResource(R.string.feature_apps_dismiss))
-            }
-        }
+        UpdateCheckBanners(
+            state = state,
+            onCancelCheckUpdates = onCancelCheckUpdates,
+            onDismissUpdateCheckMessage = onDismissUpdateCheckMessage,
+            onToggleUpdatesFilter = onToggleUpdatesFilter,
+            onRequestUpdateAll = onRequestUpdateAll,
+            onConfirmUpdateAll = onConfirmUpdateAll,
+            onDismissUpdateAllDialog = onDismissUpdateAllDialog,
+            onDismissUpdateAllMessage = onDismissUpdateAllMessage,
+        )
         if (filtersExpanded) {
             FilterRow(filter = state.filter, onFilterChange = onFilterChange)
             SortRow(sortField = state.sortField, onSortFieldChange = onSortFieldChange)
@@ -132,6 +128,110 @@ fun AppsListPane(
                 onLongPress = onLongPress,
                 onToggleSelection = onToggleSelection,
             )
+        }
+    }
+}
+
+@Composable
+private fun UpdateCheckBanners(
+    state: AppsUiState,
+    onCancelCheckUpdates: () -> Unit,
+    onDismissUpdateCheckMessage: () -> Unit,
+    onToggleUpdatesFilter: () -> Unit,
+    onRequestUpdateAll: () -> Unit,
+    onConfirmUpdateAll: () -> Unit,
+    onDismissUpdateAllDialog: () -> Unit,
+    onDismissUpdateAllMessage: () -> Unit,
+) {
+    if (state.isCheckingUpdates) {
+        Text(
+            text = formatUpdateCheckProgress(state),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        )
+        TextButton(onClick = onCancelCheckUpdates, modifier = Modifier.padding(horizontal = 8.dp)) {
+            Text(stringResource(R.string.feature_apps_cancel_check_updates))
+        }
+    }
+    state.updateCheckMessage?.let { code ->
+        UpdateCheckResultRow(
+            state = state,
+            code = code,
+            onToggleUpdatesFilter = onToggleUpdatesFilter,
+            onRequestUpdateAll = onRequestUpdateAll,
+            onDismiss = onDismissUpdateCheckMessage,
+        )
+    }
+    if (state.updateCheckMessage == null &&
+        state.filter == AppListFilter.UPDATES &&
+        state.installableUpdateCount > 0
+    ) {
+        TextButton(
+            onClick = onRequestUpdateAll,
+            modifier = Modifier.padding(horizontal = 8.dp),
+        ) {
+            Text(stringResource(R.string.feature_apps_update_all))
+        }
+    }
+    state.updateAllMessage?.let { code ->
+        Text(
+            text = formatUpdateAllMessage(code),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        )
+        TextButton(onClick = onDismissUpdateAllMessage, modifier = Modifier.padding(horizontal = 8.dp)) {
+            Text(stringResource(R.string.feature_apps_dismiss))
+        }
+    }
+    state.updateAllDialog?.let { dialog ->
+        UpdateAllConfirmDialog(
+            dialog = dialog,
+            onConfirm = onConfirmUpdateAll,
+            onDismiss = onDismissUpdateAllDialog,
+        )
+    }
+}
+
+@Composable
+private fun UpdateCheckResultRow(
+    state: AppsUiState,
+    code: String,
+    onToggleUpdatesFilter: () -> Unit,
+    onRequestUpdateAll: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Text(
+        text = formatUpdateCheckMessage(code),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+    )
+    val showViewUpdates = updateCheckFoundCount(code) > 0 || state.updateBadges.isNotEmpty()
+    Row(
+        modifier = Modifier.padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (showViewUpdates) {
+            TextButton(onClick = onToggleUpdatesFilter) {
+                Text(
+                    stringResource(
+                        if (state.filter == AppListFilter.UPDATES) {
+                            R.string.feature_apps_hide_updates_filter
+                        } else {
+                            R.string.feature_apps_view_updates
+                        },
+                    ),
+                )
+            }
+        }
+        if (state.installableUpdateCount > 0) {
+            TextButton(onClick = onRequestUpdateAll) {
+                Text(stringResource(R.string.feature_apps_update_all))
+            }
+        }
+        TextButton(onClick = onDismiss) {
+            Text(stringResource(R.string.feature_apps_dismiss))
         }
     }
 }
@@ -182,6 +282,58 @@ private fun FilterRow(filter: AppListFilter, onFilterChange: (AppListFilter) -> 
             label = { Text(stringResource(R.string.feature_apps_filter_updates)) },
         )
     }
+}
+
+@Composable
+private fun UpdateAllConfirmDialog(dialog: UpdateAllDialogState, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.feature_apps_update_all_confirm_title)) },
+        text = {
+            Text(
+                if (dialog.skippedCount > 0) {
+                    stringResource(
+                        R.string.feature_apps_update_all_confirm_body_skipped,
+                        dialog.enqueueCount,
+                        dialog.skippedCount,
+                    )
+                } else {
+                    stringResource(R.string.feature_apps_update_all_confirm_body, dialog.enqueueCount)
+                },
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.feature_apps_update_all_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.feature_apps_update_all_cancel))
+            }
+        },
+    )
+}
+
+private fun updateCheckFoundCount(code: String): Int {
+    if (!code.startsWith("updates:")) return 0
+    return code.split(':').getOrNull(1)?.toIntOrNull() ?: 0
+}
+
+@Composable
+private fun formatUpdateAllMessage(code: String): String = when {
+    code == "update_all_none" -> stringResource(R.string.feature_apps_update_all_none)
+
+    code.startsWith("update_all:") -> {
+        val parts = code.split(':')
+        stringResource(
+            R.string.feature_apps_update_all_result,
+            parts.getOrNull(1)?.toIntOrNull() ?: 0,
+            parts.getOrNull(2)?.toIntOrNull() ?: 0,
+        )
+    }
+
+    else -> code
 }
 
 @Composable

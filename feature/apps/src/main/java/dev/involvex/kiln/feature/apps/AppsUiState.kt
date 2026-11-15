@@ -34,7 +34,13 @@ data class AppsUiState(
     val updateCheckProgressTotal: Int = 0,
     val updateCheckProgressLabel: String? = null,
     val updateCheckMessage: String? = null,
+    /** Non-watchOnly updates that can be installed (signature + URL). */
+    val installableUpdateCount: Int = 0,
+    val updateAllDialog: UpdateAllDialogState? = null,
+    val updateAllMessage: String? = null,
 )
+
+data class UpdateAllDialogState(val enqueueCount: Int, val skippedCount: Int)
 
 data class ExportDialogState(
     val packageNames: List<String>,
