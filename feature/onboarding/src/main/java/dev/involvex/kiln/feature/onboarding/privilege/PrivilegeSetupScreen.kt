@@ -22,12 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.model.CapabilityAvailability
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.SelfTestReport
@@ -36,7 +36,8 @@ import dev.involvex.kiln.feature.onboarding.R
 import kotlinx.coroutines.delay
 
 @Composable
-fun PrivilegeSetupRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: PrivilegeSetupViewModel = hiltViewModel()) {
+fun PrivilegeSetupRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val viewModel = kilnHiltViewModel<PrivilegeSetupViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {

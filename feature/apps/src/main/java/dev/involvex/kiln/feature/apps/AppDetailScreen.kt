@@ -3,6 +3,8 @@ package dev.involvex.kiln.feature.apps
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -61,14 +63,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun AppDetailRoute(
-    packageName: String,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: AppDetailViewModel = hiltViewModel<AppDetailViewModel, AppDetailViewModel.Factory>(
+fun AppDetailRoute(packageName: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val activity = LocalActivity.current as ComponentActivity
+    val viewModel: AppDetailViewModel = hiltViewModel<AppDetailViewModel, AppDetailViewModel.Factory>(
+        // Nav3 entry owner often misses Hilt’s map; ActivityRetained is reliable.
+        viewModelStoreOwner = activity,
         creationCallback = { factory -> factory.create(packageName) },
-    ),
-) {
+    )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     AppDetailScreen(
         state = state,

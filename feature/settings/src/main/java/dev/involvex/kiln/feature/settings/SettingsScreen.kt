@@ -14,8 +14,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 
 @Composable
@@ -31,8 +31,8 @@ fun SettingsRoute(
     onOpenData: () -> Unit,
     onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
+    val viewModel = kilnHiltViewModel<SettingsViewModel>()
     val title = stringResource(R.string.feature_settings_title)
     val description = stringResource(R.string.feature_settings_description)
     LaunchedEffect(title, description) {

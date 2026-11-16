@@ -14,8 +14,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.designsystem.theme.allowsDynamicColor
 import dev.involvex.kiln.core.model.AppearancePrefs
 import dev.involvex.kiln.core.model.KilnFontStyle
@@ -23,7 +23,8 @@ import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnThemeStyle
 
 @Composable
-fun SettingsAppearanceRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsAppearanceRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val viewModel = kilnHiltViewModel<SettingsViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     SettingsCategoryScaffold(
         title = stringResource(R.string.settings_hub_appearance),

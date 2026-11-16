@@ -49,16 +49,17 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.feature.onboarding.match.AutoMatchConfidenceFilter
 import dev.involvex.kiln.feature.onboarding.match.AutoMatchListFilter
 import dev.involvex.kiln.feature.onboarding.match.MatchCandidate
 
 @Composable
-fun AutoMatchRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: AutoMatchViewModel = hiltViewModel()) {
+fun AutoMatchRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val viewModel = kilnHiltViewModel<AutoMatchViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     AutoMatchScreen(
         state = state,

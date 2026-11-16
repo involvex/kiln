@@ -36,25 +36,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.common.ByteSizeFormatter
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.core.model.ApkLeftover
 import dev.involvex.kiln.core.model.AppStorageStats
 import dev.involvex.kiln.core.model.OrphanStorageDir
 
 @Composable
-fun StorageRoute(
-    modifier: Modifier = Modifier,
-    showTopBar: Boolean = true,
-    onOpenPrivilegeSetup: () -> Unit = {},
-    viewModel: StorageViewModel = hiltViewModel(),
-) {
+fun StorageRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, onOpenPrivilegeSetup: () -> Unit = {}) {
+    val viewModel = kilnHiltViewModel<StorageViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current

@@ -20,28 +20,37 @@ import dev.involvex.kiln.core.model.WatchlistRepository
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoUri
 import dev.involvex.kiln.feature.sources.github.GitHubOwnerRepo
+import dev.involvex.kiln.feature.sources.github.GitHubStarsClient
 import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
+import dev.involvex.kiln.feature.sources.github.StarredApkHint
 import dev.involvex.kiln.feature.sources.obtainium.ObtainiumImport
 import java.text.DateFormat
 import java.util.Date
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 @HiltViewModel
+@Suppress("TooManyFunctions") // Sources hub: repos, Obtainium, PAT, watchlist, starred import.
 class SourcesViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
     private val repoDao: RepoDao,
     private val managedAppDao: ManagedAppDao,
     private val sync: FDroidRepoSync,
     private val tokenStore: GitHubTokenStore,
+    private val starsClient: GitHubStarsClient,
     private val appUpdateRepository: AppUpdateRepository,
     private val watchlistRepository: WatchlistRepository,
     private val incomingRepoLinkStore: IncomingRepoLinkStore,
@@ -149,30 +158,207 @@ class SourcesViewModel @Inject constructor(
 
     fun addGithubSource(ownerRepo: String) {
         viewModelScope.launch {
-            val message = withContext(ioDispatcher) {
-                val existing = managedAppDao.getAll()
-                    .firstOrNull { it.githubOwnerRepo.equals(ownerRepo, ignoreCase = true) }
-                if (existing != null) {
-                    return@withContext "github_exists:$ownerRepo"
-                }
-                val packageName = GitHubOwnerRepo.provisionalPackageName(ownerRepo)
-                managedAppDao.upsert(
-                    ManagedAppEntity(
-                        packageName = packageName,
-                        sourceId = "github:$ownerRepo",
-                        confidence = "MEDIUM",
-                        pinned = false,
-                        ignoreUpdates = false,
-                        githubOwnerRepo = ownerRepo,
-                        githubAssetRegex = ".*\\.apk$",
-                        githubChannel = "STABLE",
-                    ),
+            val message = withContext(ioDispatcher) { upsertGithubSource(ownerRepo) }
+            _uiState.update { state ->
+                state.copy(
+                    message = message,
+                    starredRepos = state.starredRepos.map { row ->
+                        if (row.ownerRepo.equals(ownerRepo, ignoreCase = true) &&
+                            message.startsWith("github_added:")
+                        ) {
+                            row.copy(alreadyManaged = true, selected = false)
+                        } else {
+                            row
+                        }
+                    },
                 )
-                "github_added:$ownerRepo"
             }
-            _uiState.update { it.copy(message = message) }
             withContext(ioDispatcher) { appUpdateRepository.refreshUpdates() }
         }
+    }
+
+    fun loadStarredRepos() {
+        if (tokenStore.getToken() == null) {
+            _uiState.update { it.copy(message = "github_pat_required") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(starredLoading = true, message = null, starredLoaded = false)
+            }
+            val result = withContext(ioDispatcher) { starsClient.listStarred() }
+            when (result) {
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            starredLoading = false,
+                            message = mapStarsError(result.message),
+                        )
+                    }
+                }
+
+                is Result.Success -> {
+                    val managed = withContext(ioDispatcher) {
+                        managedAppDao.getAll()
+                            .mapNotNull { it.githubOwnerRepo?.lowercase() }
+                            .toSet()
+                    }
+                    val rows = result.value.map { repo ->
+                        StarredRepoUiModel(
+                            ownerRepo = repo.ownerRepo,
+                            description = repo.description,
+                            fork = repo.fork,
+                            alreadyManaged = repo.ownerRepo.lowercase() in managed,
+                            selected = false,
+                            apkHint = StarredApkHint.UNKNOWN,
+                        )
+                    }
+                    _uiState.update {
+                        it.copy(
+                            starredRepos = rows,
+                            starredLoading = false,
+                            starredLoaded = true,
+                            message = if (rows.isEmpty()) "stars_empty" else null,
+                        )
+                    }
+                    if (rows.isNotEmpty()) {
+                        scanStarredApkHints()
+                    }
+                }
+            }
+        }
+    }
+
+    fun toggleStarredSelection(ownerRepo: String) {
+        _uiState.update { state ->
+            state.copy(
+                starredRepos = state.starredRepos.map { row ->
+                    if (row.ownerRepo.equals(ownerRepo, ignoreCase = true) && !row.alreadyManaged) {
+                        row.copy(selected = !row.selected)
+                    } else {
+                        row
+                    }
+                },
+            )
+        }
+    }
+
+    fun selectStarredWithApkHint() {
+        _uiState.update { state ->
+            state.copy(
+                starredRepos = state.starredRepos.map { row ->
+                    if (!row.alreadyManaged && row.apkHint == StarredApkHint.HAS_APK) {
+                        row.copy(selected = true)
+                    } else {
+                        row
+                    }
+                },
+            )
+        }
+    }
+
+    fun clearStarredSelection() {
+        _uiState.update { state ->
+            state.copy(starredRepos = state.starredRepos.map { it.copy(selected = false) })
+        }
+    }
+
+    fun addSelectedStarredRepos() {
+        val selected = _uiState.value.starredRepos.filter { it.selected && !it.alreadyManaged }
+        if (selected.isEmpty()) {
+            _uiState.update { it.copy(message = "stars_none_selected") }
+            return
+        }
+        viewModelScope.launch {
+            val added = ArrayList<String>()
+            val existed = ArrayList<String>()
+            withContext(ioDispatcher) {
+                for (row in selected) {
+                    val msg = upsertGithubSource(row.ownerRepo)
+                    if (msg.startsWith("github_added:")) {
+                        added += row.ownerRepo
+                    } else if (msg.startsWith("github_exists:")) {
+                        existed += row.ownerRepo
+                    }
+                }
+                appUpdateRepository.refreshUpdates()
+            }
+            val managedLower = (added + existed).map { it.lowercase() }.toSet()
+            _uiState.update { state ->
+                state.copy(
+                    starredRepos = state.starredRepos.map { row ->
+                        if (row.ownerRepo.lowercase() in managedLower) {
+                            row.copy(alreadyManaged = true, selected = false)
+                        } else {
+                            row
+                        }
+                    },
+                    message = "stars_added:${added.size}:${existed.size}",
+                )
+            }
+        }
+    }
+
+    private fun scanStarredApkHints() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(starredScanningApk = true) }
+            val targets = _uiState.value.starredRepos
+                .filter { it.apkHint == StarredApkHint.UNKNOWN }
+                .map { it.ownerRepo }
+            val hints = withContext(ioDispatcher) {
+                val gate = Semaphore(APK_SCAN_CONCURRENCY)
+                coroutineScope {
+                    targets.map { ownerRepo ->
+                        async {
+                            gate.withPermit {
+                                val hint = when (val r = starsClient.apkHintFor(ownerRepo)) {
+                                    is Result.Success -> r.value
+                                    is Result.Failure -> StarredApkHint.CHECK_FAILED
+                                }
+                                ownerRepo to hint
+                            }
+                        }
+                    }.awaitAll().toMap()
+                }
+            }
+            _uiState.update { state ->
+                state.copy(
+                    starredScanningApk = false,
+                    starredRepos = state.starredRepos.map { row ->
+                        hints[row.ownerRepo]?.let { row.copy(apkHint = it) } ?: row
+                    },
+                )
+            }
+        }
+    }
+
+    private suspend fun upsertGithubSource(ownerRepo: String): String {
+        val existing = managedAppDao.getAll()
+            .firstOrNull { it.githubOwnerRepo.equals(ownerRepo, ignoreCase = true) }
+        if (existing != null) {
+            return "github_exists:$ownerRepo"
+        }
+        val packageName = GitHubOwnerRepo.provisionalPackageName(ownerRepo)
+        managedAppDao.upsert(
+            ManagedAppEntity(
+                packageName = packageName,
+                sourceId = "github:$ownerRepo",
+                confidence = "MEDIUM",
+                pinned = false,
+                ignoreUpdates = false,
+                githubOwnerRepo = ownerRepo,
+                githubAssetRegex = ".*\\.apk$",
+                githubChannel = "STABLE",
+            ),
+        )
+        return "github_added:$ownerRepo"
+    }
+
+    private fun mapStarsError(raw: String): String = when {
+        raw == "github_pat_required" -> "github_pat_required"
+        raw.contains("HTTP 401") -> "stars_unauthorized"
+        raw.contains("HTTP 403") -> "stars_rate_limited"
+        else -> "stars_failed:$raw"
     }
 
     fun onObtainiumTextChange(text: String) {
@@ -412,5 +598,6 @@ class SourcesViewModel @Inject constructor(
 
     private companion object {
         const val MIN_FINGERPRINT_HEX_LENGTH = 32
+        const val APK_SCAN_CONCURRENCY = 3
     }
 }

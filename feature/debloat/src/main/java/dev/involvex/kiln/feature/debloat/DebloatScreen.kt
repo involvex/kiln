@@ -27,9 +27,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.model.DebloatAction
 import dev.involvex.kiln.core.model.DebloatAppRow
 import dev.involvex.kiln.core.model.DebloatPackageState
@@ -37,12 +37,8 @@ import dev.involvex.kiln.core.model.DebloatRating
 import dev.involvex.kiln.feature.debloat.policy.DebloatPolicy
 
 @Composable
-fun DebloatRoute(
-    onBack: () -> Unit,
-    onOpenPrivilegeSetup: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: DebloatViewModel = hiltViewModel(),
-) {
+fun DebloatRoute(onBack: () -> Unit, onOpenPrivilegeSetup: () -> Unit, modifier: Modifier = Modifier) {
+    val viewModel = kilnHiltViewModel<DebloatViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     DebloatScreen(
         state = state,

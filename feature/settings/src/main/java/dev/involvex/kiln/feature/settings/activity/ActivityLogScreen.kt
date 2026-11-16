@@ -27,9 +27,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.model.ActivityLogEvent
 import dev.involvex.kiln.core.model.ActivityLogType
 import dev.involvex.kiln.feature.settings.R
@@ -37,7 +37,8 @@ import java.text.DateFormat
 import java.util.Date
 
 @Composable
-fun ActivityLogRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: ActivityLogViewModel = hiltViewModel()) {
+fun ActivityLogRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val viewModel = kilnHiltViewModel<ActivityLogViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     ActivityLogScreen(
         state = state,

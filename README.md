@@ -4,7 +4,7 @@ All-in-one package, APK, and storage manager for Android (`dev.involvex.kiln`).
 
 - **Package:** `dev.involvex.kiln`
 - **License:** [Apache-2.0](./LICENSE)
-- **Status:** `0.2.4` released. M41 Discover panel Done (#71). See [docs/ROADMAP.md](./docs/ROADMAP.md)
+- **Status:** `0.2.4` released. M41 Discover Done (#71). M42 GitHub starred → Sources in progress. See [docs/ROADMAP.md](./docs/ROADMAP.md)
 - **Version:** `0.2.4` (versionCode 7)
 
 Kiln unifies F-Droid/GitHub sources, APK tools, app backup, storage cleanup, optional debloat, optional Termux hooks, and F-Droid catalog discovery. Privileged actions run through Shizuku/ShizukuPlus or Root when available; Tier NONE stays useful without them.
@@ -46,7 +46,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 :core:designsystem        Material 3 theme + base components
 :core:privilege           PrivilegedExecutor (Shizuku UserService allowlist)
 :feature:apps             List, detail, export, update badges + install CTA
-:feature:sources          F-Droid/Izzy sync, GitHub, Obtainium import, Discover catalog; UpdateCheckWorker
+:feature:sources          F-Droid/Izzy sync, GitHub (+ starred import), Obtainium, Discover; UpdateCheckWorker
 :feature:installer        Download queue; PackageInstaller (single + split) or silent pm / install-multiple; local APK enqueue
 :feature:onboarding       Auto-match + Shizuku setup assistant (A→D)
 :feature:storage          StorageStats analyzer + cache clear (usage access)
