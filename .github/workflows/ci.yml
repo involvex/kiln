@@ -45,10 +45,11 @@ jobs:
       - name: Detekt
         run: ./gradlew detekt --no-daemon
 
-      # Warm KSP/compile classpaths before lint. Parallel cold `lint` has flaked with
-      # Hilt "Context could not be resolved" on :feature:storage (e.g. run 43853997864).
+      # Warm KSP/compile classpaths before lint. Parallel cold KSP/Hilt has flaked with
+      # "Context could not be resolved" / unresolved inject types (e.g. :feature:storage
+      # run 43853997864; :feature:debloat PrivilegedExecutor on PR #66 run 43881626481).
       - name: Compile debug Kotlin
-        run: ./gradlew compileDebugKotlin --no-daemon
+        run: ./gradlew compileDebugKotlin --no-daemon --no-parallel
 
       - name: Lint
         run: ./gradlew lint --no-daemon --no-parallel
