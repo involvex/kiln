@@ -400,9 +400,9 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 
 ### Updates & Sicherheit
 
-- **P1 — Rollback / Downgrade**: ~~Die letzten N APK-Versionen lokal cachen…~~ → **shipped M8** (≤3/pkg + Shizuku downgrade); M23 adds age/global size prune; Settings N slider → **M38**.
-- **P1 — Update-Cooldown**: ~~Pro App oder global…~~ → **shipped M8** (global days + major auto-install skip); per-app cooldown + ignored-updates overview → **M38**.
-- **P2 — Repo-Priorität reorder UI**: Sources ↑↓ + preserve on `ensureKnownRepos` → **M38**.
+- **P1 — Rollback / Downgrade**: ~~Die letzten N APK-Versionen lokal cachen…~~ → **shipped M8** (≤3/pkg + Shizuku downgrade); M23 adds age/global size prune; Settings N slider → **shipped M38** (#63).
+- **P1 — Update-Cooldown**: ~~Pro App oder global…~~ → **shipped M8** (global days + major auto-install skip); per-app cooldown + ignored-updates overview → **shipped M38** (#63).
+- **P2 — Repo-Priorität reorder UI**: Sources ↑↓ + preserve on `ensureKnownRepos` → **shipped M38** (#63).
 - **P2 — Anti-Features & Tracker-Info**: F-Droid chips → **shipped M19**; Exodus deep-link + optional self-hosted API → **shipped M33** (#52).
 - **P2 — HyperOS Autostart / battery**: Settings Autostart UI often broken; manage via Shizuku AppOps + AOSP battery tristate. → **shipped M34** (#53).
 - **P2 — Berechtigungs-Audit**: Übersicht gefährlicher Berechtigungen pro App, per Shizuku AppOps ändern und Berechtigungen in Bulk entziehen (`appops`, `pm revoke`). → **M27** (Done #41)
@@ -445,4 +445,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 13. **M35** Universal APK merge (Done #56)
 14. **M36** Freeze / hibernate (Done #58)
 15. **M37** Settings hub + PAT + signature confirm (Done #61)
-16. **M38** Settings polish (rollback N, per-app cooldown, ignored overview, repo priority)
+16. **M38** Settings polish (Done #63)
