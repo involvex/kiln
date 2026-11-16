@@ -1,6 +1,6 @@
 # M41 — Discover panel (+ Hilt Nav3 crash fix)
 
-> Branch `m41-discover-panel`. After M40 (#69) / docs closeout (#70).
+> Shipped in [#71](https://github.com/involvex/kiln/pull/71). Branch `m41-discover-panel`. After M40 (#69) / docs closeout (#70).
 
 ## In scope
 

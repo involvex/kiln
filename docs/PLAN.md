@@ -449,4 +449,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 16. **M38** Settings polish (Done #63)
 17. **M39** Split APK install (Done #66)
 18. **M40** Backup phase 2 — SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM (no Root) → **Done (#69)**
-19. **M41** Discover panel — Hilt Nav3 ViewModel fix; shelves on Discover home; drop Trending segment
+19. **M41** Discover panel — Hilt Nav3 ViewModel fix; shelves on Discover home; drop Trending segment → **Done (#71)**
