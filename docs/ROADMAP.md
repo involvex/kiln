@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M38** Settings polish in progress (`m38-settings-polish`). **M37** Settings hub Done (#61). App version **0.2.3** (code 6), tag `v0.2.3`. Next after M38: publishing / dual-user (unscheduled). HyperOS M1–M8 checklist remains a separate release gate.
+**Current status:** **M38** Settings polish Done (#63). App version **0.2.3** (code 6), tag `v0.2.3`. Next: publishing / dual-user (unscheduled). HyperOS M1–M8 checklist remains a separate release gate.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -52,7 +52,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M35** | Universal APK merge | Done | [`prompts/M35-universal-apk-merge.md`](./prompts/M35-universal-apk-merge.md) · [#56](https://github.com/involvex/kiln/pull/56) | Merge `.apks`/`.xapk`/`.apkm` via ARSCLib + always resign (M31 keystore) |
 | **M36** | Freeze / hibernate | Done | [`prompts/M36-freeze-hibernate.md`](./prompts/M36-freeze-hibernate.md) · [#58](https://github.com/involvex/kiln/pull/58) | `pm suspend`/`unsuspend` via privilege; Settings list separate from Debloat |
 | **M37** | Settings hub + PAT + signature confirm | Done | [`prompts/M37-settings-hub.md`](./prompts/M37-settings-hub.md) · [#61](https://github.com/involvex/kiln/pull/61) | Category hub; Updates PAT + check interval; Install anyway for WARNING only |
-| **M38** | Settings polish | In progress | [`prompts/M38-settings-polish.md`](./prompts/M38-settings-polish.md) · `m38-settings-polish` | Rollback N slider; per-app cooldown; ignored-updates overview; repo priority ↑↓ |
+| **M38** | Settings polish | Done | [`prompts/M38-settings-polish.md`](./prompts/M38-settings-polish.md) · [#63](https://github.com/involvex/kiln/pull/63) | Rollback N slider; per-app cooldown; ignored-updates overview; repo priority ↑↓ |
 
 ---
 
@@ -314,11 +314,10 @@ flowchart LR
   M37 --> M38[M38 Settings polish]
 ```
 
-1. **M0–M37** on main (#61); AutoMatch UX polish (#62); **`v0.2.3`** tagged.
-2. **M38** Settings polish on `m38-settings-polish`.
-3. Next after M38: publishing / dual-user — do not mix into an unplanned branch.
-4. Publishing / F-Droid still deferred unless explicitly requested.
-5. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
+1. **M0–M38** on main (#63); AutoMatch UX polish (#62); **`v0.2.3`** tagged.
+2. Next: publishing / dual-user — do not mix into an unplanned branch.
+3. Publishing / F-Droid still deferred unless explicitly requested.
+4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 
 ---
 

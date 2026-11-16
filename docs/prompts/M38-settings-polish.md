@@ -20,9 +20,11 @@
 
 ## Done when
 
-- [ ] M37 Done in ROADMAP/PLAN; this prompt linked as M38
-- [ ] Rollback N 1–5 applies and retrims; config export/import includes the pref
-- [ ] Per-app cooldown overrides global for auto-install; null uses global
-- [ ] Ignored-updates list shows ignored apps; re-enable clears ignore
-- [ ] Sources ↑↓ renumbers priorities; repair does not overwrite user priority
-- [ ] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green
+- [x] M37 Done in ROADMAP/PLAN; this prompt linked as M38
+- [x] Rollback N 1–5 applies and retrims; config export/import includes the pref
+- [x] Per-app cooldown overrides global for auto-install; null uses global
+- [x] Ignored-updates list shows ignored apps; re-enable clears ignore
+- [x] Sources ↑↓ renumbers priorities; repair does not overwrite user priority
+- [x] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green
+
+Shipped on main via [#63](https://github.com/involvex/kiln/pull/63).
