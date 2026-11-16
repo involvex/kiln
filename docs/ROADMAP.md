@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M40** Backup phase 2 Done (#69). M39 Split APK install Done (#66). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M41** Discover panel In progress (`m41-discover-panel`). M40 Backup phase 2 Done (#69). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -55,6 +55,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M38** | Settings polish | Done | [`prompts/M38-settings-polish.md`](./prompts/M38-settings-polish.md) · [#63](https://github.com/involvex/kiln/pull/63) | Rollback N slider; per-app cooldown; ignored-updates overview; repo priority ↑↓ |
 | **M39** | Split APK install | Done | [`prompts/M39-split-install.md`](./prompts/M39-split-install.md) · [#66](https://github.com/involvex/kiln/pull/66) | SAF + Share/VIEW for `.apks`/`.xapk`/`.apkm`; PackageInstaller multi-session; optional silent `install-multiple` |
 | **M40** | Backup phase 2 | Done | [`prompts/M40-backup-phase2.md`](./prompts/M40-backup-phase2.md) · [#69](https://github.com/involvex/kiln/pull/69) | SAF tree + keep-N; Shizuku Android/data+obb; optional AES-GCM (no Root) |
+| **M41** | Discover panel | In progress | [`prompts/M41-discover-panel.md`](./prompts/M41-discover-panel.md) · `m41-discover-panel` | Hilt Nav3 crash fix; F-Droid-style shelves in Discover; drop Trending segment |
 
 ---
 
@@ -82,6 +83,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); dual-user / tablet unscheduled |
 | Publishing / F-Droid submit | Partial | Fastlane + tag workflow ready; screenshots / submit deferred |
 | HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
+| Discover home shelves (absorb Trending) | In progress (M41) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
 
 ---
 
@@ -122,7 +124,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
 | Release / store prep | ✅ version `0.2.4` (code 7); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG; F-Droid submit deferred | — |
-| App Discovery | ✅ Apps → Discover; catalog refresh; icons; detail; search/categories; install queue | NONE (+ network) |
+| App Discovery | ✅ Apps → Library\|Discover; home shelves + categories; catalog refresh; icons; detail; search; GitHub tab; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
 | Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage | NONE |
 | Trending shelves | ✅ Category/keyword shelves (honest: no download charts) | NONE (+ catalog) |
@@ -233,7 +235,7 @@ Shipped with `0.2.0` and follow-up flicker hotfixes through `0.2.2`. Prompt: [`p
 - [x] Language EN/DE chips: first frame + bottom nav labels switch — verified on device, no crash
 - [x] Settings → Check now: no crash; update notification / empty-result path OK
 - [x] Exactly 4 tabs; Manage → Storage | Backup only
-- [x] Apps → Library | Discover | Trending
+- [x] Apps → Library | Discover (Trending absorbed into Discover home in M41)
 - [x] Catalog refresh: icons + detail (+ screenshots when index has media)
 - [x] Trending ≥3 shelves with honest copy (no fake download charts)
 - [x] CHANGELOG / `0.2.0` bump done in PR
@@ -316,10 +318,11 @@ flowchart LR
   M37 --> M38[M38 Settings polish]
   M38 --> M39[M39 Split install]
   M39 --> M40[M40 Backup phase 2]
+  M40 --> M41[M41 Discover panel]
 ```
 
 1. **M0–M40** on main (#69); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
-2. No further feature milestone scheduled — pick from PLAN §12 (dual-user / tablet layouts / cloud backup) or release gates.
+2. **M41** Discover panel (`m41-discover-panel`) — Hilt Nav3 fix + shelves on Discover home.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

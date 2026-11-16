@@ -2,6 +2,8 @@ package dev.involvex.kiln.feature.sources.discovery
 
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -55,13 +57,9 @@ import dev.involvex.kiln.core.model.ExodusReportUrls
 import dev.involvex.kiln.feature.sources.R
 
 @Composable
-fun CatalogDetailRoute(
-    packageName: String,
-    repoId: String,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: CatalogDetailViewModel = hiltViewModel(),
-) {
+fun CatalogDetailRoute(packageName: String, repoId: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val activity = LocalActivity.current as ComponentActivity
+    val viewModel: CatalogDetailViewModel = hiltViewModel(viewModelStoreOwner = activity)
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(packageName, repoId) {
         viewModel.load(packageName, repoId)
