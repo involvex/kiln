@@ -12,14 +12,7 @@
     <string name="nav_settings">Einstellungen</string>
     <string name="apps_segment_library">Bibliothek</string>
     <string name="apps_segment_discover">Entdecken</string>
-    <string name="apps_segment_trending">Trends</string>
     <string name="apps_filters_menu">Filter und Sortierung</string>
-    <string name="trending_honesty">Regale nutzen F-Droid-Kategorien und aktuelle Katalogversionen — keine Download-Charts.</string>
-    <string name="trending_shelf_privacy">Privatsphäre &amp; Sicherheit</string>
-    <string name="trending_shelf_internet">Internet</string>
-    <string name="trending_shelf_media">Medien</string>
-    <string name="trending_shelf_system">System &amp; Tools</string>
-    <string name="trending_shelf_ai">KI-bezogen</string>
     <string name="catalog_detail_title">App-Details</string>
     <string name="catalog_detail_install">Installieren</string>
     <string name="catalog_detail_sources">Quellen</string>

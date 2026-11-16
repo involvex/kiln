@@ -85,6 +85,16 @@ interface IndexDao {
     )
     suspend fun packagesForTrending(limit: Int): List<IndexedPackageEntity>
 
+    /** Highest rowId ≈ last inserted during the latest catalog replace (not a store “new apps” chart). */
+    @Query(
+        """
+        SELECT * FROM indexed_packages
+        ORDER BY rowId DESC
+        LIMIT :limit
+        """,
+    )
+    suspend fun packagesByNewestRowId(limit: Int): List<IndexedPackageEntity>
+
     @Query("SELECT * FROM indexed_packages")
     suspend fun allPackages(): List<IndexedPackageEntity>
 

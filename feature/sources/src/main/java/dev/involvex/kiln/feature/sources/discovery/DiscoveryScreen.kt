@@ -1,5 +1,7 @@
 package dev.involvex.kiln.feature.sources.discovery
 
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,8 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -47,8 +51,10 @@ fun DiscoveryRoute(
     onOpenCatalogDetail: ((String, String) -> Unit)? = null,
     embedded: Boolean = false,
     showTopBar: Boolean = true,
-    viewModel: DiscoveryViewModel = hiltViewModel(),
 ) {
+    // Nav3 entry ViewModelStoreOwner can miss Hilt’s map; Activity owner resolves @HiltViewModel.
+    val activity = LocalActivity.current as ComponentActivity
+    val viewModel: DiscoveryViewModel = hiltViewModel(viewModelStoreOwner = activity)
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     DiscoveryScreen(
         state = state,
@@ -107,18 +113,27 @@ fun DiscoveryScreen(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (!embedded) {
                     item {
-                        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick = onBack,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                        ) {
                             Text(stringResource(R.string.discovery_back))
                         }
                     }
                 }
                 item {
-                    SourceTabs(selected = state.sourceTab, onSelect = onSourceTab)
+                    SourceTabs(
+                        selected = state.sourceTab,
+                        onSelect = onSourceTab,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
                 }
                 state.message?.let { msg ->
                     item {
@@ -129,8 +144,12 @@ fun DiscoveryScreen(
                             } else {
                                 MaterialTheme.colorScheme.primary
                             },
+                            modifier = Modifier.padding(horizontal = 16.dp),
                         )
-                        TextButton(onClick = onClearMessage) {
+                        TextButton(
+                            onClick = onClearMessage,
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                        ) {
                             Text(stringResource(R.string.sources_dismiss))
                         }
                     }
@@ -166,15 +185,38 @@ private fun LazyListScope.fdroidItems(
     onInstall: (DiscoveryAppRow) -> Unit,
     onOpenCatalogDetail: ((String, String) -> Unit)?,
 ) {
+    fdroidHeader(state = state, onRefreshCatalog = onRefreshCatalog)
+    if (state.showHomeShelves) {
+        homeShelfItems(
+            state = state,
+            onInstall = onInstall,
+            onOpenCatalogDetail = onOpenCatalogDetail,
+            onCategory = onCategory,
+        )
+    }
+    fdroidSearchSection(
+        state = state,
+        onQueryChange = onQueryChange,
+        onCategory = onCategory,
+        onInstall = onInstall,
+        onOpenCatalogDetail = onOpenCatalogDetail,
+    )
+}
+
+private fun LazyListScope.fdroidHeader(state: DiscoveryUiState, onRefreshCatalog: () -> Unit) {
     item {
         Text(
-            text = stringResource(R.string.discovery_description),
-            style = MaterialTheme.typography.bodyMedium,
+            text = stringResource(R.string.discovery_honesty),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
     }
     item {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -199,42 +241,103 @@ private fun LazyListScope.fdroidItems(
             }
         }
     }
+}
+
+private fun LazyListScope.fdroidSearchSection(
+    state: DiscoveryUiState,
+    onQueryChange: (String) -> Unit,
+    onCategory: (String) -> Unit,
+    onInstall: (DiscoveryAppRow) -> Unit,
+    onOpenCatalogDetail: ((String, String) -> Unit)?,
+) {
+    item {
+        SectionHeader(
+            title = stringResource(R.string.discovery_search_section),
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+    }
     item {
         OutlinedTextField(
             value = state.query,
             onValueChange = onQueryChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             singleLine = true,
             label = { Text(stringResource(R.string.discovery_search)) },
         )
     }
-    item {
-        CategoryChips(
-            categories = state.categories,
-            selected = state.selectedCategory,
-            onSelect = onCategory,
-        )
+    if (!state.showHomeShelves) {
+        item {
+            CategoryChips(
+                categories = state.categories,
+                selected = state.selectedCategory,
+                onSelect = onCategory,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+        if (state.isSearching && state.results.isEmpty()) {
+            item {
+                CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+            }
+        }
+        items(state.results, key = { "${it.repoId}:${it.packageName}" }) { row ->
+            DiscoveryAppCard(
+                row = row,
+                onInstall = { onInstall(row) },
+                onOpenDetail = onOpenCatalogDetail?.let { open ->
+                    { open(row.packageName, row.repoId) }
+                },
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
     }
-    if (state.isSearching && state.results.isEmpty()) {
-        item { CircularProgressIndicator() }
-    }
-    items(state.results, key = { "${it.repoId}:${it.packageName}" }) { row ->
-        DiscoveryAppCard(
-            row = row,
-            onInstall = { onInstall(row) },
-            onOpenDetail = onOpenCatalogDetail?.let { open ->
-                { open(row.packageName, row.repoId) }
-            },
-        )
-    }
-    if (!state.isSearching && state.results.isEmpty() && state.packageCount == 0) {
+    if (state.packageCount == 0 && !state.shelvesLoading) {
         item {
             EmptyState(
                 title = stringResource(R.string.discovery_empty_title),
                 description = stringResource(R.string.discovery_empty_catalog),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 200.dp),
+                    .heightIn(min = 200.dp)
+                    .padding(horizontal = 16.dp),
+            )
+        }
+    }
+}
+
+private fun LazyListScope.homeShelfItems(
+    state: DiscoveryUiState,
+    onInstall: (DiscoveryAppRow) -> Unit,
+    onOpenCatalogDetail: ((String, String) -> Unit)?,
+    onCategory: (String) -> Unit,
+) {
+    if (state.shelvesLoading && state.shelves.isEmpty()) {
+        item {
+            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+        }
+    } else {
+        items(state.shelves, key = { it.id.name }) { shelf ->
+            DiscoverShelfSection(
+                shelf = shelf,
+                onOpenCatalogDetail = onOpenCatalogDetail,
+                onInstall = onInstall,
+            )
+        }
+    }
+    if (state.categories.isNotEmpty()) {
+        item {
+            SectionHeader(
+                title = stringResource(R.string.discovery_categories_section),
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+        item {
+            CategoryChips(
+                categories = state.categories,
+                selected = state.selectedCategory,
+                onSelect = onCategory,
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
     }
@@ -251,13 +354,16 @@ private fun LazyListScope.githubItems(
         Text(
             text = stringResource(R.string.discovery_github_description),
             style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
     }
     item {
         OutlinedTextField(
             value = state.githubQuery,
             onValueChange = onGithubQueryChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             singleLine = true,
             label = { Text(stringResource(R.string.discovery_github_query)) },
         )
@@ -266,7 +372,9 @@ private fun LazyListScope.githubItems(
         Button(
             onClick = onLookupGithub,
             enabled = !state.isLookingUpGithub && state.githubQuery.isNotBlank(),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
         ) {
             Text(stringResource(R.string.discovery_github_lookup))
         }
@@ -276,6 +384,7 @@ private fun LazyListScope.githubItems(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(horizontal = 16.dp),
             ) {
                 CircularProgressIndicator()
                 Text(stringResource(R.string.discovery_github_looking_up))
@@ -287,13 +396,14 @@ private fun LazyListScope.githubItems(
             row = row,
             onInstall = { onInstallGithub(row) },
             onLookup = null,
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
     }
     if (state.savedGithub.isNotEmpty()) {
         item {
             SectionHeader(
                 title = stringResource(R.string.discovery_github_saved),
-                modifier = Modifier.padding(horizontal = 0.dp),
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
         items(state.savedGithub, key = { "saved:${it.ownerRepo}:${it.packageName}" }) { row ->
@@ -301,6 +411,7 @@ private fun LazyListScope.githubItems(
                 row = row,
                 onInstall = { onInstallGithub(row) },
                 onLookup = { onLookupSavedGithub(row) },
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
     } else if (!state.isLookingUpGithub && state.githubResults.isEmpty()) {
@@ -310,16 +421,53 @@ private fun LazyListScope.githubItems(
                 description = stringResource(R.string.discovery_github_empty),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 200.dp),
+                    .heightIn(min = 200.dp)
+                    .padding(horizontal = 16.dp),
             )
         }
     }
 }
 
 @Composable
-private fun SourceTabs(selected: DiscoverySourceTab, onSelect: (DiscoverySourceTab) -> Unit) {
+private fun DiscoverShelfSection(
+    shelf: TrendingShelf,
+    onOpenCatalogDetail: ((String, String) -> Unit)?,
+    onInstall: (DiscoveryAppRow) -> Unit,
+) {
+    SectionHeader(title = shelfTitle(shelf.id))
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+    ) {
+        items(shelf.apps, key = { "${it.repoId}:${it.packageName}" }) { row ->
+            DiscoveryAppCard(
+                row = row,
+                compact = true,
+                modifier = Modifier.width(268.dp),
+                onOpenDetail = onOpenCatalogDetail?.let { open ->
+                    { open(row.packageName, row.repoId) }
+                },
+                onInstall = { onInstall(row) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun shelfTitle(id: TrendingShelfId): String = when (id) {
+    TrendingShelfId.RECENTLY_UPDATED -> stringResource(R.string.discovery_shelf_recent)
+    TrendingShelfId.NEW_IN_CATALOG -> stringResource(R.string.discovery_shelf_new)
+    TrendingShelfId.PRIVACY -> stringResource(R.string.trending_shelf_privacy)
+    TrendingShelfId.INTERNET -> stringResource(R.string.trending_shelf_internet)
+    TrendingShelfId.MEDIA -> stringResource(R.string.trending_shelf_media)
+    TrendingShelfId.SYSTEM -> stringResource(R.string.trending_shelf_system)
+    TrendingShelfId.AI -> stringResource(R.string.trending_shelf_ai)
+}
+
+@Composable
+private fun SourceTabs(selected: DiscoverySourceTab, onSelect: (DiscoverySourceTab) -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -338,9 +486,9 @@ private fun SourceTabs(selected: DiscoverySourceTab, onSelect: (DiscoverySourceT
 }
 
 @Composable
-private fun CategoryChips(categories: List<String>, selected: String, onSelect: (String) -> Unit) {
+private fun CategoryChips(categories: List<String>, selected: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -361,9 +509,9 @@ private fun CategoryChips(categories: List<String>, selected: String, onSelect: 
 }
 
 @Composable
-private fun GithubAppCard(row: DiscoveryGithubRow, onInstall: () -> Unit, onLookup: (() -> Unit)?) {
+private fun GithubAppCard(row: DiscoveryGithubRow, onInstall: () -> Unit, onLookup: (() -> Unit)?, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         Column(

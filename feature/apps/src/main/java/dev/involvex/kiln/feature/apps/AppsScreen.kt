@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -52,12 +54,10 @@ import java.io.File
 import kotlinx.coroutines.launch
 
 @Composable
-fun AppsRoute(
-    onOpenDetail: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    embedded: Boolean = false,
-    viewModel: AppsViewModel = hiltViewModel(),
-) {
+fun AppsRoute(onOpenDetail: (String) -> Unit, modifier: Modifier = Modifier, embedded: Boolean = false) {
+    // Nav3 entry ViewModelStoreOwner can miss Hilt’s map; Activity owner resolves @HiltViewModel.
+    val activity = LocalActivity.current as ComponentActivity
+    val viewModel: AppsViewModel = hiltViewModel(viewModelStoreOwner = activity)
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     AppsScreen(
         state = state,

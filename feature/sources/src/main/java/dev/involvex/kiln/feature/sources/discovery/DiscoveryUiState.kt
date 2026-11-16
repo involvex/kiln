@@ -23,6 +23,8 @@ data class DiscoveryUiState(
     val selectedCategory: String = "",
     val categories: List<String> = emptyList(),
     val results: List<DiscoveryAppRow> = emptyList(),
+    val shelves: List<TrendingShelf> = emptyList(),
+    val shelvesLoading: Boolean = true,
     val packageCount: Int = 0,
     val isRefreshing: Boolean = false,
     val isSearching: Boolean = false,
@@ -32,4 +34,10 @@ data class DiscoveryUiState(
     val isLookingUpGithub: Boolean = false,
     val message: String? = null,
     val messageIsError: Boolean = false,
-)
+) {
+    /** Home shelves show when F-Droid tab has no active search/filter. */
+    val showHomeShelves: Boolean
+        get() = sourceTab == DiscoverySourceTab.FDROID &&
+            query.isBlank() &&
+            selectedCategory.isEmpty()
+}

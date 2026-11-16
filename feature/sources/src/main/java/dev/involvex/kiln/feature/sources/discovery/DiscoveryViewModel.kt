@@ -14,7 +14,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class DiscoveryViewModel @Inject constructor(private val repository: DiscoveryRepository) : ViewModel() {
+class DiscoveryViewModel @Inject constructor(
+    private val repository: DiscoveryRepository,
+    private val trendingRepository: TrendingRepository,
+) : ViewModel() {
     private val _uiState = MutableStateFlow(DiscoveryUiState())
     val uiState: StateFlow<DiscoveryUiState> = _uiState.asStateFlow()
 
@@ -69,6 +72,7 @@ class DiscoveryViewModel @Inject constructor(private val repository: DiscoveryRe
                             messageIsError = true,
                         )
                     }
+                    refreshShelves()
                 }
             }
         }
@@ -182,8 +186,15 @@ class DiscoveryViewModel @Inject constructor(private val repository: DiscoveryRe
             val count = repository.packageCount()
             val categories = repository.categories()
             _uiState.update { it.copy(packageCount = count, categories = categories) }
+            refreshShelves()
             runSearch()
         }
+    }
+
+    private suspend fun refreshShelves() {
+        _uiState.update { it.copy(shelvesLoading = true) }
+        val shelves = trendingRepository.loadShelves()
+        _uiState.update { it.copy(shelves = shelves, shelvesLoading = false) }
     }
 
     private fun refreshSavedGithub() {
@@ -195,6 +206,10 @@ class DiscoveryViewModel @Inject constructor(private val repository: DiscoveryRe
 
     private suspend fun runSearch() {
         val state = _uiState.value
+        if (state.showHomeShelves) {
+            _uiState.update { it.copy(results = emptyList(), isSearching = false) }
+            return
+        }
         _uiState.update { it.copy(isSearching = true) }
         val rows = repository.search(state.query, state.selectedCategory)
         _uiState.update { it.copy(results = rows, isSearching = false) }
