@@ -12,6 +12,12 @@
     <string name="onboarding_group_none">Nicht gefunden</string>
     <string name="onboarding_index_empty">Noch kein F-Droid-Index. Zuerst unter Quellen synchronisieren — sichere Treffer (HOCH) brauchen Paket + Signer aus einem Sync. Bis dahin erscheinen nur GitHub-Map-Vorschläge unter Prüfen.</string>
     <string name="onboarding_accepted_count">%1$d App(s) verknüpft.</string>
+    <string name="onboarding_search_label">Suche</string>
+    <string name="onboarding_search_hint">App-Name oder Paket</string>
+    <string name="onboarding_filter_all">Alle</string>
+    <string name="onboarding_show_linked">Verknüpfte anzeigen</string>
+    <string name="onboarding_chip_linked">Verknüpft</string>
+    <string name="onboarding_filter_empty">Keine Apps passen zu Suche oder Filter.</string>
     <string name="onboarding_chip_high">Hoch</string>
     <string name="onboarding_chip_medium">Prüfen</string>
     <string name="onboarding_chip_warning">Signatur</string>

@@ -25,6 +25,7 @@ fun KilnScaffold(
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
+    snackbarHost: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
@@ -44,6 +45,7 @@ fun KilnScaffold(
             }
         },
         bottomBar = bottomBar,
+        snackbarHost = snackbarHost,
         content = content,
     )
 }
