@@ -452,4 +452,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 19. **M41** Discover panel — Hilt Nav3 ViewModel fix; shelves on Discover home; drop Trending segment → **Done (#71)**
 20. **M42** GitHub starred → Sources → **Done (#73)**
 21. **M43** App activities viewer → **Done (#75)**
-22. **M44** Discover UI polish + remove Exodus → in progress (`m44-discover-polish`)
+22. **M44** Discover UI polish + remove Exodus → **Done (#76)**

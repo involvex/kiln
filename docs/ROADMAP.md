@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M44** Discover UI polish + remove Exodus in progress (`m44-discover-polish`). M43 App activities Done (#75). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M44** Discover polish + remove Exodus Done (#76). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -58,7 +58,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M41** | Discover panel | Done | [`prompts/M41-discover-panel.md`](./prompts/M41-discover-panel.md) · [#71](https://github.com/involvex/kiln/pull/71) | Hilt Nav3 crash fix; F-Droid-style shelves in Discover; drop Trending segment |
 | **M42** | GitHub starred → Sources | Done | [`prompts/M42-github-stars.md`](./prompts/M42-github-stars.md) · [#73](https://github.com/involvex/kiln/pull/73) | PAT `/user/starred` review → multi-select add; kilnHiltViewModel shell crash fix |
 | **M43** | App activities viewer | Done | [`prompts/M43-app-activities.md`](./prompts/M43-app-activities.md) · [#75](https://github.com/involvex/kiln/pull/75) | Exported activities list + Start + pin shortcut; AppDetail AssistedInject crash fix |
-| **M44** | Discover polish + remove Exodus | In progress | [`prompts/M44-discover-polish.md`](./prompts/M44-discover-polish.md) · `m44-discover-polish` | Denser shelves; catalog detail actions under hero; remove Exodus UI/API/Settings |
+| **M44** | Discover polish + remove Exodus | Done | [`prompts/M44-discover-polish.md`](./prompts/M44-discover-polish.md) · [#76](https://github.com/involvex/kiln/pull/76) | Denser shelves; catalog detail actions under hero; remove Exodus UI/API/Settings |
 
 ---
 
@@ -89,7 +89,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
 | GitHub starred repos → Sources | Done (M42 #73) | Review list + multi-select add; APK heuristic; no silent install |
 | App activity viewer / launcher | Done (M43 #75) | Exported-only list under App Detail; Tier NONE Start + pin shortcut |
-| Discover UI density + Exodus removal | In progress (M44) | Compact shelves; detail Install under hero; drop Exodus |
+| Discover UI density + Exodus removal | Done (M44 #76) | Compact shelves; detail Install under hero; drop Exodus |
 
 ---
 
@@ -330,8 +330,8 @@ flowchart LR
   M43 --> M44[M44 Discover polish]
 ```
 
-1. **M0–M43** on main (#75); **M44** on `m44-discover-polish`; **`v0.2.4`** tagged (code 7); CI lint harden (#65).
-2. After M44: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
+1. **M0–M44** on main (#76); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
+2. Next: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 
