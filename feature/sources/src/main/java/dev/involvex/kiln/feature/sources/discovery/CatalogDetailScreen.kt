@@ -43,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -51,7 +50,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
-import dev.involvex.kiln.core.model.ExodusReportUrls
 import dev.involvex.kiln.feature.sources.R
 
 @Composable
@@ -135,9 +133,6 @@ fun CatalogDetailScreen(
                 message = state.message,
                 messageIsError = state.messageIsError,
                 isWatching = state.isWatching,
-                exodusTrackerNames = state.exodusTrackerNames,
-                exodusApiConfigured = state.exodusApiConfigured,
-                exodusLoading = state.exodusLoading,
                 padding = padding,
                 onInstall = onInstall,
                 onToggleWatch = onToggleWatch,
@@ -201,9 +196,6 @@ private fun CatalogDetailContent(
     message: String?,
     messageIsError: Boolean,
     isWatching: Boolean,
-    exodusTrackerNames: List<String>,
-    exodusApiConfigured: Boolean,
-    exodusLoading: Boolean,
     padding: PaddingValues,
     onInstall: () -> Unit,
     onToggleWatch: () -> Unit,
@@ -211,13 +203,12 @@ private fun CatalogDetailContent(
     onShare: () -> Unit,
 ) {
     val context = LocalContext.current
-    val languageTag = LocalLocale.current.platformLocale.toLanguageTag()
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(padding),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         if (message != null) {
             item {
@@ -254,19 +245,6 @@ private fun CatalogDetailContent(
             item { AntiFeatureChips(antiFeatures = row.antiFeatures) }
         }
         item {
-            ExodusPrivacySection(
-                packageName = row.packageName,
-                languageTag = languageTag,
-                trackerNames = exodusTrackerNames,
-                apiConfigured = exodusApiConfigured,
-                loading = exodusLoading,
-                context = context,
-            )
-        }
-        item { CatalogMetaCard(row) }
-        item { CatalogLinksCard(row = row, context = context) }
-        item { CatalogScreenshotsSection(row.phoneScreenshotUrls) }
-        item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -294,6 +272,8 @@ private fun CatalogDetailContent(
         item {
             CatalogWatchActions(isWatching = isWatching, onToggleWatch = onToggleWatch)
         }
+        item { CatalogSourcesAndLinks(row = row, context = context) }
+        item { CatalogScreenshotsSection(row.phoneScreenshotUrls) }
     }
 }
 
@@ -371,127 +351,35 @@ private fun CatalogHeroCard(row: DiscoveryAppRow) {
 }
 
 @Composable
-private fun CatalogMetaCard(row: DiscoveryAppRow) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.catalog_detail_sources),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = row.repoName,
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            if (row.repoAddress.isNotBlank()) {
-                Text(
-                    text = row.repoAddress,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ExodusPrivacySection(
-    packageName: String,
-    languageTag: String,
-    trackerNames: List<String>,
-    apiConfigured: Boolean,
-    loading: Boolean,
-    context: android.content.Context,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = stringResource(R.string.catalog_detail_exodus_section),
-            style = MaterialTheme.typography.titleMedium,
-        )
-        OutlinedButton(
-            onClick = {
-                val url = ExodusReportUrls.reportPageUrl(packageName, languageTag)
-                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-            },
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.catalog_detail_exodus_open))
-        }
-        when {
-            loading -> CircularProgressIndicator(modifier = Modifier.size(24.dp))
-
-            trackerNames.isNotEmpty() -> {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    trackerNames.forEach { name ->
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.errorContainer,
-                        ) {
-                            Text(
-                                text = name,
-                                style = MaterialTheme.typography.labelMedium,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            )
-                        }
-                    }
-                }
-                Text(
-                    text = stringResource(R.string.catalog_detail_exodus_attribution),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            apiConfigured -> {
-                Text(
-                    text = stringResource(R.string.catalog_detail_exodus_no_trackers),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            else -> {
-                Text(
-                    text = stringResource(R.string.catalog_detail_exodus_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CatalogLinksCard(row: DiscoveryAppRow, context: android.content.Context) {
+private fun CatalogSourcesAndLinks(row: DiscoveryAppRow, context: android.content.Context) {
     val storeUrl = CatalogShareLinks.storePageUrl(row.packageName, row.repoId, row.repoAddress)
     val sourceUrl = row.sourceCodeUrl?.takeIf { it.isNotBlank() }
-    if (storeUrl == null && sourceUrl == null) return
-
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        shape = RoundedCornerShape(16.dp),
+    Column(
         modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-        ) {
+        Text(
+            text = stringResource(R.string.catalog_detail_sources),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Text(
+            text = row.repoName,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        if (row.repoAddress.isNotBlank()) {
+            Text(
+                text = row.repoAddress,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (storeUrl != null || sourceUrl != null) {
             Text(
                 text = stringResource(R.string.catalog_detail_links),
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                modifier = Modifier.padding(top = 4.dp),
             )
             storeUrl?.let { url ->
                 TextButton(

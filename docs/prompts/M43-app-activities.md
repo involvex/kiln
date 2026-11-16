@@ -1,6 +1,6 @@
 # M43 — App activities viewer + AppDetail crash fix
 
-> Branch `m43-app-activities`. After M42 (#73) / docs (#74).
+> Shipped in [#75](https://github.com/involvex/kiln/pull/75). Branch `m43-app-activities`. After M42 (#73) / docs (#74).
 
 ## In scope
 
@@ -18,9 +18,9 @@
 
 ## Done when
 
-- [ ] App Detail opens without ViewModel crash
-- [ ] Exported activities listed; Start / pin shortcut work or show clear messages
-- [ ] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green
+- [x] App Detail opens without ViewModel crash
+- [x] Exported activities listed; Start / pin shortcut work or show clear messages
+- [x] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green
 - [ ] Manual HyperOS checklist in PR
 
 ## Manual HyperOS checklist (PR)

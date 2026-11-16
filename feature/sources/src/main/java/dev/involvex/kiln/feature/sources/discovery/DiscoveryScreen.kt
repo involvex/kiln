@@ -440,7 +440,7 @@ private fun DiscoverShelfSection(
             DiscoveryAppCard(
                 row = row,
                 compact = true,
-                modifier = Modifier.width(268.dp),
+                modifier = Modifier.width(220.dp),
                 onOpenDetail = onOpenCatalogDetail?.let { open ->
                     { open(row.packageName, row.repoId) }
                 },

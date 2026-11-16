@@ -39,9 +39,6 @@ data object SettingsIgnoredUpdatesKey
 data object SettingsNetworkKey
 
 @Serializable
-data object SettingsPrivacyKey
-
-@Serializable
 data object SettingsInstallationKey
 
 @Serializable

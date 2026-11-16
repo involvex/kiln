@@ -8,8 +8,6 @@ import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
-import dev.involvex.kiln.core.model.ExodusPrivacyPreferences
-import dev.involvex.kiln.core.model.ExodusReportRepository
 import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallQueue
@@ -38,8 +36,6 @@ class AppDetailViewModel @Inject constructor(
     private val rollbackCache: ApkRollbackCache,
     private val privilegedExecutor: PrivilegedExecutor,
     private val gitHubAuth: GitHubAuthHeaderProvider,
-    private val exodusReportRepository: ExodusReportRepository,
-    private val exodusPrivacyPreferences: ExodusPrivacyPreferences,
     private val backgroundUpdatePreferences: BackgroundUpdatePreferences,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppDetailUiState())
@@ -108,7 +104,6 @@ class AppDetailViewModel @Inject constructor(
             viewModelScope.launch {
                 _uiState.update { it.copy(hasGitHubToken = gitHubAuth.hasToken()) }
             },
-            viewModelScope.launch { loadExodus(packageName) },
         )
         refresh()
         loadActivities()
@@ -200,26 +195,6 @@ class AppDetailViewModel @Inject constructor(
             _uiState.update { it.copy(activitiesLoading = true) }
             val list = activitiesRepository.exportedActivities(pkg)
             _uiState.update { it.copy(activities = list, activitiesLoading = false) }
-        }
-    }
-
-    private suspend fun loadExodus(packageName: String) {
-        val configured = exodusPrivacyPreferences.current().isApiConfigured()
-        _uiState.update { it.copy(exodusApiConfigured = configured, exodusLoading = configured) }
-        if (!configured) {
-            _uiState.update { it.copy(exodusLoading = false, exodusTrackerNames = emptyList()) }
-            return
-        }
-        when (val result = exodusReportRepository.reportFor(packageName)) {
-            is Result.Success -> {
-                _uiState.update {
-                    it.copy(exodusLoading = false, exodusTrackerNames = result.value.trackerNames)
-                }
-            }
-
-            is Result.Failure -> {
-                _uiState.update { it.copy(exodusLoading = false, exodusTrackerNames = emptyList()) }
-            }
         }
     }
 

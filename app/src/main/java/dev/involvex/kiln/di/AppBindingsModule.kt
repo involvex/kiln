@@ -17,8 +17,6 @@ import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.core.model.BackupPreferences
 import dev.involvex.kiln.core.model.DebugLogController
 import dev.involvex.kiln.core.model.DevPreferences
-import dev.involvex.kiln.core.model.ExodusPrivacyPreferences
-import dev.involvex.kiln.core.model.ExodusReportRepository
 import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
 import dev.involvex.kiln.core.model.GitHubTokenRepository
 import dev.involvex.kiln.core.model.InstallQueue
@@ -52,8 +50,6 @@ import dev.involvex.kiln.feature.settings.data.DataStoreInstallerPreferences
 import dev.involvex.kiln.feature.settings.data.DataStoreMaintenancePreferences
 import dev.involvex.kiln.feature.settings.data.DataStoreNetworkProxyPreferences
 import dev.involvex.kiln.feature.sources.DefaultAppUpdateRepository
-import dev.involvex.kiln.feature.sources.exodus.DefaultExodusPrivacyPreferences
-import dev.involvex.kiln.feature.sources.exodus.DefaultExodusReportRepository
 import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.updatecheck.DefaultBackgroundUpdateScheduler
 import dev.involvex.kiln.feature.sources.updatecheck.PrefsUpdateObservationStore
@@ -102,14 +98,6 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindGitHubTokenRepository(impl: GitHubTokenStore): GitHubTokenRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindExodusPrivacyPreferences(impl: DefaultExodusPrivacyPreferences): ExodusPrivacyPreferences
-
-    @Binds
-    @Singleton
-    abstract fun bindExodusReportRepository(impl: DefaultExodusReportRepository): ExodusReportRepository
 
     @Binds
     @Singleton
