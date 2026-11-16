@@ -197,6 +197,9 @@ fun AppDetailScreen(
                     onGitHubChannelChange = { onEvent(AppDetailEvent.SetGitHubChannel(it)) },
                     hasGitHubToken = state.hasGitHubToken,
                     onInstallUpdate = { onEvent(AppDetailEvent.InstallUpdate) },
+                    onRequestInstallDespiteSignature = {
+                        onEvent(AppDetailEvent.RequestInstallDespiteSignature)
+                    },
                     onOpenUnknownSources = {
                         val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                             data = Uri.parse("package:${context.packageName}")
@@ -214,6 +217,24 @@ fun AppDetailScreen(
                 )
             }
         }
+    }
+
+    if (state.confirmSignatureMismatchInstall) {
+        AlertDialog(
+            onDismissRequest = { onEvent(AppDetailEvent.DismissInstallDespiteSignature) },
+            title = { Text(stringResource(R.string.feature_apps_install_anyway_title)) },
+            text = { Text(stringResource(R.string.feature_apps_install_anyway_body)) },
+            confirmButton = {
+                TextButton(onClick = { onEvent(AppDetailEvent.ConfirmInstallDespiteSignature) }) {
+                    Text(stringResource(R.string.feature_apps_install_anyway_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(AppDetailEvent.DismissInstallDespiteSignature) }) {
+                    Text(stringResource(R.string.feature_apps_install_anyway_cancel))
+                }
+            },
+        )
     }
 
     state.pendingRollback?.let { pending ->

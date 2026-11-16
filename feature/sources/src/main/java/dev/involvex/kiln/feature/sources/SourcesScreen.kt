@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,8 +38,16 @@ import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.core.model.WatchlistEntry
 
 @Composable
-fun SourcesRoute(onOpenAutoMatch: () -> Unit, modifier: Modifier = Modifier, viewModel: SourcesViewModel = hiltViewModel()) {
+fun SourcesRoute(
+    onOpenAutoMatch: () -> Unit,
+    onOpenGithubTokenSettings: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: SourcesViewModel = hiltViewModel(),
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) {
+        viewModel.refreshGithubTokenStatus()
+    }
     SourcesScreen(
         state = state,
         onSyncAll = viewModel::syncAll,
@@ -49,9 +58,7 @@ fun SourcesRoute(onOpenAutoMatch: () -> Unit, modifier: Modifier = Modifier, vie
         onObtainiumTextChange = viewModel::onObtainiumTextChange,
         onImportObtainium = viewModel::importObtainium,
         onImportObtainiumUri = viewModel::importObtainiumFromUri,
-        onGithubTokenInputChange = viewModel::onGithubTokenInputChange,
-        onSaveGithubToken = viewModel::saveGithubToken,
-        onClearGithubToken = viewModel::clearGithubToken,
+        onOpenGithubTokenSettings = onOpenGithubTokenSettings,
         onOpenAutoMatch = onOpenAutoMatch,
         onUnwatch = viewModel::unwatch,
         onClearMessage = viewModel::clearMessage,
@@ -70,9 +77,7 @@ fun SourcesScreen(
     onObtainiumTextChange: (String) -> Unit,
     onImportObtainium: () -> Unit,
     onImportObtainiumUri: (Uri) -> Unit,
-    onGithubTokenInputChange: (String) -> Unit,
-    onSaveGithubToken: () -> Unit,
-    onClearGithubToken: () -> Unit,
+    onOpenGithubTokenSettings: () -> Unit,
     onOpenAutoMatch: () -> Unit,
     onUnwatch: (String) -> Unit,
     onClearMessage: () -> Unit,
@@ -93,7 +98,7 @@ fun SourcesScreen(
             sourcesWatchlist(state.watchlist, onUnwatch)
             sourcesRepoList(state.repos, onSaveRepoMirrors)
             item { AddRepoSection(state, onAddFieldsChange, onAddRepo) }
-            item { GithubPatSection(state, onGithubTokenInputChange, onSaveGithubToken, onClearGithubToken) }
+            item { GithubPatStatusSection(state.githubTokenSet, onOpenGithubTokenSettings) }
             item {
                 ObtainiumSection(
                     obtainiumText = state.obtainiumText,
@@ -400,33 +405,19 @@ private fun AddRepoSection(
 }
 
 @Composable
-private fun GithubPatSection(
-    state: SourcesUiState,
-    onGithubTokenInputChange: (String) -> Unit,
-    onSaveGithubToken: () -> Unit,
-    onClearGithubToken: () -> Unit,
-) {
+private fun GithubPatStatusSection(tokenSet: Boolean, onOpenGithubTokenSettings: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.sources_github_pat), style = MaterialTheme.typography.titleMedium)
         Text(
-            if (state.githubTokenSet) {
+            if (tokenSet) {
                 stringResource(R.string.sources_github_pat_set)
             } else {
                 stringResource(R.string.sources_github_pat_hint)
             },
             style = MaterialTheme.typography.bodySmall,
         )
-        OutlinedTextField(
-            value = state.githubTokenInput,
-            onValueChange = onGithubTokenInputChange,
-            label = { Text(stringResource(R.string.sources_github_pat_label)) },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Button(onClick = onSaveGithubToken, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.sources_github_pat_save))
-        }
-        TextButton(onClick = onClearGithubToken) {
-            Text(stringResource(R.string.sources_github_pat_clear))
+        OutlinedButton(onClick = onOpenGithubTokenSettings, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.sources_github_pat_open_settings))
         }
     }
 }

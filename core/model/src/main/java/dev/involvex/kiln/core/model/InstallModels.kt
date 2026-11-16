@@ -31,7 +31,12 @@ data class InstallJobState(
 interface InstallQueue {
     fun jobs(): Flow<Map<String, InstallJobState>>
 
-    suspend fun enqueue(update: AppUpdateInfo): Result<String>
+    /**
+     * Enqueue a download + install. For installed packages with a known signer mismatch
+     * ([AppUpdateInfo.confidence] WARNING), pass [allowSignatureMismatch] after an explicit
+     * user confirm. Auto-install / Update-all / automation must leave it false.
+     */
+    suspend fun enqueue(update: AppUpdateInfo, allowSignatureMismatch: Boolean = false): Result<String>
 
     /** Install a local APK file (backup restore). Skips network download. */
     suspend fun enqueueLocal(request: LocalInstallRequest): Result<String>

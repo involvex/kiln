@@ -287,6 +287,10 @@ class SourcesViewModel @Inject constructor(
         }
     }
 
+    fun refreshGithubTokenStatus() {
+        _uiState.update { it.copy(githubTokenSet = tokenStore.getToken() != null) }
+    }
+
     fun saveGithubToken() {
         val token = _uiState.value.githubTokenInput
         tokenStore.setToken(token.ifBlank { null })

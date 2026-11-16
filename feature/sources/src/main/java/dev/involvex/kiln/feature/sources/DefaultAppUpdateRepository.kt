@@ -115,7 +115,7 @@ class DefaultAppUpdateRepository @Inject constructor(
             null
         }
         val best = listOfNotNull(fromIndex, fromGitHub)
-            .filter { it.signatureMatches || it.confidence == MatchConfidence.WARNING }
+            .filter { isInstallableUpdateCandidate(it) }
             .maxWithOrNull(
                 compareBy<AppUpdateInfo> { it.signatureMatches }
                     .thenBy { it.availableVersionCode },
@@ -456,6 +456,18 @@ class DefaultAppUpdateRepository @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    companion object {
+        /**
+         * Matching certs, known WARNUNG mismatches, and unknown-signer rows with a download URL
+         * (GitHub MEDIUM) are kept. Empty MEDIUM without a URL is dropped.
+         */
+        fun isInstallableUpdateCandidate(info: AppUpdateInfo): Boolean {
+            if (info.signatureMatches) return true
+            if (info.confidence == MatchConfidence.WARNING) return true
+            return info.confidence == MatchConfidence.MEDIUM && !info.downloadUrl.isNullOrBlank()
         }
     }
 }

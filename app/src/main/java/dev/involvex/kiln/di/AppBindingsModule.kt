@@ -19,6 +19,7 @@ import dev.involvex.kiln.core.model.DevPreferences
 import dev.involvex.kiln.core.model.ExodusPrivacyPreferences
 import dev.involvex.kiln.core.model.ExodusReportRepository
 import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
+import dev.involvex.kiln.core.model.GitHubTokenRepository
 import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.InstallerPreferences
@@ -95,6 +96,10 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindGitHubAuthHeaderProvider(impl: GitHubTokenStore): GitHubAuthHeaderProvider
+
+    @Binds
+    @Singleton
+    abstract fun bindGitHubTokenRepository(impl: GitHubTokenStore): GitHubTokenRepository
 
     @Binds
     @Singleton

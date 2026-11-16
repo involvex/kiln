@@ -131,14 +131,16 @@ class InstallWorker @AssistedInject constructor(
 
             is KilnResult.Success -> Unit
         }
-        when (val sig = ApkSignatureGate.check(appContext.packageManager, job.packageName, apkFile)) {
-            is KilnResult.Failure -> {
-                apkFile.delete()
-                mark(jobId, InstallJobStatus.FAILED, 100, sig.message, null)
-                return Result.failure(workDataOf(KEY_ERROR to sig.message))
-            }
+        if (!job.allowSignatureMismatch) {
+            when (val sig = ApkSignatureGate.check(appContext.packageManager, job.packageName, apkFile)) {
+                is KilnResult.Failure -> {
+                    apkFile.delete()
+                    mark(jobId, InstallJobStatus.FAILED, 100, sig.message, null)
+                    return Result.failure(workDataOf(KEY_ERROR to sig.message))
+                }
 
-            is KilnResult.Success -> Unit
+                is KilnResult.Success -> Unit
+            }
         }
 
         mark(jobId, InstallJobStatus.INSTALLING, 95, null, apkFile.absolutePath)

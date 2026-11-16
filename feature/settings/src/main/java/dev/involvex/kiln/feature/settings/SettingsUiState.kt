@@ -19,6 +19,8 @@ data class SettingsUiState(
     val exodusPrivacy: ExodusPrivacyPrefs = ExodusPrivacyPrefs(),
     val exodusBaseUrlInput: String = "",
     val exodusTokenInput: String = "",
+    val githubTokenSet: Boolean = false,
+    val githubTokenInput: String = "",
     val automation: AutomationPrefs = AutomationPrefs(),
     val maintenance: MaintenancePrefs = MaintenancePrefs(),
     val lastMaintenanceRun: MaintenanceRunRecord? = null,

@@ -93,6 +93,8 @@ data class InstallJobEntity(
     val localApkPath: String? = null,
     val requiresGitHubAuth: Boolean = false,
     val apkAssetRegex: String? = null,
+    /** When true, InstallWorker skips ApkSignatureGate (user confirmed known mismatch). */
+    val allowSignatureMismatch: Boolean = false,
     val createdAtEpochMs: Long,
     val updatedAtEpochMs: Long,
 )

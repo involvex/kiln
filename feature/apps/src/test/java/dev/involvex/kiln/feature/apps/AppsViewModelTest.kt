@@ -275,7 +275,7 @@ class AppsViewModelTest {
 
         override fun jobs(): Flow<Map<String, InstallJobState>> = flowOf(emptyMap())
 
-        override suspend fun enqueue(update: AppUpdateInfo): Result<String> {
+        override suspend fun enqueue(update: AppUpdateInfo, allowSignatureMismatch: Boolean): Result<String> {
             enqueued += update
             return Result.success("job-${update.packageName}")
         }

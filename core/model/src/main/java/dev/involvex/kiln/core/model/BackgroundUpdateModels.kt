@@ -12,7 +12,16 @@ data class BackgroundUpdatePrefs(
     val autoInstallMatching: Boolean = false,
     /** Days to wait after Kiln first sees an update before auto-install. 0 = off. */
     val updateCooldownDays: Int = 0,
-)
+    /** Periodic check interval in hours. Only 12, 24, or 168. */
+    val checkIntervalHours: Int = DEFAULT_CHECK_INTERVAL_HOURS,
+) {
+    companion object {
+        const val DEFAULT_CHECK_INTERVAL_HOURS: Int = 12
+        val ALLOWED_CHECK_INTERVAL_HOURS: Set<Int> = setOf(12, 24, 168)
+
+        fun sanitizeIntervalHours(hours: Int): Int = if (hours in ALLOWED_CHECK_INTERVAL_HOURS) hours else DEFAULT_CHECK_INTERVAL_HOURS
+    }
+}
 
 /**
  * Persisted prefs (DataStore). Implemented in `:feature:settings`, bound in `:app`.
@@ -29,6 +38,8 @@ interface BackgroundUpdatePreferences {
     suspend fun setAutoInstallMatching(autoInstallMatching: Boolean)
 
     suspend fun setUpdateCooldownDays(days: Int)
+
+    suspend fun setCheckIntervalHours(hours: Int)
 }
 
 /**

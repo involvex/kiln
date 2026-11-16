@@ -26,8 +26,9 @@ class DefaultBackgroundUpdateScheduler @Inject constructor(@ApplicationContext p
             Timber.d("Cancelled periodic update check")
             return
         }
+        val intervalHours = BackgroundUpdatePrefs.sanitizeIntervalHours(prefs.checkIntervalHours).toLong()
         val request = PeriodicWorkRequestBuilder<UpdateCheckWorker>(
-            REPEAT_INTERVAL_HOURS,
+            intervalHours,
             TimeUnit.HOURS,
         )
             .setConstraints(UpdateCheckConstraints.from(prefs))
@@ -38,7 +39,11 @@ class DefaultBackgroundUpdateScheduler @Inject constructor(@ApplicationContext p
             ExistingPeriodicWorkPolicy.UPDATE,
             request,
         )
-        Timber.d("Scheduled periodic update check (unmeteredOnly=%s)", prefs.unmeteredOnly)
+        Timber.d(
+            "Scheduled periodic update check (intervalHours=%s unmeteredOnly=%s)",
+            intervalHours,
+            prefs.unmeteredOnly,
+        )
     }
 
     override fun enqueueImmediate() {
@@ -54,9 +59,5 @@ class DefaultBackgroundUpdateScheduler @Inject constructor(@ApplicationContext p
             ExistingWorkPolicy.REPLACE,
             request,
         )
-    }
-
-    companion object {
-        const val REPEAT_INTERVAL_HOURS = 12L
     }
 }

@@ -150,7 +150,11 @@ class AppDetailViewModel @AssistedInject constructor(
 
             AppDetailEvent.ClearSnackbar -> _uiState.update { it.copy(snackbarMessage = null) }
 
-            AppDetailEvent.InstallUpdate -> enqueueUpdate()
+            AppDetailEvent.InstallUpdate,
+            AppDetailEvent.RequestInstallDespiteSignature,
+            AppDetailEvent.DismissInstallDespiteSignature,
+            AppDetailEvent.ConfirmInstallDespiteSignature,
+            -> onInstallEvent(event)
 
             is AppDetailEvent.IgnoreUpdatesChanged -> setCheckForUpdates(event.checkForUpdates)
 
@@ -296,10 +300,29 @@ class AppDetailViewModel @AssistedInject constructor(
         }
     }
 
-    private fun enqueueUpdate() {
+    private fun onInstallEvent(event: AppDetailEvent) {
+        when (event) {
+            AppDetailEvent.InstallUpdate -> enqueueUpdate(allowSignatureMismatch = false)
+
+            AppDetailEvent.RequestInstallDespiteSignature ->
+                _uiState.update { it.copy(confirmSignatureMismatchInstall = true) }
+
+            AppDetailEvent.DismissInstallDespiteSignature ->
+                _uiState.update { it.copy(confirmSignatureMismatchInstall = false) }
+
+            AppDetailEvent.ConfirmInstallDespiteSignature -> {
+                _uiState.update { it.copy(confirmSignatureMismatchInstall = false) }
+                enqueueUpdate(allowSignatureMismatch = true)
+            }
+
+            else -> Unit
+        }
+    }
+
+    private fun enqueueUpdate(allowSignatureMismatch: Boolean) {
         val update = _uiState.value.availableUpdate ?: return
         viewModelScope.launch {
-            when (val result = installQueue.enqueue(update)) {
+            when (val result = installQueue.enqueue(update, allowSignatureMismatch = allowSignatureMismatch)) {
                 is Result.Success -> Unit
                 is Result.Failure -> showMessage(result.message)
             }

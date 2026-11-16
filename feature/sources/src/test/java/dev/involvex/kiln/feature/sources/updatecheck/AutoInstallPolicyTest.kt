@@ -22,6 +22,25 @@ class AutoInstallPolicyTest {
     }
 
     @Test
+    fun github_unknown_signer_never_auto_installed() {
+        val updates = listOf(
+            matching("ok"),
+            AppUpdateInfo(
+                packageName = "gh",
+                availableVersionName = "2",
+                availableVersionCode = 2,
+                sourceId = "github:o/r",
+                sourceLabel = "GitHub",
+                confidence = MatchConfidence.MEDIUM,
+                signatureMatches = false,
+                downloadUrl = "https://example.com/a.apk",
+            ),
+        )
+        val selected = AutoInstallPolicy.selectForEnqueue(updates, autoInstallMatching = true)
+        assertEquals(listOf("ok"), selected.map { it.packageName })
+    }
+
+    @Test
     fun watch_only_skipped() {
         val updates = listOf(matching("watched").copy(watchOnly = true), matching("ok"))
         val selected = AutoInstallPolicy.selectForEnqueue(updates, autoInstallMatching = true)
