@@ -34,10 +34,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.common.ByteSizeFormatter
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.core.model.BackupAppCandidate
 import dev.involvex.kiln.core.model.BackupContentTier
@@ -45,7 +45,8 @@ import dev.involvex.kiln.core.model.BackupPrefs
 import kotlin.math.roundToInt
 
 @Composable
-fun BackupRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, viewModel: BackupViewModel = hiltViewModel()) {
+fun BackupRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true) {
+    val viewModel = kilnHiltViewModel<BackupViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val createDoc = rememberLauncherForActivityResult(

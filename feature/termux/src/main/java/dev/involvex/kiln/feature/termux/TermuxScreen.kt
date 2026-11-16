@@ -29,15 +29,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.model.TermuxPrefs
 import dev.involvex.kiln.feature.termux.run.TermuxCommandResult
 import dev.involvex.kiln.feature.termux.run.TermuxRunCommandApi
 
 @Composable
-fun TermuxRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: TermuxViewModel = hiltViewModel()) {
+fun TermuxRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val viewModel = kilnHiltViewModel<TermuxViewModel>()
     val title = stringResource(R.string.feature_termux_title)
     LaunchedEffect(title) {
         viewModel.onScreenShown(title)

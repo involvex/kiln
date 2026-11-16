@@ -1,7 +1,5 @@
 package dev.involvex.kiln.feature.sources.discovery
 
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,11 +34,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.EmptyState
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.designsystem.component.SectionHeader
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.feature.sources.R
 
@@ -53,8 +51,7 @@ fun DiscoveryRoute(
     showTopBar: Boolean = true,
 ) {
     // Nav3 entry ViewModelStoreOwner can miss Hilt’s map; Activity owner resolves @HiltViewModel.
-    val activity = LocalActivity.current as ComponentActivity
-    val viewModel: DiscoveryViewModel = hiltViewModel(viewModelStoreOwner = activity)
+    val viewModel = kilnHiltViewModel<DiscoveryViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     DiscoveryScreen(
         state = state,

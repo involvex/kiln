@@ -6,8 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -40,9 +38,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.common.Result
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.SortDirection
@@ -56,8 +54,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppsRoute(onOpenDetail: (String) -> Unit, modifier: Modifier = Modifier, embedded: Boolean = false) {
     // Nav3 entry ViewModelStoreOwner can miss Hilt’s map; Activity owner resolves @HiltViewModel.
-    val activity = LocalActivity.current as ComponentActivity
-    val viewModel: AppsViewModel = hiltViewModel(viewModelStoreOwner = activity)
+    val viewModel = kilnHiltViewModel<AppsViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     AppsScreen(
         state = state,

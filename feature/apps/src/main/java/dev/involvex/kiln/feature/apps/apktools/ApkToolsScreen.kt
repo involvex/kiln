@@ -33,11 +33,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.EmptyState
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.designsystem.component.SectionHeader
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.core.model.ApkArchiveKind
 import dev.involvex.kiln.core.model.ApkInspectReport
@@ -58,7 +58,8 @@ private val KeystoreMimeTypes = arrayOf(
 )
 
 @Composable
-fun ApkToolsRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, viewModel: ApkToolsViewModel = hiltViewModel()) {
+fun ApkToolsRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true) {
+    val viewModel = kilnHiltViewModel<ApkToolsViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     ApkToolsScreen(
         state = state,

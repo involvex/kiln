@@ -1,8 +1,6 @@
 package dev.involvex.kiln.feature.sources
 
 import android.net.Uri
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +17,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -31,19 +30,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.core.model.WatchlistEntry
+import dev.involvex.kiln.feature.sources.github.StarredApkHint
 
 @Composable
 fun SourcesRoute(onOpenAutoMatch: () -> Unit, onOpenGithubTokenSettings: () -> Unit, modifier: Modifier = Modifier) {
-    val activity = LocalActivity.current as ComponentActivity
-    val viewModel: SourcesViewModel = hiltViewModel(viewModelStoreOwner = activity)
+    val viewModel = kilnHiltViewModel<SourcesViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         viewModel.refreshGithubTokenStatus()
@@ -61,6 +61,11 @@ fun SourcesRoute(onOpenAutoMatch: () -> Unit, onOpenGithubTokenSettings: () -> U
         onImportObtainiumUri = viewModel::importObtainiumFromUri,
         onOpenGithubTokenSettings = onOpenGithubTokenSettings,
         onOpenAutoMatch = onOpenAutoMatch,
+        onLoadStarred = viewModel::loadStarredRepos,
+        onToggleStarred = viewModel::toggleStarredSelection,
+        onSelectStarredWithApk = viewModel::selectStarredWithApkHint,
+        onClearStarredSelection = viewModel::clearStarredSelection,
+        onAddSelectedStarred = viewModel::addSelectedStarredRepos,
         onUnwatch = viewModel::unwatch,
         onClearMessage = viewModel::clearMessage,
         modifier = modifier,
@@ -81,6 +86,11 @@ fun SourcesScreen(
     onImportObtainiumUri: (Uri) -> Unit,
     onOpenGithubTokenSettings: () -> Unit,
     onOpenAutoMatch: () -> Unit,
+    onLoadStarred: () -> Unit,
+    onToggleStarred: (String) -> Unit,
+    onSelectStarredWithApk: () -> Unit,
+    onClearStarredSelection: () -> Unit,
+    onAddSelectedStarred: () -> Unit,
     onUnwatch: (String) -> Unit,
     onClearMessage: () -> Unit,
     modifier: Modifier = Modifier,
@@ -101,6 +111,17 @@ fun SourcesScreen(
             sourcesRepoList(state.repos, onSaveRepoMirrors, onMoveRepoPriority)
             item { AddRepoSection(state, onAddFieldsChange, onAddRepo) }
             item { GithubPatStatusSection(state.githubTokenSet, onOpenGithubTokenSettings) }
+            item {
+                GithubStarsSection(
+                    state = state,
+                    onOpenGithubTokenSettings = onOpenGithubTokenSettings,
+                    onLoadStarred = onLoadStarred,
+                    onToggleStarred = onToggleStarred,
+                    onSelectStarredWithApk = onSelectStarredWithApk,
+                    onClearStarredSelection = onClearStarredSelection,
+                    onAddSelectedStarred = onAddSelectedStarred,
+                )
+            }
             item {
                 ObtainiumSection(
                     obtainiumText = state.obtainiumText,
@@ -145,10 +166,36 @@ private val EXACT_MESSAGE_RES = mapOf(
     "index_oom" to R.string.sources_msg_index_oom,
     "share_unrecognized" to R.string.sources_msg_share_unrecognized,
     "sync_cancelled" to R.string.sources_msg_sync_cancelled,
+    "github_pat_required" to R.string.sources_msg_github_pat_required,
+    "stars_empty" to R.string.sources_msg_stars_empty,
+    "stars_none_selected" to R.string.sources_msg_stars_none_selected,
+    "stars_unauthorized" to R.string.sources_msg_stars_unauthorized,
+    "stars_rate_limited" to R.string.sources_msg_stars_rate_limited,
 )
 
 @Composable
-private fun formatPrefixedMessage(code: String): String? = when {
+private fun formatPrefixedMessage(code: String): String? {
+    formatStarsPrefixedMessage(code)?.let { return it }
+    return formatSyncPrefixedMessage(code) ?: formatMiscPrefixedMessage(code)
+}
+
+@Composable
+private fun formatStarsPrefixedMessage(code: String): String? = when {
+    code.startsWith("stars_added:") -> {
+        val parts = code.removePrefix("stars_added:").split(':')
+        val added = parts.getOrNull(0)?.toIntOrNull() ?: 0
+        val existed = parts.getOrNull(1)?.toIntOrNull() ?: 0
+        stringResource(R.string.sources_msg_stars_added, added, existed)
+    }
+
+    code.startsWith("stars_failed:") ->
+        stringResource(R.string.sources_msg_stars_failed, code.removePrefix("stars_failed:"))
+
+    else -> null
+}
+
+@Composable
+private fun formatMiscPrefixedMessage(code: String): String? = when {
     code.startsWith("package_page:") ->
         stringResource(R.string.sources_msg_package_page, code.removePrefix("package_page:"))
 
@@ -161,6 +208,11 @@ private fun formatPrefixedMessage(code: String): String? = when {
     code.startsWith("obtainium:") ->
         stringResource(R.string.sources_msg_obtainium_imported, code.substringAfter(':'))
 
+    else -> null
+}
+
+@Composable
+private fun formatSyncPrefixedMessage(code: String): String? = when {
     code.startsWith("sync_ok:") ->
         stringResource(R.string.sources_msg_sync_ok, code.substringAfter(':'))
 
@@ -460,6 +512,115 @@ private fun GithubPatStatusSection(tokenSet: Boolean, onOpenGithubTokenSettings:
             Text(stringResource(R.string.sources_github_pat_open_settings))
         }
     }
+}
+
+@Composable
+private fun GithubStarsSection(
+    state: SourcesUiState,
+    onOpenGithubTokenSettings: () -> Unit,
+    onLoadStarred: () -> Unit,
+    onToggleStarred: (String) -> Unit,
+    onSelectStarredWithApk: () -> Unit,
+    onClearStarredSelection: () -> Unit,
+    onAddSelectedStarred: () -> Unit,
+) {
+    val selectedCount = state.starredRepos.count { it.selected }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.sources_stars_title), style = MaterialTheme.typography.titleMedium)
+        Text(
+            stringResource(R.string.sources_stars_hint),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        if (!state.githubTokenSet) {
+            OutlinedButton(onClick = onOpenGithubTokenSettings, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.sources_github_pat_open_settings))
+            }
+        } else {
+            Button(
+                onClick = onLoadStarred,
+                enabled = !state.starredLoading,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.sources_stars_load))
+            }
+        }
+        if (state.starredLoading) {
+            CircularProgressIndicator()
+        }
+        if (state.starredScanningApk) {
+            Text(
+                stringResource(R.string.sources_stars_scanning),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        if (state.starredLoaded && state.starredRepos.isNotEmpty()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = onSelectStarredWithApk) {
+                    Text(stringResource(R.string.sources_stars_select_apk))
+                }
+                OutlinedButton(onClick = onClearStarredSelection) {
+                    Text(stringResource(R.string.sources_stars_clear_selection))
+                }
+            }
+            Button(
+                onClick = onAddSelectedStarred,
+                enabled = selectedCount > 0,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.sources_stars_add_selected, selectedCount))
+            }
+            state.starredRepos.forEach { row ->
+                StarredRepoRow(row = row, onToggle = { onToggleStarred(row.ownerRepo) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun StarredRepoRow(row: StarredRepoUiModel, onToggle: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Checkbox(
+                checked = row.selected,
+                onCheckedChange = { onToggle() },
+                enabled = !row.alreadyManaged,
+            )
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(row.ownerRepo, style = MaterialTheme.typography.titleSmall)
+                row.description?.takeIf { it.isNotBlank() }?.let { desc ->
+                    Text(desc, style = MaterialTheme.typography.bodySmall, maxLines = 2)
+                }
+                Text(
+                    starredStatusLabel(row),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun starredStatusLabel(row: StarredRepoUiModel): String {
+    val parts = buildList {
+        if (row.alreadyManaged) add(stringResource(R.string.sources_stars_already_managed))
+        if (row.fork) add(stringResource(R.string.sources_stars_fork))
+        add(
+            when (row.apkHint) {
+                StarredApkHint.UNKNOWN -> stringResource(R.string.sources_stars_apk_unknown)
+                StarredApkHint.HAS_APK -> stringResource(R.string.sources_stars_apk_yes)
+                StarredApkHint.NO_APK -> stringResource(R.string.sources_stars_apk_no)
+                StarredApkHint.CHECK_FAILED -> stringResource(R.string.sources_stars_apk_failed)
+            },
+        )
+    }
+    return parts.joinToString(" · ")
 }
 
 @Composable

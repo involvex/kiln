@@ -37,20 +37,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.model.FreezeApp
 import dev.involvex.kiln.core.model.FreezeListFilter
 import dev.involvex.kiln.feature.permissions.R
 
 @Composable
-fun FreezeRoute(
-    onBack: () -> Unit,
-    onOpenPrivilegeSetup: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: FreezeViewModel = hiltViewModel(),
-) {
+fun FreezeRoute(onBack: () -> Unit, onOpenPrivilegeSetup: () -> Unit, modifier: Modifier = Modifier) {
+    val viewModel = kilnHiltViewModel<FreezeViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     FreezeScreen(
         state = state,

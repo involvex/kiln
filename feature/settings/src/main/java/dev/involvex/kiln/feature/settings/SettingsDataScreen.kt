@@ -15,14 +15,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.model.KilnConfigFilenames
 import dev.involvex.kiln.core.model.KilnConfigImportPreview
 import kotlinx.coroutines.delay
 
 @Composable
-fun SettingsDataRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsDataRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val viewModel = kilnHiltViewModel<SettingsViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val exportConfig = rememberLauncherForActivityResult(
