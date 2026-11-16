@@ -53,7 +53,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 :feature:debloat          Debloat (denylist, snapshot, disable/restore)
 :feature:backup           APK .kilnbackup.zip via SAF + restore via InstallQueue
 :feature:termux           Optional RUN_COMMAND (feature flag, configurable packageId)
-:feature:settings         Privilege, Debloat, Termux, About, background-update / automation / maintenance prefs
+:feature:settings         Category hub (Appearance, Updates+GitHub PAT, Network, Tools, …); background-update / automation / maintenance prefs
 :feature:maintenance      Scheduled maintenance WorkManager + run protocol
 ```
 

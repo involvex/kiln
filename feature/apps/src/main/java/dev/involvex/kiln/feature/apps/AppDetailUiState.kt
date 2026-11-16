@@ -29,6 +29,7 @@ data class AppDetailUiState(
     val canSilentDowngrade: Boolean = false,
     val pendingRollback: RollbackApkEntry? = null,
     val rollbackInProgress: Boolean = false,
+    val confirmSignatureMismatchInstall: Boolean = false,
     val exodusTrackerNames: List<String> = emptyList(),
     val exodusApiConfigured: Boolean = false,
     val exodusLoading: Boolean = false,
@@ -44,6 +45,9 @@ sealed interface AppDetailEvent {
     data object DismissExport : AppDetailEvent
     data object ClearSnackbar : AppDetailEvent
     data object InstallUpdate : AppDetailEvent
+    data object RequestInstallDespiteSignature : AppDetailEvent
+    data object ConfirmInstallDespiteSignature : AppDetailEvent
+    data object DismissInstallDespiteSignature : AppDetailEvent
     data object OpenUnknownSourcesSettings : AppDetailEvent
     data class IgnoreUpdatesChanged(val checkForUpdates: Boolean) : AppDetailEvent
     data object OpenLinkSource : AppDetailEvent

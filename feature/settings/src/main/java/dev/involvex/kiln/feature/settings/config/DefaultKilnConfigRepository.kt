@@ -145,6 +145,7 @@ class DefaultKilnConfigRepository @Inject constructor(
                     unmeteredOnly = bg.unmeteredOnly,
                     autoInstallMatching = bg.autoInstallMatching,
                     updateCooldownDays = bg.updateCooldownDays,
+                    checkIntervalHours = bg.checkIntervalHours,
                 ),
                 automation = KilnConfigAutomationV1(enabled = auto.enabled),
                 maintenance = KilnConfigMaintenanceV1(
@@ -185,6 +186,9 @@ class DefaultKilnConfigRepository @Inject constructor(
             backgroundUpdatePreferences.setUnmeteredOnly(section.unmeteredOnly)
             backgroundUpdatePreferences.setAutoInstallMatching(section.autoInstallMatching)
             backgroundUpdatePreferences.setUpdateCooldownDays(section.updateCooldownDays)
+            section.checkIntervalHours?.let { hours ->
+                backgroundUpdatePreferences.setCheckIntervalHours(hours)
+            }
             applied++
         }
         prefs.automation?.let { section ->

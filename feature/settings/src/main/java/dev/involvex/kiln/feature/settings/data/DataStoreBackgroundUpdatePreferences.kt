@@ -44,11 +44,20 @@ class DataStoreBackgroundUpdatePreferences @Inject constructor(@ApplicationConte
         store.edit { it[KEY_COOLDOWN_DAYS] = days.coerceIn(0, MAX_COOLDOWN_DAYS) }
     }
 
+    override suspend fun setCheckIntervalHours(hours: Int) {
+        store.edit {
+            it[KEY_CHECK_INTERVAL_HOURS] = BackgroundUpdatePrefs.sanitizeIntervalHours(hours)
+        }
+    }
+
     private fun Preferences.toPrefs() = BackgroundUpdatePrefs(
         enabled = this[KEY_ENABLED] ?: false,
         unmeteredOnly = this[KEY_UNMETERED] ?: true,
         autoInstallMatching = this[KEY_AUTO_INSTALL] ?: false,
         updateCooldownDays = this[KEY_COOLDOWN_DAYS] ?: 0,
+        checkIntervalHours = BackgroundUpdatePrefs.sanitizeIntervalHours(
+            this[KEY_CHECK_INTERVAL_HOURS] ?: BackgroundUpdatePrefs.DEFAULT_CHECK_INTERVAL_HOURS,
+        ),
     )
 
     private companion object {
@@ -56,6 +65,7 @@ class DataStoreBackgroundUpdatePreferences @Inject constructor(@ApplicationConte
         val KEY_UNMETERED = booleanPreferencesKey("unmetered_only")
         val KEY_AUTO_INSTALL = booleanPreferencesKey("auto_install_matching")
         val KEY_COOLDOWN_DAYS = intPreferencesKey("update_cooldown_days")
+        val KEY_CHECK_INTERVAL_HOURS = intPreferencesKey("check_interval_hours")
         const val MAX_COOLDOWN_DAYS = 30
     }
 }

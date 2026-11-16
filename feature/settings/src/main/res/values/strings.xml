@@ -1,7 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="feature_settings_title">Settings</string>
-    <string name="feature_settings_description">App preferences. Privilege setup configures Shizuku for silent install and later privileged features.</string>
+    <string name="feature_settings_description">App preferences. Open a category for appearance, updates, network, tools, and more.</string>
+    <string name="settings_category_back">Back</string>
+    <string name="settings_hub_appearance">Appearance</string>
+    <string name="settings_hub_appearance_sub">Theme, language, font</string>
+    <string name="settings_hub_updates">Updates</string>
+    <string name="settings_hub_updates_sub">Background checks, interval, GitHub token</string>
+    <string name="settings_hub_network">Network</string>
+    <string name="settings_hub_network_sub">Proxy and Orbot</string>
+    <string name="settings_hub_privacy">Privacy</string>
+    <string name="settings_hub_privacy_sub">Exodus API</string>
+    <string name="settings_hub_installation">Installation</string>
+    <string name="settings_hub_installation_sub">System or Shizuku installer</string>
+    <string name="settings_hub_automation">Automation</string>
+    <string name="settings_hub_automation_sub">Intent / Broadcast API</string>
+    <string name="settings_hub_maintenance">Maintenance</string>
+    <string name="settings_hub_maintenance_sub">Scheduled cleanup</string>
+    <string name="settings_hub_tools">Tools</string>
+    <string name="settings_hub_tools_sub">Privilege, Debloat, Termux, activity log</string>
+    <string name="settings_hub_data">Data</string>
+    <string name="settings_hub_data_sub">Export and import Kiln config</string>
+    <string name="settings_hub_about">About</string>
+    <string name="settings_hub_about_sub">Version, license, debug log</string>
+    <string name="settings_about_version_unknown">unknown</string>
+    <string name="settings_check_interval">Check interval</string>
+    <string name="settings_check_interval_12h">12 hours</string>
+    <string name="settings_check_interval_1d">Daily</string>
+    <string name="settings_check_interval_7d">Weekly</string>
+    <string name="settings_github_pat_section">GitHub token</string>
+    <string name="settings_github_pat_explain">Optional personal access token for GitHub Releases (higher rate limit) and required for Nightly / Actions artifact downloads. Stored encrypted. Never exported in Kiln config.</string>
+    <string name="settings_github_pat_set">Token is set</string>
+    <string name="settings_github_pat_unset">No token saved</string>
+    <string name="settings_github_pat_label">Token</string>
+    <string name="settings_github_pat_save">Save token</string>
+    <string name="settings_github_pat_clear">Clear token</string>
+    <string name="settings_github_pat_saved">GitHub token saved</string>
+    <string name="settings_github_pat_cleared">GitHub token cleared</string>
     <string name="settings_privilege_setup">Privilege / Shizuku setup</string>
     <string name="settings_debloat">Debloat</string>
     <string name="settings_permission_audit">Permission audit</string>
@@ -32,11 +67,11 @@
     <string name="settings_activity_log_type_termux">Termux</string>
     <string name="settings_activity_log_type_automation">Automation</string>
     <string name="settings_background_updates_section">Background updates</string>
-    <string name="settings_background_updates_explain">Kiln can sync sources every 12 hours in the background and notify you when matching updates are available. Auto-install is optional and only for signature-matching APKs.</string>
+    <string name="settings_background_updates_explain">Kiln can sync sources in the background on the interval you choose and notify you when matching updates are available. Auto-install is optional and only for signature-matching APKs.</string>
     <string name="settings_background_enabled">Check for updates in the background</string>
     <string name="settings_unmetered_only">Wi‑Fi / unmetered only</string>
     <string name="settings_auto_install_matching">Auto-install signature-matching updates</string>
-    <string name="settings_auto_install_hint">WARNUNG / signature-mismatch updates are never installed automatically. Major version bumps always need a manual tap.</string>
+    <string name="settings_auto_install_hint">Signature-warning updates are never installed automatically. Major version bumps always need a manual tap.</string>
     <string name="settings_update_cooldown">Auto-install cooldown (days)</string>
     <string name="settings_update_cooldown_hint">Wait this many days after Kiln first sees an update before auto-install. 0 = off.</string>
     <string name="settings_update_cooldown_value">%1$d days</string>
@@ -72,7 +107,7 @@
     <string name="settings_config_import_confirm_body">Repos: %1$d new, %2$d update.\nManaged apps: %3$d upsert.\n%4$s\n%5$s</string>
     <string name="settings_config_import_prefs">Preference sections: %1$s</string>
     <string name="settings_config_import_prefs_none">No preference sections in file.</string>
-    <string name="settings_config_import_pat_hint">Export hinted a GitHub PAT was configured — re-enter it under Sources (especially for Nightly).</string>
+    <string name="settings_config_import_pat_hint">Export hinted a GitHub PAT was configured — re-enter it under Settings → Updates (especially for Nightly).</string>
     <string name="settings_config_import_confirm">Merge</string>
     <string name="settings_config_import_cancel">Cancel</string>
     <string name="settings_appearance_section">Appearance</string>

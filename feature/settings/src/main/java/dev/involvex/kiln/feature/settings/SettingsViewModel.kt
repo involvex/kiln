@@ -18,6 +18,7 @@ import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.core.model.DebugLogController
 import dev.involvex.kiln.core.model.DevPreferences
 import dev.involvex.kiln.core.model.ExodusPrivacyPreferences
+import dev.involvex.kiln.core.model.GitHubTokenRepository
 import dev.involvex.kiln.core.model.InstallerPreferences
 import dev.involvex.kiln.core.model.KilnConfigFilenames
 import dev.involvex.kiln.core.model.KilnConfigRepository
@@ -62,13 +63,20 @@ class SettingsViewModel @Inject constructor(
     private val scheduler: BackgroundUpdateScheduler,
     private val maintenanceScheduler: MaintenanceScheduler,
     private val kilnConfigRepository: KilnConfigRepository,
+    private val gitHubTokenRepository: GitHubTokenRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     init {
-        _uiState.update { it.copy(appVersionName = readVersionName(), appVersionCode = readVersionCode()) }
+        _uiState.update {
+            it.copy(
+                appVersionName = readVersionName(),
+                appVersionCode = readVersionCode(),
+                githubTokenSet = gitHubTokenRepository.isTokenSet(),
+            )
+        }
         viewModelScope.launch {
             preferences.observe().collect { prefs ->
                 _uiState.update { it.copy(backgroundUpdates = prefs) }
@@ -240,6 +248,37 @@ class SettingsViewModel @Inject constructor(
 
     fun setUpdateCooldownDays(days: Int) {
         viewModelScope.launch { preferences.setUpdateCooldownDays(days) }
+    }
+
+    fun setCheckIntervalHours(hours: Int) {
+        viewModelScope.launch { preferences.setCheckIntervalHours(hours) }
+    }
+
+    fun onGithubTokenInputChange(value: String) {
+        _uiState.update { it.copy(githubTokenInput = value) }
+    }
+
+    fun saveGithubToken() {
+        val token = _uiState.value.githubTokenInput
+        gitHubTokenRepository.saveToken(token)
+        _uiState.update {
+            it.copy(
+                githubTokenInput = "",
+                githubTokenSet = gitHubTokenRepository.isTokenSet(),
+                configMessage = "github_token_saved",
+            )
+        }
+    }
+
+    fun clearGithubToken() {
+        gitHubTokenRepository.clearToken()
+        _uiState.update {
+            it.copy(
+                githubTokenInput = "",
+                githubTokenSet = false,
+                configMessage = "github_token_cleared",
+            )
+        }
     }
 
     fun setTheme(theme: KilnThemeStyle) {

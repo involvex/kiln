@@ -45,6 +45,7 @@ import dev.involvex.kiln.core.model.InstallJobState
 import dev.involvex.kiln.core.model.InstallJobStatus
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.ManagedSourceLink
+import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.RollbackApkEntry
 import dev.involvex.kiln.feature.apps.R
 import dev.involvex.kiln.feature.apps.data.PlayStoreLinks
@@ -69,6 +70,7 @@ fun AppDetailContent(
     onGitHubChannelChange: (GitHubReleaseChannel) -> Unit = {},
     hasGitHubToken: Boolean = false,
     onInstallUpdate: () -> Unit = {},
+    onRequestInstallDespiteSignature: () -> Unit = {},
     onOpenUnknownSources: () -> Unit = {},
     rollbackEntries: List<RollbackApkEntry> = emptyList(),
     canSilentDowngrade: Boolean = false,
@@ -145,6 +147,7 @@ fun AppDetailContent(
             availableUpdate = availableUpdate,
             installJob = installJob,
             onInstallUpdate = onInstallUpdate,
+            onRequestInstallDespiteSignature = onRequestInstallDespiteSignature,
             onOpenUnknownSources = onOpenUnknownSources,
         )
         RollbackSection(
@@ -320,57 +323,131 @@ private fun UpdateSection(
     availableUpdate: AppUpdateInfo?,
     installJob: InstallJobState?,
     onInstallUpdate: () -> Unit,
+    onRequestInstallDespiteSignature: () -> Unit,
     onOpenUnknownSources: () -> Unit,
 ) {
     if (availableUpdate == null && installJob == null) return
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.feature_apps_update_section), style = MaterialTheme.typography.titleMedium)
         if (availableUpdate != null) {
-            Text(
-                stringResource(
-                    R.string.feature_apps_update_available,
-                    availableUpdate.availableVersionName,
-                    availableUpdate.sourceLabel,
-                ),
-                style = MaterialTheme.typography.bodyMedium,
+            UpdateAvailableBlock(
+                update = availableUpdate,
+                installJob = installJob,
+                onInstallUpdate = onInstallUpdate,
+                onRequestInstallDespiteSignature = onRequestInstallDespiteSignature,
             )
-            if (!availableUpdate.signatureMatches) {
-                Text(
-                    stringResource(R.string.feature_apps_update_signature_warning),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-            availableUpdate.releaseNotes?.takeIf { it.isNotBlank() }?.let { notes ->
-                ReleaseNotesBlock(notes = notes)
-            }
-            val canInstall = availableUpdate.signatureMatches &&
-                !availableUpdate.downloadUrl.isNullOrBlank() &&
-                installJob?.status != InstallJobStatus.DOWNLOADING &&
-                installJob?.status != InstallJobStatus.INSTALLING &&
-                installJob?.status != InstallJobStatus.VERIFYING
-            Button(onClick = onInstallUpdate, enabled = canInstall) {
+        }
+        installJob?.let { job ->
+            InstallJobStatusBlock(job = job, onOpenUnknownSources = onOpenUnknownSources)
+        }
+    }
+}
+
+@Composable
+private fun UpdateAvailableBlock(
+    update: AppUpdateInfo,
+    installJob: InstallJobState?,
+    onInstallUpdate: () -> Unit,
+    onRequestInstallDespiteSignature: () -> Unit,
+) {
+    Text(
+        stringResource(
+            R.string.feature_apps_update_available,
+            update.availableVersionName,
+            update.sourceLabel,
+        ),
+        style = MaterialTheme.typography.bodyMedium,
+    )
+    val knownMismatch = !update.signatureMatches && update.confidence == MatchConfidence.WARNING
+    val unknownSigner = !update.signatureMatches && !knownMismatch
+    SignatureNotice(knownMismatch = knownMismatch, unknownSigner = unknownSigner)
+    update.releaseNotes?.takeIf { it.isNotBlank() }?.let { notes ->
+        ReleaseNotesBlock(notes = notes)
+    }
+    UpdateInstallActions(
+        update = update,
+        installJob = installJob,
+        knownMismatch = knownMismatch,
+        unknownSigner = unknownSigner,
+        onInstallUpdate = onInstallUpdate,
+        onRequestInstallDespiteSignature = onRequestInstallDespiteSignature,
+    )
+}
+
+@Composable
+private fun SignatureNotice(knownMismatch: Boolean, unknownSigner: Boolean) {
+    when {
+        knownMismatch -> Text(
+            stringResource(R.string.feature_apps_update_signature_warning),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+
+        unknownSigner -> Text(
+            stringResource(R.string.feature_apps_update_signature_unknown),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun UpdateInstallActions(
+    update: AppUpdateInfo,
+    installJob: InstallJobState?,
+    knownMismatch: Boolean,
+    unknownSigner: Boolean,
+    onInstallUpdate: () -> Unit,
+    onRequestInstallDespiteSignature: () -> Unit,
+) {
+    val busy = installJob?.status == InstallJobStatus.DOWNLOADING ||
+        installJob?.status == InstallJobStatus.INSTALLING ||
+        installJob?.status == InstallJobStatus.VERIFYING
+    val hasUrl = !update.downloadUrl.isNullOrBlank()
+    when {
+        (update.signatureMatches || unknownSigner) && hasUrl && !busy -> {
+            Button(onClick = onInstallUpdate, enabled = true) {
                 Text(stringResource(R.string.feature_apps_action_update))
             }
         }
-        installJob?.let { job ->
-            Text(
-                stringResource(R.string.feature_apps_install_status, job.status.name, job.progressPercent),
-                style = MaterialTheme.typography.bodySmall,
-            )
-            if (job.errorMessage == "install_permission_required") {
-                TextButton(onClick = onOpenUnknownSources) {
-                    Text(stringResource(R.string.feature_apps_open_unknown_sources))
-                }
-            } else if (job.errorMessage != null) {
-                Text(
-                    stringResource(R.string.feature_apps_install_error, job.errorMessage.orEmpty()),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                )
+
+        knownMismatch && hasUrl && !busy -> {
+            Button(onClick = onInstallUpdate, enabled = false) {
+                Text(stringResource(R.string.feature_apps_action_update))
+            }
+            OutlinedButton(onClick = onRequestInstallDespiteSignature, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.feature_apps_install_anyway))
             }
         }
     }
+}
+
+@Composable
+private fun InstallJobStatusBlock(job: InstallJobState, onOpenUnknownSources: () -> Unit) {
+    Text(
+        stringResource(R.string.feature_apps_install_status, job.status.name, job.progressPercent),
+        style = MaterialTheme.typography.bodySmall,
+    )
+    when (job.errorMessage) {
+        "install_permission_required" -> TextButton(onClick = onOpenUnknownSources) {
+            Text(stringResource(R.string.feature_apps_open_unknown_sources))
+        }
+
+        null -> Unit
+
+        else -> Text(
+            installErrorText(job.errorMessage.orEmpty()),
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+}
+
+@Composable
+private fun installErrorText(key: String): String = when (key) {
+    "signature_mismatch" -> stringResource(R.string.feature_apps_install_error_signature_mismatch)
+    "install_failure_conflict" -> stringResource(R.string.feature_apps_install_error_conflict)
+    else -> stringResource(R.string.feature_apps_install_error, key)
 }
 
 @Composable

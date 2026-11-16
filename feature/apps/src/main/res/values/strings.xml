@@ -118,7 +118,15 @@
     <string name="feature_apps_update_release_notes">Release notes</string>
     <string name="feature_apps_update_release_notes_more">Show more</string>
     <string name="feature_apps_update_release_notes_less">Show less</string>
-    <string name="feature_apps_update_signature_warning">Signature does not match the installed app. Install is blocked. This often happens when F-Droid signs a rebuild of an app you installed from GitHub or Play.</string>
+    <string name="feature_apps_update_signature_warning">Signature does not match the installed app. This often happens when F-Droid signs a rebuild of an app you installed from GitHub or Play. Android usually rejects a certificate change.</string>
+    <string name="feature_apps_update_signature_unknown">Certificate is checked after download. Install proceeds only if it matches the installed app.</string>
+    <string name="feature_apps_install_anyway">Install anyway…</string>
+    <string name="feature_apps_install_anyway_title">Install despite signature warning?</string>
+    <string name="feature_apps_install_anyway_body">The repository lists a different signing certificate than the app on this device. Android usually rejects that update. Kiln will not auto-install this. Continue only if you understand the risk.</string>
+    <string name="feature_apps_install_anyway_confirm">Install anyway</string>
+    <string name="feature_apps_install_anyway_cancel">Cancel</string>
+    <string name="feature_apps_install_error_signature_mismatch">Downloaded APK signature does not match the installed app.</string>
+    <string name="feature_apps_install_error_conflict">Android rejected the install (signature or package conflict).</string>
     <string name="feature_apps_update_badge">Update %1$s</string>
     <string name="feature_apps_update_badge_warning">Signature warning · %1$s</string>
     <string name="feature_apps_install_status">Install: %1$s (%2$d%%)</string>

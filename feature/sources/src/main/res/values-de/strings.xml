@@ -113,11 +113,9 @@
     <string name="sources_msg_github_exists">GitHub-Quelle %1$s ist bereits eingerichtet.</string>
     <string name="sources_msg_share_unrecognized">Geteilter Text ist kein F-Droid-Repo-Link und keine GitHub-Repository-URL.</string>
     <string name="sources_github_pat">GitHub Personal Access Token</string>
-    <string name="sources_github_pat_hint">Optional. Ohne Token erlaubt GitHub etwa 60 Anfragen/Stunde.</string>
+    <string name="sources_github_pat_hint">Optional. Ohne Token erlaubt GitHub etwa 60 Anfragen/Stunde. Token unter Einstellungen → Updates verwalten.</string>
     <string name="sources_github_pat_set">Ein Token ist verschlüsselt auf diesem Gerät gespeichert.</string>
-    <string name="sources_github_pat_label">Token</string>
-    <string name="sources_github_pat_save">Token speichern</string>
-    <string name="sources_github_pat_clear">Token löschen</string>
+    <string name="sources_github_pat_open_settings">Updates-Einstellungen öffnen</string>
     <string name="sources_obtainium">Obtainium-/Discoverium-Export importieren</string>
     <string name="sources_obtainium_hint">Große Exporte: JSON-Datei wählen. Einfügen wird unter Android oft abgeschnitten.</string>
     <string name="sources_obtainium_pick_file">JSON-Datei wählen</string>

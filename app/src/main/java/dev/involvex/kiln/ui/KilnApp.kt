@@ -33,7 +33,17 @@ import dev.involvex.kiln.feature.onboarding.privilege.PrivilegeSetupRoute
 import dev.involvex.kiln.feature.permissions.PermissionAuditRoute
 import dev.involvex.kiln.feature.permissions.background.BackgroundControlsRoute
 import dev.involvex.kiln.feature.permissions.freeze.FreezeRoute
+import dev.involvex.kiln.feature.settings.SettingsAboutRoute
+import dev.involvex.kiln.feature.settings.SettingsAppearanceRoute
+import dev.involvex.kiln.feature.settings.SettingsAutomationRoute
+import dev.involvex.kiln.feature.settings.SettingsDataRoute
+import dev.involvex.kiln.feature.settings.SettingsInstallationRoute
+import dev.involvex.kiln.feature.settings.SettingsMaintenanceRoute
+import dev.involvex.kiln.feature.settings.SettingsNetworkRoute
+import dev.involvex.kiln.feature.settings.SettingsPrivacyRoute
 import dev.involvex.kiln.feature.settings.SettingsRoute
+import dev.involvex.kiln.feature.settings.SettingsToolsRoute
+import dev.involvex.kiln.feature.settings.SettingsUpdatesRoute
 import dev.involvex.kiln.feature.settings.activity.ActivityLogRoute
 import dev.involvex.kiln.feature.sources.SourcesRoute
 import dev.involvex.kiln.feature.sources.discovery.CatalogDetailRoute
@@ -52,7 +62,17 @@ import dev.involvex.kiln.navigation.FreezeKey
 import dev.involvex.kiln.navigation.ManageKey
 import dev.involvex.kiln.navigation.PermissionAuditKey
 import dev.involvex.kiln.navigation.PrivilegeSetupKey
+import dev.involvex.kiln.navigation.SettingsAboutKey
+import dev.involvex.kiln.navigation.SettingsAppearanceKey
+import dev.involvex.kiln.navigation.SettingsAutomationKey
+import dev.involvex.kiln.navigation.SettingsDataKey
+import dev.involvex.kiln.navigation.SettingsInstallationKey
 import dev.involvex.kiln.navigation.SettingsKey
+import dev.involvex.kiln.navigation.SettingsMaintenanceKey
+import dev.involvex.kiln.navigation.SettingsNetworkKey
+import dev.involvex.kiln.navigation.SettingsPrivacyKey
+import dev.involvex.kiln.navigation.SettingsToolsKey
+import dev.involvex.kiln.navigation.SettingsUpdatesKey
 import dev.involvex.kiln.navigation.SourcesKey
 import dev.involvex.kiln.navigation.TermuxKey
 import dev.involvex.kiln.navigation.TopLevelBackStack
@@ -151,6 +171,10 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
     entry<SourcesKey> {
         SourcesRoute(
             onOpenAutoMatch = { topLevelBackStack.add(AutoMatchKey) },
+            onOpenGithubTokenSettings = {
+                topLevelBackStack.addTopLevel(SettingsKey)
+                topLevelBackStack.add(SettingsUpdatesKey)
+            },
         )
     }
     entry<AutoMatchKey> {
@@ -171,6 +195,42 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
     }
     entry<SettingsKey> {
         SettingsRoute(
+            onOpenAppearance = { topLevelBackStack.add(SettingsAppearanceKey) },
+            onOpenUpdates = { topLevelBackStack.add(SettingsUpdatesKey) },
+            onOpenNetwork = { topLevelBackStack.add(SettingsNetworkKey) },
+            onOpenPrivacy = { topLevelBackStack.add(SettingsPrivacyKey) },
+            onOpenInstallation = { topLevelBackStack.add(SettingsInstallationKey) },
+            onOpenAutomation = { topLevelBackStack.add(SettingsAutomationKey) },
+            onOpenMaintenance = { topLevelBackStack.add(SettingsMaintenanceKey) },
+            onOpenTools = { topLevelBackStack.add(SettingsToolsKey) },
+            onOpenData = { topLevelBackStack.add(SettingsDataKey) },
+            onOpenAbout = { topLevelBackStack.add(SettingsAboutKey) },
+        )
+    }
+    entry<SettingsAppearanceKey> {
+        SettingsAppearanceRoute(onBack = { topLevelBackStack.removeLast() })
+    }
+    entry<SettingsUpdatesKey> {
+        SettingsUpdatesRoute(onBack = { topLevelBackStack.removeLast() })
+    }
+    entry<SettingsNetworkKey> {
+        SettingsNetworkRoute(onBack = { topLevelBackStack.removeLast() })
+    }
+    entry<SettingsPrivacyKey> {
+        SettingsPrivacyRoute(onBack = { topLevelBackStack.removeLast() })
+    }
+    entry<SettingsInstallationKey> {
+        SettingsInstallationRoute(onBack = { topLevelBackStack.removeLast() })
+    }
+    entry<SettingsAutomationKey> {
+        SettingsAutomationRoute(onBack = { topLevelBackStack.removeLast() })
+    }
+    entry<SettingsMaintenanceKey> {
+        SettingsMaintenanceRoute(onBack = { topLevelBackStack.removeLast() })
+    }
+    entry<SettingsToolsKey> {
+        SettingsToolsRoute(
+            onBack = { topLevelBackStack.removeLast() },
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
             onOpenDebloat = { topLevelBackStack.add(DebloatKey) },
             onOpenPermissionAudit = { topLevelBackStack.add(PermissionAuditKey) },
@@ -179,6 +239,12 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
             onOpenTermux = { topLevelBackStack.add(TermuxKey) },
             onOpenActivityLog = { topLevelBackStack.add(ActivityLogKey) },
         )
+    }
+    entry<SettingsDataKey> {
+        SettingsDataRoute(onBack = { topLevelBackStack.removeLast() })
+    }
+    entry<SettingsAboutKey> {
+        SettingsAboutRoute(onBack = { topLevelBackStack.removeLast() })
     }
     entry<PrivilegeSetupKey> {
         PrivilegeSetupRoute(onBack = { topLevelBackStack.removeLast() })

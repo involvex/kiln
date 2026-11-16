@@ -15,6 +15,7 @@ import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.InstalledAppSummary
+import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.SortDirection
 import dev.involvex.kiln.feature.apps.data.InstalledAppsRepository
 import dev.involvex.kiln.feature.apps.data.filterAndSortApps
@@ -181,7 +182,7 @@ class AppsViewModel @Inject constructor(
                 updateBadges.value = map.mapValues { (_, info) ->
                     UpdateBadgeUi(
                         versionLabel = info.availableVersionName,
-                        signatureWarning = !info.signatureMatches,
+                        signatureWarning = info.confidence == MatchConfidence.WARNING,
                     )
                 }
             }

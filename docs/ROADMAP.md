@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M36** Freeze/hibernate Done (#58). App version **0.2.3** (code 6), tag `v0.2.3`. Next: publishing / dual-user (unscheduled). HyperOS M1–M8 checklist remains a separate release gate.
+**Current status:** **M37** Settings hub in progress (`m37-settings-hub`). **M36** Freeze/hibernate Done (#58). App version **0.2.3** (code 6), tag `v0.2.3`. Next after M37: publishing / dual-user (unscheduled). HyperOS M1–M8 checklist remains a separate release gate.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -51,6 +51,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M34** | Autostart + battery | Done | [`prompts/M34-autostart-battery.md`](./prompts/M34-autostart-battery.md) · [#53](https://github.com/involvex/kiln/pull/53) | HyperOS Autostart AppOps + AOSP battery tristate via Shizuku |
 | **M35** | Universal APK merge | Done | [`prompts/M35-universal-apk-merge.md`](./prompts/M35-universal-apk-merge.md) · [#56](https://github.com/involvex/kiln/pull/56) | Merge `.apks`/`.xapk`/`.apkm` via ARSCLib + always resign (M31 keystore) |
 | **M36** | Freeze / hibernate | Done | [`prompts/M36-freeze-hibernate.md`](./prompts/M36-freeze-hibernate.md) · [#58](https://github.com/involvex/kiln/pull/58) | `pm suspend`/`unsuspend` via privilege; Settings list separate from Debloat |
+| **M37** | Settings hub + PAT + signature confirm | In progress | [`prompts/M37-settings-hub.md`](./prompts/M37-settings-hub.md) · `m37-settings-hub` | Category hub; Updates PAT + check interval; Install anyway for WARNING only |
 
 ---
 
@@ -112,7 +113,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Freeze / hibernate | ✅ M36 (#58) — `pm suspend`/`unsuspend`; Settings list (separate from Debloat) | ≥ SHIZUKU (`DEBLOAT`) |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
-| Background auto-update | ✅ Settings toggles; 12h PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg) | NONE (+ network; silent install/downgrade if SHIZUKU) |
+| Background auto-update | ✅ Settings hub → Updates; 12h / daily / weekly PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg); GitHub PAT under Updates | NONE (+ network; silent install/downgrade if SHIZUKU) |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
 | Release / store prep | ✅ version `0.2.3` (code 6); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG; F-Droid submit deferred | — |
@@ -262,7 +263,7 @@ Code for M3 is on `main`. Network + unknown-sources permission:
 - [ ] Sync Sources; open an app with a signature-matching update; Download & install runs FGS notification
 - [ ] System confirm dialog appears; after confirm, version updates in Kiln list
 - [ ] F-Droid-sourced APK with wrong SHA-256 fails closed (no install)
-- [ ] Signature WARNUNG update keeps Install button disabled
+- [x] Signature WARNUNG: primary Install disabled; optional Install anyway confirm (M37); auto-install never
 - [ ] GitHub-mapped app with matching flow can install (PAT optional)
 - [ ] Split bundles not required for M3 (single APK only)
 

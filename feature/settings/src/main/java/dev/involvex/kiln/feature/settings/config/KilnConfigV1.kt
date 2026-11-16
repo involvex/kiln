@@ -67,6 +67,8 @@ data class KilnConfigBackgroundUpdatesV1(
     val unmeteredOnly: Boolean = true,
     val autoInstallMatching: Boolean = false,
     val updateCooldownDays: Int = 0,
+    /** Null = omit on import (older configs). Only 12 / 24 / 168 when set. */
+    val checkIntervalHours: Int? = null,
 )
 
 @Serializable

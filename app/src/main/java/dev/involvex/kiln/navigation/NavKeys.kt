@@ -27,6 +27,36 @@ data object ManageKey
 data object SettingsKey
 
 @Serializable
+data object SettingsAppearanceKey
+
+@Serializable
+data object SettingsUpdatesKey
+
+@Serializable
+data object SettingsNetworkKey
+
+@Serializable
+data object SettingsPrivacyKey
+
+@Serializable
+data object SettingsInstallationKey
+
+@Serializable
+data object SettingsAutomationKey
+
+@Serializable
+data object SettingsMaintenanceKey
+
+@Serializable
+data object SettingsToolsKey
+
+@Serializable
+data object SettingsDataKey
+
+@Serializable
+data object SettingsAboutKey
+
+@Serializable
 data class CatalogDetailKey(val packageName: String, val repoId: String)
 
 @Serializable

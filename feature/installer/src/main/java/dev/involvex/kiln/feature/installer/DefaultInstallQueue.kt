@@ -36,15 +36,20 @@ class DefaultInstallQueue @Inject constructor(
         }
     }
 
-    override suspend fun enqueue(update: AppUpdateInfo): Result<String> {
+    override suspend fun enqueue(update: AppUpdateInfo, allowSignatureMismatch: Boolean): Result<String> {
         val url = update.downloadUrl?.takeIf { it.startsWith("https://") }
             ?: return Result.failure("missing_download_url")
-        if (!update.signatureMatches) {
-            val installed = installedAppsReader.userApps().any { it.packageName == update.packageName }
-            if (installed) {
-                return Result.failure("signature_mismatch")
-            }
-            // First-time install (e.g. GitHub discovery): worker verifies APK signature at install time.
+        val installed = installedAppsReader.userApps().any { it.packageName == update.packageName }
+        val decision = InstallEnqueueGate.decide(
+            signatureMatches = update.signatureMatches,
+            confidence = update.confidence,
+            packageInstalled = installed,
+            allowSignatureMismatch = allowSignatureMismatch,
+        )
+        val skipGate = when (decision) {
+            InstallEnqueueGate.Decision.Block -> return Result.failure("signature_mismatch")
+            InstallEnqueueGate.Decision.AllowSkipSignatureGate -> true
+            InstallEnqueueGate.Decision.Allow -> false
         }
         return enqueueJob(
             packageName = update.packageName,
@@ -56,6 +61,7 @@ class DefaultInstallQueue @Inject constructor(
             localApkPath = null,
             requiresGitHubAuth = update.requiresGitHubAuth,
             apkAssetRegex = update.apkAssetRegex,
+            allowSignatureMismatch = skipGate,
         )
     }
 
@@ -74,6 +80,7 @@ class DefaultInstallQueue @Inject constructor(
             localApkPath = apk.absolutePath,
             requiresGitHubAuth = false,
             apkAssetRegex = null,
+            allowSignatureMismatch = false,
         )
     }
 
@@ -87,6 +94,7 @@ class DefaultInstallQueue @Inject constructor(
         localApkPath: String?,
         requiresGitHubAuth: Boolean,
         apkAssetRegex: String?,
+        allowSignatureMismatch: Boolean,
     ): Result<String> {
         val now = System.currentTimeMillis()
         val jobId = UUID.randomUUID().toString()
@@ -105,6 +113,7 @@ class DefaultInstallQueue @Inject constructor(
                 localApkPath = localApkPath,
                 requiresGitHubAuth = requiresGitHubAuth,
                 apkAssetRegex = apkAssetRegex,
+                allowSignatureMismatch = allowSignatureMismatch,
                 createdAtEpochMs = now,
                 updatedAtEpochMs = now,
             ),
