@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M40** Backup phase 2 implementation complete on `m40-backup-phase2` (gates green; HyperOS device checklist pending PR). M39 Split APK install Done (#66). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M40** Backup phase 2 Done (#69). M39 Split APK install Done (#66). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -54,7 +54,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M37** | Settings hub + PAT + signature confirm | Done | [`prompts/M37-settings-hub.md`](./prompts/M37-settings-hub.md) · [#61](https://github.com/involvex/kiln/pull/61) | Category hub; Updates PAT + check interval; Install anyway for WARNING only |
 | **M38** | Settings polish | Done | [`prompts/M38-settings-polish.md`](./prompts/M38-settings-polish.md) · [#63](https://github.com/involvex/kiln/pull/63) | Rollback N slider; per-app cooldown; ignored-updates overview; repo priority ↑↓ |
 | **M39** | Split APK install | Done | [`prompts/M39-split-install.md`](./prompts/M39-split-install.md) · [#66](https://github.com/involvex/kiln/pull/66) | SAF + Share/VIEW for `.apks`/`.xapk`/`.apkm`; PackageInstaller multi-session; optional silent `install-multiple` |
-| **M40** | Backup phase 2 | Gates green | [`prompts/M40-backup-phase2.md`](./prompts/M40-backup-phase2.md) · `m40-backup-phase2` | SAF tree + keep-N; Shizuku Android/data+obb; optional AES-GCM (no Root); HyperOS checklist pending |
+| **M40** | Backup phase 2 | Done | [`prompts/M40-backup-phase2.md`](./prompts/M40-backup-phase2.md) · [#69](https://github.com/involvex/kiln/pull/69) | SAF tree + keep-N; Shizuku Android/data+obb; optional AES-GCM (no Root) |
 
 ---
 
@@ -76,7 +76,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Widgets / QS | Done | M26 #40 |
 | Permission audit | Done | M27 #41 |
 | Storage phase 2 | Done | M28 #44 |
-| SAF backup rotation / data tiers / encryption | Gates green (M40) | SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM; ROOT deferred; HyperOS checklist pending |
+| SAF backup rotation / data tiers / encryption | Done (M40 #69) | SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM; ROOT / cloud deferred |
 | APK tools 2 (inspect + compare) | Done | M29 (#47); M31 (#49); universal merge M35 (#56) |
 | Mirrors / proxy | Done | M30 #48 |
 | Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); dual-user / tablet unscheduled |
@@ -318,8 +318,8 @@ flowchart LR
   M39 --> M40[M40 Backup phase 2]
 ```
 
-1. **M0–M39** on main (#66); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
-2. **M40** Backup phase 2 (`m40-backup-phase2`) — SAF tree + keep-N + Shizuku data + optional AES-GCM.
+1. **M0–M40** on main (#69); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
+2. No further feature milestone scheduled — pick from PLAN §12 (dual-user / tablet layouts / cloud backup) or release gates.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

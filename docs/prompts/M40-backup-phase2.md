@@ -1,6 +1,6 @@
 # M40 — Backup phase 2 (SAF + Shizuku data)
 
-> Branch `m40-backup-phase2`. After `v0.2.4` (#68) / M39 (#66).
+> Shipped in [#69](https://github.com/involvex/kiln/pull/69). Branch `m40-backup-phase2`. After `v0.2.4` (#68) / M39 (#66).
 
 ## In scope
 

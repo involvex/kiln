@@ -448,4 +448,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 15. **M37** Settings hub + PAT + signature confirm (Done #61)
 16. **M38** Settings polish (Done #63)
 17. **M39** Split APK install (Done #66)
-18. **M40** Backup phase 2 — SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM (no Root)
+18. **M40** Backup phase 2 — SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM (no Root) → **Done (#69)**
