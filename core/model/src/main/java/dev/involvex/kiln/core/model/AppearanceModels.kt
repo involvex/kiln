@@ -9,6 +9,7 @@ enum class KilnThemeStyle {
     AMOLED,
     MONOKAI,
     OCEAN,
+    HACKER,
 }
 
 enum class KilnLanguage {

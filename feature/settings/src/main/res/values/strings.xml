@@ -118,8 +118,9 @@
     <string name="settings_theme_amoled">AMOLED</string>
     <string name="settings_theme_monokai">Monokai</string>
     <string name="settings_theme_ocean">Ocean</string>
+    <string name="settings_theme_hacker">Hacker</string>
     <string name="settings_dynamic_color">Dynamic color</string>
-    <string name="settings_dynamic_color_hint">Material You colors from the wallpaper (Android 12+). Ignored for Monokai and Ocean.</string>
+    <string name="settings_dynamic_color_hint">Material You colors from the wallpaper (Android 12+). Ignored for Monokai, Ocean, and Hacker.</string>
     <string name="settings_language">Language</string>
     <string name="settings_language_system">System</string>
     <string name="settings_language_english">English</string>

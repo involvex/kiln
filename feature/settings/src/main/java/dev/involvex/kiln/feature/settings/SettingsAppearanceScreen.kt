@@ -66,6 +66,7 @@ internal fun AppearanceSection(
         ThemeChip(KilnThemeStyle.AMOLED, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_amoled))
         ThemeChip(KilnThemeStyle.MONOKAI, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_monokai))
         ThemeChip(KilnThemeStyle.OCEAN, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_ocean))
+        ThemeChip(KilnThemeStyle.HACKER, prefs.theme, onThemeChange, stringResource(R.string.settings_theme_hacker))
     }
     val dynamicSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val dynamicAllowed = prefs.theme.allowsDynamicColor()

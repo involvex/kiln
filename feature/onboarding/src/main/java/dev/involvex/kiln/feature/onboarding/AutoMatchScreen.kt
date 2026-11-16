@@ -25,13 +25,17 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +53,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.model.MatchConfidence
+import dev.involvex.kiln.feature.onboarding.match.AutoMatchConfidenceFilter
+import dev.involvex.kiln.feature.onboarding.match.AutoMatchListFilter
 import dev.involvex.kiln.feature.onboarding.match.MatchCandidate
 
 @Composable
@@ -69,6 +75,10 @@ fun AutoMatchRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel:
         onDismissWarningConfirm = viewModel::dismissWarningConfirm,
         onConfirmWarningAccept = viewModel::confirmWarningAccept,
         onClearMessage = viewModel::clearMessage,
+        onSearchQueryChange = viewModel::setSearchQuery,
+        onConfidenceFilterChange = viewModel::setConfidenceFilter,
+        onShowLinkedChange = viewModel::setShowLinked,
+        onConsumeSnackbar = viewModel::consumeSnackbar,
         modifier = modifier,
     )
 }
@@ -89,11 +99,25 @@ fun AutoMatchScreen(
     onDismissWarningConfirm: () -> Unit,
     onConfirmWarningAccept: () -> Unit,
     onClearMessage: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onConfidenceFilterChange: (AutoMatchConfidenceFilter) -> Unit,
+    onShowLinkedChange: (Boolean) -> Unit,
+    onConsumeSnackbar: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val linkedMessage = state.snackbarLinkedCount?.let { count ->
+        stringResource(R.string.onboarding_accepted_count, count)
+    }
+    LaunchedEffect(linkedMessage) {
+        val message = linkedMessage ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(message)
+        onConsumeSnackbar()
+    }
     KilnScaffold(
         title = stringResource(R.string.onboarding_auto_match_title),
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         if (state.isLoading) {
             LoadingPane(Modifier.padding(padding))
@@ -109,6 +133,9 @@ fun AutoMatchScreen(
                 onOpenLink = onOpenLink,
                 onRequestWarningAccept = onRequestWarningAccept,
                 onClearMessage = onClearMessage,
+                onSearchQueryChange = onSearchQueryChange,
+                onConfidenceFilterChange = onConfidenceFilterChange,
+                onShowLinkedChange = onShowLinkedChange,
             )
         }
     }
@@ -178,6 +205,45 @@ private fun AutoMatchDialogs(
     }
 }
 
+private data class FilteredMatchGroups(
+    val high: List<MatchCandidate>,
+    val medium: List<MatchCandidate>,
+    val warning: List<MatchCandidate>,
+    val none: List<MatchCandidate>,
+) {
+    val isEmpty: Boolean
+        get() = listOf(high, medium, warning, none).all { it.isEmpty() }
+}
+
+@Composable
+private fun rememberFilteredGroups(state: AutoMatchUiState): FilteredMatchGroups {
+    val high = AutoMatchListFilter.filter(
+        state.high,
+        state.searchQuery,
+        state.confidenceFilter,
+        state.showLinked,
+    )
+    val medium = AutoMatchListFilter.filter(
+        state.medium,
+        state.searchQuery,
+        state.confidenceFilter,
+        state.showLinked,
+    )
+    val warning = AutoMatchListFilter.filter(
+        state.warning,
+        state.searchQuery,
+        state.confidenceFilter,
+        state.showLinked,
+    )
+    val none = AutoMatchListFilter.filter(
+        state.none,
+        state.searchQuery,
+        state.confidenceFilter,
+        state.showLinked,
+    )
+    return FilteredMatchGroups(high, medium, warning, none)
+}
+
 @Composable
 private fun AutoMatchList(
     state: AutoMatchUiState,
@@ -190,7 +256,11 @@ private fun AutoMatchList(
     onOpenLink: (MatchCandidate) -> Unit,
     onRequestWarningAccept: (MatchCandidate) -> Unit,
     onClearMessage: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onConfidenceFilterChange: (AutoMatchConfidenceFilter) -> Unit,
+    onShowLinkedChange: (Boolean) -> Unit,
 ) {
+    val groups = rememberFilteredGroups(state)
     val titleHigh = stringResource(R.string.onboarding_group_high)
     val titleMedium = stringResource(R.string.onboarding_group_medium)
     val titleWarning = stringResource(R.string.onboarding_group_warning)
@@ -202,58 +272,151 @@ private fun AutoMatchList(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        item {
-            Button(onClick = onBack) { Text(stringResource(R.string.onboarding_back)) }
-        }
-        item {
-            Text(stringResource(R.string.onboarding_auto_match_body), style = MaterialTheme.typography.bodyMedium)
-        }
-        if (state.indexEmpty) {
-            item {
-                Text(
-                    text = stringResource(R.string.onboarding_index_empty),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-        }
-        item { ActionRow(onAcceptAllSafe, onAcceptSelected, onRefresh) }
-        state.messageAcceptedCount?.let { count ->
-            item {
-                Text(
-                    text = stringResource(R.string.onboarding_accepted_count, count),
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable(onClick = onClearMessage),
-                )
-            }
-        }
-        state.messageErrorKey?.let { key ->
-            item {
-                Text(
-                    text = errorMessage(key),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.clickable(onClick = onClearMessage),
-                )
-            }
-        }
-        matchSection(titleHigh, state.high, state.selected, true, onToggle, onOpenLink, onRequestWarningAccept)
-        matchSection(titleMedium, state.medium, state.selected, true, onToggle, onOpenLink, onRequestWarningAccept)
-        matchSection(titleWarning, state.warning, state.selected, false, onToggle, onOpenLink, onRequestWarningAccept)
-        matchSection(titleNone, state.none, state.selected, false, onToggle, onOpenLink, onRequestWarningAccept)
+        autoMatchHeader(
+            state = state,
+            groupsEmpty = groups.isEmpty,
+            onBack = onBack,
+            onAcceptAllSafe = onAcceptAllSafe,
+            onAcceptSelected = onAcceptSelected,
+            onRefresh = onRefresh,
+            onClearMessage = onClearMessage,
+            onSearchQueryChange = onSearchQueryChange,
+            onConfidenceFilterChange = onConfidenceFilterChange,
+            onShowLinkedChange = onShowLinkedChange,
+        )
+        matchSection(titleHigh, groups.high, state.selected, true, onToggle, onOpenLink, onRequestWarningAccept)
+        matchSection(titleMedium, groups.medium, state.selected, true, onToggle, onOpenLink, onRequestWarningAccept)
+        matchSection(titleWarning, groups.warning, state.selected, false, onToggle, onOpenLink, onRequestWarningAccept)
+        matchSection(titleNone, groups.none, state.selected, false, onToggle, onOpenLink, onRequestWarningAccept)
     }
 }
 
+private fun LazyListScope.autoMatchHeader(
+    state: AutoMatchUiState,
+    groupsEmpty: Boolean,
+    onBack: () -> Unit,
+    onAcceptAllSafe: () -> Unit,
+    onAcceptSelected: () -> Unit,
+    onRefresh: () -> Unit,
+    onClearMessage: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onConfidenceFilterChange: (AutoMatchConfidenceFilter) -> Unit,
+    onShowLinkedChange: (Boolean) -> Unit,
+) {
+    item {
+        Button(onClick = onBack) { Text(stringResource(R.string.onboarding_back)) }
+    }
+    item {
+        Text(stringResource(R.string.onboarding_auto_match_body), style = MaterialTheme.typography.bodyMedium)
+    }
+    if (state.indexEmpty) {
+        item {
+            Text(
+                text = stringResource(R.string.onboarding_index_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+    }
+    item {
+        OutlinedTextField(
+            value = state.searchQuery,
+            onValueChange = onSearchQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text(stringResource(R.string.onboarding_search_label)) },
+            placeholder = { Text(stringResource(R.string.onboarding_search_hint)) },
+        )
+    }
+    item {
+        FilterChipsRow(
+            confidenceFilter = state.confidenceFilter,
+            showLinked = state.showLinked,
+            onConfidenceFilterChange = onConfidenceFilterChange,
+            onShowLinkedChange = onShowLinkedChange,
+        )
+    }
+    item { ActionRow(onAcceptAllSafe, onAcceptSelected, onRefresh) }
+    state.messageErrorKey?.let { key ->
+        item {
+            Text(
+                text = errorMessage(key),
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.clickable(onClick = onClearMessage),
+            )
+        }
+    }
+    if (groupsEmpty) {
+        item {
+            Text(
+                text = stringResource(R.string.onboarding_filter_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FilterChipsRow(
+    confidenceFilter: AutoMatchConfidenceFilter,
+    showLinked: Boolean,
+    onConfidenceFilterChange: (AutoMatchConfidenceFilter) -> Unit,
+    onShowLinkedChange: (Boolean) -> Unit,
+) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        FilterChip(
+            selected = confidenceFilter == AutoMatchConfidenceFilter.ALL,
+            onClick = { onConfidenceFilterChange(AutoMatchConfidenceFilter.ALL) },
+            label = { Text(stringResource(R.string.onboarding_filter_all)) },
+        )
+        FilterChip(
+            selected = confidenceFilter == AutoMatchConfidenceFilter.HIGH,
+            onClick = { onConfidenceFilterChange(AutoMatchConfidenceFilter.HIGH) },
+            label = { Text(stringResource(R.string.onboarding_chip_high)) },
+        )
+        FilterChip(
+            selected = confidenceFilter == AutoMatchConfidenceFilter.MEDIUM,
+            onClick = { onConfidenceFilterChange(AutoMatchConfidenceFilter.MEDIUM) },
+            label = { Text(stringResource(R.string.onboarding_chip_medium)) },
+        )
+        FilterChip(
+            selected = confidenceFilter == AutoMatchConfidenceFilter.WARNING,
+            onClick = { onConfidenceFilterChange(AutoMatchConfidenceFilter.WARNING) },
+            label = { Text(stringResource(R.string.onboarding_chip_warning)) },
+        )
+        FilterChip(
+            selected = confidenceFilter == AutoMatchConfidenceFilter.NONE,
+            onClick = { onConfidenceFilterChange(AutoMatchConfidenceFilter.NONE) },
+            label = { Text(stringResource(R.string.onboarding_chip_none)) },
+        )
+        FilterChip(
+            selected = showLinked,
+            onClick = { onShowLinkedChange(!showLinked) },
+            label = { Text(stringResource(R.string.onboarding_show_linked)) },
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ActionRow(onAcceptAllSafe: () -> Unit, onAcceptSelected: () -> Unit, onRefresh: () -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         Button(onClick = onAcceptAllSafe) {
-            Text(stringResource(R.string.onboarding_accept_all_safe))
+            Text(stringResource(R.string.onboarding_accept_all_safe), maxLines = 1)
         }
         Button(onClick = onAcceptSelected) {
-            Text(stringResource(R.string.onboarding_accept_selected))
+            Text(stringResource(R.string.onboarding_accept_selected), maxLines = 1)
         }
         OutlinedButton(onClick = onRefresh) {
-            Text(stringResource(R.string.onboarding_refresh))
+            Text(stringResource(R.string.onboarding_refresh), maxLines = 1)
         }
     }
 }
@@ -278,11 +441,11 @@ private fun LazyListScope.matchSection(
     item {
         Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
     }
-    items(items, key = { it.packageName + it.repoId + it.confidence.name }) { candidate ->
+    items(items, key = { it.packageName + it.repoId + it.confidence.name + it.alreadyLinked }) { candidate ->
         MatchRow(
             candidate = candidate,
             checked = candidate.packageName in selected,
-            selectable = selectable,
+            selectable = selectable && !candidate.alreadyLinked,
             onToggle = { onToggle(candidate.packageName) },
             onOpenLink = { onOpenLink(candidate) },
             onRequestWarningAccept = { onRequestWarningAccept(candidate) },
@@ -314,11 +477,14 @@ private fun MatchRow(
             Box(Modifier.size(48.dp))
         }
         PackageIcon(packageName = candidate.packageName)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(candidate.label, style = MaterialTheme.typography.bodyLarge)
             Text(candidate.packageName, style = MaterialTheme.typography.bodySmall)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 ConfidenceChip(candidate.confidence)
+                if (candidate.alreadyLinked) {
+                    LinkedChip()
+                }
                 if (candidate.sourceLabel.isNotBlank()) {
                     SuggestionChip(onClick = {}, label = { Text(candidate.sourceLabel) }, enabled = false)
                 }
@@ -338,12 +504,28 @@ private fun MatchRow(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            MatchRowActions(
-                confidence = candidate.confidence,
-                onOpenLink = onOpenLink,
-                onRequestWarningAccept = onRequestWarningAccept,
-            )
+            if (!candidate.alreadyLinked) {
+                MatchRowActions(
+                    confidence = candidate.confidence,
+                    onOpenLink = onOpenLink,
+                    onRequestWarningAccept = onRequestWarningAccept,
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun LinkedChip() {
+    Box(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(8.dp))
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.onboarding_chip_linked),
+            style = MaterialTheme.typography.labelMedium,
+        )
     }
 }
 

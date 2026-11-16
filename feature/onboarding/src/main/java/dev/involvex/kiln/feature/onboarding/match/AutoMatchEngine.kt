@@ -20,6 +20,8 @@ data class MatchCandidate(
     val alternateRepoLabels: List<String> = emptyList(),
     /** Stable key for UI rationale strings (not user-facing by itself). */
     val rationaleKey: String = Rationale.NONE,
+    /** True when this package already has a ManagedApp row (set by ViewModel after match). */
+    val alreadyLinked: Boolean = false,
 ) {
     object Rationale {
         const val NONE = "none"

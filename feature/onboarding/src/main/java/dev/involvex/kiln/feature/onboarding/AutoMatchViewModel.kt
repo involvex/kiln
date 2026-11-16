@@ -13,6 +13,7 @@ import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.feature.onboarding.github.GitHubMap
+import dev.involvex.kiln.feature.onboarding.match.AutoMatchConfidenceFilter
 import dev.involvex.kiln.feature.onboarding.match.AutoMatchEngine
 import dev.involvex.kiln.feature.onboarding.match.MatchCandidate
 import javax.inject.Inject
@@ -35,12 +36,15 @@ data class AutoMatchUiState(
     val selected: Set<String> = emptySet(),
     val indexEmpty: Boolean = false,
     val enabledRepos: List<LinkableRepo> = emptyList(),
-    /** Count of links just accepted; UI maps to localized string. */
-    val messageAcceptedCount: Int? = null,
+    /** One-shot snackbar count after a successful link; UI clears via [AutoMatchViewModel.consumeSnackbar]. */
+    val snackbarLinkedCount: Int? = null,
     /** String-resource key: `bad_github` | `link_failed` | raw message. */
     val messageErrorKey: String? = null,
     val linkTarget: MatchCandidate? = null,
     val warningConfirmTarget: MatchCandidate? = null,
+    val searchQuery: String = "",
+    val confidenceFilter: AutoMatchConfidenceFilter = AutoMatchConfidenceFilter.ALL,
+    val showLinked: Boolean = false,
 )
 
 @HiltViewModel
@@ -61,47 +65,23 @@ class AutoMatchViewModel @Inject constructor(
     }
 
     fun refresh() {
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    messageAcceptedCount = null,
-                    messageErrorKey = null,
-                )
-            }
-            val snapshot = withContext(ioDispatcher) {
-                val installed = installedAppsReader.userApps()
-                val indexed = indexDao.allPackages()
-                val repos = repoDao.getAll()
-                val matches = AutoMatchEngine.match(
-                    installed = installed,
-                    indexed = indexed,
-                    repoPriority = repos.associate { it.id to it.priority },
-                    repoNames = repos.associate { it.id to it.name },
-                    githubMap = githubMap,
-                )
-                Triple(
-                    matches,
-                    indexed.isEmpty(),
-                    repos.filter { it.enabled }.sortedBy { it.priority }
-                        .map { LinkableRepo(it.id, it.name) },
-                )
-            }
-            val (result, indexEmpty, enabledRepos) = snapshot
-            val high = result.filter { it.confidence == MatchConfidence.HIGH }
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    high = high,
-                    medium = result.filter { c -> c.confidence == MatchConfidence.MEDIUM },
-                    warning = result.filter { c -> c.confidence == MatchConfidence.WARNING },
-                    none = result.filter { c -> c.confidence == MatchConfidence.NONE },
-                    selected = high.map { c -> c.packageName }.toSet(),
-                    indexEmpty = indexEmpty,
-                    enabledRepos = enabledRepos,
-                )
-            }
-        }
+        viewModelScope.launch { rematch(announceCount = null) }
+    }
+
+    fun setSearchQuery(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+    }
+
+    fun setConfidenceFilter(filter: AutoMatchConfidenceFilter) {
+        _uiState.update { it.copy(confidenceFilter = filter) }
+    }
+
+    fun setShowLinked(show: Boolean) {
+        _uiState.update { it.copy(showLinked = show) }
+    }
+
+    fun consumeSnackbar() {
+        _uiState.update { it.copy(snackbarLinkedCount = null) }
     }
 
     fun toggle(packageName: String) {
@@ -113,7 +93,7 @@ class AutoMatchViewModel @Inject constructor(
     }
 
     fun clearMessage() {
-        _uiState.update { it.copy(messageAcceptedCount = null, messageErrorKey = null) }
+        _uiState.update { it.copy(messageErrorKey = null) }
     }
 
     fun openLinkDialog(candidate: MatchCandidate) {
@@ -135,9 +115,9 @@ class AutoMatchViewModel @Inject constructor(
     fun confirmWarningAccept() {
         val target = _uiState.value.warningConfirmTarget ?: return
         viewModelScope.launch {
-            persist(listOf(target), forcePinned = true)
+            val count = persist(listOf(target), forcePinned = true)
             _uiState.update { it.copy(warningConfirmTarget = null) }
-            refresh()
+            rematch(announceCount = count)
         }
     }
 
@@ -179,21 +159,25 @@ class AutoMatchViewModel @Inject constructor(
     fun acceptSelected() {
         viewModelScope.launch {
             val state = _uiState.value
-            val chosen = (state.high + state.medium).filter { it.packageName in state.selected }
-            persist(chosen, forcePinned = false)
+            val chosen = (state.high + state.medium).filter {
+                it.packageName in state.selected && !it.alreadyLinked
+            }
+            val count = persist(chosen, forcePinned = false)
+            rematch(announceCount = count)
         }
     }
 
     fun acceptAllSafe() {
-        _uiState.update { it.copy(selected = it.high.map { c -> c.packageName }.toSet()) }
+        val highPending = _uiState.value.high.filter { !it.alreadyLinked }.map { it.packageName }.toSet()
+        _uiState.update { it.copy(selected = highPending) }
         acceptSelected()
     }
 
-    private suspend fun persist(chosen: List<MatchCandidate>, forcePinned: Boolean) {
-        if (chosen.isEmpty()) {
-            _uiState.update { it.copy(messageAcceptedCount = 0) }
-            return
-        }
+    /**
+     * @return number of apps written, or 0 when [chosen] was empty.
+     */
+    private suspend fun persist(chosen: List<MatchCandidate>, forcePinned: Boolean): Int {
+        if (chosen.isEmpty()) return 0
         withContext(ioDispatcher) {
             managedAppDao.upsertAll(
                 chosen.map {
@@ -213,11 +197,11 @@ class AutoMatchViewModel @Inject constructor(
         }
         _uiState.update {
             it.copy(
-                messageAcceptedCount = chosen.size,
                 messageErrorKey = null,
                 linkTarget = null,
             )
         }
+        return chosen.size
     }
 
     private suspend fun finishLink(result: Result<Unit>) {
@@ -226,11 +210,10 @@ class AutoMatchViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         linkTarget = null,
-                        messageAcceptedCount = 1,
                         messageErrorKey = null,
                     )
                 }
-                refresh()
+                rematch(announceCount = 1)
             }
 
             is Result.Failure -> {
@@ -240,4 +223,51 @@ class AutoMatchViewModel @Inject constructor(
             }
         }
     }
+
+    private suspend fun rematch(announceCount: Int?) {
+        _uiState.update {
+            it.copy(
+                isLoading = true,
+                messageErrorKey = if (announceCount != null) null else it.messageErrorKey,
+            )
+        }
+        val snapshot = withContext(ioDispatcher) {
+            val installed = installedAppsReader.userApps()
+            val indexed = indexDao.allPackages()
+            val repos = repoDao.getAll()
+            val managed = managedAppDao.getAll().map { it.packageName }.toSet()
+            val matches = AutoMatchEngine.match(
+                installed = installed,
+                indexed = indexed,
+                repoPriority = repos.associate { it.id to it.priority },
+                repoNames = repos.associate { it.id to it.name },
+                githubMap = githubMap,
+            ).map { candidate ->
+                candidate.copy(alreadyLinked = candidate.packageName in managed)
+            }
+            MatchSnapshot(
+                matches = matches,
+                indexEmpty = indexed.isEmpty(),
+                enabledRepos = repos.filter { it.enabled }.sortedBy { it.priority }
+                    .map { LinkableRepo(it.id, it.name) },
+            )
+        }
+        val high = snapshot.matches.filter { it.confidence == MatchConfidence.HIGH }
+        val pendingHigh = high.filter { !it.alreadyLinked }
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                high = high,
+                medium = snapshot.matches.filter { c -> c.confidence == MatchConfidence.MEDIUM },
+                warning = snapshot.matches.filter { c -> c.confidence == MatchConfidence.WARNING },
+                none = snapshot.matches.filter { c -> c.confidence == MatchConfidence.NONE },
+                selected = pendingHigh.map { c -> c.packageName }.toSet(),
+                indexEmpty = snapshot.indexEmpty,
+                enabledRepos = snapshot.enabledRepos,
+                snackbarLinkedCount = announceCount?.takeIf { count -> count > 0 },
+            )
+        }
+    }
+
+    private data class MatchSnapshot(val matches: List<MatchCandidate>, val indexEmpty: Boolean, val enabledRepos: List<LinkableRepo>)
 }

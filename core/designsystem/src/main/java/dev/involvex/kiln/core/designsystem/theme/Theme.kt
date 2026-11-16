@@ -121,6 +121,32 @@ private val OceanColorScheme = darkColorScheme(
     outline = OceanOutline,
 )
 
+private val HackerColorScheme = darkColorScheme(
+    primary = HackerPrimary,
+    onPrimary = HackerOnPrimary,
+    primaryContainer = HackerPrimaryContainer,
+    onPrimaryContainer = HackerOnPrimaryContainer,
+    secondary = HackerSecondary,
+    onSecondary = HackerOnSecondary,
+    secondaryContainer = HackerSecondaryContainer,
+    onSecondaryContainer = HackerOnSecondaryContainer,
+    tertiary = HackerTertiary,
+    onTertiary = HackerOnTertiary,
+    tertiaryContainer = HackerTertiaryContainer,
+    onTertiaryContainer = HackerOnTertiaryContainer,
+    error = HackerError,
+    onError = HackerOnError,
+    errorContainer = HackerErrorContainer,
+    onErrorContainer = HackerOnErrorContainer,
+    background = HackerBackground,
+    onBackground = HackerOnBackground,
+    surface = HackerSurface,
+    onSurface = HackerOnSurface,
+    surfaceVariant = HackerSurfaceVariant,
+    onSurfaceVariant = HackerOnSurfaceVariant,
+    outline = HackerOutline,
+)
+
 private fun ColorScheme.amoled(): ColorScheme = copy(
     background = AmoledBlack,
     surface = AmoledBlack,
@@ -141,6 +167,7 @@ fun KilnThemeStyle.usesLightSystemBars(systemDark: Boolean): Boolean = when (thi
     KilnThemeStyle.AMOLED,
     KilnThemeStyle.MONOKAI,
     KilnThemeStyle.OCEAN,
+    KilnThemeStyle.HACKER,
     -> false
 }
 
@@ -148,6 +175,7 @@ fun KilnThemeStyle.usesLightSystemBars(systemDark: Boolean): Boolean = when (thi
 fun KilnThemeStyle.allowsDynamicColor(): Boolean = when (this) {
     KilnThemeStyle.MONOKAI,
     KilnThemeStyle.OCEAN,
+    KilnThemeStyle.HACKER,
     -> false
 
     KilnThemeStyle.SYSTEM,
@@ -185,6 +213,8 @@ fun KilnTheme(
         KilnThemeStyle.MONOKAI -> MonokaiColorScheme
 
         KilnThemeStyle.OCEAN -> OceanColorScheme
+
+        KilnThemeStyle.HACKER -> HackerColorScheme
     }
 
     CompositionLocalProvider(LocalAmoledDark provides amoledDark) {

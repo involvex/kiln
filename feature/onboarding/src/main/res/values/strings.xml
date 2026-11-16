@@ -12,6 +12,12 @@
     <string name="onboarding_group_none">Not found</string>
     <string name="onboarding_index_empty">No F-Droid index cached yet. Sync Sources first — safe (HIGH) matches need package + signer from a synced repo. Until then only GitHub-map suggestions appear under Review.</string>
     <string name="onboarding_accepted_count">Linked %1$d app(s).</string>
+    <string name="onboarding_search_label">Search</string>
+    <string name="onboarding_search_hint">App name or package</string>
+    <string name="onboarding_filter_all">All</string>
+    <string name="onboarding_show_linked">Show linked</string>
+    <string name="onboarding_chip_linked">Linked</string>
+    <string name="onboarding_filter_empty">No apps match this search or filter.</string>
     <string name="onboarding_chip_high">High</string>
     <string name="onboarding_chip_medium">Review</string>
     <string name="onboarding_chip_warning">Signature</string>
