@@ -1,6 +1,7 @@
 package dev.involvex.kiln.feature.apps
 
 import dev.involvex.kiln.core.model.ApkExportFormat
+import dev.involvex.kiln.core.model.AppActivityInfo
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallJobState
@@ -8,6 +9,8 @@ import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.ManagedSourceLink
 import dev.involvex.kiln.core.model.RepoConfig
 import dev.involvex.kiln.core.model.RollbackApkEntry
+import dev.involvex.kiln.feature.apps.activities.AppActivityInfoQuery
+import dev.involvex.kiln.feature.apps.activities.AppActivityLabels
 
 data class AppDetailUiState(
     val isLoading: Boolean = true,
@@ -36,7 +39,18 @@ data class AppDetailUiState(
     val exodusTrackerNames: List<String> = emptyList(),
     val exodusApiConfigured: Boolean = false,
     val exodusLoading: Boolean = false,
-)
+    val activities: List<AppActivityInfo> = emptyList(),
+    val activitiesLoading: Boolean = false,
+    val activitiesQuery: String = "",
+) {
+    val filteredActivities: List<AppActivityInfo>
+        get() = activities.filter {
+            AppActivityLabels.matchesQuery(
+                AppActivityInfoQuery(label = it.label, className = it.className),
+                activitiesQuery,
+            )
+        }
+}
 
 sealed interface AppDetailEvent {
     data object Launch : AppDetailEvent

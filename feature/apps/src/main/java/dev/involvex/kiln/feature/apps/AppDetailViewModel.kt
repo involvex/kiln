@@ -2,9 +2,6 @@ package dev.involvex.kiln.feature.apps
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ApkExportFormat
@@ -20,18 +17,22 @@ import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
 import dev.involvex.kiln.core.model.RollbackApkEntry
+import dev.involvex.kiln.feature.apps.activities.AppActivitiesRepository
 import dev.involvex.kiln.feature.apps.data.InstalledAppsRepository
 import dev.involvex.kiln.feature.apps.data.InstallerLabels
+import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-@HiltViewModel(assistedFactory = AppDetailViewModel.Factory::class)
-class AppDetailViewModel @AssistedInject constructor(
-    @Assisted private val packageName: String,
+@HiltViewModel
+@Suppress("TooManyFunctions") // Detail hub: updates, link, rollback, activities, export.
+class AppDetailViewModel @Inject constructor(
     private val repository: InstalledAppsRepository,
+    private val activitiesRepository: AppActivitiesRepository,
     private val appUpdateRepository: AppUpdateRepository,
     private val installQueue: InstallQueue,
     private val rollbackCache: ApkRollbackCache,
@@ -44,88 +45,87 @@ class AppDetailViewModel @AssistedInject constructor(
     private val _uiState = MutableStateFlow(AppDetailUiState())
     val uiState: StateFlow<AppDetailUiState> = _uiState.asStateFlow()
 
-    init {
-        refresh()
-        viewModelScope.launch {
-            appUpdateRepository.updates().collect { map ->
-                _uiState.update { it.copy(availableUpdate = map[packageName]) }
-            }
+    private var packageName: String? = null
+    private var packageJobs: List<Job> = emptyList()
+
+    fun load(packageName: String) {
+        if (this.packageName == packageName && _uiState.value.detail?.packageName == packageName) {
+            return
         }
-        viewModelScope.launch {
-            installQueue.jobs().collect { jobs ->
-                _uiState.update { it.copy(installJob = jobs[packageName]) }
-            }
-        }
-        viewModelScope.launch {
-            appUpdateRepository.observeIgnoreUpdates(packageName).collect { ignore ->
-                _uiState.update { it.copy(ignoreUpdates = ignore) }
-            }
-        }
-        viewModelScope.launch {
-            appUpdateRepository.observeUpdateCooldownDays(packageName).collect { days ->
-                _uiState.update { it.copy(updateCooldownDays = days) }
-            }
-        }
-        viewModelScope.launch {
-            backgroundUpdatePreferences.observe().collect { prefs ->
-                _uiState.update { it.copy(globalCooldownDays = prefs.updateCooldownDays) }
-            }
-        }
-        viewModelScope.launch {
-            appUpdateRepository.observeManagedLink(packageName).collect { link ->
-                _uiState.update { it.copy(managedLink = link) }
-            }
-        }
-        viewModelScope.launch {
-            appUpdateRepository.observeEnabledRepos().collect { repos ->
-                _uiState.update { it.copy(enabledRepos = repos) }
-            }
-        }
-        viewModelScope.launch {
-            rollbackCache.observe(packageName).collect { entries ->
-                val installedCode = _uiState.value.detail?.versionCode
-                val older = entries.filter { installedCode == null || it.versionCode < installedCode }
-                _uiState.update { it.copy(rollbackEntries = older) }
-            }
-        }
-        viewModelScope.launch {
-            privilegedExecutor.observeStatus().collect { status ->
-                _uiState.update {
-                    it.copy(canSilentDowngrade = PrivilegeCapability.SILENT_INSTALL in status.capabilities)
+        this.packageName = packageName
+        packageJobs.forEach { it.cancel() }
+        _uiState.value = AppDetailUiState(isLoading = true)
+        packageJobs = listOf(
+            viewModelScope.launch {
+                appUpdateRepository.updates().collect { map ->
+                    _uiState.update { it.copy(availableUpdate = map[packageName]) }
                 }
-            }
-        }
-        viewModelScope.launch {
-            val configured = exodusPrivacyPreferences.current().isApiConfigured()
-            _uiState.update { it.copy(exodusApiConfigured = configured, exodusLoading = configured) }
-            if (!configured) {
-                _uiState.update { it.copy(exodusLoading = false) }
-                return@launch
-            }
-            when (val result = exodusReportRepository.reportFor(packageName)) {
-                is Result.Success -> {
+            },
+            viewModelScope.launch {
+                installQueue.jobs().collect { jobs ->
+                    _uiState.update { it.copy(installJob = jobs[packageName]) }
+                }
+            },
+            viewModelScope.launch {
+                appUpdateRepository.observeIgnoreUpdates(packageName).collect { ignore ->
+                    _uiState.update { it.copy(ignoreUpdates = ignore) }
+                }
+            },
+            viewModelScope.launch {
+                appUpdateRepository.observeUpdateCooldownDays(packageName).collect { days ->
+                    _uiState.update { it.copy(updateCooldownDays = days) }
+                }
+            },
+            viewModelScope.launch {
+                backgroundUpdatePreferences.observe().collect { prefs ->
+                    _uiState.update { it.copy(globalCooldownDays = prefs.updateCooldownDays) }
+                }
+            },
+            viewModelScope.launch {
+                appUpdateRepository.observeManagedLink(packageName).collect { link ->
+                    _uiState.update { it.copy(managedLink = link) }
+                }
+            },
+            viewModelScope.launch {
+                appUpdateRepository.observeEnabledRepos().collect { repos ->
+                    _uiState.update { it.copy(enabledRepos = repos) }
+                }
+            },
+            viewModelScope.launch {
+                rollbackCache.observe(packageName).collect { entries ->
+                    val installedCode = _uiState.value.detail?.versionCode
+                    val older = entries.filter { installedCode == null || it.versionCode < installedCode }
+                    _uiState.update { it.copy(rollbackEntries = older) }
+                }
+            },
+            viewModelScope.launch {
+                privilegedExecutor.observeStatus().collect { status ->
                     _uiState.update {
-                        it.copy(exodusLoading = false, exodusTrackerNames = result.value.trackerNames)
+                        it.copy(canSilentDowngrade = PrivilegeCapability.SILENT_INSTALL in status.capabilities)
                     }
                 }
+            },
+            viewModelScope.launch {
+                _uiState.update { it.copy(hasGitHubToken = gitHubAuth.hasToken()) }
+            },
+            viewModelScope.launch { loadExodus(packageName) },
+        )
+        refresh()
+        loadActivities()
+    }
 
-                is Result.Failure -> {
-                    _uiState.update { it.copy(exodusLoading = false, exodusTrackerNames = emptyList()) }
-                }
-            }
-        }
-        viewModelScope.launch {
-            _uiState.update { it.copy(hasGitHubToken = gitHubAuth.hasToken()) }
-        }
+    fun setActivitiesQuery(query: String) {
+        _uiState.update { it.copy(activitiesQuery = query) }
     }
 
     fun refresh() {
+        val pkg = packageName ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            when (val result = repository.detail(packageName)) {
+            when (val result = repository.detail(pkg)) {
                 is Result.Success -> {
                     val detail = result.value
-                    val rollback = rollbackCache.list(packageName)
+                    val rollback = rollbackCache.list(pkg)
                         .filter { it.versionCode < detail.versionCode }
                     _uiState.update {
                         it.copy(
@@ -148,6 +148,7 @@ class AppDetailViewModel @AssistedInject constructor(
                 }
             }
         }
+        loadActivities()
     }
 
     fun onEvent(event: AppDetailEvent) {
@@ -193,6 +194,35 @@ class AppDetailViewModel @AssistedInject constructor(
         }
     }
 
+    private fun loadActivities() {
+        val pkg = packageName ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(activitiesLoading = true) }
+            val list = activitiesRepository.exportedActivities(pkg)
+            _uiState.update { it.copy(activities = list, activitiesLoading = false) }
+        }
+    }
+
+    private suspend fun loadExodus(packageName: String) {
+        val configured = exodusPrivacyPreferences.current().isApiConfigured()
+        _uiState.update { it.copy(exodusApiConfigured = configured, exodusLoading = configured) }
+        if (!configured) {
+            _uiState.update { it.copy(exodusLoading = false, exodusTrackerNames = emptyList()) }
+            return
+        }
+        when (val result = exodusReportRepository.reportFor(packageName)) {
+            is Result.Success -> {
+                _uiState.update {
+                    it.copy(exodusLoading = false, exodusTrackerNames = result.value.trackerNames)
+                }
+            }
+
+            is Result.Failure -> {
+                _uiState.update { it.copy(exodusLoading = false, exodusTrackerNames = emptyList()) }
+            }
+        }
+    }
+
     private fun onLinkEvent(event: AppDetailEvent) {
         when (event) {
             AppDetailEvent.OpenLinkSource -> _uiState.update { it.copy(showLinkSourceDialog = true) }
@@ -205,9 +235,10 @@ class AppDetailViewModel @AssistedInject constructor(
     }
 
     private fun setGitHubChannel(channel: GitHubReleaseChannel) {
+        val pkg = packageName ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(hasGitHubToken = gitHubAuth.hasToken()) }
-            when (val result = appUpdateRepository.setGitHubChannel(packageName, channel)) {
+            when (val result = appUpdateRepository.setGitHubChannel(pkg, channel)) {
                 is Result.Success -> Unit
                 is Result.Failure -> showMessage(result.message)
             }
@@ -215,10 +246,11 @@ class AppDetailViewModel @AssistedInject constructor(
     }
 
     private fun linkFdroid(repoId: String) {
+        val pkg = packageName ?: return
         viewModelScope.launch {
             when (
                 val result = appUpdateRepository.linkManagedSource(
-                    packageName = packageName,
+                    packageName = pkg,
                     sourceId = repoId,
                     confidence = MatchConfidence.MEDIUM,
                     pinned = true,
@@ -235,6 +267,7 @@ class AppDetailViewModel @AssistedInject constructor(
     }
 
     private fun linkGithub(ownerRepo: String) {
+        val pkg = packageName ?: return
         val normalized = ownerRepo.trim().trim('/')
         if (!normalized.contains('/') || normalized.count { it == '/' } != 1) {
             showMessage("bad_github")
@@ -243,7 +276,7 @@ class AppDetailViewModel @AssistedInject constructor(
         viewModelScope.launch {
             when (
                 val result = appUpdateRepository.linkManagedSource(
-                    packageName = packageName,
+                    packageName = pkg,
                     sourceId = "github:$normalized",
                     confidence = MatchConfidence.MEDIUM,
                     githubOwnerRepo = normalized,
@@ -268,11 +301,11 @@ class AppDetailViewModel @AssistedInject constructor(
     }
 
     private fun setCheckForUpdates(checkForUpdates: Boolean) {
-        // Switch ON = check for updates = ignoreUpdates false
+        val pkg = packageName ?: return
         viewModelScope.launch {
             when (
                 val result = appUpdateRepository.setIgnoreUpdates(
-                    packageName,
+                    pkg,
                     ignoreUpdates = !checkForUpdates,
                 )
             ) {
@@ -283,8 +316,9 @@ class AppDetailViewModel @AssistedInject constructor(
     }
 
     private fun setUpdateCooldownDays(days: Int?) {
+        val pkg = packageName ?: return
         viewModelScope.launch {
-            when (val result = appUpdateRepository.setUpdateCooldownDays(packageName, days)) {
+            when (val result = appUpdateRepository.setUpdateCooldownDays(pkg, days)) {
                 is Result.Success -> Unit
                 is Result.Failure -> showMessage(result.message)
             }
@@ -364,10 +398,5 @@ class AppDetailViewModel @AssistedInject constructor(
                 ),
             )
         }
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(packageName: String): AppDetailViewModel
     }
 }

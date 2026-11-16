@@ -3,8 +3,6 @@ package dev.involvex.kiln.feature.apps
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -48,10 +46,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.EntryPointAccessors
 import dev.involvex.kiln.core.designsystem.component.EmptyState
+import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.RepoConfig
 import dev.involvex.kiln.feature.apps.di.ApkExporterEntryPoint
@@ -64,12 +62,10 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun AppDetailRoute(packageName: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
-    val activity = LocalActivity.current as ComponentActivity
-    val viewModel: AppDetailViewModel = hiltViewModel<AppDetailViewModel, AppDetailViewModel.Factory>(
-        // Nav3 entry owner often misses Hilt’s map; ActivityRetained is reliable.
-        viewModelStoreOwner = activity,
-        creationCallback = { factory -> factory.create(packageName) },
-    )
+    val viewModel = kilnHiltViewModel<AppDetailViewModel>()
+    LaunchedEffect(packageName) {
+        viewModel.load(packageName)
+    }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     AppDetailScreen(
         state = state,
@@ -77,6 +73,7 @@ fun AppDetailRoute(packageName: String, onBack: () -> Unit, modifier: Modifier =
         onEvent = viewModel::onEvent,
         setExportInProgress = viewModel::setExportInProgress,
         showMessage = viewModel::showMessage,
+        onActivitiesQueryChange = viewModel::setActivitiesQuery,
         modifier = modifier,
     )
 }
@@ -90,6 +87,7 @@ fun AppDetailScreen(
     onEvent: (AppDetailEvent) -> Unit,
     setExportInProgress: (Boolean) -> Unit,
     showMessage: (String) -> Unit,
+    onActivitiesQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -128,6 +126,11 @@ fun AppDetailScreen(
     val rollbackNeedsPrivilege = stringResource(R.string.feature_apps_rollback_needs_privilege)
     val linkOk = stringResource(R.string.feature_apps_link_ok)
     val badGithub = stringResource(R.string.feature_apps_link_bad_github)
+    val activityStartNotFound = stringResource(R.string.feature_apps_activities_start_not_found)
+    val activityStartSecurity = stringResource(R.string.feature_apps_activities_start_security)
+    val activityShortcutRequested = stringResource(R.string.feature_apps_activities_shortcut_requested)
+    val activityShortcutRejected = stringResource(R.string.feature_apps_activities_shortcut_rejected)
+    val activityShortcutUnsupported = stringResource(R.string.feature_apps_activities_shortcut_unsupported)
     LaunchedEffect(state.snackbarMessage) {
         val raw = state.snackbarMessage ?: return@LaunchedEffect
         val message = when (raw) {
@@ -135,6 +138,11 @@ fun AppDetailScreen(
             "rollback_needs_privilege" -> rollbackNeedsPrivilege
             "link_ok" -> linkOk
             "bad_github" -> badGithub
+            "activity_start_not_found" -> activityStartNotFound
+            "activity_start_security" -> activityStartSecurity
+            "activity_shortcut_requested" -> activityShortcutRequested
+            "activity_shortcut_rejected" -> activityShortcutRejected
+            "activity_shortcut_unsupported" -> activityShortcutUnsupported
             else -> raw
         }
         snackbarHostState.showSnackbar(message)
@@ -217,6 +225,12 @@ fun AppDetailScreen(
                     exodusTrackerNames = state.exodusTrackerNames,
                     exodusApiConfigured = state.exodusApiConfigured,
                     exodusLoading = state.exodusLoading,
+                    activities = state.filteredActivities,
+                    activitiesLoading = state.activitiesLoading,
+                    activitiesQuery = state.activitiesQuery,
+                    onActivitiesQueryChange = onActivitiesQueryChange,
+                    showActivitiesSearch = state.activities.size > ACTIVITIES_SEARCH_THRESHOLD,
+                    onActivityMessage = showMessage,
                     modifier = Modifier.padding(padding),
                 )
             }
@@ -439,3 +453,5 @@ private fun FormatOption(format: ApkExportFormat, selected: ApkExportFormat, onE
         Text(label)
     }
 }
+
+private const val ACTIVITIES_SEARCH_THRESHOLD = 8
