@@ -1,6 +1,6 @@
 # M42 — Import GitHub starred repos → Sources
 
-> Branch `m42-github-stars`. After M41 (#71) / docs (#72).
+> Shipped in [#73](https://github.com/involvex/kiln/pull/73). Branch `m42-github-stars`. After M41 (#71) / docs (#72).
 
 ## In scope
 
@@ -18,10 +18,10 @@
 
 ## Done when
 
-- [ ] Manage → Storage (and sibling shell routes) open without ViewModel crash
-- [ ] Sources → Load starred (PAT required) shows review list; multi-select add works; duplicates reported
-- [ ] APK heuristic labels are honest; rate-limit / no-token messaging clear
-- [ ] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green locally
+- [x] Manage → Storage (and sibling shell routes) open without ViewModel crash
+- [x] Sources → Load starred (PAT required) shows review list; multi-select add works; duplicates reported
+- [x] APK heuristic labels are honest; rate-limit / no-token messaging clear
+- [x] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green locally
 - [ ] Manual HyperOS checklist in PR
 
 ## Manual HyperOS checklist (PR)
