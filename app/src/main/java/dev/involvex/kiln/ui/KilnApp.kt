@@ -27,6 +27,7 @@ import dev.involvex.kiln.R
 import dev.involvex.kiln.core.designsystem.scroll.LocalScrollToTopSignal
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopSignal
 import dev.involvex.kiln.feature.apps.AppDetailRoute
+import dev.involvex.kiln.feature.apps.apktools.IncomingApkInstallStore
 import dev.involvex.kiln.feature.debloat.DebloatRoute
 import dev.involvex.kiln.feature.onboarding.AutoMatchRoute
 import dev.involvex.kiln.feature.onboarding.privilege.PrivilegeSetupRoute
@@ -82,7 +83,11 @@ import dev.involvex.kiln.navigation.TopLevelBackStack
 private data class TopLevelDestination(val key: Any, val labelRes: Int, val icon: ImageVector)
 
 @Composable
-fun KilnApp(modifier: Modifier = Modifier, manageDeepLinkStore: ManageDeepLinkStore? = null) {
+fun KilnApp(
+    modifier: Modifier = Modifier,
+    manageDeepLinkStore: ManageDeepLinkStore? = null,
+    incomingApkInstallStore: IncomingApkInstallStore? = null,
+) {
     val destinations = listOf(
         TopLevelDestination(AppsKey, R.string.nav_apps, Icons.Filled.Apps),
         TopLevelDestination(SourcesKey, R.string.nav_sources, Icons.Filled.CloudDownload),
@@ -138,7 +143,7 @@ fun KilnApp(modifier: Modifier = Modifier, manageDeepLinkStore: ManageDeepLinkSt
                     rememberViewModelStoreNavEntryDecorator(),
                 ),
                 entryProvider = entryProvider {
-                    kilnNavEntries(topLevelBackStack)
+                    kilnNavEntries(topLevelBackStack, incomingApkInstallStore)
                 },
             )
         }
@@ -146,7 +151,10 @@ fun KilnApp(modifier: Modifier = Modifier, manageDeepLinkStore: ManageDeepLinkSt
 }
 
 @Suppress("LongMethod")
-private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBackStack<Any>) {
+private fun EntryProviderScope<Any>.kilnNavEntries(
+    topLevelBackStack: TopLevelBackStack<Any>,
+    incomingApkInstallStore: IncomingApkInstallStore?,
+) {
     entry<AppsKey> {
         AppsShellRoute(
             onOpenDetail = { packageName ->
@@ -193,6 +201,7 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
     entry<ManageKey> {
         ManageRoute(
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
+            incomingApkInstallStore = incomingApkInstallStore,
         )
     }
     entry<SettingsKey> {

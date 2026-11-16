@@ -12,9 +12,23 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class ApkToolsViewModel @Inject constructor(private val repository: ApkToolsRepository) : ViewModel() {
+class ApkToolsViewModel @Inject constructor(
+    private val repository: ApkToolsRepository,
+    private val incomingApkInstallStore: IncomingApkInstallStore,
+) : ViewModel() {
     private val _uiState = MutableStateFlow(ApkToolsUiState())
     val uiState: StateFlow<ApkToolsUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            incomingApkInstallStore.pending.collect { uri ->
+                if (uri != null) {
+                    val consumed = incomingApkInstallStore.consume() ?: return@collect
+                    enqueueInstall(consumed)
+                }
+            }
+        }
+    }
 
     fun setMode(mode: ApkToolsMode) {
         _uiState.update {
@@ -23,7 +37,49 @@ class ApkToolsViewModel @Inject constructor(private val repository: ApkToolsRepo
                 message = null,
                 messageIsError = false,
                 exportCount = if (mode == ApkToolsMode.EXPORT_SPLITS) it.exportCount else null,
+                installSplitCount = if (mode == ApkToolsMode.INSTALL) it.installSplitCount else null,
             )
+        }
+    }
+
+    fun setInstallUri(uri: Uri) {
+        _uiState.update {
+            it.copy(
+                mode = ApkToolsMode.INSTALL,
+                installUri = uri,
+                installLabel = repository.displayName(uri),
+                installPackageName = null,
+                installVersionName = null,
+                installSplitCount = null,
+                message = null,
+                messageIsError = false,
+            )
+        }
+    }
+
+    fun enqueueInstall(uri: Uri) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isBusy = true, message = null, mode = ApkToolsMode.INSTALL) }
+            when (val result = repository.enqueueInstallFromUri(uri)) {
+                is dev.involvex.kiln.core.common.Result.Success ->
+                    _uiState.update {
+                        it.copy(
+                            isBusy = false,
+                            installUri = uri,
+                            installLabel = repository.displayName(uri),
+                            installPackageName = result.value.packageName,
+                            installVersionName = result.value.versionName,
+                            installSplitCount = result.value.splitCount,
+                            message = "install_queued",
+                            messageIsError = false,
+                        )
+                    }
+
+                is dev.involvex.kiln.core.common.Result.Failure ->
+                    _uiState.update {
+                        it.copy(isBusy = false, message = result.message, messageIsError = true)
+                    }
+            }
         }
     }
 

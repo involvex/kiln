@@ -47,7 +47,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 :core:privilege           PrivilegedExecutor (Shizuku UserService allowlist)
 :feature:apps             List, detail, export, update badges + install CTA
 :feature:sources          F-Droid/Izzy sync, GitHub, Obtainium import, Discover catalog; UpdateCheckWorker
-:feature:installer        Download queue; PackageInstaller or silent pm; local APK enqueue
+:feature:installer        Download queue; PackageInstaller (single + split) or silent pm / install-multiple; local APK enqueue
 :feature:onboarding       Auto-match + Shizuku setup assistant (A→D)
 :feature:storage          StorageStats analyzer + cache clear (usage access)
 :feature:debloat          Debloat (denylist, snapshot, disable/restore)

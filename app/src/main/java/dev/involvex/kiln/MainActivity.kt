@@ -1,6 +1,7 @@
 package dev.involvex.kiln
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -28,15 +29,20 @@ import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnLocales
 import dev.involvex.kiln.core.model.KilnThemeStyle
 import dev.involvex.kiln.core.model.WidgetIntents
+import dev.involvex.kiln.feature.apps.apktools.IncomingApkInstallStore
 import dev.involvex.kiln.feature.sources.IncomingRepoLinkStore
 import dev.involvex.kiln.feature.widgets.ManageDeepLinkStore
 import dev.involvex.kiln.ui.KilnApp
+import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var incomingRepoLinkStore: IncomingRepoLinkStore
+
+    @Inject
+    lateinit var incomingApkInstallStore: IncomingApkInstallStore
 
     @Inject
     lateinit var appearancePreferences: AppearancePreferences
@@ -61,6 +67,7 @@ class MainActivity : AppCompatActivity() {
                 fontStyle = appearance.fontStyle,
                 dynamicColor = appearance.dynamicColor,
                 manageDeepLinkStore = manageDeepLinkStore,
+                incomingApkInstallStore = incomingApkInstallStore,
             )
         }
     }
@@ -83,6 +90,23 @@ class MainActivity : AppCompatActivity() {
                     if (text.isNotEmpty()) {
                         incomingRepoLinkStore.offer(text)
                     }
+                    return
+                }
+                val stream = intent.parcelableUriExtra(Intent.EXTRA_STREAM)
+                if (stream != null && looksLikeApkOrBundle(stream, intent.type)) {
+                    offerApkInstall(stream)
+                }
+            }
+
+            Intent.ACTION_VIEW -> {
+                val data = intent.data
+                if (data != null && looksLikeApkOrBundle(data, intent.type)) {
+                    offerApkInstall(data)
+                    return
+                }
+                val dataString = intent.dataString?.trim().orEmpty()
+                if (dataString.isNotEmpty()) {
+                    incomingRepoLinkStore.offer(dataString)
                 }
             }
 
@@ -94,7 +118,33 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun offerApkInstall(uri: Uri) {
+        incomingApkInstallStore.offer(uri)
+        manageDeepLinkStore.offer()
+    }
+
+    private fun looksLikeApkOrBundle(uri: Uri, mimeType: String?): Boolean {
+        val mime = mimeType?.lowercase(Locale.US).orEmpty()
+        if (mime == "application/vnd.android.package-archive" ||
+            mime == "application/zip" ||
+            mime == "application/octet-stream"
+        ) {
+            return true
+        }
+        val name = (uri.lastPathSegment ?: uri.toString()).lowercase(Locale.US)
+        return name.endsWith(".apk") || name.endsWith(".apks") ||
+            name.endsWith(".xapk") || name.endsWith(".apkm")
+    }
 }
+
+@Suppress("DEPRECATION")
+private fun Intent.parcelableUriExtra(key: String): Uri? =
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        getParcelableExtra(key, Uri::class.java)
+    } else {
+        getParcelableExtra(key) as? Uri
+    }
 
 /** Last language we asked AppCompat to apply in this process (stops SYSTEM OEM tag thrash). */
 @Volatile
@@ -127,6 +177,7 @@ private fun KilnRoot(
     fontStyle: KilnFontStyle,
     dynamicColor: Boolean,
     manageDeepLinkStore: ManageDeepLinkStore,
+    incomingApkInstallStore: IncomingApkInstallStore,
 ) {
     val view = LocalView.current
     val systemDark = isSystemInDarkTheme()
@@ -146,7 +197,10 @@ private fun KilnRoot(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background,
         ) {
-            KilnApp(manageDeepLinkStore = manageDeepLinkStore)
+            KilnApp(
+                manageDeepLinkStore = manageDeepLinkStore,
+                incomingApkInstallStore = incomingApkInstallStore,
+            )
         }
     }
 }

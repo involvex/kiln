@@ -44,11 +44,37 @@ interface InstallQueue {
     suspend fun cancel(jobId: String)
 }
 
-/** Local APK path for restore / sideload without a download URL. */
+/**
+ * Local APK path(s) for restore / sideload without a download URL.
+ * [apkAbsolutePaths] is ordered base-first; size ≥ 1. Single-APK callers pass a one-element list.
+ */
 data class LocalInstallRequest(
     val packageName: String,
     val versionName: String,
     val versionCode: Long,
-    val apkAbsolutePath: String,
+    val apkAbsolutePaths: List<String>,
     val expectedSha256: String? = null,
-)
+) {
+    init {
+        require(apkAbsolutePaths.isNotEmpty()) { "apkAbsolutePaths must not be empty" }
+    }
+
+    /** Base / only APK path (backward-compatible accessor). */
+    val apkAbsolutePath: String get() = apkAbsolutePaths.first()
+
+    companion object {
+        operator fun invoke(
+            packageName: String,
+            versionName: String,
+            versionCode: Long,
+            apkAbsolutePath: String,
+            expectedSha256: String? = null,
+        ): LocalInstallRequest = LocalInstallRequest(
+            packageName = packageName,
+            versionName = versionName,
+            versionCode = versionCode,
+            apkAbsolutePaths = listOf(apkAbsolutePath),
+            expectedSha256 = expectedSha256,
+        )
+    }
+}

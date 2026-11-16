@@ -79,6 +79,7 @@ fun ApkToolsRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, vie
         onMergeAlias = viewModel::setResignAlias,
         onMergeConfirmed = viewModel::setResignConfirmed,
         onMergeOutput = viewModel::mergeAndResignTo,
+        onInstall = viewModel::enqueueInstall,
         onClearMessage = viewModel::clearMessage,
         modifier = modifier,
     )
@@ -104,6 +105,7 @@ fun ApkToolsScreen(
     onMergeAlias: (String) -> Unit,
     onMergeConfirmed: (Boolean) -> Unit,
     onMergeOutput: (Uri, CharArray, CharArray) -> Unit,
+    onInstall: (Uri) -> Unit,
     onClearMessage: () -> Unit,
     showTopBar: Boolean = true,
     modifier: Modifier = Modifier,
@@ -168,6 +170,11 @@ fun ApkToolsScreen(
                     onMergeConfirmed = onMergeConfirmed,
                     onMergeOutput = onMergeOutput,
                 )
+
+                ApkToolsMode.INSTALL -> InstallPane(
+                    state = state,
+                    onInstall = onInstall,
+                )
             }
         }
     }
@@ -206,6 +213,11 @@ private fun ModeChips(mode: ApkToolsMode, onMode: (ApkToolsMode) -> Unit) {
                 onClick = { onMode(ApkToolsMode.MERGE) },
                 label = { Text(stringResource(R.string.apk_tools_mode_merge)) },
             )
+            FilterChip(
+                selected = mode == ApkToolsMode.INSTALL,
+                onClick = { onMode(ApkToolsMode.INSTALL) },
+                label = { Text(stringResource(R.string.apk_tools_mode_install)) },
+            )
         }
     }
 }
@@ -214,7 +226,7 @@ private fun ModeChips(mode: ApkToolsMode, onMode: (ApkToolsMode) -> Unit) {
 private fun MessageBanner(state: ApkToolsUiState, onClearMessage: () -> Unit) {
     val code = state.message ?: return
     Text(
-        text = formatApkToolsMessage(code, state.exportCount),
+        text = formatApkToolsMessage(code, state.exportCount, state.installSplitCount),
         color = if (state.messageIsError) {
             MaterialTheme.colorScheme.error
         } else {
@@ -223,6 +235,46 @@ private fun MessageBanner(state: ApkToolsUiState, onClearMessage: () -> Unit) {
     )
     TextButton(onClick = onClearMessage) {
         Text(stringResource(R.string.apk_tools_dismiss))
+    }
+}
+
+@Composable
+private fun InstallPane(state: ApkToolsUiState, onInstall: (Uri) -> Unit) {
+    val openInstall = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) onInstall(uri)
+    }
+    Text(
+        text = stringResource(R.string.apk_tools_install_hint),
+        style = MaterialTheme.typography.bodyMedium,
+    )
+    OutlinedButton(
+        onClick = { openInstall.launch(ApkMimeTypes) },
+        enabled = !state.isBusy,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.apk_tools_pick_install))
+    }
+    val label = state.installLabel
+    if (label != null) {
+        Text(
+            text = stringResource(R.string.apk_tools_install_picked, label),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+    val pkg = state.installPackageName
+    val version = state.installVersionName
+    val splits = state.installSplitCount
+    if (pkg != null && version != null && splits != null) {
+        Text(text = stringResource(R.string.apk_tools_install_summary, pkg, version, splits))
+    } else if (label == null) {
+        EmptyState(
+            title = stringResource(R.string.apk_tools_empty_title),
+            description = stringResource(R.string.apk_tools_empty_install),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 180.dp),
+        )
     }
 }
 
@@ -717,12 +769,20 @@ private val ApkToolsMessageIds = mapOf(
     "merge_failed" to R.string.apk_tools_msg_merge_failed,
     "merge_protected" to R.string.apk_tools_msg_merge_protected,
     "merge_oom" to R.string.apk_tools_msg_merge_oom,
+    "install_queued" to R.string.apk_tools_msg_install_queued,
+    "bundle_no_base" to R.string.apk_tools_msg_bundle_no_base,
+    "no_compatible_abi" to R.string.apk_tools_msg_no_compatible_abi,
+    "install_permission_required" to R.string.apk_tools_msg_install_permission,
+    "apk_missing" to R.string.apk_tools_msg_apk_missing,
 )
 
 @Composable
-private fun formatApkToolsMessage(code: String, exportCount: Int?): String {
+private fun formatApkToolsMessage(code: String, exportCount: Int?, installSplitCount: Int?): String {
     if (code == "export_ok") {
         return stringResource(R.string.apk_tools_msg_export_ok, exportCount ?: 0)
+    }
+    if (code == "install_queued") {
+        return stringResource(R.string.apk_tools_msg_install_queued, installSplitCount ?: 1)
     }
     val id = ApkToolsMessageIds[code] ?: return code
     return stringResource(id)

@@ -84,6 +84,12 @@ interface PrivilegedExecutor {
      */
     suspend fun installApk(apkAbsolutePath: String, allowDowngrade: Boolean = false): Result<Unit>
 
+    /**
+     * Silent multi-APK install via allowlisted `pm install-multiple -r` (split bundles).
+     * Paths are base-first; every path is validated before argv is built.
+     */
+    suspend fun installApks(apkAbsolutePaths: List<String>, allowDowngrade: Boolean = false): Result<Unit>
+
     /** Silent uninstall when [PrivilegeCapability.SILENT_UNINSTALL] is present. */
     suspend fun uninstall(packageName: String, keepData: Boolean): Result<Unit>
 
