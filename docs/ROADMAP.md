@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M43** App activities viewer in progress (`m43-app-activities`). M42 GitHub starred → Sources Done (#73). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M44** Discover UI polish + remove Exodus in progress (`m44-discover-polish`). M43 App activities Done (#75). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -47,7 +47,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M30** | Mirrors / proxy | Done | [`prompts/M30-mirrors-proxy.md`](./prompts/M30-mirrors-proxy.md) · [#48](https://github.com/involvex/kiln/pull/48) | Per-repo mirrors + HTTP/SOCKS/Orbot proxy |
 | **M31** | APK tools resign / split export | Done | [`prompts/M31-apk-tools-resign.md`](./prompts/M31-apk-tools-resign.md) · [#49](https://github.com/involvex/kiln/pull/49) | Resign via apksig + export splits from `.apks`/`.xapk` |
 | **M32** | Update-check responsiveness | Done | [`prompts/M32-update-check-perf.md`](./prompts/M32-update-check-perf.md) · [#50](https://github.com/involvex/kiln/pull/50) | Room-only badge refresh; progress/cancel; mirror fail-fast; parallel repo sync |
-| **M33** | Exodus privacy chips | Done | [`prompts/M33-exodus-privacy.md`](./prompts/M33-exodus-privacy.md) · [#52](https://github.com/involvex/kiln/pull/52) | Deep-link + optional self-hosted API tracker chips |
+| **M33** | Exodus privacy chips | Done (removed M44) | [`prompts/M33-exodus-privacy.md`](./prompts/M33-exodus-privacy.md) · [#52](https://github.com/involvex/kiln/pull/52) | Shipped deep-link + optional API; **removed in M44** (public reports often 404; no end-user API) |
 | **M34** | Autostart + battery | Done | [`prompts/M34-autostart-battery.md`](./prompts/M34-autostart-battery.md) · [#53](https://github.com/involvex/kiln/pull/53) | HyperOS Autostart AppOps + AOSP battery tristate via Shizuku |
 | **M35** | Universal APK merge | Done | [`prompts/M35-universal-apk-merge.md`](./prompts/M35-universal-apk-merge.md) · [#56](https://github.com/involvex/kiln/pull/56) | Merge `.apks`/`.xapk`/`.apkm` via ARSCLib + always resign (M31 keystore) |
 | **M36** | Freeze / hibernate | Done | [`prompts/M36-freeze-hibernate.md`](./prompts/M36-freeze-hibernate.md) · [#58](https://github.com/involvex/kiln/pull/58) | `pm suspend`/`unsuspend` via privilege; Settings list separate from Debloat |
@@ -57,7 +57,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M40** | Backup phase 2 | Done | [`prompts/M40-backup-phase2.md`](./prompts/M40-backup-phase2.md) · [#69](https://github.com/involvex/kiln/pull/69) | SAF tree + keep-N; Shizuku Android/data+obb; optional AES-GCM (no Root) |
 | **M41** | Discover panel | Done | [`prompts/M41-discover-panel.md`](./prompts/M41-discover-panel.md) · [#71](https://github.com/involvex/kiln/pull/71) | Hilt Nav3 crash fix; F-Droid-style shelves in Discover; drop Trending segment |
 | **M42** | GitHub starred → Sources | Done | [`prompts/M42-github-stars.md`](./prompts/M42-github-stars.md) · [#73](https://github.com/involvex/kiln/pull/73) | PAT `/user/starred` review → multi-select add; kilnHiltViewModel shell crash fix |
-| **M43** | App activities viewer | In progress | [`prompts/M43-app-activities.md`](./prompts/M43-app-activities.md) · `m43-app-activities` | Exported activities list + Start + pin shortcut; AppDetail AssistedInject crash fix |
+| **M43** | App activities viewer | Done | [`prompts/M43-app-activities.md`](./prompts/M43-app-activities.md) · [#75](https://github.com/involvex/kiln/pull/75) | Exported activities list + Start + pin shortcut; AppDetail AssistedInject crash fix |
+| **M44** | Discover polish + remove Exodus | In progress | [`prompts/M44-discover-polish.md`](./prompts/M44-discover-polish.md) · `m44-discover-polish` | Denser shelves; catalog detail actions under hero; remove Exodus UI/API/Settings |
 
 ---
 
@@ -69,7 +70,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Update cooldown | Done | Global days + major skip; M38 per-app override + ignored overview |
 | Repo priority UI | Done (M38) | Sources ↑↓; ensureKnownRepos preserves priority |
 | GitHub Nightly channels | Done | M19 #33 |
-| Anti-feature chips | Done | M19; Exodus deep-link + optional API in M33 (#52) |
+| Anti-feature chips | Done | M19 F-Droid chips; Exodus M33 removed in M44 |
 | HyperOS Autostart / battery | Done | M34 (#53) — AppOps 10008/10021 + deviceidle whitelist |
 | Changelog & Watchlist | Done | M21 #35 |
 | Intent / Broadcast API | Done | M22 #36 |
@@ -87,7 +88,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
 | GitHub starred repos → Sources | Done (M42 #73) | Review list + multi-select add; APK heuristic; no silent install |
-| App activity viewer / launcher | In progress (M43) | Exported-only list under App Detail; Tier NONE Start + pin shortcut |
+| App activity viewer / launcher | Done (M43 #75) | Exported-only list under App Detail; Tier NONE Start + pin shortcut |
+| Discover UI density + Exodus removal | In progress (M44) | Compact shelves; detail Install under hero; drop Exodus |
 
 ---
 
@@ -325,10 +327,11 @@ flowchart LR
   M40 --> M41[M41 Discover panel]
   M41 --> M42[M42 GitHub stars]
   M42 --> M43[M43 App activities]
+  M43 --> M44[M44 Discover polish]
 ```
 
-1. **M0–M42** on main (#73); **M43** on `m43-app-activities`; **`v0.2.4`** tagged (code 7); CI lint harden (#65).
-2. After M43: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
+1. **M0–M43** on main (#75); **M44** on `m44-discover-polish`; **`v0.2.4`** tagged (code 7); CI lint harden (#65).
+2. After M44: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

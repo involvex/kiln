@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Discover: denser shelf cards; catalog detail Install/Share/Watch under hero; flatter Sources/Links
+- Removed Exodus Privacy (catalog/app detail, Settings Privacy hub, optional API) — public reports often 404; no end-user API keys
+
 ## [0.2.4] — 2026-11-16
 
 ### Added

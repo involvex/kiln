@@ -4,7 +4,6 @@ import dev.involvex.kiln.core.model.AppearancePrefs
 import dev.involvex.kiln.core.model.AutomationPrefs
 import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
 import dev.involvex.kiln.core.model.DevPrefs
-import dev.involvex.kiln.core.model.ExodusPrivacyPrefs
 import dev.involvex.kiln.core.model.KilnConfigImportPreview
 import dev.involvex.kiln.core.model.MaintenancePrefs
 import dev.involvex.kiln.core.model.MaintenanceRunRecord
@@ -16,9 +15,6 @@ data class SettingsUiState(
     val description: String = "",
     val backgroundUpdates: BackgroundUpdatePrefs = BackgroundUpdatePrefs(),
     val networkProxy: NetworkProxyPrefs = NetworkProxyPrefs(),
-    val exodusPrivacy: ExodusPrivacyPrefs = ExodusPrivacyPrefs(),
-    val exodusBaseUrlInput: String = "",
-    val exodusTokenInput: String = "",
     val githubTokenSet: Boolean = false,
     val githubTokenInput: String = "",
     val automation: AutomationPrefs = AutomationPrefs(),

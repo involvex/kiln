@@ -47,11 +47,6 @@
     <string name="feature_apps_link_ok">Source linked.</string>
     <string name="feature_apps_link_bad_github">Use owner/repo (one slash).</string>
     <string name="feature_apps_dismiss">Dismiss</string>
-    <string name="feature_apps_exodus_section">Privacy (Exodus)</string>
-    <string name="feature_apps_exodus_open">Open Exodus report</string>
-    <string name="feature_apps_exodus_hint">Opens the public Exodus report in a browser. Optional tracker chips need a self-hosted Exodus API under Settings → Privacy.</string>
-    <string name="feature_apps_exodus_no_trackers">No trackers in the latest Exodus report (or no report yet).</string>
-    <string name="feature_apps_exodus_attribution">Tracker names from Exodus Privacy (ODbL). Presence ≠ proof of runtime activity.</string>
     <string name="feature_apps_view_updates">View updates</string>
     <string name="feature_apps_hide_updates_filter">Show all apps</string>
     <string name="feature_apps_update_all">Update all</string>

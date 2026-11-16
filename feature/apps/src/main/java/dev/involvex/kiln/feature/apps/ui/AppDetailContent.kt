@@ -8,8 +8,6 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,7 +16,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -35,13 +32,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.involvex.kiln.core.model.AppActivityInfo
 import dev.involvex.kiln.core.model.AppUpdateInfo
-import dev.involvex.kiln.core.model.ExodusReportUrls
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallJobState
 import dev.involvex.kiln.core.model.InstallJobStatus
@@ -82,9 +77,6 @@ fun AppDetailContent(
     canSilentDowngrade: Boolean = false,
     rollbackInProgress: Boolean = false,
     onRequestRollback: (RollbackApkEntry) -> Unit = {},
-    exodusTrackerNames: List<String> = emptyList(),
-    exodusApiConfigured: Boolean = false,
-    exodusLoading: Boolean = false,
     activities: List<AppActivityInfo> = emptyList(),
     activitiesLoading: Boolean = false,
     activitiesQuery: String = "",
@@ -124,12 +116,6 @@ fun AppDetailContent(
             ),
         )
         SignatureSection(detail = detail, onCopied = onCopied)
-        ExodusPrivacySection(
-            packageName = detail.packageName,
-            trackerNames = exodusTrackerNames,
-            apiConfigured = exodusApiConfigured,
-            loading = exodusLoading,
-        )
         UpdatePrefsSection(
             ignoreUpdates = ignoreUpdates,
             onIgnoreUpdatesChanged = onIgnoreUpdatesChanged,
@@ -563,69 +549,6 @@ private fun Header(detail: InstalledAppDetail) {
         Column {
             Text(detail.label, style = MaterialTheme.typography.headlineSmall)
             Text(detail.packageName, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ExodusPrivacySection(packageName: String, trackerNames: List<String>, apiConfigured: Boolean, loading: Boolean) {
-    val context = LocalContext.current
-    val languageTag = LocalLocale.current.platformLocale.toLanguageTag()
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.feature_apps_exodus_section), style = MaterialTheme.typography.titleMedium)
-        OutlinedButton(
-            onClick = {
-                val url = ExodusReportUrls.reportPageUrl(packageName, languageTag)
-                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-            },
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.feature_apps_exodus_open))
-        }
-        when {
-            loading -> CircularProgressIndicator(modifier = Modifier.size(24.dp))
-
-            trackerNames.isNotEmpty() -> {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    trackerNames.forEach { name ->
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.errorContainer,
-                        ) {
-                            Text(
-                                text = name,
-                                style = MaterialTheme.typography.labelMedium,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            )
-                        }
-                    }
-                }
-                Text(
-                    stringResource(R.string.feature_apps_exodus_attribution),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            apiConfigured -> {
-                Text(
-                    stringResource(R.string.feature_apps_exodus_no_trackers),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            else -> {
-                Text(
-                    stringResource(R.string.feature_apps_exodus_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
         }
     }
 }

@@ -9,8 +9,6 @@
     <string name="settings_hub_updates_sub">Hintergrundprüfung, Intervall, GitHub-Token</string>
     <string name="settings_hub_network">Netzwerk</string>
     <string name="settings_hub_network_sub">Proxy und Orbot</string>
-    <string name="settings_hub_privacy">Datenschutz</string>
-    <string name="settings_hub_privacy_sub">Exodus-API</string>
     <string name="settings_hub_installation">Installation</string>
     <string name="settings_hub_installation_sub">System- oder Shizuku-Installer</string>
     <string name="settings_hub_automation">Automatisierung</string>
@@ -135,17 +133,6 @@
     <string name="settings_font_style">Schriftstil</string>
     <string name="settings_font_default">Standard</string>
     <string name="settings_font_rounded">Abgerundet</string>
-    <string name="settings_exodus_section">Datenschutz (Exodus)</string>
-    <string name="settings_exodus_explain">Deep-Links zur öffentlichen Exodus-Seite funktionieren immer. Optional: selbst gehostete Exodus-API-Basis-URL (HTTPS) und Token für Tracker-Chips in App-Details. Offizielles Exodus vergibt keine API-Keys für Endnutzer-Apps. Token verschlüsselt, nie im Export.</string>
-    <string name="settings_exodus_base_url">Exodus-API-Basis-URL</string>
-    <string name="settings_exodus_token">API-Token</string>
-    <string name="settings_exodus_token_set">Token ist gesetzt</string>
-    <string name="settings_exodus_token_unset">Kein Token gespeichert</string>
-    <string name="settings_exodus_save">Exodus-API speichern</string>
-    <string name="settings_exodus_clear_token">Token löschen</string>
-    <string name="settings_exodus_saved">Exodus-API-Einstellungen gespeichert</string>
-    <string name="settings_exodus_token_cleared">Exodus-Token gelöscht</string>
-    <string name="settings_exodus_https_required">Exodus-API-URL muss HTTPS verwenden</string>
     <string name="settings_network_section">Netzwerk</string>
     <string name="settings_network_explain">Optionaler HTTP- oder SOCKS-Proxy für Kiln-HTTPS-Downloads (F-Droid-Index, GitHub, APKs). Orbot nutzt SOCKS auf 127.0.0.1:9050 — Orbot zuerst installieren und starten. Proxy-Passwort wird nie in der Kiln-Config exportiert.</string>
     <string name="settings_network_orbot">Orbot nutzen (Tor SOCKS)</string>

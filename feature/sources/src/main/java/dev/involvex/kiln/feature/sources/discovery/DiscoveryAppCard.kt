@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -47,27 +49,73 @@ fun DiscoveryAppCard(
             .clickable(enabled = onOpenDetail != null) { onOpenDetail?.invoke() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(if (compact) 10.dp else 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 12.dp),
-            verticalAlignment = Alignment.Top,
+        if (compact) {
+            CompactDiscoveryAppCardBody(row = row, onInstall = onInstall)
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                DiscoveryListIcon(
+                    name = row.name,
+                    iconUrl = row.iconUrl,
+                    sizeDp = 48,
+                )
+                DiscoveryAppCardContent(
+                    row = row,
+                    onInstall = onInstall,
+                    onOpenSource = { url ->
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CompactDiscoveryAppCardBody(row: DiscoveryAppRow, onInstall: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        DiscoveryListIcon(
+            name = row.name,
+            iconUrl = row.iconUrl,
+            sizeDp = 40,
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            DiscoveryListIcon(
-                name = row.name,
-                iconUrl = row.iconUrl,
-                sizeDp = if (compact) 40 else 48,
+            Text(
+                text = row.name,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            DiscoveryAppCardContent(
-                row = row,
-                onInstall = onInstall,
-                onOpenSource = { url ->
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                },
-                compact = compact,
-                modifier = Modifier.weight(1f),
-            )
+            row.summary?.takeIf { it.isNotBlank() }?.let { summary ->
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        FilledTonalButton(
+            onClick = onInstall,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+        ) {
+            Text(stringResource(R.string.discovery_install))
         }
     }
 }
@@ -78,7 +126,6 @@ private fun DiscoveryAppCardContent(
     row: DiscoveryAppRow,
     onInstall: () -> Unit,
     onOpenSource: (String) -> Unit,
-    compact: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -87,7 +134,7 @@ private fun DiscoveryAppCardContent(
     ) {
         Text(
             text = row.name,
-            style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
@@ -102,37 +149,26 @@ private fun DiscoveryAppCardContent(
             Text(
                 text = summary,
                 style = MaterialTheme.typography.bodyMedium,
-                maxLines = if (compact) 2 else 3,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
             )
         }
         if (row.categories.isNotEmpty()) {
             DiscoveryCategoryRow(
                 categories = row.categories,
-                limit = if (compact) 2 else 4,
+                limit = 4,
             )
         }
-        if (!compact) {
-            row.sourceCodeUrl?.takeIf { it.isNotBlank() }?.let { url ->
-                TextButton(onClick = { onOpenSource(url) }) {
-                    Text(stringResource(R.string.catalog_detail_source_code))
-                }
+        row.sourceCodeUrl?.takeIf { it.isNotBlank() }?.let { url ->
+            TextButton(onClick = { onOpenSource(url) }) {
+                Text(stringResource(R.string.catalog_detail_source_code))
             }
         }
-        if (compact) {
-            TextButton(
-                onClick = onInstall,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.discovery_install))
-            }
-        } else {
-            OutlinedButton(
-                onClick = onInstall,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.discovery_install))
-            }
+        OutlinedButton(
+            onClick = onInstall,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.discovery_install))
         }
     }
 }

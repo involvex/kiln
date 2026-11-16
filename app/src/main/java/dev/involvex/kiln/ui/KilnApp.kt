@@ -42,7 +42,6 @@ import dev.involvex.kiln.feature.settings.SettingsIgnoredUpdatesRoute
 import dev.involvex.kiln.feature.settings.SettingsInstallationRoute
 import dev.involvex.kiln.feature.settings.SettingsMaintenanceRoute
 import dev.involvex.kiln.feature.settings.SettingsNetworkRoute
-import dev.involvex.kiln.feature.settings.SettingsPrivacyRoute
 import dev.involvex.kiln.feature.settings.SettingsRoute
 import dev.involvex.kiln.feature.settings.SettingsToolsRoute
 import dev.involvex.kiln.feature.settings.SettingsUpdatesRoute
@@ -73,7 +72,6 @@ import dev.involvex.kiln.navigation.SettingsInstallationKey
 import dev.involvex.kiln.navigation.SettingsKey
 import dev.involvex.kiln.navigation.SettingsMaintenanceKey
 import dev.involvex.kiln.navigation.SettingsNetworkKey
-import dev.involvex.kiln.navigation.SettingsPrivacyKey
 import dev.involvex.kiln.navigation.SettingsToolsKey
 import dev.involvex.kiln.navigation.SettingsUpdatesKey
 import dev.involvex.kiln.navigation.SourcesKey
@@ -209,7 +207,6 @@ private fun EntryProviderScope<Any>.kilnNavEntries(
             onOpenAppearance = { topLevelBackStack.add(SettingsAppearanceKey) },
             onOpenUpdates = { topLevelBackStack.add(SettingsUpdatesKey) },
             onOpenNetwork = { topLevelBackStack.add(SettingsNetworkKey) },
-            onOpenPrivacy = { topLevelBackStack.add(SettingsPrivacyKey) },
             onOpenInstallation = { topLevelBackStack.add(SettingsInstallationKey) },
             onOpenAutomation = { topLevelBackStack.add(SettingsAutomationKey) },
             onOpenMaintenance = { topLevelBackStack.add(SettingsMaintenanceKey) },
@@ -235,9 +232,6 @@ private fun EntryProviderScope<Any>.kilnNavEntries(
     }
     entry<SettingsNetworkKey> {
         SettingsNetworkRoute(onBack = { topLevelBackStack.removeLast() })
-    }
-    entry<SettingsPrivacyKey> {
-        SettingsPrivacyRoute(onBack = { topLevelBackStack.removeLast() })
     }
     entry<SettingsInstallationKey> {
         SettingsInstallationRoute(onBack = { topLevelBackStack.removeLast() })

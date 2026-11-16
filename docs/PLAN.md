@@ -403,7 +403,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 - **P1 — Rollback / Downgrade**: ~~Die letzten N APK-Versionen lokal cachen…~~ → **shipped M8** (≤3/pkg + Shizuku downgrade); M23 adds age/global size prune; Settings N slider → **shipped M38** (#63).
 - **P1 — Update-Cooldown**: ~~Pro App oder global…~~ → **shipped M8** (global days + major auto-install skip); per-app cooldown + ignored-updates overview → **shipped M38** (#63).
 - **P2 — Repo-Priorität reorder UI**: Sources ↑↓ + preserve on `ensureKnownRepos` → **shipped M38** (#63).
-- **P2 — Anti-Features & Tracker-Info**: F-Droid chips → **shipped M19**; Exodus deep-link + optional self-hosted API → **shipped M33** (#52).
+- **P2 — Anti-Features & Tracker-Info**: F-Droid chips → **shipped M19**; Exodus deep-link + optional API → **shipped M33** (#52), **removed M44** (public reports often 404; no end-user API).
 - **P2 — HyperOS Autostart / battery**: Settings Autostart UI often broken; manage via Shizuku AppOps + AOSP battery tristate. → **shipped M34** (#53).
 - **P2 — Berechtigungs-Audit**: Übersicht gefährlicher Berechtigungen pro App, per Shizuku AppOps ändern und Berechtigungen in Bulk entziehen (`appops`, `pm revoke`). → **M27** (Done #41)
 - **P2 — Changelog & Watchlist**: → **shipped M21**
@@ -441,7 +441,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 8. **M30** Mirrors / proxy (Done #48)
 9. **M31** APK tools resign / split export (Done #49)
 10. **M32** Update-check responsiveness (Done #50); `v0.2.4` tagged (code 7)
-11. **M33** Exodus privacy chips (Done #52)
+11. **M33** Exodus privacy chips (Done #52; **removed M44**)
 12. **M34** HyperOS Autostart + battery controls (Done #53)
 13. **M35** Universal APK merge (Done #56)
 14. **M36** Freeze / hibernate (Done #58)
@@ -450,3 +450,6 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 17. **M39** Split APK install (Done #66)
 18. **M40** Backup phase 2 — SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM (no Root) → **Done (#69)**
 19. **M41** Discover panel — Hilt Nav3 ViewModel fix; shelves on Discover home; drop Trending segment → **Done (#71)**
+20. **M42** GitHub starred → Sources → **Done (#73)**
+21. **M43** App activities viewer → **Done (#75)**
+22. **M44** Discover UI polish + remove Exodus → in progress (`m44-discover-polish`)
