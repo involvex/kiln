@@ -71,6 +71,8 @@ data class ManagedApp(
     val githubChannel: GitHubReleaseChannel = GitHubReleaseChannel.STABLE,
     /** True when the user watches an uninstalled catalog/GitHub app for new versions. */
     val watchOnly: Boolean = false,
+    /** Null = use global Settings cooldown for auto-install. */
+    val updateCooldownDays: Int? = null,
 )
 
 data class AppUpdateInfo(
@@ -140,6 +142,7 @@ data class ManagedSourceLink(
  * Available updates for managed / matched packages.
  * Implemented in `:feature:sources`, consumed by `:feature:apps`.
  */
+@Suppress("TooManyFunctions") // Update badges, ignore/cooldown prefs, and source linking share one facade.
 interface AppUpdateRepository {
     fun updates(): kotlinx.coroutines.flow.Flow<Map<String, AppUpdateInfo>>
 
@@ -158,6 +161,15 @@ interface AppUpdateRepository {
     /** `null` if the package is not a managed app yet. */
     fun observeIgnoreUpdates(packageName: String): kotlinx.coroutines.flow.Flow<Boolean?>
 
+    /**
+     * Per-app auto-install cooldown override in days.
+     * Outer null = not managed; inner null = use global Settings value.
+     */
+    fun observeUpdateCooldownDays(packageName: String): kotlinx.coroutines.flow.Flow<Int?>
+
+    /** Packages with [ManagedApp.ignoreUpdates] true (for Settings overview). */
+    fun observeIgnoredUpdatePackages(): kotlinx.coroutines.flow.Flow<List<String>>
+
     /** `null` if the package is not a managed app yet. */
     fun observeManagedLink(packageName: String): kotlinx.coroutines.flow.Flow<ManagedSourceLink?>
 
@@ -169,6 +181,15 @@ interface AppUpdateRepository {
      * (source from current update info or `"manual"`).
      */
     suspend fun setIgnoreUpdates(packageName: String, ignoreUpdates: Boolean): Result<Unit>
+
+    /**
+     * Persist per-app cooldown override. [days] null clears the override (use global).
+     * Creates a minimal managed row when missing.
+     */
+    suspend fun setUpdateCooldownDays(packageName: String, days: Int?): Result<Unit>
+
+    /** Package → per-app cooldown override for auto-install (null value = use global). */
+    suspend fun cooldownOverrides(): Map<String, Int?>
 
     /**
      * Manually bind an installed package to an update source (F-Droid repo id or `github:owner/repo`).

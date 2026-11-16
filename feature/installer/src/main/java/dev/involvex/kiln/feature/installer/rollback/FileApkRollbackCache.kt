@@ -3,6 +3,8 @@ package dev.involvex.kiln.feature.installer.rollback
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.model.ApkRollbackCache
+import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
+import dev.involvex.kiln.core.model.BackgroundUpdatePrefs
 import dev.involvex.kiln.core.model.RollbackApkEntry
 import dev.involvex.kiln.core.model.RollbackPrunePolicy
 import java.io.File
@@ -17,10 +19,14 @@ import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 /**
- * Keeps up to [MAX_PER_PACKAGE] successfully installed APKs per package under app filesDir.
+ * Keeps up to [BackgroundUpdatePrefs.rollbackKeepCount] successfully installed APKs per package
+ * under app filesDir.
  */
 @Singleton
-class FileApkRollbackCache @Inject constructor(@ApplicationContext private val context: Context) : ApkRollbackCache {
+class FileApkRollbackCache @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val backgroundUpdatePreferences: BackgroundUpdatePreferences,
+) : ApkRollbackCache {
     private val root = File(context.filesDir, ROOT_DIR).also { it.mkdirs() }
     private val mutex = Mutex()
     private val snapshot = MutableStateFlow(scanAll())
@@ -58,7 +64,10 @@ class FileApkRollbackCache @Inject constructor(@ApplicationContext private val c
                 meta.delete()
                 return@withLock
             }
-            prunePackageLocked(pkgDir, keep = MAX_PER_PACKAGE)
+            val keep = BackgroundUpdatePrefs.sanitizeRollbackKeepCount(
+                backgroundUpdatePreferences.current().rollbackKeepCount,
+            )
+            prunePackageLocked(pkgDir, keep = keep)
             snapshot.value = scanAll()
         }
 
@@ -83,6 +92,15 @@ class FileApkRollbackCache @Inject constructor(@ApplicationContext private val c
             snapshot.value = scanAll()
         }
         freed
+    }
+
+    override suspend fun retrimAll(keep: Int) = mutex.withLock {
+        val safeKeep = BackgroundUpdatePrefs.sanitizeRollbackKeepCount(keep)
+        if (!root.isDirectory) return@withLock
+        root.listFiles()?.filter { it.isDirectory }?.forEach { pkgDir ->
+            prunePackageLocked(pkgDir, keep = safeKeep)
+        }
+        snapshot.value = scanAll()
     }
 
     private fun entriesFor(packageName: String): List<RollbackApkEntry> {
@@ -116,10 +134,14 @@ class FileApkRollbackCache @Inject constructor(@ApplicationContext private val c
     private fun prunePackageLocked(pkgDir: File, keep: Int) {
         val apks = pkgDir.listFiles()?.filter { it.extension == "apk" }.orEmpty()
             .sortedByDescending { it.nameWithoutExtension.toLongOrNull() ?: 0L }
-        apks.drop(keep).forEach { apk ->
-            val code = apk.nameWithoutExtension
-            apk.delete()
-            File(pkgDir, "$code.meta").delete()
+        val codes = apks.mapNotNull { it.nameWithoutExtension.toLongOrNull() }
+        val toDelete = RollbackKeepPolicy.versionCodesToDelete(codes, keep).toSet()
+        apks.forEach { apk ->
+            val code = apk.nameWithoutExtension.toLongOrNull() ?: return@forEach
+            if (code in toDelete) {
+                apk.delete()
+                File(pkgDir, "$code.meta").delete()
+            }
         }
     }
 
@@ -141,6 +163,5 @@ class FileApkRollbackCache @Inject constructor(@ApplicationContext private val c
 
     private companion object {
         const val ROOT_DIR = "apk_rollback"
-        const val MAX_PER_PACKAGE = 3
     }
 }

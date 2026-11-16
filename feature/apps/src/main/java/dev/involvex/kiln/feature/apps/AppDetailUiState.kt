@@ -21,6 +21,9 @@ data class AppDetailUiState(
     val installJob: InstallJobState? = null,
     /** null = not managed yet; true = skipping update checks; false = checking updates */
     val ignoreUpdates: Boolean? = null,
+    /** null = use [globalCooldownDays]; otherwise per-app override. */
+    val updateCooldownDays: Int? = null,
+    val globalCooldownDays: Int = 0,
     val managedLink: ManagedSourceLink? = null,
     val enabledRepos: List<RepoConfig> = emptyList(),
     val showLinkSourceDialog: Boolean = false,
@@ -50,6 +53,7 @@ sealed interface AppDetailEvent {
     data object DismissInstallDespiteSignature : AppDetailEvent
     data object OpenUnknownSourcesSettings : AppDetailEvent
     data class IgnoreUpdatesChanged(val checkForUpdates: Boolean) : AppDetailEvent
+    data class UpdateCooldownChanged(val days: Int?) : AppDetailEvent
     data object OpenLinkSource : AppDetailEvent
     data object DismissLinkSource : AppDetailEvent
     data class LinkFdroidRepo(val repoId: String) : AppDetailEvent

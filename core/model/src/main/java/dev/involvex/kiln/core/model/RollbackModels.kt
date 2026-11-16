@@ -29,6 +29,9 @@ interface ApkRollbackCache {
      * Returns bytes freed. Per-package max count is unchanged (see FileApkRollbackCache).
      */
     suspend fun pruneByAgeAndSize(maxAgeMs: Long, maxTotalBytes: Long, nowEpochMs: Long): Long
+
+    /** Drop older APKs so each package keeps at most [keep] newest versionCodes. */
+    suspend fun retrimAll(keep: Int)
 }
 
 /**

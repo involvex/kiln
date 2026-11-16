@@ -57,12 +57,14 @@ class UpdateCheckWorker @AssistedInject constructor(
                 )
                 val installedNames = installedAppsReader.userApps()
                     .associate { it.packageName to it.versionName }
+                val perAppCooldown = appUpdateRepository.cooldownOverrides()
                 val toInstall = AutoInstallPolicy.selectForEnqueue(
                     updates = updates.values,
                     autoInstallMatching = prefs.autoInstallMatching,
                     installedVersionNames = installedNames,
                     firstSeenEpochMs = firstSeen,
-                    cooldownDays = prefs.updateCooldownDays,
+                    globalCooldownDays = prefs.updateCooldownDays,
+                    perAppCooldownDays = perAppCooldown,
                     nowEpochMs = now,
                 )
                 for (update in toInstall) {

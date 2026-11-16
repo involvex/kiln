@@ -15,15 +15,11 @@ object AutoInstallPolicy {
         autoInstallMatching: Boolean,
         installedVersionNames: Map<String, String?> = emptyMap(),
         firstSeenEpochMs: Map<String, Long> = emptyMap(),
-        cooldownDays: Int = 0,
+        globalCooldownDays: Int = 0,
+        perAppCooldownDays: Map<String, Int?> = emptyMap(),
         nowEpochMs: Long = System.currentTimeMillis(),
     ): List<AppUpdateInfo> {
         if (!autoInstallMatching) return emptyList()
-        val cooldownMs = if (cooldownDays > 0) {
-            TimeUnit.DAYS.toMillis(cooldownDays.toLong())
-        } else {
-            0L
-        }
         return updates.filter { update ->
             if (update.watchOnly) return@filter false
             if (!update.signatureMatches) return@filter false
@@ -37,7 +33,12 @@ object AutoInstallPolicy {
                 )
                 return@filter false
             }
-            if (cooldownMs > 0) {
+            val cooldownDays = effectiveCooldownDays(
+                perApp = perAppCooldownDays[update.packageName],
+                global = globalCooldownDays,
+            )
+            if (cooldownDays > 0) {
+                val cooldownMs = TimeUnit.DAYS.toMillis(cooldownDays.toLong())
                 val key = "${update.packageName}:${update.availableVersionCode}"
                 val firstSeen = firstSeenEpochMs[key]
                 if (firstSeen == null) {
@@ -57,6 +58,9 @@ object AutoInstallPolicy {
             true
         }
     }
+
+    /** Per-app override when non-null; otherwise [global]. */
+    fun effectiveCooldownDays(perApp: Int?, global: Int): Int = perApp ?: global
 
     /**
      * Major bump = first numeric segment of available versionName is greater than installed.

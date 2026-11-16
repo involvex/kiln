@@ -38,6 +38,8 @@ data class KilnConfigManagedAppV1(
     val githubAssetRegex: String? = null,
     val githubChannel: String = "STABLE",
     val watchOnly: Boolean = false,
+    /** Null = use global cooldown. */
+    val updateCooldownDays: Int? = null,
 )
 
 @Serializable
@@ -69,6 +71,8 @@ data class KilnConfigBackgroundUpdatesV1(
     val updateCooldownDays: Int = 0,
     /** Null = omit on import (older configs). Only 12 / 24 / 168 when set. */
     val checkIntervalHours: Int? = null,
+    /** Null = omit on import (older configs). Range 1–5 when set. */
+    val rollbackKeepCount: Int? = null,
 )
 
 @Serializable

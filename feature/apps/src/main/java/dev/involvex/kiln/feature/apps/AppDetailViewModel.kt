@@ -10,6 +10,7 @@ import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.AppUpdateRepository
+import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.ExodusPrivacyPreferences
 import dev.involvex.kiln.core.model.ExodusReportRepository
 import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
@@ -38,6 +39,7 @@ class AppDetailViewModel @AssistedInject constructor(
     private val gitHubAuth: GitHubAuthHeaderProvider,
     private val exodusReportRepository: ExodusReportRepository,
     private val exodusPrivacyPreferences: ExodusPrivacyPreferences,
+    private val backgroundUpdatePreferences: BackgroundUpdatePreferences,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppDetailUiState())
     val uiState: StateFlow<AppDetailUiState> = _uiState.asStateFlow()
@@ -57,6 +59,16 @@ class AppDetailViewModel @AssistedInject constructor(
         viewModelScope.launch {
             appUpdateRepository.observeIgnoreUpdates(packageName).collect { ignore ->
                 _uiState.update { it.copy(ignoreUpdates = ignore) }
+            }
+        }
+        viewModelScope.launch {
+            appUpdateRepository.observeUpdateCooldownDays(packageName).collect { days ->
+                _uiState.update { it.copy(updateCooldownDays = days) }
+            }
+        }
+        viewModelScope.launch {
+            backgroundUpdatePreferences.observe().collect { prefs ->
+                _uiState.update { it.copy(globalCooldownDays = prefs.updateCooldownDays) }
             }
         }
         viewModelScope.launch {
@@ -157,6 +169,8 @@ class AppDetailViewModel @AssistedInject constructor(
             -> onInstallEvent(event)
 
             is AppDetailEvent.IgnoreUpdatesChanged -> setCheckForUpdates(event.checkForUpdates)
+
+            is AppDetailEvent.UpdateCooldownChanged -> setUpdateCooldownDays(event.days)
 
             is AppDetailEvent.RequestRollback -> requestRollback(event.entry)
 
@@ -262,6 +276,15 @@ class AppDetailViewModel @AssistedInject constructor(
                     ignoreUpdates = !checkForUpdates,
                 )
             ) {
+                is Result.Success -> Unit
+                is Result.Failure -> showMessage(result.message)
+            }
+        }
+    }
+
+    private fun setUpdateCooldownDays(days: Int?) {
+        viewModelScope.launch {
+            when (val result = appUpdateRepository.setUpdateCooldownDays(packageName, days)) {
                 is Result.Success -> Unit
                 is Result.Failure -> showMessage(result.message)
             }

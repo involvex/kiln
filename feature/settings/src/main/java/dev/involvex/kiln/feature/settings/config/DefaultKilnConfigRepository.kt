@@ -137,6 +137,7 @@ class DefaultKilnConfigRepository @Inject constructor(
                     githubAssetRegex = app.githubAssetRegex,
                     githubChannel = app.githubChannel,
                     watchOnly = app.watchOnly,
+                    updateCooldownDays = app.updateCooldownDays,
                 )
             },
             preferences = KilnConfigPreferencesV1(
@@ -146,6 +147,7 @@ class DefaultKilnConfigRepository @Inject constructor(
                     autoInstallMatching = bg.autoInstallMatching,
                     updateCooldownDays = bg.updateCooldownDays,
                     checkIntervalHours = bg.checkIntervalHours,
+                    rollbackKeepCount = bg.rollbackKeepCount,
                 ),
                 automation = KilnConfigAutomationV1(enabled = auto.enabled),
                 maintenance = KilnConfigMaintenanceV1(
@@ -188,6 +190,9 @@ class DefaultKilnConfigRepository @Inject constructor(
             backgroundUpdatePreferences.setUpdateCooldownDays(section.updateCooldownDays)
             section.checkIntervalHours?.let { hours ->
                 backgroundUpdatePreferences.setCheckIntervalHours(hours)
+            }
+            section.rollbackKeepCount?.let { keep ->
+                backgroundUpdatePreferences.setRollbackKeepCount(keep)
             }
             applied++
         }
@@ -260,9 +265,14 @@ class DefaultKilnConfigRepository @Inject constructor(
             githubAssetRegex = githubAssetRegex?.trim()?.takeIf { it.isNotEmpty() },
             githubChannel = githubChannel.ifBlank { "STABLE" },
             watchOnly = watchOnly,
+            updateCooldownDays = updateCooldownDays?.coerceIn(0, MAX_PER_APP_COOLDOWN_DAYS),
         )
     }
 
     private inline fun <reified T : Enum<T>> enumOrDefault(raw: String, default: T): T =
         runCatching { enumValueOf<T>(raw.trim().uppercase()) }.getOrDefault(default)
+
+    private companion object {
+        const val MAX_PER_APP_COOLDOWN_DAYS = 30
+    }
 }

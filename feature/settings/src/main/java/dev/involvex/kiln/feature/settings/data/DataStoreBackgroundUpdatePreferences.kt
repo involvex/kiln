@@ -50,6 +50,12 @@ class DataStoreBackgroundUpdatePreferences @Inject constructor(@ApplicationConte
         }
     }
 
+    override suspend fun setRollbackKeepCount(count: Int) {
+        store.edit {
+            it[KEY_ROLLBACK_KEEP] = BackgroundUpdatePrefs.sanitizeRollbackKeepCount(count)
+        }
+    }
+
     private fun Preferences.toPrefs() = BackgroundUpdatePrefs(
         enabled = this[KEY_ENABLED] ?: false,
         unmeteredOnly = this[KEY_UNMETERED] ?: true,
@@ -57,6 +63,9 @@ class DataStoreBackgroundUpdatePreferences @Inject constructor(@ApplicationConte
         updateCooldownDays = this[KEY_COOLDOWN_DAYS] ?: 0,
         checkIntervalHours = BackgroundUpdatePrefs.sanitizeIntervalHours(
             this[KEY_CHECK_INTERVAL_HOURS] ?: BackgroundUpdatePrefs.DEFAULT_CHECK_INTERVAL_HOURS,
+        ),
+        rollbackKeepCount = BackgroundUpdatePrefs.sanitizeRollbackKeepCount(
+            this[KEY_ROLLBACK_KEEP] ?: BackgroundUpdatePrefs.DEFAULT_ROLLBACK_KEEP_COUNT,
         ),
     )
 
@@ -66,6 +75,7 @@ class DataStoreBackgroundUpdatePreferences @Inject constructor(@ApplicationConte
         val KEY_AUTO_INSTALL = booleanPreferencesKey("auto_install_matching")
         val KEY_COOLDOWN_DAYS = intPreferencesKey("update_cooldown_days")
         val KEY_CHECK_INTERVAL_HOURS = intPreferencesKey("check_interval_hours")
+        val KEY_ROLLBACK_KEEP = intPreferencesKey("rollback_keep_count")
         const val MAX_COOLDOWN_DAYS = 30
     }
 }

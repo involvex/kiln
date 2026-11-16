@@ -78,7 +78,7 @@ class AutoInstallPolicyTest {
             updates = updates,
             autoInstallMatching = true,
             firstSeenEpochMs = firstSeen,
-            cooldownDays = 1,
+            globalCooldownDays = 1,
             nowEpochMs = now,
         )
         assertTrue(blocked.isEmpty())
@@ -86,10 +86,35 @@ class AutoInstallPolicyTest {
             updates = updates,
             autoInstallMatching = true,
             firstSeenEpochMs = firstSeen,
-            cooldownDays = 1,
+            globalCooldownDays = 1,
             nowEpochMs = now + 25 * 60 * 60 * 1000L,
         )
         assertEquals(listOf("app"), allowed.map { it.packageName })
+    }
+
+    @Test
+    fun per_app_cooldown_overrides_global() {
+        val updates = listOf(matching("strict"), matching("open"))
+        val now = 1_000_000L
+        val firstSeen = mapOf(
+            "strict:2" to now - 12 * 60 * 60 * 1000L,
+            "open:2" to now - 12 * 60 * 60 * 1000L,
+        )
+        val selected = AutoInstallPolicy.selectForEnqueue(
+            updates = updates,
+            autoInstallMatching = true,
+            firstSeenEpochMs = firstSeen,
+            globalCooldownDays = 0,
+            perAppCooldownDays = mapOf("strict" to 1, "open" to null),
+            nowEpochMs = now,
+        )
+        assertEquals(listOf("open"), selected.map { it.packageName })
+    }
+
+    @Test
+    fun effectiveCooldownDays_prefers_per_app() {
+        assertEquals(7, AutoInstallPolicy.effectiveCooldownDays(perApp = 7, global = 1))
+        assertEquals(1, AutoInstallPolicy.effectiveCooldownDays(perApp = null, global = 1))
     }
 
     @Test

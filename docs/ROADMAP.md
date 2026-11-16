@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M37** Settings hub in progress (`m37-settings-hub`). **M36** Freeze/hibernate Done (#58). App version **0.2.3** (code 6), tag `v0.2.3`. Next after M37: publishing / dual-user (unscheduled). HyperOS M1–M8 checklist remains a separate release gate.
+**Current status:** **M38** Settings polish in progress (`m38-settings-polish`). **M37** Settings hub Done (#61). App version **0.2.3** (code 6), tag `v0.2.3`. Next after M38: publishing / dual-user (unscheduled). HyperOS M1–M8 checklist remains a separate release gate.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -51,7 +51,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M34** | Autostart + battery | Done | [`prompts/M34-autostart-battery.md`](./prompts/M34-autostart-battery.md) · [#53](https://github.com/involvex/kiln/pull/53) | HyperOS Autostart AppOps + AOSP battery tristate via Shizuku |
 | **M35** | Universal APK merge | Done | [`prompts/M35-universal-apk-merge.md`](./prompts/M35-universal-apk-merge.md) · [#56](https://github.com/involvex/kiln/pull/56) | Merge `.apks`/`.xapk`/`.apkm` via ARSCLib + always resign (M31 keystore) |
 | **M36** | Freeze / hibernate | Done | [`prompts/M36-freeze-hibernate.md`](./prompts/M36-freeze-hibernate.md) · [#58](https://github.com/involvex/kiln/pull/58) | `pm suspend`/`unsuspend` via privilege; Settings list separate from Debloat |
-| **M37** | Settings hub + PAT + signature confirm | In progress | [`prompts/M37-settings-hub.md`](./prompts/M37-settings-hub.md) · `m37-settings-hub` | Category hub; Updates PAT + check interval; Install anyway for WARNING only |
+| **M37** | Settings hub + PAT + signature confirm | Done | [`prompts/M37-settings-hub.md`](./prompts/M37-settings-hub.md) · [#61](https://github.com/involvex/kiln/pull/61) | Category hub; Updates PAT + check interval; Install anyway for WARNING only |
+| **M38** | Settings polish | In progress | [`prompts/M38-settings-polish.md`](./prompts/M38-settings-polish.md) · `m38-settings-polish` | Rollback N slider; per-app cooldown; ignored-updates overview; repo priority ↑↓ |
 
 ---
 
@@ -59,8 +60,9 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| Rollback / Downgrade | Done (core) | ≤3/pkg cache; M23 adds age/1 GiB prune; Settings N slider later |
-| Update cooldown | Done (core) | Global days + major auto-install skip; per-app later |
+| Rollback / Downgrade | Done | ≤3/pkg cache; M23 age/1 GiB prune; M38 Settings N slider (1–5) |
+| Update cooldown | Done | Global days + major skip; M38 per-app override + ignored overview |
+| Repo priority UI | Done (M38) | Sources ↑↓; ensureKnownRepos preserves priority |
 | GitHub Nightly channels | Done | M19 #33 |
 | Anti-feature chips | Done | M19; Exodus deep-link + optional API in M33 (#52) |
 | HyperOS Autostart / battery | Done | M34 (#53) — AppOps 10008/10021 + deviceidle whitelist |
@@ -113,7 +115,8 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Freeze / hibernate | ✅ M36 (#58) — `pm suspend`/`unsuspend`; Settings list (separate from Debloat) | ≥ SHIZUKU (`DEBLOAT`) |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
-| Background auto-update | ✅ Settings hub → Updates; 12h / daily / weekly PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; cooldown days + major-bump skip; APK rollback cache (≤3/pkg); GitHub PAT under Updates | NONE (+ network; silent install/downgrade if SHIZUKU) |
+| Background auto-update | ✅ Settings hub → Updates; 12h / daily / weekly PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; global + per-app cooldown; APK rollback keep-N (1–5); ignored-updates overview; GitHub PAT under Updates | NONE (+ network; silent install/downgrade if SHIZUKU) |
+| Repo priority | ✅ Sources ↑↓ reorder; `ensureKnownRepos` preserves user priority; Auto-match / update conflict tie-break | NONE |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
 | Release / store prep | ✅ version `0.2.3` (code 6); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG; F-Droid submit deferred | — |
@@ -307,12 +310,15 @@ flowchart LR
   M33 --> M34[M34 Autostart battery]
   M34 --> M35[M35 Universal merge]
   M35 --> M36[M36 Freeze hibernate]
+  M36 --> M37[M37 Settings hub]
+  M37 --> M38[M38 Settings polish]
 ```
 
-1. **M0–M36** on main (#58); Background controls polish (#55); **`v0.2.3`** tagged.
-2. Next: publishing / dual-user — do not mix into an unplanned branch.
-3. Publishing / F-Droid still deferred unless explicitly requested.
-4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
+1. **M0–M37** on main (#61); AutoMatch UX polish (#62); **`v0.2.3`** tagged.
+2. **M38** Settings polish on `m38-settings-polish`.
+3. Next after M38: publishing / dual-user — do not mix into an unplanned branch.
+4. Publishing / F-Droid still deferred unless explicitly requested.
+5. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 
 ---
 
