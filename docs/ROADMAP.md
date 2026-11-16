@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M42** GitHub starred → Sources Done (#73). M41 Discover panel Done (#71). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M43** App activities viewer in progress (`m43-app-activities`). M42 GitHub starred → Sources Done (#73). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -57,6 +57,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M40** | Backup phase 2 | Done | [`prompts/M40-backup-phase2.md`](./prompts/M40-backup-phase2.md) · [#69](https://github.com/involvex/kiln/pull/69) | SAF tree + keep-N; Shizuku Android/data+obb; optional AES-GCM (no Root) |
 | **M41** | Discover panel | Done | [`prompts/M41-discover-panel.md`](./prompts/M41-discover-panel.md) · [#71](https://github.com/involvex/kiln/pull/71) | Hilt Nav3 crash fix; F-Droid-style shelves in Discover; drop Trending segment |
 | **M42** | GitHub starred → Sources | Done | [`prompts/M42-github-stars.md`](./prompts/M42-github-stars.md) · [#73](https://github.com/involvex/kiln/pull/73) | PAT `/user/starred` review → multi-select add; kilnHiltViewModel shell crash fix |
+| **M43** | App activities viewer | In progress | [`prompts/M43-app-activities.md`](./prompts/M43-app-activities.md) · `m43-app-activities` | Exported activities list + Start + pin shortcut; AppDetail AssistedInject crash fix |
 
 ---
 
@@ -86,6 +87,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
 | GitHub starred repos → Sources | Done (M42 #73) | Review list + multi-select add; APK heuristic; no silent install |
+| App activity viewer / launcher | In progress (M43) | Exported-only list under App Detail; Tier NONE Start + pin shortcut |
 
 ---
 
@@ -97,7 +99,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | --- | --- | --- |
 | Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
 | List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
-| App detail | ✅ Version, installer, SHA-256, paths, permissions; rollback list + Shizuku downgrade confirm | NONE / SHIZUKU |
+| App detail | ✅ Version, installer, SHA-256, paths, permissions; **M43** exported activities + Start/pin shortcut; rollback list + Shizuku downgrade confirm | NONE / SHIZUKU |
 | APK export (single / batch) | ✅ `.apk` / `.apks` STORED / `.xapk`; SAF + share + WorkManager batch | NONE |
 | Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
 | Sources / updates | ✅ F-Droid/Izzy/Guardian defaults + FP upsert; `fdroidrepo(s):` / `?fingerprint=` deep links; index-v2 + entry.jar verify; GitHub; **M42** starred import (PAT review → multi-select); Obtainium import; Room cache; per-repo mirrors (M30) | NONE (+ network) |
@@ -322,10 +324,11 @@ flowchart LR
   M39 --> M40[M40 Backup phase 2]
   M40 --> M41[M41 Discover panel]
   M41 --> M42[M42 GitHub stars]
+  M42 --> M43[M43 App activities]
 ```
 
-1. **M0–M42** on main (#73); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
-2. Next: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
+1. **M0–M42** on main (#73); **M43** on `m43-app-activities`; **`v0.2.4`** tagged (code 7); CI lint harden (#65).
+2. After M43: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

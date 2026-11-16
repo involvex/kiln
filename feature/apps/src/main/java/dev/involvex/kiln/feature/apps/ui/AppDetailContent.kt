@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import dev.involvex.kiln.core.model.AppActivityInfo
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.ExodusReportUrls
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
@@ -84,6 +85,12 @@ fun AppDetailContent(
     exodusTrackerNames: List<String> = emptyList(),
     exodusApiConfigured: Boolean = false,
     exodusLoading: Boolean = false,
+    activities: List<AppActivityInfo> = emptyList(),
+    activitiesLoading: Boolean = false,
+    activitiesQuery: String = "",
+    onActivitiesQueryChange: (String) -> Unit = {},
+    showActivitiesSearch: Boolean = false,
+    onActivityMessage: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -145,6 +152,14 @@ fun AppDetailContent(
         )
         PathsSection(detail = detail)
         PermissionsSection(detail = detail)
+        AppActivitiesSection(
+            activities = activities,
+            loading = activitiesLoading,
+            query = activitiesQuery,
+            onQueryChange = onActivitiesQueryChange,
+            showSearch = showActivitiesSearch,
+            onMessage = onActivityMessage,
+        )
         if (!detail.canUninstall) {
             Text(
                 text = stringResource(R.string.feature_apps_uninstall_disabled),
