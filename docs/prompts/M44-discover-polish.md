@@ -1,6 +1,6 @@
 # M44 — Discover UI polish + remove Exodus
 
-> Branch `m44-discover-polish`. After M43 (#75). Includes M43 docs closeout.
+> Shipped in [#76](https://github.com/involvex/kiln/pull/76). Branch `m44-discover-polish`. After M43 (#75). Includes M43 docs closeout.
 
 ## In scope
 
@@ -24,10 +24,10 @@ Public `reports.exodus-privacy.eu.org/.../reports/<pkg>/` often 404s. Tracker ch
 
 ## Done when
 
-- [ ] Discover home shows clearly denser shelves (≥4 shelf rows more reachable without scroll)
-- [ ] Catalog detail shows Install in the first screenful; no Exodus UI
-- [ ] App detail and Settings have no Exodus / Privacy-Exodus hub
-- [ ] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green
+- [x] Discover home shows clearly denser shelves (≥4 shelf rows more reachable without scroll)
+- [x] Catalog detail shows Install in the first screenful; no Exodus UI
+- [x] App detail and Settings have no Exodus / Privacy-Exodus hub
+- [x] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green
 - [ ] Manual HyperOS checklist in PR
 
 ## Manual HyperOS checklist (PR)
