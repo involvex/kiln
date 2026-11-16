@@ -1,0 +1,1 @@
+0.2.4: Split-APK-Install (.apks/.xapk/.apkm) per SAF und Teilen; Settings-Feinschliff (Rollback-N, Cooldown, Repo-Priorität); Einfrieren; Universal-Merge; Exodus; HyperOS Autostart/Akku; AutoMatch-UX.

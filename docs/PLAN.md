@@ -440,7 +440,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 7. **M29** APK tools phase 2 (inspect + compare; Done #47)
 8. **M30** Mirrors / proxy (Done #48)
 9. **M31** APK tools resign / split export (Done #49)
-10. **M32** Update-check responsiveness (Done #50); `v0.2.3` tagged
+10. **M32** Update-check responsiveness (Done #50); `v0.2.4` tagged (code 7)
 11. **M33** Exodus privacy chips (Done #52)
 12. **M34** HyperOS Autostart + battery controls (Done #53)
 13. **M35** Universal APK merge (Done #56)
