@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M39** Split APK install Done on `m39-split-install` (awaiting PR). M38 Settings polish Done (#63). App version **0.2.3** (code 6), tag `v0.2.3`. HyperOS M1–M8 checklist remains a separate release gate; publishing / dual-user unscheduled.
+**Current status:** **M39** Split APK install Done (#66). M38 Settings polish Done (#63). App version **0.2.3** (code 6), tag `v0.2.3`. HyperOS M1–M8 checklist remains a separate release gate; publishing / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -53,7 +53,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M36** | Freeze / hibernate | Done | [`prompts/M36-freeze-hibernate.md`](./prompts/M36-freeze-hibernate.md) · [#58](https://github.com/involvex/kiln/pull/58) | `pm suspend`/`unsuspend` via privilege; Settings list separate from Debloat |
 | **M37** | Settings hub + PAT + signature confirm | Done | [`prompts/M37-settings-hub.md`](./prompts/M37-settings-hub.md) · [#61](https://github.com/involvex/kiln/pull/61) | Category hub; Updates PAT + check interval; Install anyway for WARNING only |
 | **M38** | Settings polish | Done | [`prompts/M38-settings-polish.md`](./prompts/M38-settings-polish.md) · [#63](https://github.com/involvex/kiln/pull/63) | Rollback N slider; per-app cooldown; ignored-updates overview; repo priority ↑↓ |
-| **M39** | Split APK install | Done | [`prompts/M39-split-install.md`](./prompts/M39-split-install.md) · `m39-split-install` | SAF + Share/VIEW for `.apks`/`.xapk`/`.apkm`; PackageInstaller multi-session; optional silent `install-multiple` |
+| **M39** | Split APK install | Done | [`prompts/M39-split-install.md`](./prompts/M39-split-install.md) · [#66](https://github.com/involvex/kiln/pull/66) | SAF + Share/VIEW for `.apks`/`.xapk`/`.apkm`; PackageInstaller multi-session; optional silent `install-multiple` |
 
 ---
 
@@ -316,8 +316,8 @@ flowchart LR
   M38 --> M39[M39 Split install]
 ```
 
-1. **M0–M38** on main (#63); AutoMatch UX polish (#62); **`v0.2.3`** tagged; CI lint harden (#65).
-2. **M39** Split APK install Done on `m39-split-install` (awaiting merge) — bundles via SAF + Share/VIEW.
+1. **M0–M39** on main (#66); AutoMatch UX polish (#62); **`v0.2.3`** tagged; CI lint harden (#65).
+2. No further feature milestone scheduled — pick from PLAN §12 (SAF backup rotation / dual-user / tablet layouts) or release gates.
 3. Publishing / F-Droid still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 
