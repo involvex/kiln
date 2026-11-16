@@ -11,21 +11,38 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.involvex.kiln.R
 import dev.involvex.kiln.feature.apps.apktools.ApkToolsRoute
+import dev.involvex.kiln.feature.apps.apktools.IncomingApkInstallStore
 import dev.involvex.kiln.feature.backup.BackupRoute
 import dev.involvex.kiln.feature.storage.StorageRoute
 
+private const val TAB_APK_TOOLS = 2
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ManageRoute(modifier: Modifier = Modifier, onOpenPrivilegeSetup: () -> Unit = {}) {
+fun ManageRoute(
+    modifier: Modifier = Modifier,
+    onOpenPrivilegeSetup: () -> Unit = {},
+    incomingApkInstallStore: IncomingApkInstallStore? = null,
+) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    if (incomingApkInstallStore != null) {
+        val pendingUri by incomingApkInstallStore.pending.collectAsStateWithLifecycle()
+        LaunchedEffect(pendingUri) {
+            if (pendingUri != null) {
+                selectedTab = TAB_APK_TOOLS
+            }
+        }
+    }
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -49,8 +66,8 @@ fun ManageRoute(modifier: Modifier = Modifier, onOpenPrivilegeSetup: () -> Unit 
                     text = { Text(stringResource(R.string.manage_tab_backup)) },
                 )
                 Tab(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
+                    selected = selectedTab == TAB_APK_TOOLS,
+                    onClick = { selectedTab = TAB_APK_TOOLS },
                     text = { Text(stringResource(R.string.manage_tab_apk_tools)) },
                 )
             }

@@ -61,20 +61,17 @@ class InstallWorker @AssistedInject constructor(
 
         mark(jobId, InstallJobStatus.DOWNLOADING, 0, null, job.localApkPath)
         val downloadDir = File(appContext.cacheDir, DOWNLOAD_DIR).apply { mkdirs() }
-        val apkFile = File(downloadDir, "$jobId.apk")
-        if (job.downloadUrl.startsWith(DefaultInstallQueue.LOCAL_URL_PREFIX)) {
-            val source = job.localApkPath?.let { File(it) }
-            if (source == null || !source.isFile) {
-                mark(jobId, InstallJobStatus.FAILED, 100, "apk_missing", null)
-                return Result.failure(workDataOf(KEY_ERROR to "apk_missing"))
-            }
-            try {
-                source.copyTo(apkFile, overwrite = true)
-            } catch (e: IOException) {
-                mark(jobId, InstallJobStatus.FAILED, 100, e.message ?: "copy_failed", null)
-                return Result.failure(workDataOf(KEY_ERROR to (e.message ?: "copy_failed")))
+        val apkFiles: List<File> = if (job.downloadUrl.startsWith(DefaultInstallQueue.LOCAL_URL_PREFIX)) {
+            when (val prepared = prepareLocalApks(jobId, job.localApkPath, downloadDir)) {
+                is KilnResult.Failure -> {
+                    mark(jobId, InstallJobStatus.FAILED, 100, prepared.message, null)
+                    return Result.failure(workDataOf(KEY_ERROR to prepared.message))
+                }
+
+                is KilnResult.Success -> prepared.value
             }
         } else {
+            val apkFile = File(downloadDir, "$jobId.apk")
             val headers = if (job.requiresGitHubAuth) {
                 val auth = gitHubAuth.bearerHeaders()
                 if (auth.isEmpty()) {
@@ -119,12 +116,14 @@ class InstallWorker @AssistedInject constructor(
                     is KilnResult.Success -> Unit
                 }
             }
+            listOf(apkFile)
         }
 
-        mark(jobId, InstallJobStatus.VERIFYING, 92, null, apkFile.absolutePath)
-        when (val hash = ApkHashVerifier.verifySha256(apkFile, job.expectedSha256)) {
+        val baseApk = apkFiles.first()
+        mark(jobId, InstallJobStatus.VERIFYING, 92, null, baseApk.absolutePath)
+        when (val hash = ApkHashVerifier.verifySha256(baseApk, job.expectedSha256)) {
             is KilnResult.Failure -> {
-                apkFile.delete()
+                cleanupApks(apkFiles)
                 mark(jobId, InstallJobStatus.FAILED, 100, hash.message, null)
                 return Result.failure(workDataOf(KEY_ERROR to hash.message))
             }
@@ -132,9 +131,9 @@ class InstallWorker @AssistedInject constructor(
             is KilnResult.Success -> Unit
         }
         if (!job.allowSignatureMismatch) {
-            when (val sig = ApkSignatureGate.check(appContext.packageManager, job.packageName, apkFile)) {
+            when (val sig = ApkSignatureGate.check(appContext.packageManager, job.packageName, baseApk)) {
                 is KilnResult.Failure -> {
-                    apkFile.delete()
+                    cleanupApks(apkFiles)
                     mark(jobId, InstallJobStatus.FAILED, 100, sig.message, null)
                     return Result.failure(workDataOf(KEY_ERROR to sig.message))
                 }
@@ -143,7 +142,7 @@ class InstallWorker @AssistedInject constructor(
             }
         }
 
-        mark(jobId, InstallJobStatus.INSTALLING, 95, null, apkFile.absolutePath)
+        mark(jobId, InstallJobStatus.INSTALLING, 95, null, baseApk.absolutePath)
         val preferred = installerPreferences.current()
         val canSilent = InstallCommitPolicy.useSilentInstall(
             preferred = preferred,
@@ -151,20 +150,22 @@ class InstallWorker @AssistedInject constructor(
                 privilegedExecutor.currentStatus().capabilities,
         )
         if (canSilent) {
-            return when (val silent = privilegedExecutor.installApk(apkFile.absolutePath)) {
+            return when (val silent = privilegedExecutor.installApks(apkFiles.map { it.absolutePath })) {
                 is KilnResult.Failure -> {
                     Timber.w("Silent install failed (%s); falling back to PackageInstaller", silent.message)
-                    commitWithPackageInstaller(jobId, job.packageName, apkFile)
+                    commitWithPackageInstaller(jobId, job.packageName, apkFiles)
                 }
 
                 is KilnResult.Success -> {
-                    mark(jobId, InstallJobStatus.SUCCEEDED, 100, null, apkFile.absolutePath)
-                    rollbackCache.rememberSuccessfulInstall(
-                        packageName = job.packageName,
-                        versionName = job.versionName,
-                        versionCode = job.versionCode,
-                        apkAbsolutePath = apkFile.absolutePath,
-                    )
+                    mark(jobId, InstallJobStatus.SUCCEEDED, 100, null, baseApk.absolutePath)
+                    if (apkFiles.size == 1) {
+                        rollbackCache.rememberSuccessfulInstall(
+                            packageName = job.packageName,
+                            versionName = job.versionName,
+                            versionCode = job.versionCode,
+                            apkAbsolutePath = baseApk.absolutePath,
+                        )
+                    }
                     Result.success()
                 }
             }
@@ -172,17 +173,60 @@ class InstallWorker @AssistedInject constructor(
         if (preferred == PreferredInstaller.SHIZUKU) {
             Timber.d("Shizuku preferred but SILENT_INSTALL unavailable; using PackageInstaller")
         }
-        return commitWithPackageInstaller(jobId, job.packageName, apkFile)
+        return commitWithPackageInstaller(jobId, job.packageName, apkFiles)
     }
 
-    private suspend fun commitWithPackageInstaller(jobId: String, packageName: String, apkFile: File): Result {
+    private fun prepareLocalApks(jobId: String, encodedPaths: String?, downloadDir: File): KilnResult<List<File>> {
+        val sources = encodedPaths
+            ?.split('\n')
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.map { File(it) }
+            .orEmpty()
+        if (sources.isEmpty() || sources.any { !it.isFile }) {
+            return KilnResult.failure("apk_missing")
+        }
+        return try {
+            if (sources.size == 1) {
+                val apkFile = File(downloadDir, "$jobId.apk")
+                sources.first().copyTo(apkFile, overwrite = true)
+                KilnResult.success(listOf(apkFile))
+            } else {
+                val splitDir = File(downloadDir, jobId).apply { mkdirs() }
+                val copied = sources.mapIndexed { index, source ->
+                    val safe = source.name.replace(Regex("[^A-Za-z0-9._-]"), "_")
+                        .ifBlank { "split-$index.apk" }
+                    val dest = File(splitDir, safe)
+                    source.copyTo(dest, overwrite = true)
+                    dest
+                }
+                KilnResult.success(copied)
+            }
+        } catch (e: IOException) {
+            KilnResult.failure(e.message ?: "copy_failed", e)
+        }
+    }
+
+    private fun cleanupApks(apkFiles: List<File>) {
+        apkFiles.forEach { it.delete() }
+        apkFiles.firstOrNull()?.parentFile
+            ?.takeIf { it.name != DOWNLOAD_DIR && it.isDirectory }
+            ?.deleteRecursively()
+    }
+
+    private suspend fun commitWithPackageInstaller(jobId: String, packageName: String, apkFiles: List<File>): Result {
+        val base = apkFiles.firstOrNull()
+        if (base == null) {
+            mark(jobId, InstallJobStatus.FAILED, 100, "apk_missing", null)
+            return Result.failure(workDataOf(KEY_ERROR to "apk_missing"))
+        }
         if (!appContext.packageManager.canRequestPackageInstalls()) {
-            mark(jobId, InstallJobStatus.FAILED, 100, "install_permission_required", apkFile.absolutePath)
+            mark(jobId, InstallJobStatus.FAILED, 100, "install_permission_required", base.absolutePath)
             return Result.failure(workDataOf(KEY_ERROR to "install_permission_required"))
         }
-        return when (val commit = sessionRunner.commitApk(appContext, jobId, packageName, apkFile)) {
+        return when (val commit = sessionRunner.commitApks(appContext, jobId, packageName, apkFiles)) {
             is KilnResult.Failure -> {
-                mark(jobId, InstallJobStatus.FAILED, 100, commit.message, apkFile.absolutePath)
+                mark(jobId, InstallJobStatus.FAILED, 100, commit.message, base.absolutePath)
                 Result.failure(workDataOf(KEY_ERROR to commit.message))
             }
 

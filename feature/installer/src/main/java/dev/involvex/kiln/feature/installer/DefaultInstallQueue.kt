@@ -66,18 +66,21 @@ class DefaultInstallQueue @Inject constructor(
     }
 
     override suspend fun enqueueLocal(request: LocalInstallRequest): Result<String> {
-        val apk = File(request.apkAbsolutePath)
-        if (!apk.isFile || !apk.canRead()) {
+        val files = request.apkAbsolutePaths.map { File(it) }
+        if (files.any { !it.isFile || !it.canRead() }) {
             return Result.failure("apk_missing")
         }
+        // Multi-path: encode as newline-separated absolute paths (each path has no newlines).
+        val encoded = files.joinToString("\n") { it.absolutePath }
+        val sizeBytes = files.sumOf { it.length() }
         return enqueueJob(
             packageName = request.packageName,
             versionName = request.versionName,
             versionCode = request.versionCode,
             downloadUrl = LOCAL_URL_PREFIX,
             expectedSha256 = request.expectedSha256,
-            sizeBytes = apk.length(),
-            localApkPath = apk.absolutePath,
+            sizeBytes = sizeBytes,
+            localApkPath = encoded,
             requiresGitHubAuth = false,
             apkAssetRegex = null,
             allowSignatureMismatch = false,

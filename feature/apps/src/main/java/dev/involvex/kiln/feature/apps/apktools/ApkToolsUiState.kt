@@ -10,6 +10,7 @@ enum class ApkToolsMode {
     RESIGN,
     EXPORT_SPLITS,
     MERGE,
+    INSTALL,
 }
 
 data class ApkToolsUiState(
@@ -26,6 +27,11 @@ data class ApkToolsUiState(
     val resignConfirmed: Boolean = false,
     val mergeBundleUri: Uri? = null,
     val mergeBundleLabel: String? = null,
+    val installUri: Uri? = null,
+    val installLabel: String? = null,
+    val installPackageName: String? = null,
+    val installVersionName: String? = null,
+    val installSplitCount: Int? = null,
     val exportCount: Int? = null,
     val message: String? = null,
     val messageIsError: Boolean = false,

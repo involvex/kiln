@@ -16,9 +16,12 @@ import timber.log.Timber
 
 @Singleton
 class PackageInstallerSessionRunner @Inject constructor() {
+    fun commitApk(context: Context, jobId: String, packageName: String, apkFile: File): Result<Unit> =
+        commitApks(context, jobId, packageName, listOf(apkFile))
+
     @SuppressLint("MissingPermission")
-    fun commitApk(context: Context, jobId: String, packageName: String, apkFile: File): Result<Unit> {
-        if (!apkFile.exists()) {
+    fun commitApks(context: Context, jobId: String, packageName: String, apkFiles: List<File>): Result<Unit> {
+        if (apkFiles.isEmpty() || apkFiles.any { !it.exists() }) {
             return Result.failure("apk_missing")
         }
         val installer = context.packageManager.packageInstaller
@@ -38,10 +41,13 @@ class PackageInstallerSessionRunner @Inject constructor() {
         return try {
             val sessionId = installer.createSession(params)
             installer.openSession(sessionId).use { session ->
-                apkFile.inputStream().use { input ->
-                    session.openWrite("base.apk", 0, apkFile.length()).use { output ->
-                        input.copyTo(output)
-                        session.fsync(output)
+                apkFiles.forEachIndexed { index, apkFile ->
+                    val writeName = sessionWriteName(apkFile, index)
+                    apkFile.inputStream().use { input ->
+                        session.openWrite(writeName, 0, apkFile.length()).use { output ->
+                            input.copyTo(output)
+                            session.fsync(output)
+                        }
                     }
                 }
                 val callback = Intent(context, InstallStatusReceiver::class.java).apply {
@@ -60,6 +66,11 @@ class PackageInstallerSessionRunner @Inject constructor() {
         } catch (error: SecurityException) {
             Result.failure(error.message ?: "session_security_failed", error)
         }
+    }
+
+    private fun sessionWriteName(apkFile: File, index: Int): String {
+        val safe = apkFile.name.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "split-$index.apk" }
+        return if (safe.endsWith(".apk", ignoreCase = true)) safe else "$safe.apk"
     }
 
     private fun isKilnInstallerOfRecord(context: Context, packageName: String): Boolean = try {

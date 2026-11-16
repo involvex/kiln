@@ -12,6 +12,8 @@ object ShellAllowlist {
     const val ID = "id"
     const val PM_INSTALL = "pm_install"
     const val PM_INSTALL_DOWNGRADE = "pm_install_downgrade"
+    const val PM_INSTALL_MULTIPLE = "pm_install_multiple"
+    const val PM_INSTALL_MULTIPLE_DOWNGRADE = "pm_install_multiple_downgrade"
     const val PM_UNINSTALL = "pm_uninstall"
     const val PM_CLEAR_CACHE = "pm_clear_cache"
     const val PM_TRIM_CACHES = "pm_trim_caches"
@@ -58,6 +60,10 @@ object ShellAllowlist {
             // -d allows installing an older versionCode over a newer one (rollback).
             if (!isSafeApkPath(path)) null else listOf("pm", "install", "-r", "-d", "--user", "0", path)
         }
+
+        PM_INSTALL_MULTIPLE -> buildInstallMultipleArgv(args, downgrade = false)
+
+        PM_INSTALL_MULTIPLE_DOWNGRADE -> buildInstallMultipleArgv(args, downgrade = true)
 
         PM_UNINSTALL -> {
             val packageName = args.getOrNull(0) ?: return null
@@ -225,5 +231,22 @@ object ShellAllowlist {
         }
         if (value.contains("..")) return false
         return APK_PATH.matches(value)
+    }
+
+    /** Cap split count so argv stays bounded for UserService. */
+    private const val MAX_INSTALL_MULTIPLE = 64
+
+    private fun buildInstallMultipleArgv(args: List<String>, downgrade: Boolean): List<String>? {
+        if (args.isEmpty() || args.size > MAX_INSTALL_MULTIPLE) return null
+        if (args.any { !isSafeApkPath(it) }) return null
+        return buildList {
+            add("pm")
+            add("install-multiple")
+            add("-r")
+            if (downgrade) add("-d")
+            add("--user")
+            add("0")
+            addAll(args)
+        }
     }
 }

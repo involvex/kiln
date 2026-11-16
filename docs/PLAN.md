@@ -139,7 +139,7 @@ Die UI fragt nie „ist Shizuku da?", sondern `capabilities: Set<Capability>` au
 ### 4.3 Installer (`feature:installer`)
 
 - Download-Queue (Foreground Service, resumable, Hash-Check gegen Index-SHA256 wenn vorhanden)
-- Installation über `PackageInstaller` Sessions (Single APK + Split-Bundles `.apks`/`.xapk`/`.apkm` entpacken, passende Splits für Gerät wählen)
+- Installation über `PackageInstaller` Sessions (Single APK + Split-Bundles `.apks`/`.xapk`/`.apkm` entpacken, passende Splits für Gerät wählen) → **M39** (SAF + Share/VIEW; silent `pm install-multiple` when capable)
 - Ohne Privilegien: System-Bestätigungsdialog. Ab Android 12: `USER_ACTION_NOT_REQUIRED` für Updates nutzen, wenn Kiln Installer-of-Record ist. Ab Android 14: `setRequestUpdateOwnership(true)` setzen
 - Mit Shizuku/Root: stille Installation/Updates, Deinstallation ohne Dialog
 - Fehler sauber mappen (`STATUS_FAILURE_*` → verständliche Texte, z. B. „Signatur passt nicht zur installierten Version")
@@ -415,6 +415,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 - **P2 — Intent-/Broadcast-API für Automatisierung**: → **shipped M22**
 - **P2 — Config-Export/-Import und Sync**: Quellenliste und Regeln als JSON (Kiln-Config) via SAF → **M25** (Done #38); optional Sync über Cloudflare Worker (Hono + D1/R2) später.
 - **P3 — APK-Werkzeuge Phase 2**: Manifest-Viewer + Signaturvergleich → **shipped M29**; Resign (`apksig`) + Split-Export → **shipped M31** (#49); Universal-Merge (REAndroid ARSCLib + Resign) → **shipped M35** (#56).
+- **P2 — Split-Bundle-Install**: `.apks`/`.xapk`/`.apkm` via PackageInstaller multi-session + Share/SAF → **M39** (In progress).
 
 ### Storage & Wartung
 

@@ -149,6 +149,34 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
+    override suspend fun installApks(apkAbsolutePaths: List<String>, allowDowngrade: Boolean): Result<Unit> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.SILENT_INSTALL !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:SILENT_INSTALL")
+        }
+        if (apkAbsolutePaths.isEmpty() || apkAbsolutePaths.any { !ShellAllowlist.isSafeApkPath(it) }) {
+            return@withContext Result.failure("invalid_apk_path")
+        }
+        if (apkAbsolutePaths.size == 1) {
+            return@withContext installApk(apkAbsolutePaths.first(), allowDowngrade)
+        }
+        val commandId = if (allowDowngrade) {
+            ShellAllowlist.PM_INSTALL_MULTIPLE_DOWNGRADE
+        } else {
+            ShellAllowlist.PM_INSTALL_MULTIPLE
+        }
+        when (val out = invokeAllowlisted(commandId, apkAbsolutePaths)) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    Result.success(Unit)
+                }
+            }
+        }
+    }
+
     override suspend fun uninstall(packageName: String, keepData: Boolean): Result<Unit> = withContext(ioDispatcher) {
         if (PrivilegeCapability.SILENT_UNINSTALL !in currentStatus().capabilities) {
             return@withContext Result.failure("capability_missing:SILENT_UNINSTALL")
@@ -421,6 +449,8 @@ class DefaultPrivilegedExecutor @Inject constructor(
         val packageName = when (commandId) {
             ShellAllowlist.PM_INSTALL,
             ShellAllowlist.PM_INSTALL_DOWNGRADE,
+            ShellAllowlist.PM_INSTALL_MULTIPLE,
+            ShellAllowlist.PM_INSTALL_MULTIPLE_DOWNGRADE,
             ShellAllowlist.PM_TRIM_CACHES,
             ShellAllowlist.ID,
             ShellAllowlist.LS_ANDROID_ROOT,

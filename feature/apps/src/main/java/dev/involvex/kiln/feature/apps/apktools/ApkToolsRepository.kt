@@ -21,6 +21,7 @@ import kotlinx.coroutines.withContext
 class ApkToolsRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val installPreparer: ApkInstallPreparer,
 ) {
     suspend fun inspectUri(uri: Uri): Result<ApkInspectReport> = withContext(ioDispatcher) {
         val displayName = queryDisplayName(uri) ?: "picked"
@@ -249,6 +250,24 @@ class ApkToolsRepository @Inject constructor(
     }
 
     fun displayName(uri: Uri): String? = queryDisplayName(uri)
+
+    /**
+     * Copies [uri], selects device-compatible splits for bundles, enqueues a local install.
+     * Staging files under cache remain for InstallWorker to copy; caller may leave them.
+     */
+    suspend fun enqueueInstallFromUri(uri: Uri): Result<InstallEnqueueInfo> = withContext(ioDispatcher) {
+        val displayName = queryDisplayName(uri) ?: "picked"
+        if (ApkArchiveReader.kindOf(displayName) == ApkArchiveKind.UNKNOWN) {
+            return@withContext Result.failure("unsupported_archive")
+        }
+        val cache = copyUriToCache(uri, displayName)
+            ?: return@withContext Result.failure("copy_failed")
+        try {
+            installPreparer.enqueueFromCachedFile(cache, displayName)
+        } finally {
+            cache.delete()
+        }
+    }
 
     private fun queryDisplayName(uri: Uri): String? {
         context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->

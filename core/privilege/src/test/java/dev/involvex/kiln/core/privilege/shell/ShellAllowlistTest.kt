@@ -32,6 +32,31 @@ class ShellAllowlistTest {
     }
 
     @Test
+    fun pm_install_multiple_accepts_safe_paths() {
+        val base = "/data/user/0/dev.involvex.kiln/cache/apk_downloads/job/base.apk"
+        val abi = "/data/user/0/dev.involvex.kiln/cache/apk_downloads/job/config.arm64_v8a.apk"
+        assertEquals(
+            listOf("pm", "install-multiple", "-r", "--user", "0", base, abi),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL_MULTIPLE, listOf(base, abi)),
+        )
+        assertEquals(
+            listOf("pm", "install-multiple", "-r", "-d", "--user", "0", base, abi),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL_MULTIPLE_DOWNGRADE, listOf(base, abi)),
+        )
+    }
+
+    @Test
+    fun pm_install_multiple_rejects_bad_path_or_empty() {
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL_MULTIPLE, emptyList()))
+        assertNull(
+            ShellAllowlist.buildArgv(
+                ShellAllowlist.PM_INSTALL_MULTIPLE,
+                listOf("/data/ok.apk", "/tmp/a.apk;rm"),
+            ),
+        )
+    }
+
+    @Test
     fun pm_install_rejects_injection() {
         assertNull(
             ShellAllowlist.buildArgv(

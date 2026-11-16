@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M38** Settings polish Done (#63). App version **0.2.3** (code 6), tag `v0.2.3`. Next: publishing / dual-user (unscheduled). HyperOS M1–M8 checklist remains a separate release gate.
+**Current status:** **M39** Split APK install Done on `m39-split-install` (awaiting PR). M38 Settings polish Done (#63). App version **0.2.3** (code 6), tag `v0.2.3`. HyperOS M1–M8 checklist remains a separate release gate; publishing / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -53,6 +53,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M36** | Freeze / hibernate | Done | [`prompts/M36-freeze-hibernate.md`](./prompts/M36-freeze-hibernate.md) · [#58](https://github.com/involvex/kiln/pull/58) | `pm suspend`/`unsuspend` via privilege; Settings list separate from Debloat |
 | **M37** | Settings hub + PAT + signature confirm | Done | [`prompts/M37-settings-hub.md`](./prompts/M37-settings-hub.md) · [#61](https://github.com/involvex/kiln/pull/61) | Category hub; Updates PAT + check interval; Install anyway for WARNING only |
 | **M38** | Settings polish | Done | [`prompts/M38-settings-polish.md`](./prompts/M38-settings-polish.md) · [#63](https://github.com/involvex/kiln/pull/63) | Rollback N slider; per-app cooldown; ignored-updates overview; repo priority ↑↓ |
+| **M39** | Split APK install | Done | [`prompts/M39-split-install.md`](./prompts/M39-split-install.md) · `m39-split-install` | SAF + Share/VIEW for `.apks`/`.xapk`/`.apkm`; PackageInstaller multi-session; optional silent `install-multiple` |
 
 ---
 
@@ -109,7 +110,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Permission audit | ✅ Dangerous overview; `pm revoke` + basic AppOps set | NONE / SHIZUKU (`MANAGE_APP_OPS`) |
 | Background controls | ✅ HyperOS Autostart + battery Unrestricted/Optimized/Restricted | SHIZUKU (`MANAGE_APP_OPS`) |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
-| Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; splits deferred | NONE / SHIZUKU |
+| Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; ✅ M39 multi-session + `install-multiple` for `.apks`/`.xapk`/`.apkm` (SAF + Share/VIEW) | NONE / SHIZUKU |
 | Storage / cleaner | ✅ Size bars; APK leftovers; orphan Android/data+obb; cache clear | NONE / SHIZUKU (`CLEAR_CACHE`, `ACCESS_ANDROID_DATA`) |
 | APK tools (inspect / compare / resign / merge) | ✅ M29 inspect+compare; ✅ M31 resign + split export; ✅ M35 universal merge (#56) | NONE |
 | Freeze / hibernate | ✅ M36 (#58) — `pm suspend`/`unsuspend`; Settings list (separate from Debloat) | ≥ SHIZUKU (`DEBLOAT`) |
@@ -312,10 +313,11 @@ flowchart LR
   M35 --> M36[M36 Freeze hibernate]
   M36 --> M37[M37 Settings hub]
   M37 --> M38[M38 Settings polish]
+  M38 --> M39[M39 Split install]
 ```
 
-1. **M0–M38** on main (#63); AutoMatch UX polish (#62); **`v0.2.3`** tagged.
-2. Next: publishing / dual-user — do not mix into an unplanned branch.
+1. **M0–M38** on main (#63); AutoMatch UX polish (#62); **`v0.2.3`** tagged; CI lint harden (#65).
+2. **M39** Split APK install Done on `m39-split-install` (awaiting merge) — bundles via SAF + Share/VIEW.
 3. Publishing / F-Droid still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 
