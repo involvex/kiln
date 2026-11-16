@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M39** Split APK install Done (#66). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M40** Backup phase 2 implementation complete on `m40-backup-phase2` (gates green; HyperOS device checklist pending PR). M39 Split APK install Done (#66). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -54,6 +54,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M37** | Settings hub + PAT + signature confirm | Done | [`prompts/M37-settings-hub.md`](./prompts/M37-settings-hub.md) · [#61](https://github.com/involvex/kiln/pull/61) | Category hub; Updates PAT + check interval; Install anyway for WARNING only |
 | **M38** | Settings polish | Done | [`prompts/M38-settings-polish.md`](./prompts/M38-settings-polish.md) · [#63](https://github.com/involvex/kiln/pull/63) | Rollback N slider; per-app cooldown; ignored-updates overview; repo priority ↑↓ |
 | **M39** | Split APK install | Done | [`prompts/M39-split-install.md`](./prompts/M39-split-install.md) · [#66](https://github.com/involvex/kiln/pull/66) | SAF + Share/VIEW for `.apks`/`.xapk`/`.apkm`; PackageInstaller multi-session; optional silent `install-multiple` |
+| **M40** | Backup phase 2 | Gates green | [`prompts/M40-backup-phase2.md`](./prompts/M40-backup-phase2.md) · `m40-backup-phase2` | SAF tree + keep-N; Shizuku Android/data+obb; optional AES-GCM (no Root); HyperOS checklist pending |
 
 ---
 
@@ -75,7 +76,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Widgets / QS | Done | M26 #40 |
 | Permission audit | Done | M27 #41 |
 | Storage phase 2 | Done | M28 #44 |
-| SAF backup rotation / data tiers / encryption | Open | Unscheduled |
+| SAF backup rotation / data tiers / encryption | Gates green (M40) | SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM; ROOT deferred; HyperOS checklist pending |
 | APK tools 2 (inspect + compare) | Done | M29 (#47); M31 (#49); universal merge M35 (#56) |
 | Mirrors / proxy | Done | M30 #48 |
 | Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); dual-user / tablet unscheduled |
@@ -115,7 +116,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | APK tools (inspect / compare / resign / merge) | ✅ M29 inspect+compare; ✅ M31 resign + split export; ✅ M35 universal merge (#56) | NONE |
 | Freeze / hibernate | ✅ M36 (#58) — `pm suspend`/`unsuspend`; Settings list (separate from Debloat) | ≥ SHIZUKU (`DEBLOAT`) |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
-| Backup (APK) | ✅ `.kilnbackup.zip` (STORED + metadata.json); restore via InstallQueue local; splits backed up, base APK restored; `/data/data` + Android/data deferred | NONE (APK) … ROOT later |
+| Backup (APK) | ✅ `.kilnbackup.zip`; **M40** SAF tree + keep-N; Shizuku Android/data+obb when capable; optional AES-GCM; ROOT `/data/data` deferred | NONE (APK) / SHIZUKU (`ACCESS_ANDROID_DATA`) |
 | Background auto-update | ✅ Settings hub → Updates; 12h / daily / weekly PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; global + per-app cooldown; APK rollback keep-N (1–5); ignored-updates overview; GitHub PAT under Updates | NONE (+ network; silent install/downgrade if SHIZUKU) |
 | Repo priority | ✅ Sources ↑↓ reorder; `ensureKnownRepos` preserves user priority; Auto-match / update conflict tie-break | NONE |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
@@ -314,10 +315,11 @@ flowchart LR
   M36 --> M37[M37 Settings hub]
   M37 --> M38[M38 Settings polish]
   M38 --> M39[M39 Split install]
+  M39 --> M40[M40 Backup phase 2]
 ```
 
 1. **M0–M39** on main (#66); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
-2. No further feature milestone scheduled — pick from PLAN §12 (SAF backup rotation / dual-user / tablet layouts) or release gates.
+2. **M40** Backup phase 2 (`m40-backup-phase2`) — SAF tree + keep-N + Shizuku data + optional AES-GCM.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

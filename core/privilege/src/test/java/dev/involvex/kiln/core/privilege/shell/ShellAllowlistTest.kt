@@ -241,4 +241,29 @@ class ShellAllowlistTest {
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.RM_ANDROID_PKG, listOf("data", "com.example;rm")))
         assertNull(ShellAllowlist.androidPackagePath("data", "a/b"))
     }
+
+    @Test
+    fun tar_android_pkg_and_force_stop_allowlist() {
+        val pkg = "com.example.app"
+        val tar = "/storage/emulated/0/Android/data/dev.involvex.kiln/cache/backup_stage/data.tar"
+        assertEquals(
+            listOf("tar", "-cf", tar, "-C", "/storage/emulated/0/Android/data", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.TAR_ANDROID_PKG_OUT, listOf("data", pkg, tar)),
+        )
+        assertEquals(
+            listOf("tar", "-xf", tar, "-C", "/storage/emulated/0/Android/obb"),
+            ShellAllowlist.buildArgv(ShellAllowlist.TAR_ANDROID_PKG_IN, listOf("obb", pkg, tar)),
+        )
+        assertEquals(
+            listOf("am", "force-stop", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.AM_FORCE_STOP, listOf(pkg)),
+        )
+        assertNull(
+            ShellAllowlist.buildArgv(
+                ShellAllowlist.TAR_ANDROID_PKG_OUT,
+                listOf("data", pkg, "/tmp/evil.tar"),
+            ),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.AM_FORCE_STOP, listOf("bad;pkg")))
+    }
 }

@@ -29,10 +29,19 @@ object ShellAllowlist {
     const val LS_ANDROID_ROOT = "ls_android_root"
     const val DU_ANDROID_PKG = "du_android_pkg"
     const val RM_ANDROID_PKG = "rm_android_pkg"
+    const val TAR_ANDROID_PKG_OUT = "tar_android_pkg_out"
+    const val TAR_ANDROID_PKG_IN = "tar_android_pkg_in"
+    const val AM_FORCE_STOP = "am_force_stop"
 
     private val PACKAGE_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
     private val PERMISSION_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
     private val APK_PATH = Regex("^/[\\w./\\-+]+\\.apk$", RegexOption.IGNORE_CASE)
+
+    /** Staging tar under Kiln app external cache only. */
+    private val STAGING_TAR_PATH = Regex(
+        "^/storage/emulated/0/Android/data/dev\\.involvex\\.kiln(\\.debug)?/cache/[\\w./\\-]+\\.tar$",
+        RegexOption.IGNORE_CASE,
+    )
     private val DEVICEIDLE_ACTIONS: Set<String> = setOf("+", "-", "=")
 
     /** Desired free-space argument for `pm trim-caches` (digits only, capped length). */
@@ -201,6 +210,31 @@ object ShellAllowlist {
             listOf("rm", "-rf", path)
         }
 
+        TAR_ANDROID_PKG_OUT -> {
+            if (args.size != 3) return null
+            val root = resolveRoot(args[0]) ?: return null
+            val packageName = args[1]
+            val destTar = args[2]
+            if (!isSafePackageName(packageName) || !isSafeStagingTarPath(destTar)) return null
+            // tar -cf dest -C /storage/.../Android/data packageName
+            listOf("tar", "-cf", destTar, "-C", root.absolutePath, packageName)
+        }
+
+        TAR_ANDROID_PKG_IN -> {
+            if (args.size != 3) return null
+            val root = resolveRoot(args[0]) ?: return null
+            val packageName = args[1]
+            val srcTar = args[2]
+            if (!isSafePackageName(packageName) || !isSafeStagingTarPath(srcTar)) return null
+            listOf("tar", "-xf", srcTar, "-C", root.absolutePath)
+        }
+
+        AM_FORCE_STOP -> {
+            val packageName = args.singleOrNull() ?: return null
+            if (!isSafePackageName(packageName)) return null
+            listOf("am", "force-stop", packageName)
+        }
+
         else -> null
     }
 
@@ -231,6 +265,19 @@ object ShellAllowlist {
         }
         if (value.contains("..")) return false
         return APK_PATH.matches(value)
+    }
+
+    fun isSafeStagingTarPath(value: String): Boolean {
+        if (value.length !in 20..4096) return false
+        if (value.contains('\u0000') || value.contains('`') || value.contains('$') ||
+            value.contains('|') || value.contains(';') || value.contains('&') ||
+            value.contains('\n') || value.contains('\r') || value.contains('"') ||
+            value.contains('\'') || value.contains(' ')
+        ) {
+            return false
+        }
+        if (value.contains("..")) return false
+        return STAGING_TAR_PATH.matches(value)
     }
 
     /** Cap split count so argv stays bounded for UserService. */

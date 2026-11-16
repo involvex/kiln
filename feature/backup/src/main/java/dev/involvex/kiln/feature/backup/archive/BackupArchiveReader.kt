@@ -8,17 +8,31 @@ import java.io.InputStream
 import java.util.zip.ZipInputStream
 import kotlinx.serialization.SerializationException
 
-data class BackupExtractResult(val metadata: BackupArchiveMetadata, val baseApk: File, val allApkFiles: List<File>)
+data class BackupExtractResult(
+    val metadata: BackupArchiveMetadata,
+    val baseApk: File,
+    val allApkFiles: List<File>,
+    val androidDataTar: File?,
+    val androidObbTar: File?,
+)
 
 object BackupArchiveReader {
     fun extract(input: InputStream, outputDir: File): Result<BackupExtractResult> {
         if (!outputDir.exists()) outputDir.mkdirs()
         return try {
-            val (metadata, apkFiles) = readEntries(input, outputDir)
-            val meta = metadata ?: return Result.failure("metadata_missing")
-            if (apkFiles.isEmpty()) return Result.failure("apk_missing")
-            val base = pickBaseApk(apkFiles) ?: return Result.failure("apk_missing")
-            Result.success(BackupExtractResult(meta, base, apkFiles))
+            val parsed = readEntries(input, outputDir)
+            val meta = parsed.metadata ?: return Result.failure("metadata_missing")
+            if (parsed.apkFiles.isEmpty()) return Result.failure("apk_missing")
+            val base = pickBaseApk(parsed.apkFiles) ?: return Result.failure("apk_missing")
+            Result.success(
+                BackupExtractResult(
+                    metadata = meta,
+                    baseApk = base,
+                    allApkFiles = parsed.apkFiles,
+                    androidDataTar = parsed.androidDataTar,
+                    androidObbTar = parsed.androidObbTar,
+                ),
+            )
         } catch (e: IOException) {
             Result.failure(e.message ?: "extract_failed", e)
         } catch (e: SerializationException) {
@@ -28,9 +42,18 @@ object BackupArchiveReader {
         }
     }
 
-    private fun readEntries(input: InputStream, outputDir: File): Pair<BackupArchiveMetadata?, List<File>> {
+    private data class Parsed(
+        val metadata: BackupArchiveMetadata?,
+        val apkFiles: List<File>,
+        val androidDataTar: File?,
+        val androidObbTar: File?,
+    )
+
+    private fun readEntries(input: InputStream, outputDir: File): Parsed {
         var metadata: BackupArchiveMetadata? = null
         val apkFiles = ArrayList<File>()
+        var androidDataTar: File? = null
+        var androidObbTar: File? = null
         ZipInputStream(input).use { zip ->
             var entry = zip.nextEntry
             while (entry != null) {
@@ -38,6 +61,18 @@ object BackupArchiveReader {
                 when {
                     name == BackupMetadataCodec.FILE_NAME -> {
                         metadata = BackupMetadataCodec.decode(zip.readBytes())
+                    }
+
+                    name.equals(BackupMetadataCodec.ANDROID_DATA_ENTRY, ignoreCase = true) -> {
+                        val out = File(outputDir, BackupMetadataCodec.ANDROID_DATA_ENTRY)
+                        out.outputStream().use { zip.copyTo(it) }
+                        androidDataTar = out
+                    }
+
+                    name.equals(BackupMetadataCodec.ANDROID_OBB_ENTRY, ignoreCase = true) -> {
+                        val out = File(outputDir, BackupMetadataCodec.ANDROID_OBB_ENTRY)
+                        out.outputStream().use { zip.copyTo(it) }
+                        androidObbTar = out
                     }
 
                     name.endsWith(".apk", ignoreCase = true) -> {
@@ -50,7 +85,7 @@ object BackupArchiveReader {
                 entry = zip.nextEntry
             }
         }
-        return metadata to apkFiles
+        return Parsed(metadata, apkFiles, androidDataTar, androidObbTar)
     }
 
     private fun pickBaseApk(apkFiles: List<File>): File? = apkFiles.firstOrNull { it.name.equals("base.apk", ignoreCase = true) }

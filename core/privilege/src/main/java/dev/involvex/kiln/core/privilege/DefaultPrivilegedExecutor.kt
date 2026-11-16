@@ -400,6 +400,101 @@ class DefaultPrivilegedExecutor @Inject constructor(
             }
         }
 
+    override suspend fun archiveAndroidSharedPackageDir(
+        root: AndroidSharedRoot,
+        packageName: String,
+        destTarAbsolutePath: String,
+    ): Result<Boolean> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.ACCESS_ANDROID_DATA !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:ACCESS_ANDROID_DATA")
+        }
+        if (!ShellAllowlist.isSafePackageName(packageName)) {
+            return@withContext Result.failure("invalid_package")
+        }
+        if (!ShellAllowlist.isSafeStagingTarPath(destTarAbsolutePath)) {
+            return@withContext Result.failure("invalid_staging_path")
+        }
+        when (val listed = listAndroidSharedPackageDirs(root)) {
+            is Result.Failure -> listed
+
+            is Result.Success -> {
+                if (packageName !in listed.value) {
+                    return@withContext Result.success(false)
+                }
+                when (
+                    val out = invokeAllowlisted(
+                        ShellAllowlist.TAR_ANDROID_PKG_OUT,
+                        listOf(root.pathKey, packageName, destTarAbsolutePath),
+                    )
+                ) {
+                    is Result.Failure -> out
+
+                    is Result.Success -> {
+                        if (out.value.startsWith("ERR:")) {
+                            Result.failure(out.value)
+                        } else {
+                            Result.success(true)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun restoreAndroidSharedPackageDir(
+        root: AndroidSharedRoot,
+        packageName: String,
+        srcTarAbsolutePath: String,
+    ): Result<Unit> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.ACCESS_ANDROID_DATA !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:ACCESS_ANDROID_DATA")
+        }
+        if (!ShellAllowlist.isSafePackageName(packageName)) {
+            return@withContext Result.failure("invalid_package")
+        }
+        if (!ShellAllowlist.isSafeStagingTarPath(srcTarAbsolutePath)) {
+            return@withContext Result.failure("invalid_staging_path")
+        }
+        // Best-effort replace: ignore rm failure (missing dir), then extract.
+        deleteAndroidSharedPackageDir(root, packageName)
+        when (
+            val out = invokeAllowlisted(
+                ShellAllowlist.TAR_ANDROID_PKG_IN,
+                listOf(root.pathKey, packageName, srcTarAbsolutePath),
+            )
+        ) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    Result.success(Unit)
+                }
+            }
+        }
+    }
+
+    override suspend fun forceStopPackage(packageName: String): Result<Unit> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.ACCESS_ANDROID_DATA !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:ACCESS_ANDROID_DATA")
+        }
+        if (!ShellAllowlist.isSafePackageName(packageName)) {
+            return@withContext Result.failure("invalid_package")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.AM_FORCE_STOP, listOf(packageName))) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    Result.success(Unit)
+                }
+            }
+        }
+    }
+
     private suspend fun runDebloatCommand(commandId: String, packageName: String): Result<Unit> = withContext(ioDispatcher) {
         if (PrivilegeCapability.DEBLOAT !in currentStatus().capabilities) {
             return@withContext Result.failure("capability_missing:DEBLOAT")
