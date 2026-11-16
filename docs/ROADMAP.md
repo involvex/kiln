@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M41** Discover panel In progress (`m41-discover-panel`). M40 Backup phase 2 Done (#69). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M41** Discover panel Done (#71). M40 Backup phase 2 Done (#69). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -55,7 +55,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M38** | Settings polish | Done | [`prompts/M38-settings-polish.md`](./prompts/M38-settings-polish.md) · [#63](https://github.com/involvex/kiln/pull/63) | Rollback N slider; per-app cooldown; ignored-updates overview; repo priority ↑↓ |
 | **M39** | Split APK install | Done | [`prompts/M39-split-install.md`](./prompts/M39-split-install.md) · [#66](https://github.com/involvex/kiln/pull/66) | SAF + Share/VIEW for `.apks`/`.xapk`/`.apkm`; PackageInstaller multi-session; optional silent `install-multiple` |
 | **M40** | Backup phase 2 | Done | [`prompts/M40-backup-phase2.md`](./prompts/M40-backup-phase2.md) · [#69](https://github.com/involvex/kiln/pull/69) | SAF tree + keep-N; Shizuku Android/data+obb; optional AES-GCM (no Root) |
-| **M41** | Discover panel | In progress | [`prompts/M41-discover-panel.md`](./prompts/M41-discover-panel.md) · `m41-discover-panel` | Hilt Nav3 crash fix; F-Droid-style shelves in Discover; drop Trending segment |
+| **M41** | Discover panel | Done | [`prompts/M41-discover-panel.md`](./prompts/M41-discover-panel.md) · [#71](https://github.com/involvex/kiln/pull/71) | Hilt Nav3 crash fix; F-Droid-style shelves in Discover; drop Trending segment |
 
 ---
 
@@ -83,7 +83,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); dual-user / tablet unscheduled |
 | Publishing / F-Droid submit | Partial | Fastlane + tag workflow ready; screenshots / submit deferred |
 | HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
-| Discover home shelves (absorb Trending) | In progress (M41) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
+| Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
 
 ---
 
@@ -321,8 +321,8 @@ flowchart LR
   M40 --> M41[M41 Discover panel]
 ```
 
-1. **M0–M40** on main (#69); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
-2. **M41** Discover panel (`m41-discover-panel`) — Hilt Nav3 fix + shelves on Discover home.
+1. **M0–M41** on main (#71); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
+2. No further feature milestone scheduled — pick from PLAN §12 (dual-user / tablet layouts / cloud backup) or release gates.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 
