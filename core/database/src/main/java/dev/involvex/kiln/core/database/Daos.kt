@@ -167,6 +167,15 @@ interface ManagedAppDao {
     @Query("SELECT * FROM managed_apps WHERE packageName = :packageName LIMIT 1")
     fun observe(packageName: String): Flow<ManagedAppEntity?>
 
+    @Query(
+        """
+        SELECT packageName FROM managed_apps
+        WHERE ignoreUpdates = 1
+        ORDER BY packageName COLLATE NOCASE ASC
+        """,
+    )
+    fun observeIgnoredPackageNames(): Flow<List<String>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(app: ManagedAppEntity)
 

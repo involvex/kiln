@@ -22,6 +22,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -53,6 +54,7 @@ import dev.involvex.kiln.feature.apps.icon.PackageIconModel
 import dev.involvex.kiln.feature.apps.util.formatApkSize
 import java.text.DateFormat
 import java.util.Date
+import kotlin.math.roundToInt
 
 @Composable
 @Suppress("LongMethod")
@@ -65,6 +67,9 @@ fun AppDetailContent(
     installJob: InstallJobState? = null,
     ignoreUpdates: Boolean? = null,
     onIgnoreUpdatesChanged: (checkForUpdates: Boolean) -> Unit = {},
+    updateCooldownDays: Int? = null,
+    globalCooldownDays: Int = 0,
+    onUpdateCooldownChanged: (days: Int?) -> Unit = {},
     managedLink: ManagedSourceLink? = null,
     onOpenLinkSource: () -> Unit = {},
     onGitHubChannelChange: (GitHubReleaseChannel) -> Unit = {},
@@ -121,6 +126,9 @@ fun AppDetailContent(
         UpdatePrefsSection(
             ignoreUpdates = ignoreUpdates,
             onIgnoreUpdatesChanged = onIgnoreUpdatesChanged,
+            updateCooldownDays = updateCooldownDays,
+            globalCooldownDays = globalCooldownDays,
+            onUpdateCooldownChanged = onUpdateCooldownChanged,
         )
         ManagedSourceSection(
             managedLink = managedLink,
@@ -295,26 +303,74 @@ private fun ManagedSourceSection(
 }
 
 @Composable
-private fun UpdatePrefsSection(ignoreUpdates: Boolean?, onIgnoreUpdatesChanged: (Boolean) -> Unit) {
+private fun UpdatePrefsSection(
+    ignoreUpdates: Boolean?,
+    onIgnoreUpdatesChanged: (Boolean) -> Unit,
+    updateCooldownDays: Int?,
+    globalCooldownDays: Int,
+    onUpdateCooldownChanged: (Int?) -> Unit,
+) {
     // Switch ON means "check for updates" (ignoreUpdates == false or not yet managed).
     val checking = ignoreUpdates != true
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.feature_apps_ignore_updates))
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.feature_apps_ignore_updates))
+                Text(
+                    stringResource(R.string.feature_apps_ignore_updates_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(
+                checked = checking,
+                onCheckedChange = onIgnoreUpdatesChanged,
+            )
+        }
+        Text(
+            text = stringResource(R.string.feature_apps_cooldown),
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Text(
+            text = stringResource(R.string.feature_apps_cooldown_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FilterChip(
+                selected = updateCooldownDays == null,
+                onClick = { onUpdateCooldownChanged(null) },
+                label = {
+                    Text(stringResource(R.string.feature_apps_cooldown_global, globalCooldownDays))
+                },
+            )
+            FilterChip(
+                selected = updateCooldownDays != null,
+                onClick = { onUpdateCooldownChanged(updateCooldownDays ?: globalCooldownDays) },
+                label = { Text(stringResource(R.string.feature_apps_cooldown_custom)) },
+            )
+        }
+        if (updateCooldownDays != null) {
             Text(
-                stringResource(R.string.feature_apps_ignore_updates_hint),
+                text = stringResource(R.string.feature_apps_cooldown_value, updateCooldownDays),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Slider(
+                value = updateCooldownDays.toFloat(),
+                onValueChange = { onUpdateCooldownChanged(it.roundToInt()) },
+                valueRange = 0f..14f,
+                steps = 13,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
-        Switch(
-            checked = checking,
-            onCheckedChange = onIgnoreUpdatesChanged,
-        )
     }
 }
 

@@ -152,6 +152,14 @@ class DefaultAppUpdateRepository @Inject constructor(
 
     override fun observeIgnoreUpdates(packageName: String): Flow<Boolean?> = managedAppDao.observe(packageName).map { it?.ignoreUpdates }
 
+    override fun observeUpdateCooldownDays(packageName: String): Flow<Int?> =
+        managedAppDao.observe(packageName).map { it?.updateCooldownDays }
+
+    override fun observeIgnoredUpdatePackages(): Flow<List<String>> = managedAppDao.observeIgnoredPackageNames()
+
+    override suspend fun cooldownOverrides(): Map<String, Int?> =
+        managedAppDao.getAll().associate { it.packageName to it.updateCooldownDays }
+
     override fun observeManagedLink(packageName: String): Flow<ManagedSourceLink?> = managedAppDao.observe(packageName).map { entity ->
         entity?.let {
             ManagedSourceLink(
@@ -225,9 +233,33 @@ class DefaultAppUpdateRepository @Inject constructor(
                 githubAssetRegex = ".*\\.apk$",
                 githubChannel = GitHubReleaseChannel.STABLE.name,
                 watchOnly = false,
+                updateCooldownDays = null,
             )
         managedAppDao.upsert(entity)
         refreshUpdates()
+        return Result.success(Unit)
+    }
+
+    override suspend fun setUpdateCooldownDays(packageName: String, days: Int?): Result<Unit> {
+        val sanitized = days?.coerceIn(0, MAX_PER_APP_COOLDOWN_DAYS)
+        val existing = managedAppDao.get(packageName)
+        val update = updatesState.value[packageName]
+        val entity = existing?.copy(updateCooldownDays = sanitized)
+            ?: ManagedAppEntity(
+                packageName = packageName,
+                sourceId = update?.sourceId ?: "manual",
+                confidence = (update?.confidence ?: MatchConfidence.NONE).name,
+                pinned = false,
+                ignoreUpdates = false,
+                githubOwnerRepo = update?.sourceId
+                    ?.takeIf { it.startsWith("github:") }
+                    ?.removePrefix("github:"),
+                githubAssetRegex = ".*\\.apk$",
+                githubChannel = GitHubReleaseChannel.STABLE.name,
+                watchOnly = false,
+                updateCooldownDays = sanitized,
+            )
+        managedAppDao.upsert(entity)
         return Result.success(Unit)
     }
 
@@ -460,6 +492,8 @@ class DefaultAppUpdateRepository @Inject constructor(
     }
 
     companion object {
+        private const val MAX_PER_APP_COOLDOWN_DAYS = 30
+
         /**
          * Matching certs, known WARNUNG mismatches, and unknown-signer rows with a download URL
          * (GitHub MEDIUM) are kept. Empty MEDIUM without a URL is dropped.

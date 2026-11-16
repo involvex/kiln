@@ -60,7 +60,8 @@ object DefaultRepos {
 
 /**
  * Insert missing built-in repos and repair known address/fingerprint/name.
- * Preserves [RepoEntity.enabled] and [RepoEntity.lastSyncedAtEpochMs] for existing rows.
+ * Preserves [RepoEntity.enabled], [RepoEntity.lastSyncedAtEpochMs], [RepoEntity.priority],
+ * and user mirrors for existing rows.
  */
 suspend fun ensureKnownRepos(repoDao: RepoDao) {
     val existing = repoDao.getAll().associateBy { it.id }
@@ -84,8 +85,7 @@ suspend fun ensureKnownRepos(repoDao: RepoDao) {
                 address = spec.address,
                 fingerprint = spec.fingerprint,
                 kind = "FDROID",
-                priority = spec.priority,
-                // Preserve user mirrors when repairing known address/fingerprint.
+                // Preserve user priority and mirrors when repairing known address/fingerprint.
             )
         }
     }

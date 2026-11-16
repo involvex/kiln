@@ -34,7 +34,12 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
 @Composable
-fun SettingsUpdatesRoute(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsUpdatesRoute(
+    onBack: () -> Unit,
+    onOpenIgnoredUpdates: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: SettingsViewModel = hiltViewModel(),
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val notificationPermission = rememberLauncherForActivityResult(
@@ -46,6 +51,11 @@ fun SettingsUpdatesRoute(onBack: () -> Unit, modifier: Modifier = Modifier, view
         modifier = modifier,
     ) { padding ->
         SettingsScrollColumn(padding = padding) {
+            SettingsHubRow(
+                title = stringResource(R.string.settings_ignored_updates),
+                subtitle = stringResource(R.string.settings_ignored_updates_explain),
+                onClick = onOpenIgnoredUpdates,
+            )
             BackgroundUpdatesBlock(
                 prefs = state.backgroundUpdates,
                 checkNowQueued = state.checkNowQueued,
@@ -60,6 +70,7 @@ fun SettingsUpdatesRoute(onBack: () -> Unit, modifier: Modifier = Modifier, view
                 onUnmeteredOnlyChange = viewModel::setUnmeteredOnly,
                 onAutoInstallChange = viewModel::setAutoInstallMatching,
                 onCooldownDaysChange = viewModel::setUpdateCooldownDays,
+                onRollbackKeepChange = viewModel::setRollbackKeepCount,
                 onIntervalChange = viewModel::setCheckIntervalHours,
                 onCheckNow = viewModel::checkNow,
                 onConsumeCheckNow = viewModel::consumeCheckNowQueued,
@@ -160,6 +171,7 @@ private fun BackgroundUpdatesBlock(
     onUnmeteredOnlyChange: (Boolean) -> Unit,
     onAutoInstallChange: (Boolean) -> Unit,
     onCooldownDaysChange: (Int) -> Unit,
+    onRollbackKeepChange: (Int) -> Unit,
     onIntervalChange: (Int) -> Unit,
     onCheckNow: () -> Unit,
     onConsumeCheckNow: () -> Unit,
@@ -206,27 +218,14 @@ private fun BackgroundUpdatesBlock(
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
-    Text(
-        text = stringResource(R.string.settings_update_cooldown),
-        style = MaterialTheme.typography.bodyLarge,
-    )
-    Text(
-        text = stringResource(R.string.settings_update_cooldown_value, prefs.updateCooldownDays),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    Slider(
-        value = prefs.updateCooldownDays.toFloat(),
-        onValueChange = { onCooldownDaysChange(it.roundToInt()) },
-        valueRange = 0f..14f,
-        steps = 13,
+    CooldownSlider(
+        days = prefs.updateCooldownDays,
         enabled = prefs.enabled && prefs.autoInstallMatching,
-        modifier = Modifier.fillMaxWidth(),
+        onDaysChange = onCooldownDaysChange,
     )
-    Text(
-        text = stringResource(R.string.settings_update_cooldown_hint),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    RollbackKeepSlider(
+        keep = prefs.rollbackKeepCount,
+        onKeepChange = onRollbackKeepChange,
     )
     OutlinedButton(onClick = onCheckNow, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.settings_check_now))
@@ -241,6 +240,58 @@ private fun BackgroundUpdatesBlock(
             onConsumeCheckNow()
         }
     }
+}
+
+@Composable
+private fun CooldownSlider(days: Int, enabled: Boolean, onDaysChange: (Int) -> Unit) {
+    Text(
+        text = stringResource(R.string.settings_update_cooldown),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    Text(
+        text = stringResource(R.string.settings_update_cooldown_value, days),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Slider(
+        value = days.toFloat(),
+        onValueChange = { onDaysChange(it.roundToInt()) },
+        valueRange = 0f..14f,
+        steps = 13,
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Text(
+        text = stringResource(R.string.settings_update_cooldown_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun RollbackKeepSlider(keep: Int, onKeepChange: (Int) -> Unit) {
+    Text(
+        text = stringResource(R.string.settings_rollback_keep),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    Text(
+        text = stringResource(R.string.settings_rollback_keep_value, keep),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Slider(
+        value = keep.toFloat(),
+        onValueChange = { onKeepChange(it.roundToInt()) },
+        valueRange = BackgroundUpdatePrefs.MIN_ROLLBACK_KEEP_COUNT.toFloat()..BackgroundUpdatePrefs.MAX_ROLLBACK_KEEP_COUNT.toFloat(),
+        steps = BackgroundUpdatePrefs.MAX_ROLLBACK_KEEP_COUNT -
+            BackgroundUpdatePrefs.MIN_ROLLBACK_KEEP_COUNT - 1,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Text(
+        text = stringResource(R.string.settings_rollback_keep_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @Composable

@@ -251,7 +251,15 @@ class AppsViewModelTest {
 
         override fun observeIgnoreUpdates(packageName: String): Flow<Boolean?> = flowOf(false)
 
+        override fun observeUpdateCooldownDays(packageName: String): Flow<Int?> = flowOf(null)
+
+        override fun observeIgnoredUpdatePackages(): Flow<List<String>> = flowOf(emptyList())
+
         override suspend fun setIgnoreUpdates(packageName: String, ignoreUpdates: Boolean): Result<Unit> = Result.success(Unit)
+
+        override suspend fun setUpdateCooldownDays(packageName: String, days: Int?): Result<Unit> = Result.success(Unit)
+
+        override suspend fun cooldownOverrides(): Map<String, Int?> = emptyMap()
 
         override fun observeManagedLink(packageName: String): Flow<ManagedSourceLink?> = flowOf(null)
 

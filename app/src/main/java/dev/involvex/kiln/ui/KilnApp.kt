@@ -37,6 +37,7 @@ import dev.involvex.kiln.feature.settings.SettingsAboutRoute
 import dev.involvex.kiln.feature.settings.SettingsAppearanceRoute
 import dev.involvex.kiln.feature.settings.SettingsAutomationRoute
 import dev.involvex.kiln.feature.settings.SettingsDataRoute
+import dev.involvex.kiln.feature.settings.SettingsIgnoredUpdatesRoute
 import dev.involvex.kiln.feature.settings.SettingsInstallationRoute
 import dev.involvex.kiln.feature.settings.SettingsMaintenanceRoute
 import dev.involvex.kiln.feature.settings.SettingsNetworkRoute
@@ -66,6 +67,7 @@ import dev.involvex.kiln.navigation.SettingsAboutKey
 import dev.involvex.kiln.navigation.SettingsAppearanceKey
 import dev.involvex.kiln.navigation.SettingsAutomationKey
 import dev.involvex.kiln.navigation.SettingsDataKey
+import dev.involvex.kiln.navigation.SettingsIgnoredUpdatesKey
 import dev.involvex.kiln.navigation.SettingsInstallationKey
 import dev.involvex.kiln.navigation.SettingsKey
 import dev.involvex.kiln.navigation.SettingsMaintenanceKey
@@ -211,7 +213,16 @@ private fun EntryProviderScope<Any>.kilnNavEntries(topLevelBackStack: TopLevelBa
         SettingsAppearanceRoute(onBack = { topLevelBackStack.removeLast() })
     }
     entry<SettingsUpdatesKey> {
-        SettingsUpdatesRoute(onBack = { topLevelBackStack.removeLast() })
+        SettingsUpdatesRoute(
+            onBack = { topLevelBackStack.removeLast() },
+            onOpenIgnoredUpdates = { topLevelBackStack.add(SettingsIgnoredUpdatesKey) },
+        )
+    }
+    entry<SettingsIgnoredUpdatesKey> {
+        SettingsIgnoredUpdatesRoute(
+            onBack = { topLevelBackStack.removeLast() },
+            onOpenAppDetail = { packageName -> topLevelBackStack.add(AppDetailKey(packageName)) },
+        )
     }
     entry<SettingsNetworkKey> {
         SettingsNetworkRoute(onBack = { topLevelBackStack.removeLast() })

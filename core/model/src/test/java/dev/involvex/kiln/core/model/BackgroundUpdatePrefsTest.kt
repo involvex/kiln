@@ -22,4 +22,11 @@ class BackgroundUpdatePrefsTest {
             BackgroundUpdatePrefs.sanitizeIntervalHours(0),
         )
     }
+
+    @Test
+    fun sanitize_rollback_keep_clamps_to_1_5() {
+        assertEquals(1, BackgroundUpdatePrefs.sanitizeRollbackKeepCount(0))
+        assertEquals(3, BackgroundUpdatePrefs.sanitizeRollbackKeepCount(3))
+        assertEquals(5, BackgroundUpdatePrefs.sanitizeRollbackKeepCount(9))
+    }
 }

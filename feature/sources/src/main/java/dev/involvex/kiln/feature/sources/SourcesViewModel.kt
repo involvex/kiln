@@ -377,6 +377,25 @@ class SourcesViewModel @Inject constructor(
         }
     }
 
+    fun moveRepoPriority(repoId: String, delta: Int) {
+        viewModelScope.launch {
+            withContext(ioDispatcher) {
+                val ordered = repoDao.getAll()
+                val renumbered = RepoPriorityReorder.afterMove(
+                    orderedIds = ordered.map { it.id },
+                    moveId = repoId,
+                    delta = delta,
+                ) ?: return@withContext
+                val byId = ordered.associateBy { it.id }
+                repoDao.upsertAll(
+                    renumbered.mapNotNull { (id, priority) ->
+                        byId[id]?.copy(priority = priority)
+                    },
+                )
+            }
+        }
+    }
+
     private fun RepoEntity.toUi(): RepoUiModel = RepoUiModel(
         id = id,
         name = name,

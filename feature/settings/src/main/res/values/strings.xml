@@ -75,6 +75,13 @@
     <string name="settings_update_cooldown">Auto-install cooldown (days)</string>
     <string name="settings_update_cooldown_hint">Wait this many days after Kiln first sees an update before auto-install. 0 = off.</string>
     <string name="settings_update_cooldown_value">%1$d days</string>
+    <string name="settings_rollback_keep">Rollback APKs kept per app</string>
+    <string name="settings_rollback_keep_hint">After each successful install Kiln keeps this many older APKs for downgrade. Lowering the value deletes extras immediately.</string>
+    <string name="settings_rollback_keep_value">%1$d versions</string>
+    <string name="settings_ignored_updates">Ignored updates</string>
+    <string name="settings_ignored_updates_explain">Apps where update checks are turned off. Re-enable to include them in sync again.</string>
+    <string name="settings_ignored_updates_empty">No apps are ignoring updates.</string>
+    <string name="settings_ignored_updates_reenable">Check for updates again</string>
     <string name="settings_check_now">Check now</string>
     <string name="settings_check_now_queued">Update check queued…</string>
     <string name="settings_automation_section">Automation</string>

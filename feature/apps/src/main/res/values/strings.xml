@@ -20,6 +20,11 @@
     <string name="feature_apps_update_check_error">Update check failed: %1$s</string>
     <string name="feature_apps_ignore_updates">Check for updates for this app</string>
     <string name="feature_apps_ignore_updates_hint">When off, Kiln skips this app during update checks.</string>
+    <string name="feature_apps_cooldown">Auto-install cooldown</string>
+    <string name="feature_apps_cooldown_hint">Wait after Kiln first sees an update before auto-install. Global uses Settings → Updates.</string>
+    <string name="feature_apps_cooldown_global">Global (%1$d days)</string>
+    <string name="feature_apps_cooldown_custom">Custom</string>
+    <string name="feature_apps_cooldown_value">%1$d days</string>
     <string name="feature_apps_managed_source_section">Update source</string>
     <string name="feature_apps_managed_source_none">Not linked yet. Match installed apps or link a source here.</string>
     <string name="feature_apps_managed_source_current">%1$s · %2$s</string>

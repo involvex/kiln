@@ -14,12 +14,19 @@ data class BackgroundUpdatePrefs(
     val updateCooldownDays: Int = 0,
     /** Periodic check interval in hours. Only 12, 24, or 168. */
     val checkIntervalHours: Int = DEFAULT_CHECK_INTERVAL_HOURS,
+    /** How many successful install APKs to keep per package for rollback. */
+    val rollbackKeepCount: Int = DEFAULT_ROLLBACK_KEEP_COUNT,
 ) {
     companion object {
         const val DEFAULT_CHECK_INTERVAL_HOURS: Int = 12
         val ALLOWED_CHECK_INTERVAL_HOURS: Set<Int> = setOf(12, 24, 168)
+        const val DEFAULT_ROLLBACK_KEEP_COUNT: Int = 3
+        const val MIN_ROLLBACK_KEEP_COUNT: Int = 1
+        const val MAX_ROLLBACK_KEEP_COUNT: Int = 5
 
         fun sanitizeIntervalHours(hours: Int): Int = if (hours in ALLOWED_CHECK_INTERVAL_HOURS) hours else DEFAULT_CHECK_INTERVAL_HOURS
+
+        fun sanitizeRollbackKeepCount(count: Int): Int = count.coerceIn(MIN_ROLLBACK_KEEP_COUNT, MAX_ROLLBACK_KEEP_COUNT)
     }
 }
 
@@ -40,6 +47,8 @@ interface BackgroundUpdatePreferences {
     suspend fun setUpdateCooldownDays(days: Int)
 
     suspend fun setCheckIntervalHours(hours: Int)
+
+    suspend fun setRollbackKeepCount(count: Int)
 }
 
 /**

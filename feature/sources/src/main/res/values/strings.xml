@@ -95,6 +95,10 @@
     <string name="sources_repo_last_sync">Last sync: %1$s</string>
     <string name="sources_never_synced">Never</string>
     <string name="sources_repo_mirrors_count">Mirrors: %1$d</string>
+    <string name="sources_repo_priority">Priority: %1$d (lower = preferred)</string>
+    <string name="sources_repo_priority_hint">Reorder repos with ↑↓. Lower priority wins when several sources offer the same app (and signatures match).</string>
+    <string name="sources_repo_move_up">Move up</string>
+    <string name="sources_repo_move_down">Move down</string>
     <string name="sources_repo_edit_mirrors">Edit mirrors</string>
     <string name="sources_repo_mirrors_title">Repo mirrors</string>
     <string name="sources_repo_mirrors_hint">One HTTPS base URL per line (or comma-separated). Tried after the primary address on sync/download failure.</string>

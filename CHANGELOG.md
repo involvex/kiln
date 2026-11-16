@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Settings → Updates: rollback keep-N slider (1–5), ignored-updates overview; App detail per-app auto-install cooldown; Sources repo priority ↑↓ (M38)
+- Settings category hub, Updates PAT + check interval, Install anyway for signature WARNING (#61)
 - Settings → Background controls: HyperOS Autostart (AppOps) + AOSP battery Unrestricted/Optimized/Restricted via Shizuku (#53)
 - Catalog / App detail: Open Exodus report (browser); optional self-hosted Exodus API in Settings for tracker name chips (ODbL attribution) (#52)
 

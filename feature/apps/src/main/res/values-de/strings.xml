@@ -20,6 +20,11 @@
     <string name="feature_apps_update_check_error">Update-Prüfung fehlgeschlagen: %1$s</string>
     <string name="feature_apps_ignore_updates">Updates für diese App prüfen</string>
     <string name="feature_apps_ignore_updates_hint">Aus = Kiln überspringt diese App bei der Update-Prüfung.</string>
+    <string name="feature_apps_cooldown">Auto-Install-Wartezeit</string>
+    <string name="feature_apps_cooldown_hint">Warten, nachdem Kiln ein Update zuerst gesehen hat. Global = Einstellungen → Updates.</string>
+    <string name="feature_apps_cooldown_global">Global (%1$d Tage)</string>
+    <string name="feature_apps_cooldown_custom">Eigene</string>
+    <string name="feature_apps_cooldown_value">%1$d Tage</string>
     <string name="feature_apps_managed_source_section">Update-Quelle</string>
     <string name="feature_apps_managed_source_none">Noch nicht verknüpft. Apps zuordnen oder hier eine Quelle wählen.</string>
     <string name="feature_apps_managed_source_current">%1$s · %2$s</string>

@@ -73,6 +73,8 @@ data class ManagedAppEntity(
     val githubChannel: String = "STABLE",
     /** True when watching an uninstalled app for new versions (no local install required). */
     val watchOnly: Boolean = false,
+    /** Null = use global Settings cooldown for auto-install. */
+    val updateCooldownDays: Int? = null,
 )
 
 @Entity(

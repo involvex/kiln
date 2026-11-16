@@ -33,6 +33,9 @@ data object SettingsAppearanceKey
 data object SettingsUpdatesKey
 
 @Serializable
+data object SettingsIgnoredUpdatesKey
+
+@Serializable
 data object SettingsNetworkKey
 
 @Serializable

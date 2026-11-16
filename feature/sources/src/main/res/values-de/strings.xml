@@ -95,6 +95,10 @@
     <string name="sources_repo_last_sync">Letzte Sync: %1$s</string>
     <string name="sources_never_synced">Nie</string>
     <string name="sources_repo_mirrors_count">Spiegel: %1$d</string>
+    <string name="sources_repo_priority">Priorität: %1$d (niedriger = bevorzugt)</string>
+    <string name="sources_repo_priority_hint">Repos mit ↑↓ umsortieren. Niedrigere Priorität gewinnt, wenn mehrere Quellen dieselbe App anbieten (und Signaturen passen).</string>
+    <string name="sources_repo_move_up">Nach oben</string>
+    <string name="sources_repo_move_down">Nach unten</string>
     <string name="sources_repo_edit_mirrors">Spiegel bearbeiten</string>
     <string name="sources_repo_mirrors_title">Repo-Spiegel</string>
     <string name="sources_repo_mirrors_hint">Eine HTTPS-Basis-URL pro Zeile (oder kommagetrennt). Nach der Primäradresse bei Sync-/Download-Fehlern.</string>

@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.common.IoDispatcher
 import dev.involvex.kiln.core.common.Result
+import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.AutomationPreferences
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
@@ -64,6 +65,7 @@ class SettingsViewModel @Inject constructor(
     private val maintenanceScheduler: MaintenanceScheduler,
     private val kilnConfigRepository: KilnConfigRepository,
     private val gitHubTokenRepository: GitHubTokenRepository,
+    private val apkRollbackCache: ApkRollbackCache,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -248,6 +250,13 @@ class SettingsViewModel @Inject constructor(
 
     fun setUpdateCooldownDays(days: Int) {
         viewModelScope.launch { preferences.setUpdateCooldownDays(days) }
+    }
+
+    fun setRollbackKeepCount(count: Int) {
+        viewModelScope.launch {
+            preferences.setRollbackKeepCount(count)
+            apkRollbackCache.retrimAll(count)
+        }
     }
 
     fun setCheckIntervalHours(hours: Int) {

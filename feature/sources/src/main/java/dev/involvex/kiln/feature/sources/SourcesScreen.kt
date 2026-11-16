@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -55,6 +56,7 @@ fun SourcesRoute(
         onAddFieldsChange = viewModel::onAddFieldsChange,
         onAddRepo = viewModel::addRepo,
         onSaveRepoMirrors = viewModel::saveRepoMirrors,
+        onMoveRepoPriority = viewModel::moveRepoPriority,
         onObtainiumTextChange = viewModel::onObtainiumTextChange,
         onImportObtainium = viewModel::importObtainium,
         onImportObtainiumUri = viewModel::importObtainiumFromUri,
@@ -74,6 +76,7 @@ fun SourcesScreen(
     onAddFieldsChange: (name: String?, address: String?, fingerprint: String?) -> Unit,
     onAddRepo: () -> Unit,
     onSaveRepoMirrors: (repoId: String, mirrorsRaw: String) -> Unit,
+    onMoveRepoPriority: (repoId: String, delta: Int) -> Unit,
     onObtainiumTextChange: (String) -> Unit,
     onImportObtainium: () -> Unit,
     onImportObtainiumUri: (Uri) -> Unit,
@@ -96,7 +99,7 @@ fun SourcesScreen(
         ) {
             sourcesHeader(state, onSyncAll, onCancelSyncAll, onOpenAutoMatch)
             sourcesWatchlist(state.watchlist, onUnwatch)
-            sourcesRepoList(state.repos, onSaveRepoMirrors)
+            sourcesRepoList(state.repos, onSaveRepoMirrors, onMoveRepoPriority)
             item { AddRepoSection(state, onAddFieldsChange, onAddRepo) }
             item { GithubPatStatusSection(state.githubTokenSet, onOpenGithubTokenSettings) }
             item {
@@ -299,14 +302,40 @@ private fun formatSyncProgress(state: SourcesUiState): String {
     }
 }
 
-private fun LazyListScope.sourcesRepoList(repos: List<RepoUiModel>, onSaveRepoMirrors: (repoId: String, mirrorsRaw: String) -> Unit) {
+private fun LazyListScope.sourcesRepoList(
+    repos: List<RepoUiModel>,
+    onSaveRepoMirrors: (repoId: String, mirrorsRaw: String) -> Unit,
+    onMoveRepoPriority: (repoId: String, delta: Int) -> Unit,
+) {
+    item {
+        Text(
+            text = stringResource(R.string.sources_repo_priority_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
     items(repos, key = { it.id }) { repo ->
-        RepoCard(repo, onSaveRepoMirrors)
+        val index = repos.indexOfFirst { it.id == repo.id }
+        RepoCard(
+            repo = repo,
+            canMoveUp = index > 0,
+            canMoveDown = index in 0 until repos.lastIndex,
+            onSaveRepoMirrors = onSaveRepoMirrors,
+            onMoveUp = { onMoveRepoPriority(repo.id, -1) },
+            onMoveDown = { onMoveRepoPriority(repo.id, 1) },
+        )
     }
 }
 
 @Composable
-private fun RepoCard(repo: RepoUiModel, onSaveRepoMirrors: (repoId: String, mirrorsRaw: String) -> Unit) {
+private fun RepoCard(
+    repo: RepoUiModel,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onSaveRepoMirrors: (repoId: String, mirrorsRaw: String) -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+) {
     var editingMirrors by remember(repo.id) { mutableStateOf(false) }
     var mirrorsDraft by remember(repo.id, repo.mirrorsCsv) {
         mutableStateOf(repo.mirrorsCsv.replace(',', '\n'))
@@ -327,11 +356,23 @@ private fun RepoCard(repo: RepoUiModel, onSaveRepoMirrors: (repoId: String, mirr
                 style = MaterialTheme.typography.bodySmall,
             )
             Text(
+                stringResource(R.string.sources_repo_priority, repo.priority),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
                 stringResource(R.string.sources_repo_mirrors_count, repo.mirrorCount),
                 style = MaterialTheme.typography.bodySmall,
             )
-            TextButton(onClick = { editingMirrors = true }) {
-                Text(stringResource(R.string.sources_repo_edit_mirrors))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = onMoveUp, enabled = canMoveUp) {
+                    Text(stringResource(R.string.sources_repo_move_up))
+                }
+                OutlinedButton(onClick = onMoveDown, enabled = canMoveDown) {
+                    Text(stringResource(R.string.sources_repo_move_down))
+                }
+                TextButton(onClick = { editingMirrors = true }) {
+                    Text(stringResource(R.string.sources_repo_edit_mirrors))
+                }
             }
         }
     }

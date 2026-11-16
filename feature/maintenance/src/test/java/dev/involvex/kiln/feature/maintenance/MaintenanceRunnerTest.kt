@@ -73,4 +73,6 @@ private class FakeRollbackCache : ApkRollbackCache {
     override suspend fun get(packageName: String, versionCode: Long): RollbackApkEntry? = null
 
     override suspend fun pruneByAgeAndSize(maxAgeMs: Long, maxTotalBytes: Long, nowEpochMs: Long): Long = 0L
+
+    override suspend fun retrimAll(keep: Int) = Unit
 }
