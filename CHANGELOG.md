@@ -7,12 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] — 2026-11-16
+
 ### Added
 
-- Settings → Updates: rollback keep-N slider (1–5), ignored-updates overview; App detail per-app auto-install cooldown; Sources repo priority ↑↓ (M38)
+- Manage → APK tools **Install**: `.apks` / `.xapk` / `.apkm` (and single `.apk`) via PackageInstaller multi-session; device-aware split filter; Share/VIEW entry; silent `pm install-multiple` when capable (#66)
+- Settings → Updates: rollback keep-N slider (1–5), ignored-updates overview; App detail per-app auto-install cooldown; Sources repo priority ↑↓ (M38, #63)
 - Settings category hub, Updates PAT + check interval, Install anyway for signature WARNING (#61)
+- Auto-match UX polish + Hacker theme (#62)
+- Freeze / hibernate via `pm suspend` / `unsuspend` (#58)
+- Universal APK merge via ARSCLib with mandatory resign (#56)
 - Settings → Background controls: HyperOS Autostart (AppOps) + AOSP battery Unrestricted/Optimized/Restricted via Shizuku (#53)
 - Catalog / App detail: Open Exodus report (browser); optional self-hosted Exodus API in Settings for tracker name chips (ODbL attribution) (#52)
+
+### Fixed
+
+- CI: warm KSP / `--no-parallel` compile and lint to avoid Hilt classpath flakes (#65)
+- Depend on `work-runtime` for WorkManager 2.12 (#60)
+- HyperOS Autostart display alignment + Background controls UI polish (#55)
+
+### Changed
+
+- Docs/ROADMAP: M33–M39 closed; publishing remains GitHub Release (F-Droid submit still deferred)
 
 ## [0.2.3] — 2026-11-15
 
@@ -101,7 +117,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - No telemetry; HTTPS-only network; signature checks on updates; tokens not logged
 
-[Unreleased]: https://github.com/involvex/kiln/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/involvex/kiln/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/involvex/kiln/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/involvex/kiln/compare/v0.2.0...v0.2.3
 [0.2.2]: https://github.com/involvex/kiln/compare/v0.2.0...v0.2.3
 [0.2.1]: https://github.com/involvex/kiln/compare/v0.2.0...v0.2.3

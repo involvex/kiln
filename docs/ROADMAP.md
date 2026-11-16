@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M39** Split APK install Done (#66). M38 Settings polish Done (#63). App version **0.2.3** (code 6), tag `v0.2.3`. HyperOS M1–M8 checklist remains a separate release gate; publishing / dual-user unscheduled.
+**Current status:** **M39** Split APK install Done (#66). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -120,7 +120,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Repo priority | ✅ Sources ↑↓ reorder; `ensureKnownRepos` preserves user priority; Auto-match / update conflict tie-break | NONE |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
-| Release / store prep | ✅ version `0.2.3` (code 6); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG; F-Droid submit deferred | — |
+| Release / store prep | ✅ version `0.2.4` (code 7); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG; F-Droid submit deferred | — |
 | App Discovery | ✅ Apps → Discover; catalog refresh; icons; detail; search/categories; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
 | Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage | NONE |
@@ -316,9 +316,9 @@ flowchart LR
   M38 --> M39[M39 Split install]
 ```
 
-1. **M0–M39** on main (#66); AutoMatch UX polish (#62); **`v0.2.3`** tagged; CI lint harden (#65).
+1. **M0–M39** on main (#66); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
 2. No further feature milestone scheduled — pick from PLAN §12 (SAF backup rotation / dual-user / tablet layouts) or release gates.
-3. Publishing / F-Droid still deferred unless explicitly requested.
+3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 
 ---

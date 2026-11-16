@@ -15,7 +15,7 @@ internal val Project.libs: VersionCatalog
 private const val COMPILE_SDK = 37
 private const val TARGET_SDK = 37
 private const val MIN_SDK = 26
-private const val VERSION_CODE = 6
+private const val VERSION_CODE = 7
 
 internal fun Project.configureAndroidApplication() {
     extensions.configure<ApplicationExtension> {
@@ -24,7 +24,7 @@ internal fun Project.configureAndroidApplication() {
             minSdk = MIN_SDK
             targetSdk = TARGET_SDK
             versionCode = VERSION_CODE
-            versionName = "0.2.3"
+            versionName = "0.2.4"
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
         // AGP 9 built-in Kotlin: org.jetbrains.kotlin.android is NOT applied.
