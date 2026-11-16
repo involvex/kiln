@@ -415,7 +415,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 - **P2 — Intent-/Broadcast-API für Automatisierung**: → **shipped M22**
 - **P2 — Config-Export/-Import und Sync**: Quellenliste und Regeln als JSON (Kiln-Config) via SAF → **M25** (Done #38); optional Sync über Cloudflare Worker (Hono + D1/R2) später.
 - **P3 — APK-Werkzeuge Phase 2**: Manifest-Viewer + Signaturvergleich → **shipped M29**; Resign (`apksig`) + Split-Export → **shipped M31** (#49); Universal-Merge (REAndroid ARSCLib + Resign) → **shipped M35** (#56).
-- **P2 — Split-Bundle-Install**: `.apks`/`.xapk`/`.apkm` via PackageInstaller multi-session + Share/SAF → **M39** (In progress).
+- **P2 — Split-Bundle-Install**: `.apks`/`.xapk`/`.apkm` via PackageInstaller multi-session + Share/SAF → **shipped M39** (#66).
 
 ### Storage & Wartung
 

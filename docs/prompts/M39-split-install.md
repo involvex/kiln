@@ -1,6 +1,6 @@
 # M39 — Split APK install (bundles)
 
-> Branch `m39-split-install`. After M38 (#63) + CI lint harden (#65).
+> Shipped in [#66](https://github.com/involvex/kiln/pull/66). Branch `m39-split-install`. After M38 (#63) + CI lint harden (#65).
 
 ## In scope
 
