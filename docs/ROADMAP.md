@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M42** GitHub starred → Sources in progress (`m42-github-stars`). M41 Discover panel Done (#71). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M42** GitHub starred → Sources Done (#73). M41 Discover panel Done (#71). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -56,7 +56,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M39** | Split APK install | Done | [`prompts/M39-split-install.md`](./prompts/M39-split-install.md) · [#66](https://github.com/involvex/kiln/pull/66) | SAF + Share/VIEW for `.apks`/`.xapk`/`.apkm`; PackageInstaller multi-session; optional silent `install-multiple` |
 | **M40** | Backup phase 2 | Done | [`prompts/M40-backup-phase2.md`](./prompts/M40-backup-phase2.md) · [#69](https://github.com/involvex/kiln/pull/69) | SAF tree + keep-N; Shizuku Android/data+obb; optional AES-GCM (no Root) |
 | **M41** | Discover panel | Done | [`prompts/M41-discover-panel.md`](./prompts/M41-discover-panel.md) · [#71](https://github.com/involvex/kiln/pull/71) | Hilt Nav3 crash fix; F-Droid-style shelves in Discover; drop Trending segment |
-| **M42** | GitHub starred → Sources | In progress | [`prompts/M42-github-stars.md`](./prompts/M42-github-stars.md) · `m42-github-stars` | PAT `/user/starred` review → multi-select add; kilnHiltViewModel shell crash fix |
+| **M42** | GitHub starred → Sources | Done | [`prompts/M42-github-stars.md`](./prompts/M42-github-stars.md) · [#73](https://github.com/involvex/kiln/pull/73) | PAT `/user/starred` review → multi-select add; kilnHiltViewModel shell crash fix |
 
 ---
 
@@ -85,7 +85,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Publishing / F-Droid submit | Partial | Fastlane + tag workflow ready; screenshots / submit deferred |
 | HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
-| GitHub starred repos → Sources | In progress (M42) | Review list + multi-select add; APK heuristic; no silent install |
+| GitHub starred repos → Sources | Done (M42 #73) | Review list + multi-select add; APK heuristic; no silent install |
 
 ---
 
@@ -100,7 +100,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | App detail | ✅ Version, installer, SHA-256, paths, permissions; rollback list + Shizuku downgrade confirm | NONE / SHIZUKU |
 | APK export (single / batch) | ✅ `.apk` / `.apks` STORED / `.xapk`; SAF + share + WorkManager batch | NONE |
 | Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
-| Sources / updates | ✅ F-Droid/Izzy/Guardian defaults + FP upsert; `fdroidrepo(s):` / `?fingerprint=` deep links; index-v2 + entry.jar verify; GitHub; Obtainium import; Room cache; per-repo mirrors (M30) | NONE (+ network) |
+| Sources / updates | ✅ F-Droid/Izzy/Guardian defaults + FP upsert; `fdroidrepo(s):` / `?fingerprint=` deep links; index-v2 + entry.jar verify; GitHub; **M42** starred import (PAT review → multi-select); Obtainium import; Room cache; per-repo mirrors (M30) | NONE (+ network) |
 | Network proxy | ✅ HTTP/SOCKS + Orbot SOCKS via `KilnHttpClient` (M30) | NONE |
 | Auto-match | ✅ Confidence tiers; icons/chips/rationale; signer-preferring multi-repo pick; WARNING confirm + manual F-Droid/GitHub link (pinned) | NONE |
 | GitHub channels | ✅ Stable / Pre-release / Nightly (Actions artifacts; PAT required for Nightly) | NONE (+ network; PAT for Nightly) |
@@ -128,7 +128,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Release / store prep | ✅ version `0.2.4` (code 7); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG; F-Droid submit deferred | — |
 | App Discovery | ✅ Apps → Library\|Discover; home shelves + categories; catalog refresh; icons; detail; search; GitHub tab; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
-| Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage | NONE |
+| Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage; **M42** `kilnHiltViewModel` Activity scope (Nav3 Hilt map miss) | NONE |
 | Trending shelves | ✅ Category/keyword shelves (honest: no download charts) | NONE (+ catalog) |
 
 ---
@@ -324,8 +324,8 @@ flowchart LR
   M41 --> M42[M42 GitHub stars]
 ```
 
-1. **M0–M41** on main (#71); **M42** on `m42-github-stars`; **`v0.2.4`** tagged (code 7); CI lint harden (#65).
-2. After M42: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
+1. **M0–M42** on main (#73); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
+2. Next: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 
