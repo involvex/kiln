@@ -155,4 +155,18 @@ interface PrivilegedExecutor {
      * Requires [PrivilegeCapability.ACCESS_ANDROID_DATA].
      */
     suspend fun deleteAndroidSharedPackageDir(root: AndroidSharedRoot, packageName: String): Result<Unit>
+
+    /**
+     * Tar `root/<packageName>` into [destTarAbsolutePath] (Kiln external-cache staging only).
+     * Requires [PrivilegeCapability.ACCESS_ANDROID_DATA]. Missing package dir → success with empty skip.
+     */
+    suspend fun archiveAndroidSharedPackageDir(root: AndroidSharedRoot, packageName: String, destTarAbsolutePath: String): Result<Boolean>
+
+    /**
+     * Extract tar into `root/` (creates/replaces `packageName` entry). Requires [PrivilegeCapability.ACCESS_ANDROID_DATA].
+     */
+    suspend fun restoreAndroidSharedPackageDir(root: AndroidSharedRoot, packageName: String, srcTarAbsolutePath: String): Result<Unit>
+
+    /** `am force-stop <package>` — best-effort before data restore. Requires [PrivilegeCapability.ACCESS_ANDROID_DATA]. */
+    suspend fun forceStopPackage(packageName: String): Result<Unit>
 }

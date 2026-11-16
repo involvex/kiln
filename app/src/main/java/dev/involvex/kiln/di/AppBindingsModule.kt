@@ -14,6 +14,7 @@ import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.AutomationPreferences
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
+import dev.involvex.kiln.core.model.BackupPreferences
 import dev.involvex.kiln.core.model.DebugLogController
 import dev.involvex.kiln.core.model.DevPreferences
 import dev.involvex.kiln.core.model.ExodusPrivacyPreferences
@@ -36,6 +37,7 @@ import dev.involvex.kiln.core.model.WidgetUpdatePublisher
 import dev.involvex.kiln.feature.apps.data.DefaultInstalledAppsReader
 import dev.involvex.kiln.feature.apps.data.PackageInfoSource
 import dev.involvex.kiln.feature.apps.data.PackageManagerPackageInfoSource
+import dev.involvex.kiln.feature.backup.data.DataStoreBackupPreferences
 import dev.involvex.kiln.feature.installer.DefaultInstallQueue
 import dev.involvex.kiln.feature.installer.rollback.DefaultApkDownloadJanitor
 import dev.involvex.kiln.feature.installer.rollback.FileApkRollbackCache
@@ -124,6 +126,10 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindMaintenancePreferences(impl: DataStoreMaintenancePreferences): MaintenancePreferences
+
+    @Binds
+    @Singleton
+    abstract fun bindBackupPreferences(impl: DataStoreBackupPreferences): BackupPreferences
 
     @Binds
     @Singleton

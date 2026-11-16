@@ -17,11 +17,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -38,6 +41,8 @@ import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.core.model.BackupAppCandidate
 import dev.involvex.kiln.core.model.BackupContentTier
+import dev.involvex.kiln.core.model.BackupPrefs
+import kotlin.math.roundToInt
 
 @Composable
 fun BackupRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, viewModel: BackupViewModel = hiltViewModel()) {
@@ -56,9 +61,16 @@ fun BackupRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, viewM
         ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
         if (uri != null) {
-            viewModel.performRestore(uri, context.contentResolver)
+            viewModel.onRestoreFilePicked(uri, context.contentResolver)
         } else {
             viewModel.dismissRestore()
+        }
+    }
+    val openTree = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.onTreePicked(uri, context.contentResolver)
         }
     }
 
@@ -68,9 +80,11 @@ fun BackupRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, viewM
         onQueryChange = viewModel::setQuery,
         onSelect = viewModel::select,
         onRequestBackup = {
-            val pkg = state.selectedPackage ?: return@BackupScreen
-            viewModel.requestBackup()
-            createDoc.launch(viewModel.suggestedFileName(pkg))
+            val needsCreate = viewModel.requestBackup()
+            if (needsCreate) {
+                val pkg = state.selectedPackage ?: return@BackupScreen
+                createDoc.launch(viewModel.suggestedFileName(pkg))
+            }
         },
         onRequestRestore = viewModel::requestRestore,
         onConfirmRestore = {
@@ -78,6 +92,21 @@ fun BackupRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, viewM
             openDoc.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
         },
         onDismissRestore = viewModel::dismissRestore,
+        onPickTree = { openTree.launch(null) },
+        onClearTree = { viewModel.clearTree(context.contentResolver) },
+        onKeepNChange = viewModel::setKeepN,
+        onEncryptChange = viewModel::setEncryptEnabled,
+        onPasswordDraftChange = viewModel::setPasswordDraft,
+        onConfirmPassword = {
+            val needsCreate = viewModel.confirmPasswordPrompt(context.contentResolver)
+            if (needsCreate) {
+                val pkg = viewModel.uiState.value.pendingBackupPackage
+                    ?: viewModel.uiState.value.selectedPackage
+                    ?: return@BackupScreen
+                createDoc.launch(viewModel.suggestedFileName(pkg))
+            }
+        },
+        onDismissPassword = viewModel::dismissPasswordPrompt,
         showTopBar = showTopBar,
         modifier = modifier,
     )
@@ -93,6 +122,13 @@ fun BackupScreen(
     onRequestRestore: () -> Unit,
     onConfirmRestore: () -> Unit,
     onDismissRestore: () -> Unit,
+    onPickTree: () -> Unit,
+    onClearTree: () -> Unit,
+    onKeepNChange: (Int) -> Unit,
+    onEncryptChange: (Boolean) -> Unit,
+    onPasswordDraftChange: (String) -> Unit,
+    onConfirmPassword: () -> Unit,
+    onDismissPassword: () -> Unit,
     modifier: Modifier = Modifier,
     showTopBar: Boolean = true,
 ) {
@@ -122,6 +158,10 @@ fun BackupScreen(
                 onSelect = onSelect,
                 onRequestBackup = onRequestBackup,
                 onRequestRestore = onRequestRestore,
+                onPickTree = onPickTree,
+                onClearTree = onClearTree,
+                onKeepNChange = onKeepNChange,
+                onEncryptChange = onEncryptChange,
             )
         }
     }
@@ -130,6 +170,15 @@ fun BackupScreen(
         RestoreConfirmDialog(
             onConfirm = onConfirmRestore,
             onDismiss = onDismissRestore,
+        )
+    }
+    if (state.passwordPrompt != null) {
+        PasswordDialog(
+            prompt = state.passwordPrompt,
+            value = state.passwordDraft,
+            onValueChange = onPasswordDraftChange,
+            onConfirm = onConfirmPassword,
+            onDismiss = onDismissPassword,
         )
     }
 }
@@ -164,6 +213,43 @@ private fun RestoreConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     )
 }
 
+@Composable
+private fun PasswordDialog(
+    prompt: BackupPasswordPrompt,
+    value: String,
+    onValueChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val title = when (prompt) {
+        BackupPasswordPrompt.BACKUP -> stringResource(R.string.backup_password_backup_title)
+        BackupPasswordPrompt.RESTORE -> stringResource(R.string.backup_password_restore_title)
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                label = { Text(stringResource(R.string.backup_password_label)) },
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm, enabled = value.isNotEmpty()) {
+                Text(stringResource(R.string.backup_password_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.backup_cancel))
+            }
+        },
+    )
+}
+
 private fun LazyListScope.backupListItems(
     state: BackupUiState,
     onRefresh: () -> Unit,
@@ -171,8 +257,26 @@ private fun LazyListScope.backupListItems(
     onSelect: (String) -> Unit,
     onRequestBackup: () -> Unit,
     onRequestRestore: () -> Unit,
+    onPickTree: () -> Unit,
+    onClearTree: () -> Unit,
+    onKeepNChange: (Int) -> Unit,
+    onEncryptChange: (Boolean) -> Unit,
 ) {
     item { BackupHonestyBanner(tier = state.tier) }
+    item {
+        BackupTreeSection(
+            state = state,
+            onPickTree = onPickTree,
+            onClearTree = onClearTree,
+            onKeepNChange = onKeepNChange,
+        )
+    }
+    item {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = state.encryptEnabled, onCheckedChange = onEncryptChange)
+            Text(stringResource(R.string.backup_encrypt_toggle))
+        }
+    }
     item {
         BackupActions(
             canBackup = state.selectedPackage != null && !state.busy,
@@ -204,6 +308,36 @@ private fun LazyListScope.backupListItems(
             app = app,
             selected = app.packageName == state.selectedPackage,
             onSelect = { onSelect(app.packageName) },
+        )
+    }
+}
+
+@Composable
+private fun BackupTreeSection(state: BackupUiState, onPickTree: () -> Unit, onClearTree: () -> Unit, onKeepNChange: (Int) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.backup_tree_title), style = MaterialTheme.typography.titleSmall)
+        Text(
+            text = state.treeLabel?.let { stringResource(R.string.backup_tree_current, it) }
+                ?: stringResource(R.string.backup_tree_none),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = onPickTree) {
+                Text(stringResource(R.string.backup_tree_pick))
+            }
+            if (state.hasTree) {
+                OutlinedButton(onClick = onClearTree) {
+                    Text(stringResource(R.string.backup_tree_clear))
+                }
+            }
+        }
+        Text(stringResource(R.string.backup_keep_n_label, state.prefs.keepN))
+        Slider(
+            value = state.prefs.keepN.toFloat(),
+            onValueChange = { onKeepNChange(it.roundToInt()) },
+            valueRange = BackupPrefs.MIN_KEEP_N.toFloat()..BackupPrefs.MAX_KEEP_N.toFloat(),
+            steps = BackupPrefs.MAX_KEEP_N - BackupPrefs.MIN_KEEP_N - 1,
         )
     }
 }
@@ -295,6 +429,14 @@ private fun userMessage(raw: String): String = when {
 
     raw == "could_not_open_output" || raw == "could_not_open_input" ->
         stringResource(R.string.backup_err_saf)
+
+    raw == "tree_not_set" -> stringResource(R.string.backup_err_tree)
+
+    raw == "tree_create_failed" -> stringResource(R.string.backup_err_tree_create)
+
+    raw == "password_required" -> stringResource(R.string.backup_err_password)
+
+    raw == "decrypt_failed" -> stringResource(R.string.backup_err_decrypt)
 
     else -> raw
 }

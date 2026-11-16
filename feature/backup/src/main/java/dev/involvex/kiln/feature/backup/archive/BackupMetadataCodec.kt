@@ -7,6 +7,8 @@ import kotlinx.serialization.json.Json
 
 object BackupMetadataCodec {
     const val FILE_NAME = "metadata.json"
+    const val ANDROID_DATA_ENTRY = "android_data.tar"
+    const val ANDROID_OBB_ENTRY = "android_obb.tar"
     private val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
@@ -33,6 +35,9 @@ object BackupMetadataCodec {
         val includesAndroidData: Boolean = false,
         val apkEntries: List<String> = emptyList(),
         val hasSplits: Boolean = false,
+        val encrypted: Boolean = false,
+        val androidDataEntry: String? = null,
+        val androidObbEntry: String? = null,
     ) {
         fun toModel(): BackupArchiveMetadata = BackupArchiveMetadata(
             formatVersion = formatVersion,
@@ -47,6 +52,9 @@ object BackupMetadataCodec {
             includesAndroidData = includesAndroidData,
             apkEntries = apkEntries,
             hasSplits = hasSplits,
+            encrypted = encrypted,
+            androidDataEntry = androidDataEntry,
+            androidObbEntry = androidObbEntry,
         )
 
         companion object {
@@ -63,6 +71,9 @@ object BackupMetadataCodec {
                 includesAndroidData = metadata.includesAndroidData,
                 apkEntries = metadata.apkEntries,
                 hasSplits = metadata.hasSplits,
+                encrypted = metadata.encrypted,
+                androidDataEntry = metadata.androidDataEntry,
+                androidObbEntry = metadata.androidObbEntry,
             )
         }
     }

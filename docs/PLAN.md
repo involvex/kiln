@@ -174,8 +174,8 @@ Die UI fragt nie „ist Shizuku da?", sondern `capabilities: Set<Capability>` au
 | SHIZUKU (shell)     | APK + `Android/data` + `Android/obb` (Zugriff als shell-UID); App-Daten in `/data/data` nur bei Apps, die selbst Backup erlauben |
 | ROOT / Shizuku-Root | Volles Backup `/data/data` + `/data/user_de` + Berechtigungen; Restore mit korrektem Owner/SELinux-Kontext (`restorecon`)        |
 
-- Format: `tar.zst` (oder zip) + `metadata.json` (Paket, Version, Signatur, Zeit, Tier), optional Verschlüsselung (AES-GCM, Schlüssel per Passwort/Keystore)
-- Ziel: SAF-Ordner; später WebDAV/Cloudflare R2 (S3-kompatibel)
+- Format: zip + `metadata.json` (Paket, Version, Signatur, Zeit, Tier); optional AES-GCM (Passwort/PBKDF2) → **M40**; ROOT-Daten später
+- Ziel: SAF-Ordner mit keep-N Rotation → **M40**; später WebDAV/Cloudflare R2 (S3-kompatibel)
 - Restore-Reihenfolge: APK installieren → `force-stop` → Daten entpacken → Owner/Kontext setzen
 - Realistisch: Vollständige Datenbackups ohne Root sind **nicht** zuverlässig machbar. Die UI muss das klar kommunizieren. Referenz: Neo Backup, Swift Backup, AppManager
 
@@ -447,3 +447,5 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 14. **M36** Freeze / hibernate (Done #58)
 15. **M37** Settings hub + PAT + signature confirm (Done #61)
 16. **M38** Settings polish (Done #63)
+17. **M39** Split APK install (Done #66)
+18. **M40** Backup phase 2 — SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM (no Root)
