@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Processes widget ANR/freeze: early-exit meminfo snapshot + async refresh (no dumpsys on Glance/receiver bind path)
 - Processes widget empty on HyperOS: parse `NNNK:` / RSS+PSS `dumpsys meminfo` formats
 - Hilt ViewModel crashes (Storage, Background controls, …) from incomplete/stale KSP maps; `ksp.incremental=false` + `verifyHiltViewModelMapDebug`
 

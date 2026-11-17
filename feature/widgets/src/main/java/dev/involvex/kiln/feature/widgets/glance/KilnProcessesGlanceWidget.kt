@@ -13,6 +13,8 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.actionSendBroadcast
 import androidx.glance.appwidget.action.actionStartActivity
+import androidx.glance.appwidget.lazy.LazyColumn
+import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
@@ -25,6 +27,7 @@ import androidx.glance.layout.padding
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import dagger.hilt.android.EntryPointAccessors
 import dev.involvex.kiln.core.common.ByteSizeFormatter
@@ -34,8 +37,6 @@ import dev.involvex.kiln.core.model.WidgetIntents
 import dev.involvex.kiln.feature.widgets.R
 import dev.involvex.kiln.feature.widgets.WidgetPreferencesEntryPoint
 import java.util.Locale
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class KilnProcessesGlanceWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -46,19 +47,20 @@ class KilnProcessesGlanceWidget : GlanceAppWidget() {
         val caps = entryPoint.privilegedExecutor().currentStatus().capabilities
         val canList = ProcessStatsGate.canList(caps)
         val canKill = ProcessStatsGate.canForceStop(caps)
+        // Never await dumpsys on the Glance bind path — that ANR'd / froze the app (#logcat).
+        val processSnap = entryPoint.processWidgetStore().current()
         if (canList) {
-            withContext(Dispatchers.IO) {
-                runCatching { entryPoint.processWidgetRefresher().refreshIfStale() }
-            }
+            entryPoint.processWidgetRefresher().enqueueRefresh(
+                force = processSnap.rows.isEmpty() || processSnap.lastErrorKey != null,
+            )
         }
         val snapshot = entryPoint.widgetPreferences().current()
-        val processSnap = entryPoint.processWidgetStore().current()
         val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
             ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             ?: Intent()
         val setupIntent = Intent(launch).putExtra(WidgetIntents.EXTRA_OPEN_PRIVILEGE_SETUP, true)
         val emptyOrError = when {
-            processSnap.lastErrorKey != null ->
+            processSnap.lastErrorKey != null && processSnap.rows.isEmpty() ->
                 context.getString(R.string.widget_processes_error)
 
             else -> context.getString(R.string.widget_processes_empty)
@@ -68,6 +70,9 @@ class KilnProcessesGlanceWidget : GlanceAppWidget() {
             GlanceTheme {
                 ProcessesWidgetContent(
                     title = context.getString(R.string.widget_processes_title),
+                    appHeader = context.getString(R.string.widget_processes_col_app),
+                    memHeader = context.getString(R.string.widget_processes_col_mem),
+                    cpuHeader = context.getString(R.string.widget_processes_col_cpu),
                     canList = canList,
                     canKill = canKill,
                     needShizuku = context.getString(R.string.widget_processes_need_shizuku),
@@ -109,6 +114,9 @@ class KilnProcessesWidgetReceiver : GlanceAppWidgetReceiver() {
 @Suppress("LongParameterList")
 private fun ProcessesWidgetContent(
     title: String,
+    appHeader: String,
+    memHeader: String,
+    cpuHeader: String,
     canList: Boolean,
     canKill: Boolean,
     needShizuku: String,
@@ -164,23 +172,62 @@ private fun ProcessesWidgetContent(
             if (rows.isEmpty()) {
                 KilnWidgetBody(text = emptyLabel)
             } else {
-                rows.forEachIndexed { index, row ->
-                    if (index > 0) {
-                        Spacer(modifier = GlanceModifier.height(2.dp))
+                ProcessTableHeader(
+                    appHeader = appHeader,
+                    memHeader = memHeader,
+                    cpuHeader = cpuHeader,
+                    showActionColumn = canKill,
+                )
+                Spacer(modifier = GlanceModifier.height(2.dp))
+                LazyColumn(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+                    items(
+                        items = rows,
+                        itemId = { it.packageName.hashCode().toLong() },
+                    ) { row ->
+                        ProcessRow(
+                            row = row,
+                            killConfirmPackage = killConfirmPackage,
+                            canKill = canKill,
+                            killLabel = killLabel,
+                            confirmLabel = confirmLabel,
+                            cancelLabel = cancelLabel,
+                            killRequestIntent = killRequestIntent,
+                            killConfirmIntent = killConfirmIntent,
+                            killCancelIntent = killCancelIntent,
+                        )
                     }
-                    ProcessRow(
-                        row = row,
-                        killConfirmPackage = killConfirmPackage,
-                        canKill = canKill,
-                        killLabel = killLabel,
-                        confirmLabel = confirmLabel,
-                        cancelLabel = cancelLabel,
-                        killRequestIntent = killRequestIntent,
-                        killConfirmIntent = killConfirmIntent,
-                        killCancelIntent = killCancelIntent,
-                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ProcessTableHeader(appHeader: String, memHeader: String, cpuHeader: String, showActionColumn: Boolean) {
+    Row(
+        modifier = GlanceModifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = appHeader,
+            style = columnHeaderStyle(),
+            maxLines = 1,
+            modifier = GlanceModifier.defaultWeight(),
+        )
+        Text(
+            text = memHeader,
+            style = columnHeaderStyle(alignEnd = true),
+            maxLines = 1,
+            modifier = GlanceModifier.width(MEM_COL_WIDTH),
+        )
+        Text(
+            text = cpuHeader,
+            style = columnHeaderStyle(alignEnd = true),
+            maxLines = 1,
+            modifier = GlanceModifier.width(CPU_COL_WIDTH),
+        )
+        if (showActionColumn) {
+            Spacer(modifier = GlanceModifier.width(ACTION_COL_WIDTH))
         }
     }
 }
@@ -202,7 +249,9 @@ private fun ProcessRow(
     val cpu = row.cpuPercent?.let { String.format(Locale.US, "%.0f%%", it) } ?: "—"
     val pending = killConfirmPackage == row.packageName
     Row(
-        modifier = GlanceModifier.fillMaxWidth(),
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -216,34 +265,62 @@ private fun ProcessRow(
             modifier = GlanceModifier.defaultWeight(),
         )
         Text(
-            text = "$mem · $cpu",
+            text = mem,
             style = TextStyle(
                 fontSize = 11.sp,
                 color = GlanceTheme.colors.onSurfaceVariant,
+                textAlign = TextAlign.End,
             ),
             maxLines = 1,
-            modifier = GlanceModifier.padding(start = 6.dp, end = 6.dp),
+            modifier = GlanceModifier.width(MEM_COL_WIDTH),
+        )
+        Text(
+            text = cpu,
+            style = TextStyle(
+                fontSize = 11.sp,
+                color = GlanceTheme.colors.onSurfaceVariant,
+                textAlign = TextAlign.End,
+            ),
+            maxLines = 1,
+            modifier = GlanceModifier.width(CPU_COL_WIDTH),
         )
         if (!canKill) return@Row
-        if (pending) {
-            KilnGlassChip(
-                label = confirmLabel,
-                action = actionSendBroadcast(killConfirmIntent(row.packageName)),
-                danger = true,
-                compact = true,
-            )
-            Spacer(modifier = GlanceModifier.width(4.dp))
-            KilnGlassChip(
-                label = cancelLabel,
-                action = actionSendBroadcast(killCancelIntent),
-                compact = true,
-            )
-        } else {
-            KilnGlassChip(
-                label = killLabel,
-                action = actionSendBroadcast(killRequestIntent(row.packageName)),
-                compact = true,
-            )
+        Column(
+            modifier = GlanceModifier.width(ACTION_COL_WIDTH),
+            horizontalAlignment = Alignment.End,
+        ) {
+            if (pending) {
+                KilnGlassChip(
+                    label = confirmLabel,
+                    action = actionSendBroadcast(killConfirmIntent(row.packageName)),
+                    danger = true,
+                    compact = true,
+                )
+                Spacer(modifier = GlanceModifier.height(2.dp))
+                KilnGlassChip(
+                    label = cancelLabel,
+                    action = actionSendBroadcast(killCancelIntent),
+                    compact = true,
+                )
+            } else {
+                KilnGlassChip(
+                    label = killLabel,
+                    action = actionSendBroadcast(killRequestIntent(row.packageName)),
+                    compact = true,
+                )
+            }
         }
     }
 }
+
+@Composable
+private fun columnHeaderStyle(alignEnd: Boolean = false): TextStyle = TextStyle(
+    fontSize = 10.sp,
+    fontWeight = FontWeight.Medium,
+    color = GlanceTheme.colors.onSurfaceVariant,
+    textAlign = if (alignEnd) TextAlign.End else TextAlign.Start,
+)
+
+private val MEM_COL_WIDTH = 68.dp
+private val CPU_COL_WIDTH = 40.dp
+private val ACTION_COL_WIDTH = 88.dp
