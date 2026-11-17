@@ -7,23 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] — 2026-11-17
+
 ### Added
 
-- Home widgets: Cache (trim with confirm) and Processes (mem/CPU + force-stop via Shizuku)
+- Home widgets: Cache (trim with confirm) and Processes (mem/CPU + force-stop via Shizuku) (M46, #81)
+- Discover home shelves + GitHub starred → Sources; app activities viewer (M41–M43)
+- Backup phase 2: SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM (M40, #69)
 
 ### Fixed
 
-- Processes widget ANR/freeze: early-exit meminfo snapshot + async refresh (no dumpsys on Glance/receiver bind path)
+- Processes widget ANR/freeze: early-exit meminfo snapshot + async refresh (no dumpsys on Glance/receiver bind path) (#85)
 - Processes widget empty on HyperOS: parse `NNNK:` / RSS+PSS `dumpsys meminfo` formats
-- Hilt ViewModel crashes (Storage, Background controls, …) from incomplete/stale KSP maps; `ksp.incremental=false` + `verifyHiltViewModelMapDebug`
+- Hilt ViewModel crashes (Storage, Background controls, …) from incomplete/stale KSP maps; `ksp.incremental=false` + `verifyHiltViewModelMapDebug` (M45, #79)
+- Package list icons: decode to request size and mark Coil `MEMORY` (avoid full mipmap bitmaps)
 
 ### Changed
 
-- Home widgets: Material glass chrome (rounded translucent surfaces + action chips)
-- Updates widget: drop trim/confirm/cancel; show latest update preview lines + Check now
-- App Detail: denser layout (hero card, actions under hero, Updates / Installation / Security / Technical cards)
-- Discover: denser shelf cards; catalog detail Install/Share/Watch under hero; flatter Sources/Links
-- Removed Exodus Privacy (catalog/app detail, Settings Privacy hub, optional API) — public reports often 404; no end-user API keys
+- GitHub Release workflow: require upload-keystore secrets, `apksigner verify`, attach `kiln-<version>.apk`
+- Home widgets: Material glass chrome; Updates widget drops trim (Cache widget owns it)
+- App Detail / Discover denser layouts; removed Exodus Privacy (M44–M45)
+- Version **0.2.5** (versionCode 8)
 
 ## [0.2.4] — 2026-11-16
 
@@ -135,7 +139,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - No telemetry; HTTPS-only network; signature checks on updates; tokens not logged
 
-[Unreleased]: https://github.com/involvex/kiln/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/involvex/kiln/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/involvex/kiln/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/involvex/kiln/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/involvex/kiln/compare/v0.2.0...v0.2.3
 [0.2.2]: https://github.com/involvex/kiln/compare/v0.2.0...v0.2.3

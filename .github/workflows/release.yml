@@ -37,11 +37,21 @@ jobs:
       - name: Decode upload keystore
         env:
           KILN_STORE_FILE_BASE64: ${{ secrets.KILN_STORE_FILE_BASE64 }}
+          KILN_STORE_PASSWORD: ${{ secrets.KILN_STORE_PASSWORD }}
+          KILN_KEY_ALIAS: ${{ secrets.KILN_KEY_ALIAS }}
+          KILN_KEY_PASSWORD: ${{ secrets.KILN_KEY_PASSWORD }}
         run: |
           set -euo pipefail
-          if [ -z "${KILN_STORE_FILE_BASE64}" ]; then
-            echo "No KILN_STORE_FILE_BASE64 secret; assembleRelease will use debug signing."
-            exit 0
+          missing=0
+          for name in KILN_STORE_FILE_BASE64 KILN_STORE_PASSWORD KILN_KEY_ALIAS KILN_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required secret: $name"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "GitHub Releases require all four KILN_* upload-keystore secrets (see docs/RELEASE.md)."
+            exit 1
           fi
           echo "$KILN_STORE_FILE_BASE64" | base64 -d > "$RUNNER_TEMP/kiln-upload.jks"
           echo "KILN_STORE_FILE=$RUNNER_TEMP/kiln-upload.jks" >> "$GITHUB_ENV"
@@ -56,14 +66,43 @@ jobs:
           KILN_KEY_PASSWORD: ${{ secrets.KILN_KEY_PASSWORD }}
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: Resolve APK path
+      - name: Package and verify APK
         id: apk
         run: |
           set -euo pipefail
-          APK=$(find app/build/outputs/apk/release -name '*.apk' | head -n 1)
-          test -n "$APK"
-          echo "path=$APK" >> "$GITHUB_OUTPUT"
-          echo "name=$(basename "$APK")" >> "$GITHUB_OUTPUT"
+          VERSION="${GITHUB_REF_NAME#v}"
+          SRC=$(find app/build/outputs/apk/release -name '*.apk' | head -n 1)
+          test -n "$SRC"
+          DEST="$RUNNER_TEMP/kiln-${VERSION}.apk"
+          cp "$SRC" "$DEST"
+
+          SEARCH_ROOTS=()
+          [ -n "${ANDROID_HOME:-}" ] && SEARCH_ROOTS+=("$ANDROID_HOME")
+          [ -n "${ANDROID_SDK_ROOT:-}" ] && SEARCH_ROOTS+=("$ANDROID_SDK_ROOT")
+          SEARCH_ROOTS+=("$HOME/Android/Sdk" "$HOME/.android/sdk")
+          APKSIGNER=""
+          for root in "${SEARCH_ROOTS[@]}"; do
+            if [ -d "$root/build-tools" ]; then
+              candidate=$(find "$root/build-tools" -type f -name apksigner 2>/dev/null | sort -V | tail -n 1 || true)
+              if [ -n "$candidate" ]; then
+                APKSIGNER="$candidate"
+                break
+              fi
+            fi
+          done
+          if [ -z "$APKSIGNER" ]; then
+            APKSIGNER=$(find "${HOME}/.gradle" "${ANDROID_HOME:-/nonexistent}" -type f -name apksigner 2>/dev/null | sort -V | tail -n 1 || true)
+          fi
+          if [ -z "$APKSIGNER" ]; then
+            echo "::error::apksigner not found (ANDROID_HOME=${ANDROID_HOME:-unset} ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-unset})"
+            exit 1
+          fi
+          echo "Using apksigner: $APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$DEST"
+
+          echo "path=$DEST" >> "$GITHUB_OUTPUT"
+          echo "name=kiln-${VERSION}.apk" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
@@ -71,7 +110,9 @@ jobs:
           generate_release_notes: true
           files: ${{ steps.apk.outputs.path }}
           body: |
+            Kiln **${{ steps.apk.outputs.version }}** — upload-keystore signed APK (`${{ steps.apk.outputs.name }}`).
+
             See [CHANGELOG.md](https://github.com/involvex/kiln/blob/main/CHANGELOG.md) for details.
             Privacy: [docs/PRIVACY.md](https://github.com/involvex/kiln/blob/main/docs/PRIVACY.md).
             Docs site: https://involvex.github.io/kiln/
-            If upload-keystore secrets were not set, this APK is **debug-signed** for sideload only (see docs/RELEASE.md).
+            Signing: [docs/RELEASE.md](https://github.com/involvex/kiln/blob/main/docs/RELEASE.md).

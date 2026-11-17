@@ -9,17 +9,18 @@ GitHub release. Keep [CHANGELOG.md](../CHANGELOG.md) in sync.
 ## GitHub Release (CI)
 
 1. Merge the release PR to `main`.
-2. Tag: `git tag -a v0.1.0 -m "Kiln 0.1.0" && git push origin v0.1.0`
+2. Tag: `git tag -a v0.2.5 -m "Kiln 0.2.5" && git push origin v0.2.5`
 3. Workflow [`.github/workflows/release.yml`](../.github/workflows/release.yml)
-   builds a release APK and attaches it to the GitHub Release.
+   builds a **upload-keystore signed** release APK (`kiln-<version>.apk`),
+   verifies it with `apksigner`, and attaches it to the GitHub Release.
 4. Docs site (optional): after `docs.yml` runs, enable **Settings → Pages → GitHub Actions**.
    Site URL: `https://involvex.github.io/kiln/`
 
-### Signing secrets (optional but recommended)
+### Signing secrets (required for tagged releases)
 
-Without secrets, CI signs the “release” APK with the **debug** keystore so
-sideloaders still get an artifact (label it clearly). For production uploads
-add repository secrets:
+Tagged releases **fail** if any of these repository secrets are missing.
+Local `assembleRelease` without the env vars may still fall back to the
+debug keystore (sideload / smoke only).
 
 | Secret | Purpose |
 | --- | --- |
@@ -44,8 +45,6 @@ gh secret set KILN_KEY_PASSWORD -R involvex/kiln
 gh secret list -R involvex/kiln
 ```
 
-Without all four, the release APK stays debug-signed. The workflow already reads `KILN_STORE_FILE_BASE64` in [`.github/workflows/release.yml`](../.github/workflows/release.yml).
-
 ## F-Droid
 
 - Metadata scaffold: [`fastlane/metadata/android/`](../fastlane/metadata/android/)
@@ -58,6 +57,7 @@ Without all four, the release APK stays debug-signed. The workflow already reads
 ```bash
 ./gradlew.bat assembleRelease
 # APK: app/build/outputs/apk/release/app-release.apk (or -unsigned)
+# Without KILN_* env vars this may be debug-signed — CI tags always require upload secrets.
 ```
 
 ## Checklist
@@ -65,5 +65,5 @@ Without all four, the release APK stays debug-signed. The workflow already reads
 - [ ] CHANGELOG section for the version
 - [ ] versionName / versionCode bumped
 - [ ] `spotlessCheck detekt lint testDebugUnitTest assembleRelease` green
-- [ ] Tag pushed; Release notes pasted from CHANGELOG
+- [ ] Tag pushed; Release workflow verifies with `apksigner` and uploads `kiln-<version>.apk`
 - [ ] Privacy policy URL still valid (`docs/PRIVACY.md`)
