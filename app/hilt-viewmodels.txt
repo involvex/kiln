@@ -1,0 +1,20 @@
+# FQCNs of every @HiltViewModel in the app graph. Keep in sync when adding ViewModels.
+# verifyHiltViewModelMapDebug fails the build if any entry is missing from generated Hilt sources.
+dev.involvex.kiln.feature.apps.AppDetailViewModel
+dev.involvex.kiln.feature.apps.AppsViewModel
+dev.involvex.kiln.feature.apps.apktools.ApkToolsViewModel
+dev.involvex.kiln.feature.backup.BackupViewModel
+dev.involvex.kiln.feature.debloat.DebloatViewModel
+dev.involvex.kiln.feature.onboarding.AutoMatchViewModel
+dev.involvex.kiln.feature.onboarding.privilege.PrivilegeSetupViewModel
+dev.involvex.kiln.feature.permissions.PermissionAuditViewModel
+dev.involvex.kiln.feature.permissions.background.BackgroundControlsViewModel
+dev.involvex.kiln.feature.permissions.freeze.FreezeViewModel
+dev.involvex.kiln.feature.settings.SettingsIgnoredUpdatesViewModel
+dev.involvex.kiln.feature.settings.SettingsViewModel
+dev.involvex.kiln.feature.settings.activity.ActivityLogViewModel
+dev.involvex.kiln.feature.sources.SourcesViewModel
+dev.involvex.kiln.feature.sources.discovery.CatalogDetailViewModel
+dev.involvex.kiln.feature.sources.discovery.DiscoveryViewModel
+dev.involvex.kiln.feature.storage.StorageViewModel
+dev.involvex.kiln.feature.termux.TermuxViewModel

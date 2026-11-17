@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package dev.involvex.kiln.feature.apps.ui
 
 import android.content.ClipData
@@ -6,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +19,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -28,11 +34,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.involvex.kiln.core.model.AppActivityInfo
@@ -53,7 +61,7 @@ import java.util.Date
 import kotlin.math.roundToInt
 
 @Composable
-@Suppress("LongMethod")
+@Suppress("LongMethod", "LongParameterList")
 fun AppDetailContent(
     detail: InstalledAppDetail,
     installerLabel: String?,
@@ -86,69 +94,26 @@ fun AppDetailContent(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    var activitiesExpanded by rememberSaveable { mutableStateOf(false) }
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Header(detail)
-        Text(
-            text = stringResource(
-                R.string.feature_apps_detail_version,
-                detail.versionName ?: "—",
-                detail.versionCode,
-            ),
-        )
-        Text(
-            text = stringResource(R.string.feature_apps_detail_sdk, detail.minSdk, detail.targetSdk),
-        )
-        Text(
-            text = stringResource(R.string.feature_apps_detail_installed, formatDate(detail.firstInstallTime)),
-        )
-        Text(
-            text = stringResource(R.string.feature_apps_detail_updated, formatDate(detail.lastUpdateTime)),
-        )
-        Text(
-            text = stringResource(
-                R.string.feature_apps_detail_installer,
-                installerLabel ?: stringResource(R.string.feature_apps_detail_installer_unknown),
-            ),
-        )
-        SignatureSection(detail = detail, onCopied = onCopied)
-        UpdatePrefsSection(
-            ignoreUpdates = ignoreUpdates,
-            onIgnoreUpdatesChanged = onIgnoreUpdatesChanged,
-            updateCooldownDays = updateCooldownDays,
-            globalCooldownDays = globalCooldownDays,
-            onUpdateCooldownChanged = onUpdateCooldownChanged,
-        )
-        ManagedSourceSection(
-            managedLink = managedLink,
-            onOpenLinkSource = onOpenLinkSource,
-            onGitHubChannelChange = onGitHubChannelChange,
-            hasGitHubToken = hasGitHubToken,
-            showOpenInPlayStore = PlayStoreLinks.shouldOfferOpenInPlayStore(
-                hasManagedLink = managedLink != null,
-                installerPackage = detail.installerPackage,
-            ),
-            onOpenInPlayStore = {
-                PlayStoreLinks.openListing(context, detail.packageName)
-            },
-        )
-        PathsSection(detail = detail)
-        PermissionsSection(detail = detail)
-        AppActivitiesSection(
-            activities = activities,
-            loading = activitiesLoading,
-            query = activitiesQuery,
-            onQueryChange = onActivitiesQueryChange,
-            showSearch = showActivitiesSearch,
-            onMessage = onActivityMessage,
+        HeroCard(detail = detail, hasUpdate = availableUpdate != null)
+        PrimaryActions(
+            detail = detail,
+            context = context,
+            availableUpdate = availableUpdate,
+            installJob = installJob,
+            onInstallUpdate = onInstallUpdate,
+            onExport = onExport,
         )
         if (!detail.canUninstall) {
             Text(
                 text = stringResource(R.string.feature_apps_uninstall_disabled),
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -159,16 +124,297 @@ fun AppDetailContent(
             onRequestInstallDespiteSignature = onRequestInstallDespiteSignature,
             onOpenUnknownSources = onOpenUnknownSources,
         )
-        RollbackSection(
-            entries = rollbackEntries,
-            canSilentDowngrade = canSilentDowngrade,
-            rollbackInProgress = rollbackInProgress,
-            onRequestRollback = onRequestRollback,
+        DetailSectionCard(title = stringResource(R.string.feature_apps_detail_section_updates)) {
+            ManagedSourceSection(
+                managedLink = managedLink,
+                onOpenLinkSource = onOpenLinkSource,
+                onGitHubChannelChange = onGitHubChannelChange,
+                hasGitHubToken = hasGitHubToken,
+                showOpenInPlayStore = PlayStoreLinks.shouldOfferOpenInPlayStore(
+                    hasManagedLink = managedLink != null,
+                    installerPackage = detail.installerPackage,
+                ),
+                onOpenInPlayStore = {
+                    PlayStoreLinks.openListing(context, detail.packageName)
+                },
+            )
+            UpdatePrefsSection(
+                ignoreUpdates = ignoreUpdates,
+                onIgnoreUpdatesChanged = onIgnoreUpdatesChanged,
+                updateCooldownDays = updateCooldownDays,
+                globalCooldownDays = globalCooldownDays,
+                onUpdateCooldownChanged = onUpdateCooldownChanged,
+            )
+            RollbackSection(
+                entries = rollbackEntries,
+                canSilentDowngrade = canSilentDowngrade,
+                rollbackInProgress = rollbackInProgress,
+                onRequestRollback = onRequestRollback,
+            )
+        }
+        DetailSectionCard(title = stringResource(R.string.feature_apps_detail_section_installation)) {
+            InstallationMeta(
+                detail = detail,
+                installerLabel = installerLabel,
+            )
+        }
+        DetailSectionCard(title = stringResource(R.string.feature_apps_detail_section_security)) {
+            SignatureSection(detail = detail, onCopied = onCopied)
+        }
+        DetailSectionCard(title = stringResource(R.string.feature_apps_detail_section_technical)) {
+            PathsSection(detail = detail)
+            PermissionsSection(detail = detail)
+            Text(
+                text = stringResource(
+                    R.string.feature_apps_detail_activities_collapsed,
+                    activities.size,
+                ),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { activitiesExpanded = !activitiesExpanded }
+                    .padding(vertical = 4.dp),
+            )
+            if (activitiesExpanded) {
+                AppActivitiesSection(
+                    activities = activities,
+                    loading = activitiesLoading,
+                    query = activitiesQuery,
+                    onQueryChange = onActivitiesQueryChange,
+                    showSearch = showActivitiesSearch,
+                    onMessage = onActivityMessage,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailSectionCard(title: String, content: @Composable () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            content()
+        }
+    }
+}
+
+@Composable
+private fun HeroCard(detail: InstalledAppDetail, hasUpdate: Boolean) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AsyncImage(
+                model = PackageIconModel(detail.packageName, detail.lastUpdateTime),
+                contentDescription = null,
+                modifier = Modifier.size(72.dp),
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = detail.label,
+                    style = MaterialTheme.typography.headlineSmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = detail.packageName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                    ) {
+                        Text(
+                            text = stringResource(
+                                R.string.feature_apps_detail_version,
+                                detail.versionName ?: "—",
+                                detail.versionCode,
+                            ),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
+                    if (detail.isSystem) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.feature_apps_detail_chip_system),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                        }
+                    }
+                    if (hasUpdate) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.tertiaryContainer,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.feature_apps_detail_chip_update),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PrimaryActions(
+    detail: InstalledAppDetail,
+    context: Context,
+    availableUpdate: AppUpdateInfo?,
+    installJob: InstallJobState?,
+    onInstallUpdate: () -> Unit,
+    onExport: () -> Unit,
+) {
+    val busy = installJob?.status == InstallJobStatus.DOWNLOADING ||
+        installJob?.status == InstallJobStatus.INSTALLING ||
+        installJob?.status == InstallJobStatus.VERIFYING
+    val canUpdate = availableUpdate != null &&
+        !availableUpdate.downloadUrl.isNullOrBlank() &&
+        availableUpdate.signatureMatches &&
+        !busy
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (detail.hasLaunchIntent) {
+                FilledTonalButton(
+                    onClick = {
+                        context.packageManager.getLaunchIntentForPackage(detail.packageName)?.let {
+                            context.startActivity(it)
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.feature_apps_action_launch))
+                }
+            }
+            if (canUpdate) {
+                Button(
+                    onClick = onInstallUpdate,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.feature_apps_action_update))
+                }
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            OutlinedButton(
+                onClick = {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", detail.packageName, null)
+                    }
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.feature_apps_action_info))
+            }
+            OutlinedButton(
+                onClick = onExport,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.feature_apps_action_export))
+            }
+        }
+        OutlinedButton(
+            onClick = {
+                val intent = Intent(Intent.ACTION_DELETE).apply {
+                    data = Uri.fromParts("package", detail.packageName, null)
+                }
+                context.startActivity(intent)
+            },
+            enabled = detail.canUninstall,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.feature_apps_action_uninstall))
+        }
+    }
+}
+
+@Composable
+private fun InstallationMeta(detail: InstalledAppDetail, installerLabel: String?) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        MetaLine(
+            label = stringResource(R.string.feature_apps_detail_meta_version),
+            value = stringResource(
+                R.string.feature_apps_detail_version,
+                detail.versionName ?: "—",
+                detail.versionCode,
+            ),
         )
-        ActionButtons(
-            detail = detail,
-            context = context,
-            onExport = onExport,
+        MetaLine(
+            label = stringResource(R.string.feature_apps_detail_meta_sdk),
+            value = stringResource(R.string.feature_apps_detail_sdk, detail.minSdk, detail.targetSdk),
+        )
+        MetaLine(
+            label = stringResource(R.string.feature_apps_detail_meta_installed),
+            value = formatDate(detail.firstInstallTime),
+        )
+        MetaLine(
+            label = stringResource(R.string.feature_apps_detail_meta_updated),
+            value = formatDate(detail.lastUpdateTime),
+        )
+        MetaLine(
+            label = stringResource(R.string.feature_apps_detail_meta_installer),
+            value = installerLabel ?: stringResource(R.string.feature_apps_detail_installer_unknown),
+        )
+    }
+}
+
+@Composable
+private fun MetaLine(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.35f),
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(0.65f),
         )
     }
 }
@@ -181,7 +427,7 @@ private fun RollbackSection(
     onRequestRollback: (RollbackApkEntry) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.feature_apps_rollback_section), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.feature_apps_rollback_section), style = MaterialTheme.typography.titleSmall)
         Text(
             stringResource(R.string.feature_apps_rollback_hint),
             style = MaterialTheme.typography.bodySmall,
@@ -226,7 +472,7 @@ private fun ManagedSourceSection(
     onOpenInPlayStore: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.feature_apps_managed_source_section), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.feature_apps_managed_source_section), style = MaterialTheme.typography.titleSmall)
         if (managedLink == null) {
             Text(
                 stringResource(R.string.feature_apps_managed_source_none),
@@ -384,8 +630,7 @@ private fun UpdateSection(
     onOpenUnknownSources: () -> Unit,
 ) {
     if (availableUpdate == null && installJob == null) return
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.feature_apps_update_section), style = MaterialTheme.typography.titleMedium)
+    DetailSectionCard(title = stringResource(R.string.feature_apps_update_section)) {
         if (availableUpdate != null) {
             UpdateAvailableBlock(
                 update = availableUpdate,
@@ -463,13 +708,13 @@ private fun UpdateInstallActions(
     val hasUrl = !update.downloadUrl.isNullOrBlank()
     when {
         (update.signatureMatches || unknownSigner) && hasUrl && !busy -> {
-            Button(onClick = onInstallUpdate, enabled = true) {
+            Button(onClick = onInstallUpdate, enabled = true, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.feature_apps_action_update))
             }
         }
 
         knownMismatch && hasUrl && !busy -> {
-            Button(onClick = onInstallUpdate, enabled = false) {
+            Button(onClick = onInstallUpdate, enabled = false, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.feature_apps_action_update))
             }
             OutlinedButton(onClick = onRequestInstallDespiteSignature, modifier = Modifier.fillMaxWidth()) {
@@ -536,57 +781,81 @@ private fun ReleaseNotesBlock(notes: String) {
 }
 
 @Composable
-private fun Header(detail: InstalledAppDetail) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        AsyncImage(
-            model = PackageIconModel(detail.packageName, detail.lastUpdateTime),
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-        )
-        Column {
-            Text(detail.label, style = MaterialTheme.typography.headlineSmall)
-            Text(detail.packageName, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@Composable
 private fun SignatureSection(detail: InstalledAppDetail, onCopied: () -> Unit) {
     val context = LocalContext.current
-    Text(stringResource(R.string.feature_apps_detail_signature), style = MaterialTheme.typography.titleMedium)
-    detail.signerSha256.forEach { fingerprint ->
-        Text(fingerprint, style = MaterialTheme.typography.bodySmall)
+    var showFull by rememberSaveable { mutableStateOf(false) }
+    val first = detail.signerSha256.firstOrNull()
+    if (first == null) {
+        Text(
+            text = "—",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        return
     }
-    if (detail.signerSha256.isNotEmpty()) {
+    Text(
+        text = if (showFull) first else first.take(SIGNATURE_PREVIEW_CHARS) + "…",
+        style = MaterialTheme.typography.bodySmall,
+        maxLines = if (showFull) Int.MAX_VALUE else 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+    if (showFull) {
+        detail.signerSha256.drop(1).forEach { fingerprint ->
+            Text(fingerprint, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         TextButton(
             onClick = {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("sha256", detail.signerSha256.first()))
+                clipboard.setPrimaryClip(ClipData.newPlainText("sha256", first))
                 onCopied()
             },
         ) {
             Text(stringResource(R.string.feature_apps_detail_copy_signature))
+        }
+        if (detail.signerSha256.isNotEmpty()) {
+            TextButton(onClick = { showFull = !showFull }) {
+                Text(
+                    stringResource(
+                        if (showFull) {
+                            R.string.feature_apps_detail_signature_hide
+                        } else {
+                            R.string.feature_apps_detail_signature_show_full
+                        },
+                    ),
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun PathsSection(detail: InstalledAppDetail) {
-    Text(stringResource(R.string.feature_apps_detail_paths), style = MaterialTheme.typography.titleMedium)
+    Text(stringResource(R.string.feature_apps_detail_paths), style = MaterialTheme.typography.titleSmall)
     detail.apkPaths.forEach { path ->
         val size = formatApkSize(path.sizeBytes) ?: stringResource(R.string.feature_apps_size_unknown)
         val id = path.splitId ?: "base"
-        Text("$id · $size\n${path.path}", style = MaterialTheme.typography.bodySmall)
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text("$id · $size", style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = path.path,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
 @Composable
 private fun PermissionsSection(detail: InstalledAppDetail) {
-    Text(stringResource(R.string.feature_apps_detail_permissions), style = MaterialTheme.typography.titleMedium)
-    detail.requestedPermissions.take(PERMISSION_PREVIEW_LIMIT).forEach { permission ->
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    val all = detail.requestedPermissions
+    val visible = if (expanded) all else all.take(PERMISSION_COMPACT_LIMIT)
+    Text(stringResource(R.string.feature_apps_detail_permissions), style = MaterialTheme.typography.titleSmall)
+    visible.forEach { permission ->
         val status = if (permission.granted) {
             stringResource(R.string.feature_apps_permission_granted)
         } else {
@@ -597,49 +866,22 @@ private fun PermissionsSection(detail: InstalledAppDetail) {
         } else {
             ""
         }
-        Text("${permission.name}: $status$dangerous", style = MaterialTheme.typography.bodySmall)
+        Text(
+            text = "${permission.name}: $status$dangerous",
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
-}
-
-@Composable
-private fun ActionButtons(detail: InstalledAppDetail, context: Context, onExport: () -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-        if (detail.hasLaunchIntent) {
-            Button(
-                onClick = {
-                    context.packageManager.getLaunchIntentForPackage(detail.packageName)?.let {
-                        context.startActivity(it)
-                    }
+    if (all.size > PERMISSION_COMPACT_LIMIT) {
+        TextButton(onClick = { expanded = !expanded }) {
+            Text(
+                if (expanded) {
+                    stringResource(R.string.feature_apps_detail_permissions_show_less)
+                } else {
+                    stringResource(R.string.feature_apps_detail_permissions_show_all, all.size)
                 },
-            ) {
-                Text(stringResource(R.string.feature_apps_action_launch))
-            }
-        }
-        OutlinedButton(
-            onClick = {
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                    data = Uri.fromParts("package", detail.packageName, null)
-                }
-                context.startActivity(intent)
-            },
-        ) {
-            Text(stringResource(R.string.feature_apps_action_info))
-        }
-    }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(
-            onClick = {
-                val intent = Intent(Intent.ACTION_DELETE).apply {
-                    data = Uri.fromParts("package", detail.packageName, null)
-                }
-                context.startActivity(intent)
-            },
-            enabled = detail.canUninstall,
-        ) {
-            Text(stringResource(R.string.feature_apps_action_uninstall))
-        }
-        Button(onClick = onExport) {
-            Text(stringResource(R.string.feature_apps_action_export))
+            )
         }
     }
 }
@@ -647,4 +889,5 @@ private fun ActionButtons(detail: InstalledAppDetail, context: Context, onExport
 private fun formatDate(epochMillis: Long): String =
     DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(epochMillis))
 
-private const val PERMISSION_PREVIEW_LIMIT = 40
+private const val PERMISSION_COMPACT_LIMIT = 8
+private const val SIGNATURE_PREVIEW_CHARS = 24
