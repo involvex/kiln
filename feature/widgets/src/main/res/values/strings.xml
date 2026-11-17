@@ -29,6 +29,7 @@
     <string name="widget_processes_kill_confirm">Confirm stop</string>
     <string name="widget_processes_kill_cancel">Cancel</string>
     <string name="widget_processes_empty">No process data yet</string>
+    <string name="widget_processes_error">Could not refresh processes. Tap Refresh to retry.</string>
 
     <string name="tile_updates_label">Kiln updates</string>
     <string name="tile_updates_subtitle_zero">No updates</string>

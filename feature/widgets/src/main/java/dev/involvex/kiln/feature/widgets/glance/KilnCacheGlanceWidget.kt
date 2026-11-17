@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
@@ -14,7 +13,6 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.actionSendBroadcast
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
-import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
@@ -22,10 +20,6 @@ import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
-import androidx.glance.layout.padding
-import androidx.glance.text.FontWeight
-import androidx.glance.text.Text
-import androidx.glance.text.TextStyle
 import dagger.hilt.android.EntryPointAccessors
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.WidgetIntents
@@ -98,85 +92,47 @@ private fun CacheWidgetContent(
     cancelLabel: String,
     openSetupLabel: String,
 ) {
-    Column(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .background(GlanceTheme.colors.widgetBackground)
-            .padding(12.dp)
-            .clickable(actionStartActivity(launchIntent)),
-        verticalAlignment = Alignment.Top,
-        horizontalAlignment = Alignment.Start,
+    KilnGlassWidgetScaffold(
+        modifier = GlanceModifier.clickable(actionStartActivity(launchIntent)),
     ) {
-        Text(
-            text = title,
-            style = TextStyle(
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = GlanceTheme.colors.onSurface,
-            ),
-        )
-        Spacer(modifier = GlanceModifier.height(6.dp))
-        Text(
-            text = explain,
-            style = TextStyle(
-                fontSize = 13.sp,
-                color = GlanceTheme.colors.onSurfaceVariant,
-            ),
-        )
-        Spacer(modifier = GlanceModifier.defaultWeight())
-        Row(modifier = GlanceModifier.fillMaxWidth()) {
-            when {
-                !canClear -> {
-                    Text(
-                        text = openSetupLabel,
-                        style = TextStyle(
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = GlanceTheme.colors.primary,
-                        ),
-                        modifier = GlanceModifier
-                            .padding(vertical = 4.dp)
-                            .clickable(actionStartActivity(setupIntent)),
-                    )
-                }
+        Column(
+            modifier = GlanceModifier.fillMaxSize(),
+            verticalAlignment = Alignment.Top,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            KilnWidgetHeaderRow(title = title)
+            Spacer(modifier = GlanceModifier.height(8.dp))
+            KilnWidgetBody(text = explain)
+            KilnWidgetFooter {
+                Row(modifier = GlanceModifier.fillMaxWidth()) {
+                    when {
+                        !canClear -> {
+                            KilnGlassChip(
+                                label = openSetupLabel,
+                                action = actionStartActivity(setupIntent),
+                            )
+                        }
 
-                confirmPending -> {
-                    Text(
-                        text = confirmLabel,
-                        style = TextStyle(
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = GlanceTheme.colors.error,
-                        ),
-                        modifier = GlanceModifier
-                            .padding(end = 12.dp, top = 4.dp, bottom = 4.dp)
-                            .clickable(actionSendBroadcast(confirmIntent)),
-                    )
-                    Text(
-                        text = cancelLabel,
-                        style = TextStyle(
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = GlanceTheme.colors.primary,
-                        ),
-                        modifier = GlanceModifier
-                            .padding(vertical = 4.dp)
-                            .clickable(actionSendBroadcast(cancelIntent)),
-                    )
-                }
+                        confirmPending -> {
+                            KilnGlassChip(
+                                label = confirmLabel,
+                                action = actionSendBroadcast(confirmIntent),
+                                danger = true,
+                            )
+                            Spacer(modifier = GlanceModifier.defaultWeight())
+                            KilnGlassChip(
+                                label = cancelLabel,
+                                action = actionSendBroadcast(cancelIntent),
+                            )
+                        }
 
-                else -> {
-                    Text(
-                        text = clearLabel,
-                        style = TextStyle(
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = GlanceTheme.colors.primary,
-                        ),
-                        modifier = GlanceModifier
-                            .padding(vertical = 4.dp)
-                            .clickable(actionSendBroadcast(requestIntent)),
-                    )
+                        else -> {
+                            KilnGlassChip(
+                                label = clearLabel,
+                                action = actionSendBroadcast(requestIntent),
+                            )
+                        }
+                    }
                 }
             }
         }
