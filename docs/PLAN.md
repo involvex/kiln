@@ -453,4 +453,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 20. **M42** GitHub starred → Sources → **Done (#73)**
 21. **M43** App activities viewer → **Done (#75)**
 22. **M44** Discover UI polish + remove Exodus → **Done (#76)**
-23. **M45** Hilt/KSP stability + App Detail overhaul → In progress (`m45-stability-app-detail`)
+23. **M45** Hilt/KSP stability + App Detail overhaul → **Done (#79)**
