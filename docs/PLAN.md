@@ -454,4 +454,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 21. **M43** App activities viewer → **Done (#75)**
 22. **M44** Discover UI polish + remove Exodus → **Done (#76)**
 23. **M45** Hilt/KSP stability + App Detail overhaul → **Done (#79)**
-24. **M46** Widget rework (Updates / Cache / Processes) → In progress (`m46-widget-rework`)
+24. **M46** Widget rework (Updates / Cache / Processes) → **Done (#81)**

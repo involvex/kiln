@@ -1,6 +1,6 @@
 # M46 — Widget rework (Updates / Cache / Processes)
 
-> Branch `m46-widget-rework`. After M45 (#79) / docs (#80).
+> Shipped in [#81](https://github.com/involvex/kiln/pull/81). Branch `m46-widget-rework`. After M45 (#79) / docs (#80).
 
 ## In scope
 
@@ -17,10 +17,10 @@
 
 ## Done when
 
-- [ ] Three Glance providers in picker; Updates has no trim UI
-- [ ] Cache confirm clears only after confirm; NONE opens Manage
-- [ ] Processes lists top apps with Shizuku; force-stop confirms; NEVER kills Kiln
-- [ ] `spotlessCheck detekt lint testDebugUnitTest assembleDebug verifyHiltViewModelMapDebug` green
+- [x] Three Glance providers in picker; Updates has no trim UI
+- [x] Cache confirm clears only after confirm; NONE opens Manage
+- [x] Processes lists top apps with Shizuku; force-stop confirms; NEVER kills Kiln
+- [x] `spotlessCheck detekt lint testDebugUnitTest assembleDebug verifyHiltViewModelMapDebug` green
 - [ ] Manual HyperOS checklist in PR
 
 ## Manual HyperOS checklist (PR)
