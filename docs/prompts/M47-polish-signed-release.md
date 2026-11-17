@@ -22,9 +22,9 @@ You work on the Android project **Kiln**. Handle **only milestone M47** (no §12
 
 ## Acceptance
 
-- [ ] `versionName` / `versionCode` are 0.2.5 / 8
-- [ ] Tagged release workflow fails without upload secrets (no debug-signed GitHub APK)
-- [ ] Release asset named `kiln-0.2.5.apk`; body states upload-keystore signed
-- [ ] Package icon unit test for downscale/cap green
-- [ ] `spotlessCheck detekt lint testDebugUnitTest assembleRelease` green
-- [ ] README / ROADMAP / CHANGELOG updated
+- [x] `versionName` / `versionCode` are 0.2.5 / 8
+- [x] Tagged release workflow fails without upload secrets (no debug-signed GitHub APK)
+- [x] Release asset named `kiln-0.2.5.apk`; body states upload-keystore signed
+- [x] Package icon unit test for downscale/cap green
+- [x] `spotlessCheck detekt lint testDebugUnitTest assembleRelease` green
+- [x] README / ROADMAP / CHANGELOG updated

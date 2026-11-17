@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M47** Polish + signed release in progress (`m47-polish-signed-release`). App version **0.2.5** (code 8); previous tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M47** Polish + signed release Done (#86). App version **0.2.5** (code 8), tag `v0.2.5` (`kiln-0.2.5.apk` upload-keystore signed). HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -61,7 +61,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M44** | Discover polish + remove Exodus | Done | [`prompts/M44-discover-polish.md`](./prompts/M44-discover-polish.md) · [#76](https://github.com/involvex/kiln/pull/76) | Denser shelves; catalog detail actions under hero; remove Exodus UI/API/Settings |
 | **M45** | Hilt stability + App Detail overhaul | Done | [`prompts/M45-stability-app-detail.md`](./prompts/M45-stability-app-detail.md) · [#79](https://github.com/involvex/kiln/pull/79) | KSP incremental off + Hilt VM map guard; App Detail hero/actions/cards; kilnHiltViewModel harden |
 | **M46** | Widget rework | Done | [`prompts/M46-widget-rework.md`](./prompts/M46-widget-rework.md) · [#81](https://github.com/involvex/kiln/pull/81) | Updates list+Check; Cache widget; Processes mem/CPU+kill (Shizuku) |
-| **M47** | Polish + signed 0.2.5 | In progress | [`prompts/M47-polish-signed-release.md`](./prompts/M47-polish-signed-release.md) · `m47-polish-signed-release` | Require upload signing + apksigner; icon decode perf; tag `v0.2.5` |
+| **M47** | Polish + signed 0.2.5 | Done | [`prompts/M47-polish-signed-release.md`](./prompts/M47-polish-signed-release.md) · [#86](https://github.com/involvex/kiln/pull/86) | Require upload signing + apksigner; icon decode perf; tag `v0.2.5` |
 
 ---
 
