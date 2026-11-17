@@ -148,18 +148,21 @@ fun PermissionAuditScreen(
                 }
 
                 state.detailApp != null -> {
-                    DetailPane(
-                        state = state,
-                        app = state.detailApp!!,
-                        onCloseDetail = onCloseDetail,
-                        onTogglePermission = onTogglePermission,
-                        onSelectAll = onSelectAll,
-                        onRequestRevokeSelected = onRequestRevokeSelected,
-                        onRequestRevokeAll = onRequestRevokeAll,
-                        onAppOpChange = onAppOpChange,
-                        onAppOpModeChange = onAppOpModeChange,
-                        onRequestAppOp = onRequestAppOp,
-                    )
+                    val detailApp = state.detailApp
+                    if (detailApp != null) {
+                        DetailPane(
+                            state = state,
+                            app = detailApp,
+                            onCloseDetail = onCloseDetail,
+                            onTogglePermission = onTogglePermission,
+                            onSelectAll = onSelectAll,
+                            onRequestRevokeSelected = onRequestRevokeSelected,
+                            onRequestRevokeAll = onRequestRevokeAll,
+                            onAppOpChange = onAppOpChange,
+                            onAppOpModeChange = onAppOpModeChange,
+                            onRequestAppOp = onRequestAppOp,
+                        )
+                    }
                 }
 
                 state.filteredApps.isEmpty() -> {

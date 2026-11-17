@@ -53,7 +53,10 @@ Ziel-Befehle:
 ./gradlew lint                     # Android Lint
 ./gradlew spotlessCheck detekt     # Format + statische Analyse (nach M0)
 ./gradlew spotlessApply            # Auto-Format
+./gradlew verifyHiltViewModelMapDebug  # Hilt @HiltViewModel map complete (nach assemble)
 ```
+
+`ksp.incremental=false` in `gradle.properties` — stale KSP previously omitted ViewModels from the Hilt map (runtime crash). Keep [`app/hilt-viewmodels.txt`](./app/hilt-viewmodels.txt) in sync when adding `@HiltViewModel`s. ViewModels in UI: `kilnHiltViewModel()`, never raw `hiltViewModel()`.
 
 Vor jedem Commit müssen Build, Unit-Tests, Lint und Format-Check grün sein.
 

@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M44** Discover polish + remove Exodus Done (#76). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M45** Hilt/KSP stability + App Detail overhaul In progress (`m45-stability-app-detail`). **M44** Done (#76). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -59,6 +59,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M42** | GitHub starred → Sources | Done | [`prompts/M42-github-stars.md`](./prompts/M42-github-stars.md) · [#73](https://github.com/involvex/kiln/pull/73) | PAT `/user/starred` review → multi-select add; kilnHiltViewModel shell crash fix |
 | **M43** | App activities viewer | Done | [`prompts/M43-app-activities.md`](./prompts/M43-app-activities.md) · [#75](https://github.com/involvex/kiln/pull/75) | Exported activities list + Start + pin shortcut; AppDetail AssistedInject crash fix |
 | **M44** | Discover polish + remove Exodus | Done | [`prompts/M44-discover-polish.md`](./prompts/M44-discover-polish.md) · [#76](https://github.com/involvex/kiln/pull/76) | Denser shelves; catalog detail actions under hero; remove Exodus UI/API/Settings |
+| **M45** | Hilt stability + App Detail overhaul | In progress | [`prompts/M45-stability-app-detail.md`](./prompts/M45-stability-app-detail.md) · `m45-stability-app-detail` | KSP incremental off + Hilt VM map guard; App Detail hero/actions/cards; kilnHiltViewModel harden |
 
 ---
 
@@ -90,6 +91,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | GitHub starred repos → Sources | Done (M42 #73) | Review list + multi-select add; APK heuristic; no silent install |
 | App activity viewer / launcher | Done (M43 #75) | Exported-only list under App Detail; Tier NONE Start + pin shortcut |
 | Discover UI density + Exodus removal | Done (M44 #76) | Compact shelves; detail Install under hero; drop Exodus |
+| Hilt/KSP ViewModel map + App Detail IA | In progress (M45) | Guard incomplete Hilt maps; denser App Detail like Catalog |
 
 ---
 
@@ -328,10 +330,11 @@ flowchart LR
   M41 --> M42[M42 GitHub stars]
   M42 --> M43[M43 App activities]
   M43 --> M44[M44 Discover polish]
+  M44 --> M45[M45 Hilt + App Detail]
 ```
 
-1. **M0–M44** on main (#76); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
-2. Next: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
+1. **M0–M44** on main (#76); **M45** in progress; **`v0.2.4`** tagged (code 7); CI lint harden (#65).
+2. Next after M45: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

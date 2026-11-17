@@ -13,6 +13,10 @@ import androidx.lifecycle.ViewModel
  */
 @Composable
 inline fun <reified VM : ViewModel> kilnHiltViewModel(): VM {
-    val activity = LocalActivity.current as ComponentActivity
+    val activity = LocalActivity.current as? ComponentActivity
+        ?: error(
+            "kilnHiltViewModel<${VM::class.java.name}> requires a ComponentActivity host " +
+                "(LocalActivity was ${LocalActivity.current})",
+        )
     return hiltViewModel(viewModelStoreOwner = activity)
 }

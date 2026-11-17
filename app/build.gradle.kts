@@ -84,3 +84,66 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.timber)
 }
+
+// Fails when generated Hilt component sources omit a known @HiltViewModel.
+// Stale KSP incremental output previously shipped APKs that crashed at runtime with
+// "Cannot create an instance of …ViewModel".
+tasks.register("verifyHiltViewModelMapDebug") {
+    group = "verification"
+    description = "Assert all listed @HiltViewModel classes appear in debug Hilt codegen"
+    dependsOn("hiltJavaCompileDebug")
+    val expectedFile = layout.projectDirectory.file("hilt-viewmodels.txt")
+    val hiltSources = layout.buildDirectory.dir("generated/hilt/component_sources/debug")
+    val repoRoot = rootProject.layout.projectDirectory
+    inputs.file(expectedFile)
+    inputs.dir(hiltSources)
+    doLast {
+        val expected = expectedFile.asFile.readLines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() && !it.startsWith("#") }
+        val sourcesDir = hiltSources.get().asFile
+        check(sourcesDir.isDirectory) {
+            "Hilt debug component sources missing at ${sourcesDir.path}. Run assembleDebug first."
+        }
+        val combined = sourcesDir.walkTopDown()
+            .filter { it.isFile && it.extension == "java" }
+            .joinToString("\n") { it.readText() }
+        val missing = expected.filter { fqcn ->
+            val simple = fqcn.substringAfterLast('.')
+            !combined.contains(fqcn) && !combined.contains(simple)
+        }
+        check(missing.isEmpty()) {
+            buildString {
+                appendLine("Hilt ViewModel map incomplete (debug). Missing:")
+                missing.forEach { appendLine("  - $it") }
+                appendLine("Clean rebuild (ksp.incremental=false) and ensure each module ran KSP.")
+            }
+        }
+
+        // Scan main sources only (not registered as task inputs — avoids Gradle
+        // implicit-deps on feature/*/build outputs under the feature/ tree).
+        val root = repoRoot.asFile
+        val callPattern = Regex("""hiltViewModel\s*[<(]""")
+        fun isMainKotlin(file: java.io.File): Boolean {
+            val normalized = file.path.replace('\\', '/')
+            return file.extension == "kt" && normalized.contains("/src/main/")
+        }
+        val offenders = listOf(root.resolve("feature"), root.resolve("app/src/main"))
+            .filter { it.isDirectory }
+            .flatMap { dir ->
+                dir.walkTopDown()
+                    .filter { it.isFile && isMainKotlin(it) }
+                    .filter { callPattern.containsMatchIn(it.readText()) }
+            }
+        check(offenders.isEmpty()) {
+            buildString {
+                appendLine("Use kilnHiltViewModel() instead of hiltViewModel() in:")
+                offenders.forEach { appendLine("  - ${it.relativeTo(root)}") }
+            }
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn("verifyHiltViewModelMapDebug")
+}
