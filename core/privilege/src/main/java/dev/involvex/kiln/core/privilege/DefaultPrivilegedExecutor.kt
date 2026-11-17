@@ -505,6 +505,7 @@ class DefaultPrivilegedExecutor @Inject constructor(
         if (PrivilegeCapability.RUN_SHELL_DIAGNOSTIC !in currentStatus().capabilities) {
             return@withContext Result.failure("capability_missing:RUN_SHELL_DIAGNOSTIC")
         }
+        // Meminfo only: dumpsys cpuinfo is another heavy dump and is not worth ANR risk for widgets.
         val memOut = when (val out = invokeAllowlisted(ShellAllowlist.DUMPSYS_MEMINFO, emptyList())) {
             is Result.Failure -> return@withContext out
             is Result.Success -> out.value
@@ -512,18 +513,13 @@ class DefaultPrivilegedExecutor @Inject constructor(
         if (memOut.startsWith("ERR:")) {
             return@withContext Result.failure(memOut)
         }
-        val cpuOut = when (val out = invokeAllowlisted(ShellAllowlist.DUMPSYS_CPUINFO, emptyList())) {
-            is Result.Failure -> ""
-            is Result.Success -> if (out.value.startsWith("ERR:")) "" else out.value
-        }
         val mem = ProcessStatsParser.parseMeminfo(memOut)
-        val cpu = ProcessStatsParser.parseCpuinfo(cpuOut)
         val labels = resolveLabels(mem.map { it.packageName })
         val merged = ProcessStatsParser.merge(
             mem = mem.map { row ->
                 row.copy(label = labels[row.packageName] ?: row.label)
             },
-            cpuByPackage = cpu,
+            cpuByPackage = emptyMap(),
             kilnPackageName = context.packageName,
             limit = limit,
         )

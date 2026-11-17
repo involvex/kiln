@@ -29,6 +29,11 @@ class KilnUserService : IKilnUserService.Stub {
         val argv = ShellAllowlist.buildArgv(id, argList)
             ?: return "ERR:rejected:$id"
         Timber.d("UserService allowlisted %s argc=%d", id, argv.size)
-        return ShellRunner.run(argv)
+        return when (id) {
+            // Full dumpsys meminfo can take minutes and ANR the app over Binder; snapshot only.
+            ShellAllowlist.DUMPSYS_MEMINFO -> ShellRunner.runMeminfoSnapshot(argv)
+
+            else -> ShellRunner.run(argv)
+        }
     }
 }

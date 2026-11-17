@@ -30,6 +30,9 @@
     <string name="widget_processes_kill_cancel">Abbrechen</string>
     <string name="widget_processes_empty">Noch keine Prozessdaten</string>
     <string name="widget_processes_error">Prozesse konnten nicht aktualisiert werden. Tippe auf Aktualisieren.</string>
+    <string name="widget_processes_col_app">App</string>
+    <string name="widget_processes_col_mem">Speicher</string>
+    <string name="widget_processes_col_cpu">CPU</string>
 
     <string name="tile_updates_label">Kiln-Updates</string>
     <string name="tile_updates_subtitle_zero">Keine Updates</string>

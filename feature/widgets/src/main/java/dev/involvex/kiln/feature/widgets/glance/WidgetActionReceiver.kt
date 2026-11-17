@@ -88,8 +88,8 @@ class WidgetActionReceiver : BroadcastReceiver() {
                     }
 
                     WidgetIntents.ACTION_PROCESS_REFRESH -> {
-                        processWidgetRefresher.refreshIfStale(force = true)
-                        surfaceUpdater.refreshProcesses()
+                        // Enqueue only — awaiting dumpsys meminfo here caused BroadcastReceiver ANRs.
+                        processWidgetRefresher.enqueueRefresh(force = true)
                     }
 
                     WidgetIntents.ACTION_KILL_REQUEST -> {
@@ -120,7 +120,7 @@ class WidgetActionReceiver : BroadcastReceiver() {
                             widgetPreferences.setKillConfirmPackage(null)
                             forceStop(context, pkg)
                         }
-                        processWidgetRefresher.refreshIfStale(force = true)
+                        processWidgetRefresher.enqueueRefresh(force = true)
                         surfaceUpdater.refreshProcesses()
                     }
 
