@@ -1,6 +1,6 @@
 # M45 — Hilt crash fix + App Detail overhaul + stability guards
 
-> Branch `m45-stability-app-detail`. After M44 (#76) / docs (#77).
+> Shipped in [#79](https://github.com/involvex/kiln/pull/79). Branch `m45-stability-app-detail`. After M44 (#76) / docs (#77).
 
 ## In scope
 
@@ -18,10 +18,10 @@
 
 ## Done when
 
-- [ ] Clean `assembleDebug` includes all allowlisted ViewModels in Hilt debug component
-- [ ] `verifyHiltViewModelMapDebug` green in CI
-- [ ] App Detail section order matches Catalog-style density (actions under hero; truncated signature)
-- [ ] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green
+- [x] Clean `assembleDebug` includes all allowlisted ViewModels in Hilt debug component
+- [x] `verifyHiltViewModelMapDebug` green in CI
+- [x] App Detail section order matches Catalog-style density (actions under hero; truncated signature)
+- [x] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` green
 - [ ] Manual HyperOS checklist in PR
 
 ## Manual HyperOS checklist (PR)
