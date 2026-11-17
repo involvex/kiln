@@ -32,6 +32,8 @@ object ShellAllowlist {
     const val TAR_ANDROID_PKG_OUT = "tar_android_pkg_out"
     const val TAR_ANDROID_PKG_IN = "tar_android_pkg_in"
     const val AM_FORCE_STOP = "am_force_stop"
+    const val DUMPSYS_MEMINFO = "dumpsys_meminfo"
+    const val DUMPSYS_CPUINFO = "dumpsys_cpuinfo"
 
     private val PACKAGE_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
     private val PERMISSION_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
@@ -233,6 +235,14 @@ object ShellAllowlist {
             val packageName = args.singleOrNull() ?: return null
             if (!isSafePackageName(packageName)) return null
             listOf("am", "force-stop", packageName)
+        }
+
+        DUMPSYS_MEMINFO -> {
+            if (args.isNotEmpty()) null else listOf("dumpsys", "meminfo")
+        }
+
+        DUMPSYS_CPUINFO -> {
+            if (args.isNotEmpty()) null else listOf("dumpsys", "cpuinfo")
         }
 
         else -> null

@@ -265,5 +265,15 @@ class ShellAllowlistTest {
             ),
         )
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.AM_FORCE_STOP, listOf("bad;pkg")))
+        assertEquals(
+            listOf("dumpsys", "meminfo"),
+            ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_MEMINFO, emptyList()),
+        )
+        assertEquals(
+            listOf("dumpsys", "cpuinfo"),
+            ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_CPUINFO, emptyList()),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_MEMINFO, listOf("extra")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_CPUINFO, listOf("extra")))
     }
 }

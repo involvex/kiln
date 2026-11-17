@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Home widgets: Cache (trim with confirm) and Processes (mem/CPU + force-stop via Shizuku)
+
 ### Fixed
 
 - Hilt ViewModel crashes (Storage, Background controls, …) from incomplete/stale KSP maps; `ksp.incremental=false` + `verifyHiltViewModelMapDebug`
 
 ### Changed
 
+- Updates widget: drop trim/confirm/cancel; show latest update preview lines + Check now
 - App Detail: denser layout (hero card, actions under hero, Updates / Installation / Security / Technical cards)
 - Discover: denser shelf cards; catalog detail Install/Share/Watch under hero; flatter Sources/Links
 - Removed Exodus Privacy (catalog/app detail, Settings Privacy hub, optional API) — public reports often 404; no end-user API keys

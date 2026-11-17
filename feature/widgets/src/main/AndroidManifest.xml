@@ -15,10 +15,41 @@
         </receiver>
 
         <receiver
+            android:name=".glance.KilnCacheWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_cache_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/kiln_cache_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".glance.KilnProcessesWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_processes_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/kiln_processes_widget_info" />
+        </receiver>
+
+        <receiver
             android:name=".glance.WidgetActionReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="dev.involvex.kiln.widget.CHECK_NOW" />
+                <action android:name="dev.involvex.kiln.widget.CACHE_REQUEST" />
+                <action android:name="dev.involvex.kiln.widget.CACHE_CONFIRM" />
+                <action android:name="dev.involvex.kiln.widget.CACHE_CANCEL" />
+                <action android:name="dev.involvex.kiln.widget.PROCESS_REFRESH" />
+                <action android:name="dev.involvex.kiln.widget.KILL_REQUEST" />
+                <action android:name="dev.involvex.kiln.widget.KILL_CONFIRM" />
+                <action android:name="dev.involvex.kiln.widget.KILL_CANCEL" />
                 <action android:name="dev.involvex.kiln.widget.TRIM_REQUEST" />
                 <action android:name="dev.involvex.kiln.widget.TRIM_CONFIRM" />
                 <action android:name="dev.involvex.kiln.widget.TRIM_CANCEL" />

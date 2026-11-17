@@ -32,6 +32,7 @@ import dev.involvex.kiln.core.model.WidgetIntents
 import dev.involvex.kiln.feature.apps.apktools.IncomingApkInstallStore
 import dev.involvex.kiln.feature.sources.IncomingRepoLinkStore
 import dev.involvex.kiln.feature.widgets.ManageDeepLinkStore
+import dev.involvex.kiln.feature.widgets.PrivilegeSetupDeepLinkStore
 import dev.involvex.kiln.ui.KilnApp
 import java.util.Locale
 import javax.inject.Inject
@@ -50,6 +51,9 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var manageDeepLinkStore: ManageDeepLinkStore
 
+    @Inject
+    lateinit var privilegeSetupDeepLinkStore: PrivilegeSetupDeepLinkStore
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -67,6 +71,7 @@ class MainActivity : AppCompatActivity() {
                 fontStyle = appearance.fontStyle,
                 dynamicColor = appearance.dynamicColor,
                 manageDeepLinkStore = manageDeepLinkStore,
+                privilegeSetupDeepLinkStore = privilegeSetupDeepLinkStore,
                 incomingApkInstallStore = incomingApkInstallStore,
             )
         }
@@ -80,35 +85,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun offerIncoming(intent: Intent?) {
         if (intent == null) return
-        if (intent.getBooleanExtra(WidgetIntents.EXTRA_OPEN_MANAGE, false)) {
-            manageDeepLinkStore.offer()
-        }
+        offerWidgetDeepLinks(intent)
         when (intent.action) {
-            Intent.ACTION_SEND -> {
-                if (intent.type?.startsWith("text/") == true) {
-                    val text = intent.getStringExtra(Intent.EXTRA_TEXT)?.trim().orEmpty()
-                    if (text.isNotEmpty()) {
-                        incomingRepoLinkStore.offer(text)
-                    }
-                    return
-                }
-                val stream = intent.parcelableUriExtra(Intent.EXTRA_STREAM)
-                if (stream != null && looksLikeApkOrBundle(stream, intent.type)) {
-                    offerApkInstall(stream)
-                }
-            }
+            Intent.ACTION_SEND -> offerSendIntent(intent)
 
-            Intent.ACTION_VIEW -> {
-                val data = intent.data
-                if (data != null && looksLikeApkOrBundle(data, intent.type)) {
-                    offerApkInstall(data)
-                    return
-                }
-                val dataString = intent.dataString?.trim().orEmpty()
-                if (dataString.isNotEmpty()) {
-                    incomingRepoLinkStore.offer(dataString)
-                }
-            }
+            Intent.ACTION_VIEW -> offerViewIntent(intent)
 
             else -> {
                 val data = intent.dataString?.trim().orEmpty()
@@ -116,6 +97,41 @@ class MainActivity : AppCompatActivity() {
                     incomingRepoLinkStore.offer(data)
                 }
             }
+        }
+    }
+
+    private fun offerWidgetDeepLinks(intent: Intent) {
+        if (intent.getBooleanExtra(WidgetIntents.EXTRA_OPEN_MANAGE, false)) {
+            manageDeepLinkStore.offer()
+        }
+        if (intent.getBooleanExtra(WidgetIntents.EXTRA_OPEN_PRIVILEGE_SETUP, false)) {
+            privilegeSetupDeepLinkStore.offer()
+        }
+    }
+
+    private fun offerSendIntent(intent: Intent) {
+        if (intent.type?.startsWith("text/") == true) {
+            val text = intent.getStringExtra(Intent.EXTRA_TEXT)?.trim().orEmpty()
+            if (text.isNotEmpty()) {
+                incomingRepoLinkStore.offer(text)
+            }
+            return
+        }
+        val stream = intent.parcelableUriExtra(Intent.EXTRA_STREAM)
+        if (stream != null && looksLikeApkOrBundle(stream, intent.type)) {
+            offerApkInstall(stream)
+        }
+    }
+
+    private fun offerViewIntent(intent: Intent) {
+        val data = intent.data
+        if (data != null && looksLikeApkOrBundle(data, intent.type)) {
+            offerApkInstall(data)
+            return
+        }
+        val dataString = intent.dataString?.trim().orEmpty()
+        if (dataString.isNotEmpty()) {
+            incomingRepoLinkStore.offer(dataString)
         }
     }
 
@@ -177,6 +193,7 @@ private fun KilnRoot(
     fontStyle: KilnFontStyle,
     dynamicColor: Boolean,
     manageDeepLinkStore: ManageDeepLinkStore,
+    privilegeSetupDeepLinkStore: PrivilegeSetupDeepLinkStore,
     incomingApkInstallStore: IncomingApkInstallStore,
 ) {
     val view = LocalView.current
@@ -199,6 +216,7 @@ private fun KilnRoot(
         ) {
             KilnApp(
                 manageDeepLinkStore = manageDeepLinkStore,
+                privilegeSetupDeepLinkStore = privilegeSetupDeepLinkStore,
                 incomingApkInstallStore = incomingApkInstallStore,
             )
         }

@@ -1,18 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="widget_updates_description">Shows available Kiln updates and shortcuts to check or trim caches.</string>
+    <string name="widget_updates_description">Shows available Kiln updates and a shortcut to check now.</string>
     <string name="widget_updates_loading">Kiln…</string>
-    <string name="widget_updates_title">Kiln</string>
+    <string name="widget_updates_title">Updates</string>
     <string name="widget_updates_queued">Update check queued…</string>
     <string name="widget_updates_check_now">Check now</string>
-    <string name="widget_updates_trim">Trim caches</string>
-    <string name="widget_updates_trim_confirm">Confirm trim</string>
-    <string name="widget_updates_trim_cancel">Cancel</string>
     <string name="widget_updates_zero">No updates</string>
     <plurals name="widget_updates_count">
         <item quantity="one">%d update</item>
         <item quantity="other">%d updates</item>
     </plurals>
+
+    <string name="widget_cache_title">Cache</string>
+    <string name="widget_cache_description">Clear app caches with confirmation. Needs Shizuku or root.</string>
+    <string name="widget_cache_explain">Clear caches for all apps on this device.</string>
+    <string name="widget_cache_need_privilege">Needs Shizuku or root to clear caches.</string>
+    <string name="widget_cache_clear">Clear caches</string>
+    <string name="widget_cache_confirm">Confirm clear</string>
+    <string name="widget_cache_cancel">Cancel</string>
+    <string name="widget_cache_open_setup">Open setup</string>
+
+    <string name="widget_processes_title">Processes</string>
+    <string name="widget_processes_description">Top apps by memory with force-stop. Needs Shizuku or root.</string>
+    <string name="widget_processes_need_shizuku">Needs Shizuku or root to list processes.</string>
+    <string name="widget_processes_open_setup">Open setup</string>
+    <string name="widget_processes_refresh">Refresh</string>
+    <string name="widget_processes_kill">Stop</string>
+    <string name="widget_processes_kill_confirm">Confirm stop</string>
+    <string name="widget_processes_kill_cancel">Cancel</string>
+    <string name="widget_processes_empty">No process data yet</string>
+
     <string name="tile_updates_label">Kiln updates</string>
     <string name="tile_updates_subtitle_zero">No updates</string>
     <plurals name="tile_updates_subtitle_count">

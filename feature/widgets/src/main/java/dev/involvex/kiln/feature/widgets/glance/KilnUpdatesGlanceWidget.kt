@@ -28,6 +28,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import dagger.hilt.android.EntryPointAccessors
 import dev.involvex.kiln.core.model.WidgetIntents
+import dev.involvex.kiln.core.model.WidgetUpdatePreviewLine
 import dev.involvex.kiln.feature.widgets.R
 import dev.involvex.kiln.feature.widgets.WidgetPreferencesEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -63,43 +64,32 @@ class KilnUpdatesGlanceWidget : GlanceAppWidget() {
 
         provideContent {
             GlanceTheme {
-                WidgetContent(
+                UpdatesWidgetContent(
                     title = context.getString(R.string.widget_updates_title),
                     status = status,
-                    trimConfirmPending = snapshot.trimConfirmPending,
+                    preview = snapshot.updatePreview,
                     launchIntent = launch,
                     checkIntent = Intent(context, WidgetActionReceiver::class.java)
                         .setAction(WidgetIntents.ACTION_CHECK_NOW),
-                    trimRequestIntent = Intent(context, WidgetActionReceiver::class.java)
-                        .setAction(WidgetIntents.ACTION_TRIM_REQUEST),
-                    trimConfirmIntent = Intent(context, WidgetActionReceiver::class.java)
-                        .setAction(WidgetIntents.ACTION_TRIM_CONFIRM),
-                    trimCancelIntent = Intent(context, WidgetActionReceiver::class.java)
-                        .setAction(WidgetIntents.ACTION_TRIM_CANCEL),
                     checkLabel = context.getString(R.string.widget_updates_check_now),
-                    trimLabel = context.getString(R.string.widget_updates_trim),
-                    confirmLabel = context.getString(R.string.widget_updates_trim_confirm),
-                    cancelLabel = context.getString(R.string.widget_updates_trim_cancel),
                 )
             }
         }
     }
 }
 
+class KilnUpdatesWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = KilnUpdatesGlanceWidget()
+}
+
 @Composable
-private fun WidgetContent(
+private fun UpdatesWidgetContent(
     title: String,
     status: String,
-    trimConfirmPending: Boolean,
+    preview: List<WidgetUpdatePreviewLine>,
     launchIntent: Intent,
     checkIntent: Intent,
-    trimRequestIntent: Intent,
-    trimConfirmIntent: Intent,
-    trimCancelIntent: Intent,
     checkLabel: String,
-    trimLabel: String,
-    confirmLabel: String,
-    cancelLabel: String,
 ) {
     Column(
         modifier = GlanceModifier
@@ -113,57 +103,49 @@ private fun WidgetContent(
         Text(
             text = title,
             style = TextStyle(
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
                 color = GlanceTheme.colors.onSurface,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
             ),
         )
-        Spacer(GlanceModifier.height(4.dp))
+        Spacer(modifier = GlanceModifier.height(4.dp))
         Text(
             text = status,
             style = TextStyle(
-                color = GlanceTheme.colors.onSurface,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
+                color = GlanceTheme.colors.onSurface,
             ),
         )
-        Spacer(GlanceModifier.height(8.dp))
-        Row(modifier = GlanceModifier.fillMaxWidth()) {
-            Text(
-                text = checkLabel,
-                modifier = GlanceModifier
-                    .clickable(actionSendBroadcast(checkIntent))
-                    .padding(4.dp),
-                style = TextStyle(color = GlanceTheme.colors.primary, fontSize = 12.sp),
-            )
-            if (trimConfirmPending) {
+        if (preview.isNotEmpty()) {
+            Spacer(modifier = GlanceModifier.height(6.dp))
+            preview.forEach { line ->
                 Text(
-                    text = confirmLabel,
-                    modifier = GlanceModifier
-                        .clickable(actionSendBroadcast(trimConfirmIntent))
-                        .padding(4.dp),
-                    style = TextStyle(color = GlanceTheme.colors.error, fontSize = 12.sp),
-                )
-                Text(
-                    text = cancelLabel,
-                    modifier = GlanceModifier
-                        .clickable(actionSendBroadcast(trimCancelIntent))
-                        .padding(4.dp),
-                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp),
-                )
-            } else {
-                Text(
-                    text = trimLabel,
-                    modifier = GlanceModifier
-                        .clickable(actionSendBroadcast(trimRequestIntent))
-                        .padding(4.dp),
-                    style = TextStyle(color = GlanceTheme.colors.primary, fontSize = 12.sp),
+                    text = "${line.label} → ${line.availableVersionName}",
+                    style = TextStyle(
+                        fontSize = 11.sp,
+                        color = GlanceTheme.colors.onSurfaceVariant,
+                    ),
+                    maxLines = 1,
                 )
             }
         }
+        Spacer(modifier = GlanceModifier.defaultWeight())
+        Row(
+            modifier = GlanceModifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.End,
+        ) {
+            Text(
+                text = checkLabel,
+                style = TextStyle(
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = GlanceTheme.colors.primary,
+                ),
+                modifier = GlanceModifier
+                    .padding(vertical = 4.dp)
+                    .clickable(actionSendBroadcast(checkIntent)),
+            )
+        }
     }
-}
-
-class KilnUpdatesWidgetReceiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = KilnUpdatesGlanceWidget()
 }

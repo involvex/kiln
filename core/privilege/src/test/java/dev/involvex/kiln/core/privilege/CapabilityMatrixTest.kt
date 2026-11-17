@@ -17,6 +17,8 @@ class CapabilityMatrixTest {
         assertEquals(CapabilityAvailability.RESTRICTED, matrix[PrivilegeCapability.FULL_BACKUP])
         assertTrue(PrivilegeCapability.SILENT_INSTALL in CapabilityMatrix.capabilities(2000, PrivilegeTier.SHIZUKU))
         assertTrue(PrivilegeCapability.MANAGE_APP_OPS in CapabilityMatrix.capabilities(2000, PrivilegeTier.SHIZUKU))
+        assertTrue(PrivilegeCapability.FORCE_STOP in CapabilityMatrix.capabilities(2000, PrivilegeTier.SHIZUKU))
+        assertTrue(PrivilegeCapability.RUN_SHELL_DIAGNOSTIC in CapabilityMatrix.capabilities(2000, PrivilegeTier.SHIZUKU))
         assertTrue(PrivilegeCapability.FULL_BACKUP !in CapabilityMatrix.capabilities(2000, PrivilegeTier.SHIZUKU))
     }
 

@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M45** Hilt/KSP stability + App Detail overhaul Done (#79). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M46** Widget rework In progress (`m46-widget-rework`). **M45** Done (#79). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -60,6 +60,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M43** | App activities viewer | Done | [`prompts/M43-app-activities.md`](./prompts/M43-app-activities.md) · [#75](https://github.com/involvex/kiln/pull/75) | Exported activities list + Start + pin shortcut; AppDetail AssistedInject crash fix |
 | **M44** | Discover polish + remove Exodus | Done | [`prompts/M44-discover-polish.md`](./prompts/M44-discover-polish.md) · [#76](https://github.com/involvex/kiln/pull/76) | Denser shelves; catalog detail actions under hero; remove Exodus UI/API/Settings |
 | **M45** | Hilt stability + App Detail overhaul | Done | [`prompts/M45-stability-app-detail.md`](./prompts/M45-stability-app-detail.md) · [#79](https://github.com/involvex/kiln/pull/79) | KSP incremental off + Hilt VM map guard; App Detail hero/actions/cards; kilnHiltViewModel harden |
+| **M46** | Widget rework | In progress | [`prompts/M46-widget-rework.md`](./prompts/M46-widget-rework.md) · `m46-widget-rework` | Updates list+Check; Cache widget; Processes mem/CPU+kill (Shizuku) |
 
 ---
 
@@ -78,7 +79,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Scheduled maintenance | Done | M23 #37 |
 | Activity log | Done | M24 #39 |
 | Config export/import | Done | M25 #38 (Obtainium import already exists; separate format) |
-| Widgets / QS | Done | M26 #40 |
+| Widgets / QS | Done (M26); rework M46 | M26 #40; M46: three Glance widgets |
 | Permission audit | Done | M27 #41 |
 | Storage phase 2 | Done | M28 #44 |
 | SAF backup rotation / data tiers / encryption | Done (M40 #69) | SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM; ROOT / cloud deferred |
@@ -92,6 +93,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | App activity viewer / launcher | Done (M43 #75) | Exported-only list under App Detail; Tier NONE Start + pin shortcut |
 | Discover UI density + Exodus removal | Done (M44 #76) | Compact shelves; detail Install under hero; drop Exodus |
 | Hilt/KSP ViewModel map + App Detail IA | Done (M45 #79) | Guard incomplete Hilt maps; denser App Detail like Catalog |
+| Widget rework (Updates / Cache / Processes) | In progress (M46) | Drop trim from Updates; dedicated Cache + Processes Glance |
 
 ---
 
@@ -117,7 +119,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Scheduled maintenance | ✅ weekly Wi‑Fi+charging; trim / prune downloads / rollback / backup temps; protocol | NONE (+ privilege for trim) |
 | Kiln-Config export/import | ✅ SAF JSON merge of repos, managed apps, non-secret prefs (no PAT) | NONE |
 | Activity log | ✅ Room-backed searchable log (install/backup/cache/maintenance/shell/…) | NONE |
-| Widgets / QS | ✅ Glance update count + Check now + Trim; QS tile Check now | NONE (+ privilege for Trim) |
+| Widgets / QS | ✅ M46: Updates (preview+Check); Cache (confirm/`CLEAR_CACHE`); Processes (mem/CPU+`FORCE_STOP`); QS Check now | NONE / SHIZUKU (`CLEAR_CACHE`, `RUN_SHELL_DIAGNOSTIC`, `FORCE_STOP`) |
 | Permission audit | ✅ Dangerous overview; `pm revoke` + basic AppOps set | NONE / SHIZUKU (`MANAGE_APP_OPS`) |
 | Background controls | ✅ HyperOS Autostart + battery Unrestricted/Optimized/Restricted | SHIZUKU (`MANAGE_APP_OPS`) |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
@@ -331,10 +333,11 @@ flowchart LR
   M42 --> M43[M43 App activities]
   M43 --> M44[M44 Discover polish]
   M44 --> M45[M45 Hilt + App Detail]
+  M45 --> M46[M46 Widget rework]
 ```
 
-1. **M0–M45** on main (#79); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
-2. Next: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
+1. **M0–M45** on main (#79); **M46** in progress; **`v0.2.4`** tagged (code 7); CI lint harden (#65).
+2. Next after M46: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

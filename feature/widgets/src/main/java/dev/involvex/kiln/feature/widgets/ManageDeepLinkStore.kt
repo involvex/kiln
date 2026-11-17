@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * One-shot signal so MainActivity/KilnApp can open the Manage tab
- * when Trim caches cannot run without privilege.
+ * when Cache clear cannot run without privilege.
  */
 @Singleton
 class ManageDeepLinkStore @Inject constructor() {
