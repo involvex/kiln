@@ -48,6 +48,8 @@ class ProcessWidgetRefresher @Inject constructor(
 
     companion object {
         const val MIN_INTERVAL_MS = 15_000L
-        const val LIMIT = 6
+
+        /** Dense single-line rows fit more entries in a 4×2 / 4×3 widget. */
+        const val LIMIT = 8
     }
 }
