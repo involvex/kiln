@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_glass_bg">#DCF7F2FA</color>
+    <color name="widget_glass_chip">#33FFFFFF</color>
+    <color name="widget_glass_chip_danger">#44FFB4AB</color>
+</resources>

@@ -13,10 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Processes widget empty on HyperOS: parse `NNNK:` / RSS+PSS `dumpsys meminfo` formats
 - Hilt ViewModel crashes (Storage, Background controls, …) from incomplete/stale KSP maps; `ksp.incremental=false` + `verifyHiltViewModelMapDebug`
 
 ### Changed
 
+- Home widgets: Material glass chrome (rounded translucent surfaces + action chips)
 - Updates widget: drop trim/confirm/cancel; show latest update preview lines + Check now
 - App Detail: denser layout (hero card, actions under hero, Updates / Installation / Security / Technical cards)
 - Discover: denser shelf cards; catalog detail Install/Share/Watch under hero; flatter Sources/Links

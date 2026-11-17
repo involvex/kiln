@@ -14,7 +14,6 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.actionSendBroadcast
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
-import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
@@ -22,7 +21,6 @@ import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
-import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -91,61 +89,43 @@ private fun UpdatesWidgetContent(
     checkIntent: Intent,
     checkLabel: String,
 ) {
-    Column(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .background(GlanceTheme.colors.widgetBackground)
-            .padding(12.dp)
-            .clickable(actionStartActivity(launchIntent)),
-        verticalAlignment = Alignment.Top,
-        horizontalAlignment = Alignment.Start,
+    KilnGlassWidgetScaffold(
+        modifier = GlanceModifier.clickable(actionStartActivity(launchIntent)),
     ) {
-        Text(
-            text = title,
-            style = TextStyle(
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = GlanceTheme.colors.onSurface,
-            ),
-        )
-        Spacer(modifier = GlanceModifier.height(4.dp))
-        Text(
-            text = status,
-            style = TextStyle(
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = GlanceTheme.colors.onSurface,
-            ),
-        )
-        if (preview.isNotEmpty()) {
-            Spacer(modifier = GlanceModifier.height(6.dp))
-            preview.forEach { line ->
-                Text(
-                    text = "${line.label} → ${line.availableVersionName}",
-                    style = TextStyle(
-                        fontSize = 11.sp,
-                        color = GlanceTheme.colors.onSurfaceVariant,
-                    ),
-                    maxLines = 1,
-                )
-            }
-        }
-        Spacer(modifier = GlanceModifier.defaultWeight())
-        Row(
-            modifier = GlanceModifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.End,
+        Column(
+            modifier = GlanceModifier.fillMaxSize(),
+            verticalAlignment = Alignment.Top,
+            horizontalAlignment = Alignment.Start,
         ) {
-            Text(
-                text = checkLabel,
-                style = TextStyle(
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = GlanceTheme.colors.primary,
-                ),
-                modifier = GlanceModifier
-                    .padding(vertical = 4.dp)
-                    .clickable(actionSendBroadcast(checkIntent)),
-            )
+            KilnWidgetHeaderRow(title = title)
+            Spacer(modifier = GlanceModifier.height(6.dp))
+            KilnWidgetHero(text = status)
+            if (preview.isNotEmpty()) {
+                Spacer(modifier = GlanceModifier.height(8.dp))
+                preview.forEach { line ->
+                    Text(
+                        text = "${line.label} → ${line.availableVersionName}",
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = GlanceTheme.colors.onSurface,
+                        ),
+                        maxLines = 1,
+                    )
+                    Spacer(modifier = GlanceModifier.height(2.dp))
+                }
+            }
+            KilnWidgetFooter {
+                Row(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.End,
+                ) {
+                    KilnGlassChip(
+                        label = checkLabel,
+                        action = actionSendBroadcast(checkIntent),
+                    )
+                }
+            }
         }
     }
 }

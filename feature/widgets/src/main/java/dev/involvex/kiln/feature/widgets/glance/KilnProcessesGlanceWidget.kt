@@ -14,7 +14,6 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.actionSendBroadcast
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
-import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
@@ -22,7 +21,6 @@ import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
-import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -52,11 +50,17 @@ class KilnProcessesGlanceWidget : GlanceAppWidget() {
             }
         }
         val snapshot = entryPoint.widgetPreferences().current()
-        val rows = entryPoint.processWidgetStore().current()
+        val processSnap = entryPoint.processWidgetStore().current()
         val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
             ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             ?: Intent()
         val setupIntent = Intent(launch).putExtra(WidgetIntents.EXTRA_OPEN_PRIVILEGE_SETUP, true)
+        val emptyOrError = when {
+            processSnap.lastErrorKey != null ->
+                context.getString(R.string.widget_processes_error)
+
+            else -> context.getString(R.string.widget_processes_empty)
+        }
 
         provideContent {
             GlanceTheme {
@@ -70,8 +74,8 @@ class KilnProcessesGlanceWidget : GlanceAppWidget() {
                     killLabel = context.getString(R.string.widget_processes_kill),
                     confirmLabel = context.getString(R.string.widget_processes_kill_confirm),
                     cancelLabel = context.getString(R.string.widget_processes_kill_cancel),
-                    emptyLabel = context.getString(R.string.widget_processes_empty),
-                    rows = rows,
+                    emptyLabel = emptyOrError,
+                    rows = processSnap.rows,
                     killConfirmPackage = snapshot.killConfirmPackage,
                     launchIntent = launch,
                     setupIntent = setupIntent,
@@ -121,74 +125,54 @@ private fun ProcessesWidgetContent(
     killConfirmIntent: (String) -> Intent,
     killCancelIntent: Intent,
 ) {
-    Column(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .background(GlanceTheme.colors.widgetBackground)
-            .padding(12.dp)
-            .clickable(actionStartActivity(launchIntent)),
-        verticalAlignment = Alignment.Top,
-        horizontalAlignment = Alignment.Start,
+    KilnGlassWidgetScaffold(
+        modifier = GlanceModifier.clickable(actionStartActivity(launchIntent)),
     ) {
-        Row(modifier = GlanceModifier.fillMaxWidth()) {
-            Text(
-                text = title,
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = GlanceTheme.colors.onSurface,
-                ),
-                modifier = GlanceModifier.defaultWeight(),
-            )
-            if (canList) {
-                Text(
-                    text = refreshLabel,
-                    style = TextStyle(
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = GlanceTheme.colors.primary,
-                    ),
-                    modifier = GlanceModifier.clickable(actionSendBroadcast(refreshIntent)),
-                )
-            }
-        }
-        Spacer(modifier = GlanceModifier.height(6.dp))
-        if (!canList) {
-            Text(
-                text = needShizuku,
-                style = TextStyle(fontSize = 13.sp, color = GlanceTheme.colors.onSurfaceVariant),
+        Column(
+            modifier = GlanceModifier.fillMaxSize(),
+            verticalAlignment = Alignment.Top,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            KilnWidgetHeaderRow(
+                title = title,
+                trailing = if (canList) {
+                    {
+                        KilnGlassChip(
+                            label = refreshLabel,
+                            action = actionSendBroadcast(refreshIntent),
+                        )
+                    }
+                } else {
+                    null
+                },
             )
             Spacer(modifier = GlanceModifier.height(8.dp))
-            Text(
-                text = openSetupLabel,
-                style = TextStyle(
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = GlanceTheme.colors.primary,
-                ),
-                modifier = GlanceModifier.clickable(actionStartActivity(setupIntent)),
-            )
-            return@Column
-        }
-        if (rows.isEmpty()) {
-            Text(
-                text = emptyLabel,
-                style = TextStyle(fontSize = 13.sp, color = GlanceTheme.colors.onSurfaceVariant),
-            )
-        } else {
-            rows.forEach { row ->
-                ProcessRow(
-                    row = row,
-                    killConfirmPackage = killConfirmPackage,
-                    canKill = canKill,
-                    killLabel = killLabel,
-                    confirmLabel = confirmLabel,
-                    cancelLabel = cancelLabel,
-                    killRequestIntent = killRequestIntent,
-                    killConfirmIntent = killConfirmIntent,
-                    killCancelIntent = killCancelIntent,
+            if (!canList) {
+                KilnWidgetBody(text = needShizuku)
+                Spacer(modifier = GlanceModifier.height(10.dp))
+                KilnGlassChip(
+                    label = openSetupLabel,
+                    action = actionStartActivity(setupIntent),
                 )
-                Spacer(modifier = GlanceModifier.height(4.dp))
+                return@Column
+            }
+            if (rows.isEmpty()) {
+                KilnWidgetBody(text = emptyLabel)
+            } else {
+                rows.forEach { row ->
+                    ProcessRow(
+                        row = row,
+                        killConfirmPackage = killConfirmPackage,
+                        canKill = canKill,
+                        killLabel = killLabel,
+                        confirmLabel = confirmLabel,
+                        cancelLabel = cancelLabel,
+                        killRequestIntent = killRequestIntent,
+                        killConfirmIntent = killConfirmIntent,
+                        killCancelIntent = killCancelIntent,
+                    )
+                    Spacer(modifier = GlanceModifier.height(6.dp))
+                }
             }
         }
     }
@@ -212,42 +196,40 @@ private fun ProcessRow(
     val pending = killConfirmPackage == row.packageName
     Column(modifier = GlanceModifier.fillMaxWidth()) {
         Text(
-            text = "${row.label} · $mem · $cpu",
-            style = TextStyle(fontSize = 11.sp, color = GlanceTheme.colors.onSurface),
+            text = row.label,
+            style = TextStyle(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = GlanceTheme.colors.onSurface,
+            ),
+            maxLines = 1,
+        )
+        Text(
+            text = "$mem · $cpu",
+            style = TextStyle(
+                fontSize = 11.sp,
+                color = GlanceTheme.colors.onSurfaceVariant,
+            ),
             maxLines = 1,
         )
         if (!canKill) return@Column
+        Spacer(modifier = GlanceModifier.height(4.dp))
         Row(modifier = GlanceModifier.fillMaxWidth()) {
             if (pending) {
-                Text(
-                    text = confirmLabel,
-                    style = TextStyle(
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = GlanceTheme.colors.error,
-                    ),
-                    modifier = GlanceModifier
-                        .padding(end = 10.dp)
-                        .clickable(actionSendBroadcast(killConfirmIntent(row.packageName))),
+                KilnGlassChip(
+                    label = confirmLabel,
+                    action = actionSendBroadcast(killConfirmIntent(row.packageName)),
+                    danger = true,
                 )
-                Text(
-                    text = cancelLabel,
-                    style = TextStyle(
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = GlanceTheme.colors.primary,
-                    ),
-                    modifier = GlanceModifier.clickable(actionSendBroadcast(killCancelIntent)),
+                Spacer(modifier = GlanceModifier.defaultWeight())
+                KilnGlassChip(
+                    label = cancelLabel,
+                    action = actionSendBroadcast(killCancelIntent),
                 )
             } else {
-                Text(
-                    text = killLabel,
-                    style = TextStyle(
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = GlanceTheme.colors.primary,
-                    ),
-                    modifier = GlanceModifier.clickable(actionSendBroadcast(killRequestIntent(row.packageName))),
+                KilnGlassChip(
+                    label = killLabel,
+                    action = actionSendBroadcast(killRequestIntent(row.packageName)),
                 )
             }
         }

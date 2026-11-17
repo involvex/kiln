@@ -16,12 +16,12 @@ class ProcessWidgetRefresher @Inject constructor(
 ) {
     /**
      * Polls allowlisted process stats when capability is present.
-     * @return true if a shell poll ran
+     * @return true if a shell poll ran successfully with rows (may be empty)
      */
     suspend fun refreshIfStale(force: Boolean = false): Boolean {
         val caps = privilegedExecutor.currentStatus().capabilities
         if (!ProcessStatsGate.canList(caps)) {
-            processWidgetStore.publish(emptyList())
+            processWidgetStore.clear()
             return false
         }
         val now = System.currentTimeMillis()
@@ -32,6 +32,9 @@ class ProcessWidgetRefresher @Inject constructor(
         return when (val result = privilegedExecutor.listProcessStats(LIMIT)) {
             is Result.Failure -> {
                 Timber.w("Process widget refresh failed: %s", result.message)
+                processWidgetStore.publishFailure(
+                    errorKey = result.message.substringBefore(':').ifBlank { "shell_error" },
+                )
                 false
             }
 
