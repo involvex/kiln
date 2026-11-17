@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M46** Widget rework Done (#81). App version **0.2.4** (code 7), tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M47** Polish + signed release in progress (`m47-polish-signed-release`). App version **0.2.5** (code 8); previous tag `v0.2.4`. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -61,6 +61,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M44** | Discover polish + remove Exodus | Done | [`prompts/M44-discover-polish.md`](./prompts/M44-discover-polish.md) · [#76](https://github.com/involvex/kiln/pull/76) | Denser shelves; catalog detail actions under hero; remove Exodus UI/API/Settings |
 | **M45** | Hilt stability + App Detail overhaul | Done | [`prompts/M45-stability-app-detail.md`](./prompts/M45-stability-app-detail.md) · [#79](https://github.com/involvex/kiln/pull/79) | KSP incremental off + Hilt VM map guard; App Detail hero/actions/cards; kilnHiltViewModel harden |
 | **M46** | Widget rework | Done | [`prompts/M46-widget-rework.md`](./prompts/M46-widget-rework.md) · [#81](https://github.com/involvex/kiln/pull/81) | Updates list+Check; Cache widget; Processes mem/CPU+kill (Shizuku) |
+| **M47** | Polish + signed 0.2.5 | In progress | [`prompts/M47-polish-signed-release.md`](./prompts/M47-polish-signed-release.md) · `m47-polish-signed-release` | Require upload signing + apksigner; icon decode perf; tag `v0.2.5` |
 
 ---
 
@@ -86,7 +87,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | APK tools 2 (inspect + compare) | Done | M29 (#47); M31 (#49); universal merge M35 (#56) |
 | Mirrors / proxy | Done | M30 #48 |
 | Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); dual-user / tablet unscheduled |
-| Publishing / F-Droid submit | Partial | Fastlane + tag workflow ready; screenshots / submit deferred |
+| Publishing / F-Droid submit | Partial | M47: tag workflow requires upload signing + apksigner; screenshots / F-Droid submit deferred |
 | HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
 | GitHub starred repos → Sources | Done (M42 #73) | Review list + multi-select add; APK heuristic; no silent install |
@@ -334,10 +335,11 @@ flowchart LR
   M43 --> M44[M44 Discover polish]
   M44 --> M45[M45 Hilt + App Detail]
   M45 --> M46[M46 Widget rework]
+  M46 --> M47[M47 Polish signed 0.2.5]
 ```
 
-1. **M0–M46** on main (#81); **`v0.2.4`** tagged (code 7); CI lint harden (#65).
-2. Next: PLAN §12 leftovers (dual-user / tablet / cloud backup) or release gates.
+1. **M0–M46** on main (#81); **M47** cuts **0.2.5** with mandatory upload-signed GitHub Releases.
+2. Next after M47: PLAN §12 leftovers (dual-user / tablet / cloud backup) or HyperOS release gates.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

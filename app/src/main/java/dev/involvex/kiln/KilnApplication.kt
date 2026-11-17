@@ -6,6 +6,7 @@ import androidx.work.Configuration
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import coil3.request.crossfade
 import dagger.hilt.android.HiltAndroidApp
 import dev.involvex.kiln.core.model.AppearancePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
@@ -89,6 +90,8 @@ class KilnApplication :
             .build()
 
     override fun newImageLoader(context: PlatformContext): ImageLoader = ImageLoader.Builder(context)
+        // List rows (apps / catalog) feel snappier without decode crossfade.
+        .crossfade(false)
         .components {
             add(PackageIconFetcher.Factory(this@KilnApplication))
             add(PackageIconKeyer())
