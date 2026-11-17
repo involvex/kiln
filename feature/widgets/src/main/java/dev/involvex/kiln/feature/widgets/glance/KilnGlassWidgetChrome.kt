@@ -2,6 +2,7 @@ package dev.involvex.kiln.feature.widgets.glance
 
 import android.os.Build
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
@@ -31,13 +32,13 @@ import dev.involvex.kiln.feature.widgets.R
  * Glance/RemoteViews cannot blur the wallpaper; translucency + radius approximates glass.
  */
 @Composable
-fun KilnGlassWidgetScaffold(modifier: GlanceModifier = GlanceModifier, content: @Composable () -> Unit) {
+fun KilnGlassWidgetScaffold(modifier: GlanceModifier = GlanceModifier, contentPadding: Dp = 14.dp, content: @Composable () -> Unit) {
     Box(
         modifier = modifier
             .fillMaxSize()
             .appWidgetBackground()
             .kilnGlassBackground()
-            .padding(14.dp),
+            .padding(contentPadding),
     ) {
         content()
     }
@@ -93,7 +94,13 @@ fun KilnWidgetBody(text: String, modifier: GlanceModifier = GlanceModifier) {
 }
 
 @Composable
-fun KilnGlassChip(label: String, action: Action, danger: Boolean = false, modifier: GlanceModifier = GlanceModifier) {
+fun KilnGlassChip(
+    label: String,
+    action: Action,
+    danger: Boolean = false,
+    compact: Boolean = false,
+    modifier: GlanceModifier = GlanceModifier,
+) {
     val tint = if (danger) {
         GlanceTheme.colors.error
     } else {
@@ -107,13 +114,16 @@ fun KilnGlassChip(label: String, action: Action, danger: Boolean = false, modifi
     Text(
         text = label,
         style = TextStyle(
-            fontSize = 12.sp,
+            fontSize = if (compact) 11.sp else 12.sp,
             fontWeight = FontWeight.Medium,
             color = tint,
         ),
         modifier = modifier
             .background(ImageProvider(chipBg))
-            .padding(horizontal = 12.dp, vertical = 7.dp)
+            .padding(
+                horizontal = if (compact) 8.dp else 12.dp,
+                vertical = if (compact) 4.dp else 7.dp,
+            )
             .clickable(action),
     )
 }

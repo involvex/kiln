@@ -21,6 +21,8 @@ import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
+import androidx.glance.layout.padding
+import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -127,6 +129,7 @@ private fun ProcessesWidgetContent(
 ) {
     KilnGlassWidgetScaffold(
         modifier = GlanceModifier.clickable(actionStartActivity(launchIntent)),
+        contentPadding = 10.dp,
     ) {
         Column(
             modifier = GlanceModifier.fillMaxSize(),
@@ -140,26 +143,31 @@ private fun ProcessesWidgetContent(
                         KilnGlassChip(
                             label = refreshLabel,
                             action = actionSendBroadcast(refreshIntent),
+                            compact = true,
                         )
                     }
                 } else {
                     null
                 },
             )
-            Spacer(modifier = GlanceModifier.height(8.dp))
+            Spacer(modifier = GlanceModifier.height(4.dp))
             if (!canList) {
                 KilnWidgetBody(text = needShizuku)
-                Spacer(modifier = GlanceModifier.height(10.dp))
+                Spacer(modifier = GlanceModifier.height(8.dp))
                 KilnGlassChip(
                     label = openSetupLabel,
                     action = actionStartActivity(setupIntent),
+                    compact = true,
                 )
                 return@Column
             }
             if (rows.isEmpty()) {
                 KilnWidgetBody(text = emptyLabel)
             } else {
-                rows.forEach { row ->
+                rows.forEachIndexed { index, row ->
+                    if (index > 0) {
+                        Spacer(modifier = GlanceModifier.height(2.dp))
+                    }
                     ProcessRow(
                         row = row,
                         killConfirmPackage = killConfirmPackage,
@@ -171,7 +179,6 @@ private fun ProcessesWidgetContent(
                         killConfirmIntent = killConfirmIntent,
                         killCancelIntent = killCancelIntent,
                     )
-                    Spacer(modifier = GlanceModifier.height(6.dp))
                 }
             }
         }
@@ -194,15 +201,19 @@ private fun ProcessRow(
     val mem = ByteSizeFormatter.format(row.pssKb * 1024L)
     val cpu = row.cpuPercent?.let { String.format(Locale.US, "%.0f%%", it) } ?: "—"
     val pending = killConfirmPackage == row.packageName
-    Column(modifier = GlanceModifier.fillMaxWidth()) {
+    Row(
+        modifier = GlanceModifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(
             text = row.label,
             style = TextStyle(
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = GlanceTheme.colors.onSurface,
             ),
             maxLines = 1,
+            modifier = GlanceModifier.defaultWeight(),
         )
         Text(
             text = "$mem · $cpu",
@@ -211,27 +222,28 @@ private fun ProcessRow(
                 color = GlanceTheme.colors.onSurfaceVariant,
             ),
             maxLines = 1,
+            modifier = GlanceModifier.padding(start = 6.dp, end = 6.dp),
         )
-        if (!canKill) return@Column
-        Spacer(modifier = GlanceModifier.height(4.dp))
-        Row(modifier = GlanceModifier.fillMaxWidth()) {
-            if (pending) {
-                KilnGlassChip(
-                    label = confirmLabel,
-                    action = actionSendBroadcast(killConfirmIntent(row.packageName)),
-                    danger = true,
-                )
-                Spacer(modifier = GlanceModifier.defaultWeight())
-                KilnGlassChip(
-                    label = cancelLabel,
-                    action = actionSendBroadcast(killCancelIntent),
-                )
-            } else {
-                KilnGlassChip(
-                    label = killLabel,
-                    action = actionSendBroadcast(killRequestIntent(row.packageName)),
-                )
-            }
+        if (!canKill) return@Row
+        if (pending) {
+            KilnGlassChip(
+                label = confirmLabel,
+                action = actionSendBroadcast(killConfirmIntent(row.packageName)),
+                danger = true,
+                compact = true,
+            )
+            Spacer(modifier = GlanceModifier.width(4.dp))
+            KilnGlassChip(
+                label = cancelLabel,
+                action = actionSendBroadcast(killCancelIntent),
+                compact = true,
+            )
+        } else {
+            KilnGlassChip(
+                label = killLabel,
+                action = actionSendBroadcast(killRequestIntent(row.packageName)),
+                compact = true,
+            )
         }
     }
 }
