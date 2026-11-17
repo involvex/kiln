@@ -20,6 +20,9 @@ enum class PrivilegeCapability {
     CLEAR_CACHE,
     RUN_SHELL_DIAGNOSTIC,
     ACCESS_ANDROID_DATA,
+
+    /** `am force-stop` — shell/root; also accepted when [ACCESS_ANDROID_DATA] is present (backup). */
+    FORCE_STOP,
     DEBLOAT,
     MANAGE_APP_OPS,
     FULL_BACKUP,
@@ -167,6 +170,15 @@ interface PrivilegedExecutor {
      */
     suspend fun restoreAndroidSharedPackageDir(root: AndroidSharedRoot, packageName: String, srcTarAbsolutePath: String): Result<Unit>
 
-    /** `am force-stop <package>` — best-effort before data restore. Requires [PrivilegeCapability.ACCESS_ANDROID_DATA]. */
+    /**
+     * `am force-stop <package>` — best-effort before data restore / process widget.
+     * Requires [PrivilegeCapability.FORCE_STOP] or [PrivilegeCapability.ACCESS_ANDROID_DATA].
+     */
     suspend fun forceStopPackage(packageName: String): Result<Unit>
+
+    /**
+     * Snapshot of top processes by PSS (+ optional coarse CPU%).
+     * Requires [PrivilegeCapability.RUN_SHELL_DIAGNOSTIC].
+     */
+    suspend fun listProcessStats(limit: Int = 6): Result<List<ProcessStat>>
 }

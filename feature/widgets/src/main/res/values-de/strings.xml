@@ -1,18 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="widget_updates_description">Zeigt verfügbare Kiln-Updates und Shortcuts zum Prüfen oder Cache-Leeren.</string>
+    <string name="widget_updates_description">Zeigt verfügbare Kiln-Updates und einen Shortcut zum Prüfen.</string>
     <string name="widget_updates_loading">Kiln…</string>
-    <string name="widget_updates_title">Kiln</string>
+    <string name="widget_updates_title">Updates</string>
     <string name="widget_updates_queued">Update-Check eingereiht…</string>
     <string name="widget_updates_check_now">Jetzt prüfen</string>
-    <string name="widget_updates_trim">Caches leeren</string>
-    <string name="widget_updates_trim_confirm">Leeren bestätigen</string>
-    <string name="widget_updates_trim_cancel">Abbrechen</string>
     <string name="widget_updates_zero">Keine Updates</string>
     <plurals name="widget_updates_count">
         <item quantity="one">%d Update</item>
         <item quantity="other">%d Updates</item>
     </plurals>
+
+    <string name="widget_cache_title">Cache</string>
+    <string name="widget_cache_description">App-Caches mit Bestätigung leeren. Benötigt Shizuku oder Root.</string>
+    <string name="widget_cache_explain">Caches aller Apps auf diesem Gerät leeren.</string>
+    <string name="widget_cache_need_privilege">Zum Cache-Leeren werden Shizuku oder Root benötigt.</string>
+    <string name="widget_cache_clear">Caches leeren</string>
+    <string name="widget_cache_confirm">Leeren bestätigen</string>
+    <string name="widget_cache_cancel">Abbrechen</string>
+    <string name="widget_cache_open_setup">Setup öffnen</string>
+
+    <string name="widget_processes_title">Prozesse</string>
+    <string name="widget_processes_description">Top-Apps nach Speicher mit Beenden. Benötigt Shizuku oder Root.</string>
+    <string name="widget_processes_need_shizuku">Zum Anzeigen der Prozesse werden Shizuku oder Root benötigt.</string>
+    <string name="widget_processes_open_setup">Setup öffnen</string>
+    <string name="widget_processes_refresh">Aktualisieren</string>
+    <string name="widget_processes_kill">Beenden</string>
+    <string name="widget_processes_kill_confirm">Beenden bestätigen</string>
+    <string name="widget_processes_kill_cancel">Abbrechen</string>
+    <string name="widget_processes_empty">Noch keine Prozessdaten</string>
+
     <string name="tile_updates_label">Kiln-Updates</string>
     <string name="tile_updates_subtitle_zero">Keine Updates</string>
     <plurals name="tile_updates_subtitle_count">

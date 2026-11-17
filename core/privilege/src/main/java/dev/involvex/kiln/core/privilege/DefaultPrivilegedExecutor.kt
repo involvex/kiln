@@ -18,6 +18,8 @@ import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegeStatus
 import dev.involvex.kiln.core.model.PrivilegeTier
 import dev.involvex.kiln.core.model.PrivilegedExecutor
+import dev.involvex.kiln.core.model.ProcessStat
+import dev.involvex.kiln.core.model.ProcessStatsParser
 import dev.involvex.kiln.core.model.SelfTestReport
 import dev.involvex.kiln.core.model.ShizukuSetupPhase
 import dev.involvex.kiln.core.privilege.shell.ShellAllowlist
@@ -476,11 +478,15 @@ class DefaultPrivilegedExecutor @Inject constructor(
     }
 
     override suspend fun forceStopPackage(packageName: String): Result<Unit> = withContext(ioDispatcher) {
-        if (PrivilegeCapability.ACCESS_ANDROID_DATA !in currentStatus().capabilities) {
-            return@withContext Result.failure("capability_missing:ACCESS_ANDROID_DATA")
+        val caps = currentStatus().capabilities
+        if (PrivilegeCapability.FORCE_STOP !in caps && PrivilegeCapability.ACCESS_ANDROID_DATA !in caps) {
+            return@withContext Result.failure("capability_missing:FORCE_STOP")
         }
         if (!ShellAllowlist.isSafePackageName(packageName)) {
             return@withContext Result.failure("invalid_package")
+        }
+        if (packageName == context.packageName) {
+            return@withContext Result.failure("cannot_stop_self")
         }
         when (val out = invokeAllowlisted(ShellAllowlist.AM_FORCE_STOP, listOf(packageName))) {
             is Result.Failure -> out
@@ -492,6 +498,45 @@ class DefaultPrivilegedExecutor @Inject constructor(
                     Result.success(Unit)
                 }
             }
+        }
+    }
+
+    override suspend fun listProcessStats(limit: Int): Result<List<ProcessStat>> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.RUN_SHELL_DIAGNOSTIC !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:RUN_SHELL_DIAGNOSTIC")
+        }
+        val memOut = when (val out = invokeAllowlisted(ShellAllowlist.DUMPSYS_MEMINFO, emptyList())) {
+            is Result.Failure -> return@withContext out
+            is Result.Success -> out.value
+        }
+        if (memOut.startsWith("ERR:")) {
+            return@withContext Result.failure(memOut)
+        }
+        val cpuOut = when (val out = invokeAllowlisted(ShellAllowlist.DUMPSYS_CPUINFO, emptyList())) {
+            is Result.Failure -> ""
+            is Result.Success -> if (out.value.startsWith("ERR:")) "" else out.value
+        }
+        val mem = ProcessStatsParser.parseMeminfo(memOut)
+        val cpu = ProcessStatsParser.parseCpuinfo(cpuOut)
+        val labels = resolveLabels(mem.map { it.packageName })
+        val merged = ProcessStatsParser.merge(
+            mem = mem.map { row ->
+                row.copy(label = labels[row.packageName] ?: row.label)
+            },
+            cpuByPackage = cpu,
+            kilnPackageName = context.packageName,
+            limit = limit,
+        )
+        Result.success(merged)
+    }
+
+    private fun resolveLabels(packageNames: List<String>): Map<String, String> {
+        val pm = context.packageManager
+        return packageNames.associateWith { pkg ->
+            runCatching {
+                val info = pm.getApplicationInfo(pkg, 0)
+                pm.getApplicationLabel(info).toString()
+            }.getOrElse { pkg.substringAfterLast('.') }
         }
     }
 

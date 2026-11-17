@@ -51,6 +51,7 @@ import dev.involvex.kiln.feature.sources.discovery.CatalogDetailRoute
 import dev.involvex.kiln.feature.sources.discovery.DiscoveryRoute
 import dev.involvex.kiln.feature.termux.TermuxRoute
 import dev.involvex.kiln.feature.widgets.ManageDeepLinkStore
+import dev.involvex.kiln.feature.widgets.PrivilegeSetupDeepLinkStore
 import dev.involvex.kiln.navigation.ActivityLogKey
 import dev.involvex.kiln.navigation.AppDetailKey
 import dev.involvex.kiln.navigation.AppsKey
@@ -84,6 +85,7 @@ private data class TopLevelDestination(val key: Any, val labelRes: Int, val icon
 fun KilnApp(
     modifier: Modifier = Modifier,
     manageDeepLinkStore: ManageDeepLinkStore? = null,
+    privilegeSetupDeepLinkStore: PrivilegeSetupDeepLinkStore? = null,
     incomingApkInstallStore: IncomingApkInstallStore? = null,
 ) {
     val destinations = listOf(
@@ -100,6 +102,16 @@ fun KilnApp(
             manageDeepLinkStore.pending.collect { pending ->
                 if (pending && manageDeepLinkStore.consume()) {
                     topLevelBackStack.addTopLevel(ManageKey)
+                }
+            }
+        }
+    }
+
+    if (privilegeSetupDeepLinkStore != null) {
+        LaunchedEffect(privilegeSetupDeepLinkStore) {
+            privilegeSetupDeepLinkStore.pending.collect { pending ->
+                if (pending && privilegeSetupDeepLinkStore.consume()) {
+                    topLevelBackStack.add(PrivilegeSetupKey)
                 }
             }
         }
