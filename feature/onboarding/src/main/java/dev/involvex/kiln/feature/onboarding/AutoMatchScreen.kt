@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -75,6 +76,9 @@ fun AutoMatchRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
         onRequestWarningAccept = viewModel::requestWarningAccept,
         onDismissWarningConfirm = viewModel::dismissWarningConfirm,
         onConfirmWarningAccept = viewModel::confirmWarningAccept,
+        onRequestUnlink = viewModel::requestUnlink,
+        onDismissUnlinkConfirm = viewModel::dismissUnlinkConfirm,
+        onConfirmUnlink = viewModel::confirmUnlink,
         onClearMessage = viewModel::clearMessage,
         onSearchQueryChange = viewModel::setSearchQuery,
         onConfidenceFilterChange = viewModel::setConfidenceFilter,
@@ -85,6 +89,7 @@ fun AutoMatchRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 @Composable
+@Suppress("LongParameterList")
 fun AutoMatchScreen(
     state: AutoMatchUiState,
     onBack: () -> Unit,
@@ -99,6 +104,9 @@ fun AutoMatchScreen(
     onRequestWarningAccept: (MatchCandidate) -> Unit,
     onDismissWarningConfirm: () -> Unit,
     onConfirmWarningAccept: () -> Unit,
+    onRequestUnlink: (MatchCandidate) -> Unit,
+    onDismissUnlinkConfirm: () -> Unit,
+    onConfirmUnlink: () -> Unit,
     onClearMessage: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onConfidenceFilterChange: (AutoMatchConfidenceFilter) -> Unit,
@@ -110,8 +118,13 @@ fun AutoMatchScreen(
     val linkedMessage = state.snackbarLinkedCount?.let { count ->
         stringResource(R.string.onboarding_accepted_count, count)
     }
-    LaunchedEffect(linkedMessage) {
-        val message = linkedMessage ?: return@LaunchedEffect
+    val unlinkedMessage = if (state.snackbarUnlinked) {
+        stringResource(R.string.onboarding_unlinked)
+    } else {
+        null
+    }
+    LaunchedEffect(linkedMessage, unlinkedMessage) {
+        val message = linkedMessage ?: unlinkedMessage ?: return@LaunchedEffect
         snackbarHostState.showSnackbar(message)
         onConsumeSnackbar()
     }
@@ -133,6 +146,7 @@ fun AutoMatchScreen(
                 onRefresh = onRefresh,
                 onOpenLink = onOpenLink,
                 onRequestWarningAccept = onRequestWarningAccept,
+                onRequestUnlink = onRequestUnlink,
                 onClearMessage = onClearMessage,
                 onSearchQueryChange = onSearchQueryChange,
                 onConfidenceFilterChange = onConfidenceFilterChange,
@@ -147,6 +161,8 @@ fun AutoMatchScreen(
         onLinkGithub = onLinkGithub,
         onDismissWarningConfirm = onDismissWarningConfirm,
         onConfirmWarningAccept = onConfirmWarningAccept,
+        onDismissUnlinkConfirm = onDismissUnlinkConfirm,
+        onConfirmUnlink = onConfirmUnlink,
     )
 }
 
@@ -169,11 +185,14 @@ private fun AutoMatchDialogs(
     onLinkGithub: (packageName: String, ownerRepo: String) -> Unit,
     onDismissWarningConfirm: () -> Unit,
     onConfirmWarningAccept: () -> Unit,
+    onDismissUnlinkConfirm: () -> Unit,
+    onConfirmUnlink: () -> Unit,
 ) {
     state.linkTarget?.let { target ->
         LinkSourceDialog(
             candidate = target,
             enabledRepos = state.enabledRepos,
+            savedGithubRepos = state.savedGithubRepos,
             onDismiss = onDismissLink,
             onLinkFdroid = { onLinkFdroid(target.packageName, it) },
             onLinkGithub = { onLinkGithub(target.packageName, it) },
@@ -200,6 +219,23 @@ private fun AutoMatchDialogs(
             dismissButton = {
                 TextButton(onClick = onDismissWarningConfirm) {
                     Text(stringResource(R.string.onboarding_warning_confirm_cancel))
+                }
+            },
+        )
+    }
+    state.unlinkConfirmTarget?.let { target ->
+        AlertDialog(
+            onDismissRequest = onDismissUnlinkConfirm,
+            title = { Text(stringResource(R.string.onboarding_stop_tracking_title, target.label)) },
+            text = { Text(stringResource(R.string.onboarding_stop_tracking_body)) },
+            confirmButton = {
+                TextButton(onClick = onConfirmUnlink) {
+                    Text(stringResource(R.string.onboarding_stop_tracking_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissUnlinkConfirm) {
+                    Text(stringResource(R.string.onboarding_stop_tracking_cancel))
                 }
             },
         )
@@ -256,6 +292,7 @@ private fun AutoMatchList(
     onRefresh: () -> Unit,
     onOpenLink: (MatchCandidate) -> Unit,
     onRequestWarningAccept: (MatchCandidate) -> Unit,
+    onRequestUnlink: (MatchCandidate) -> Unit,
     onClearMessage: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onConfidenceFilterChange: (AutoMatchConfidenceFilter) -> Unit,
@@ -285,10 +322,46 @@ private fun AutoMatchList(
             onConfidenceFilterChange = onConfidenceFilterChange,
             onShowLinkedChange = onShowLinkedChange,
         )
-        matchSection(titleHigh, groups.high, state.selected, true, onToggle, onOpenLink, onRequestWarningAccept)
-        matchSection(titleMedium, groups.medium, state.selected, true, onToggle, onOpenLink, onRequestWarningAccept)
-        matchSection(titleWarning, groups.warning, state.selected, false, onToggle, onOpenLink, onRequestWarningAccept)
-        matchSection(titleNone, groups.none, state.selected, false, onToggle, onOpenLink, onRequestWarningAccept)
+        matchSection(
+            titleHigh,
+            groups.high,
+            state.selected,
+            true,
+            onToggle,
+            onOpenLink,
+            onRequestWarningAccept,
+            onRequestUnlink,
+        )
+        matchSection(
+            titleMedium,
+            groups.medium,
+            state.selected,
+            true,
+            onToggle,
+            onOpenLink,
+            onRequestWarningAccept,
+            onRequestUnlink,
+        )
+        matchSection(
+            titleWarning,
+            groups.warning,
+            state.selected,
+            false,
+            onToggle,
+            onOpenLink,
+            onRequestWarningAccept,
+            onRequestUnlink,
+        )
+        matchSection(
+            titleNone,
+            groups.none,
+            state.selected,
+            false,
+            onToggle,
+            onOpenLink,
+            onRequestWarningAccept,
+            onRequestUnlink,
+        )
     }
 }
 
@@ -426,6 +499,7 @@ private fun ActionRow(onAcceptAllSafe: () -> Unit, onAcceptSelected: () -> Unit,
 private fun errorMessage(key: String): String = when (key) {
     "bad_github" -> stringResource(R.string.onboarding_link_bad_github)
     "link_failed" -> stringResource(R.string.onboarding_link_failed)
+    "unlink_failed" -> stringResource(R.string.onboarding_unlink_failed)
     else -> key
 }
 
@@ -437,12 +511,16 @@ private fun LazyListScope.matchSection(
     onToggle: (String) -> Unit,
     onOpenLink: (MatchCandidate) -> Unit,
     onRequestWarningAccept: (MatchCandidate) -> Unit,
+    onRequestUnlink: (MatchCandidate) -> Unit,
 ) {
     if (items.isEmpty()) return
     item {
         Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
     }
-    items(items, key = { it.packageName + it.repoId + it.confidence.name + it.alreadyLinked }) { candidate ->
+    items(
+        items,
+        key = { it.packageName + it.repoId + it.confidence.name + it.alreadyLinked + it.trackedSourceLabel },
+    ) { candidate ->
         MatchRow(
             candidate = candidate,
             checked = candidate.packageName in selected,
@@ -450,6 +528,7 @@ private fun LazyListScope.matchSection(
             onToggle = { onToggle(candidate.packageName) },
             onOpenLink = { onOpenLink(candidate) },
             onRequestWarningAccept = { onRequestWarningAccept(candidate) },
+            onRequestUnlink = { onRequestUnlink(candidate) },
         )
     }
 }
@@ -463,57 +542,78 @@ private fun MatchRow(
     onToggle: () -> Unit,
     onOpenLink: () -> Unit,
     onRequestWarningAccept: () -> Unit,
+    onRequestUnlink: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (selectable) Modifier.clickable(onClick = onToggle) else Modifier)
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        if (selectable) {
-            Checkbox(checked = checked, onCheckedChange = { onToggle() })
-        } else {
-            Box(Modifier.size(48.dp))
-        }
-        PackageIcon(packageName = candidate.packageName)
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(candidate.label, style = MaterialTheme.typography.bodyLarge)
-            Text(candidate.packageName, style = MaterialTheme.typography.bodySmall)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                ConfidenceChip(candidate.confidence)
-                if (candidate.alreadyLinked) {
-                    LinkedChip()
-                }
-                if (candidate.sourceLabel.isNotBlank()) {
-                    SuggestionChip(onClick = {}, label = { Text(candidate.sourceLabel) }, enabled = false)
-                }
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (selectable) Modifier.clickable(onClick = onToggle) else Modifier)
+                .padding(12.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (selectable) {
+                Checkbox(checked = checked, onCheckedChange = { onToggle() })
             }
-            Text(
-                text = rationaleText(candidate.rationaleKey),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (candidate.alternateRepoLabels.isNotEmpty()) {
+            PackageIcon(packageName = candidate.packageName)
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(candidate.label, style = MaterialTheme.typography.bodyLarge)
+                Text(candidate.packageName, style = MaterialTheme.typography.bodySmall)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    ConfidenceChip(candidate.confidence)
+                    if (candidate.alreadyLinked) {
+                        LinkedChip()
+                    }
+                    val suggestionLabel = when {
+                        candidate.alreadyLinked && candidate.trackedSourceLabel.isNotBlank() ->
+                            candidate.trackedSourceLabel
+
+                        candidate.sourceLabel.isNotBlank() -> candidate.sourceLabel
+
+                        else -> ""
+                    }
+                    if (suggestionLabel.isNotBlank()) {
+                        SuggestionChip(onClick = {}, label = { Text(suggestionLabel) }, enabled = false)
+                    }
+                }
                 Text(
-                    text = stringResource(
-                        R.string.onboarding_also_in_repos,
-                        candidate.alternateRepoLabels.joinToString(),
-                    ),
+                    text = matchStatusText(candidate),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            }
-            if (!candidate.alreadyLinked) {
+                if (candidate.alternateRepoLabels.isNotEmpty() && !candidate.alreadyLinked) {
+                    Text(
+                        text = stringResource(
+                            R.string.onboarding_also_in_repos,
+                            candidate.alternateRepoLabels.joinToString(),
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 MatchRowActions(
-                    confidence = candidate.confidence,
+                    candidate = candidate,
                     onOpenLink = onOpenLink,
                     onRequestWarningAccept = onRequestWarningAccept,
+                    onRequestUnlink = onRequestUnlink,
                 )
             }
         }
     }
+}
+
+@Composable
+private fun matchStatusText(candidate: MatchCandidate): String = when {
+    candidate.alreadyLinked && candidate.trackedSourceLabel.isNotBlank() ->
+        stringResource(R.string.onboarding_tracking_from, candidate.trackedSourceLabel)
+
+    candidate.alreadyLinked -> stringResource(R.string.onboarding_tracking_unspecified)
+
+    else -> rationaleText(candidate.rationaleKey)
 }
 
 @Composable
@@ -531,8 +631,24 @@ private fun LinkedChip() {
 }
 
 @Composable
-private fun MatchRowActions(confidence: MatchConfidence, onOpenLink: () -> Unit, onRequestWarningAccept: () -> Unit) {
-    when (confidence) {
+private fun MatchRowActions(
+    candidate: MatchCandidate,
+    onOpenLink: () -> Unit,
+    onRequestWarningAccept: () -> Unit,
+    onRequestUnlink: () -> Unit,
+) {
+    if (candidate.alreadyLinked) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick = onOpenLink) {
+                Text(stringResource(R.string.onboarding_change_source))
+            }
+            TextButton(onClick = onRequestUnlink) {
+                Text(stringResource(R.string.onboarding_stop_tracking))
+            }
+        }
+        return
+    }
+    when (candidate.confidence) {
         MatchConfidence.WARNING -> {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = onRequestWarningAccept) {
@@ -612,6 +728,7 @@ private fun PackageIcon(packageName: String, modifier: Modifier = Modifier) {
 private fun LinkSourceDialog(
     candidate: MatchCandidate,
     enabledRepos: List<LinkableRepo>,
+    savedGithubRepos: List<String>,
     onDismiss: () -> Unit,
     onLinkFdroid: (repoId: String) -> Unit,
     onLinkGithub: (ownerRepo: String) -> Unit,
@@ -619,6 +736,9 @@ private fun LinkSourceDialog(
     var githubInput by remember(candidate.packageName) {
         mutableStateOf(
             candidate.githubOwnerRepo
+                ?: candidate.trackedSourceLabel
+                    .removePrefix("GitHub ")
+                    .takeIf { it.contains('/') }
                 ?: candidate.sourceCodeSuggestion
                     ?.substringAfter("github.com/")
                     ?.trim('/')
@@ -646,7 +766,10 @@ private fun LinkSourceDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.onboarding_link_dialog_body), style = MaterialTheme.typography.bodyMedium)
                 Text(stringResource(R.string.onboarding_link_fdroid_section), style = MaterialTheme.typography.titleSmall)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
                     suggestedRepos.forEach { repo ->
                         AssistChip(onClick = { onLinkFdroid(repo.id) }, label = { Text(repo.name) })
                     }
@@ -657,6 +780,26 @@ private fun LinkSourceDialog(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+                Text(
+                    stringResource(R.string.onboarding_link_saved_github_section),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                if (savedGithubRepos.isEmpty()) {
+                    Text(
+                        stringResource(R.string.onboarding_link_no_saved_github),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        savedGithubRepos.forEach { ownerRepo ->
+                            AssistChip(onClick = { onLinkGithub(ownerRepo) }, label = { Text(ownerRepo) })
+                        }
+                    }
                 }
                 Text(stringResource(R.string.onboarding_link_github_section), style = MaterialTheme.typography.titleSmall)
                 OutlinedTextField(

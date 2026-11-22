@@ -2,13 +2,30 @@ package dev.involvex.kiln.feature.sources
 
 /**
  * Primary compare by versionCode; fallback to loose versionName segments.
- * @return positive if [remoteCode]/[remoteName] is newer than installed.
+ * @return true if [remoteCode]/[remoteName] is newer than installed.
  */
 fun isRemoteNewer(installedCode: Long, installedName: String?, remoteCode: Long, remoteName: String?): Boolean {
     if (remoteCode > 0 && installedCode > 0) {
         return remoteCode > installedCode
     }
     return compareVersionNames(remoteName, installedName) > 0
+}
+
+/**
+ * GitHub tags are not Android versionCodes. Prefer dotted version-name compare when both
+ * sides look like `1.2.3` / `v158.0.8127.42`; otherwise fall back to [isRemoteNewer].
+ */
+fun isGitHubRemoteNewer(installedCode: Long, installedName: String?, remoteCode: Long, remoteName: String?): Boolean {
+    if (hasDottedVersion(installedName) && hasDottedVersion(remoteName)) {
+        return compareVersionNames(remoteName, installedName) > 0
+    }
+    return isRemoteNewer(installedCode, installedName, remoteCode, remoteName)
+}
+
+fun hasDottedVersion(raw: String?): Boolean {
+    if (raw.isNullOrBlank()) return false
+    val trimmed = raw.trim().trimStart('v', 'V')
+    return trimmed.contains('.') && trimmed.any { it.isDigit() }
 }
 
 fun compareVersionNames(a: String?, b: String?): Int {

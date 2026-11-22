@@ -298,6 +298,8 @@ class AppsViewModelTest {
 
         override fun observeEnabledRepos(): Flow<List<RepoConfig>> = flowOf(emptyList())
 
+        override fun observeSavedGithubOwnerRepos(): Flow<List<String>> = flowOf(emptyList())
+
         override suspend fun linkManagedSource(
             packageName: String,
             sourceId: String,
@@ -307,6 +309,8 @@ class AppsViewModelTest {
             pinned: Boolean,
             githubChannel: GitHubReleaseChannel?,
         ): Result<Unit> = Result.success(Unit)
+
+        override suspend fun unlinkManagedPackage(packageName: String): Result<Unit> = Result.success(Unit)
 
         override suspend fun setGitHubChannel(packageName: String, channel: GitHubReleaseChannel): Result<Unit> = Result.success(Unit)
     }

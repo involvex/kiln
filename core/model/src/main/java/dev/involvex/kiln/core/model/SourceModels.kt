@@ -176,6 +176,9 @@ interface AppUpdateRepository {
     /** Enabled F-Droid-format repos for manual source linking. */
     fun observeEnabledRepos(): kotlinx.coroutines.flow.Flow<List<RepoConfig>>
 
+    /** Distinct GitHub `owner/repo` values already saved on managed rows (for link-dialog chips). */
+    fun observeSavedGithubOwnerRepos(): kotlinx.coroutines.flow.Flow<List<String>>
+
     /**
      * Persist [ignoreUpdates] for [packageName]. Creates a minimal managed row when missing
      * (source from current update info or `"manual"`).
@@ -194,6 +197,7 @@ interface AppUpdateRepository {
     /**
      * Manually bind an installed package to an update source (F-Droid repo id or `github:owner/repo`).
      * Sets [pinned] so later auto-match / priority does not silently override the choice.
+     * When [githubOwnerRepo] is set, probes that repo before returning (not only the local index).
      */
     suspend fun linkManagedSource(
         packageName: String,
@@ -204,6 +208,12 @@ interface AppUpdateRepository {
         pinned: Boolean = true,
         githubChannel: GitHubReleaseChannel? = null,
     ): Result<Unit>
+
+    /**
+     * Stop tracking an installed package: deletes its `managed_apps` row and recomputes badges.
+     * Does not uninstall the app. Distinct from [setIgnoreUpdates] and from watch-only [WatchlistRepository.unwatchPackage].
+     */
+    suspend fun unlinkManagedPackage(packageName: String): Result<Unit>
 
     /**
      * Sets the GitHub update channel for a managed app. No-op failure when the package

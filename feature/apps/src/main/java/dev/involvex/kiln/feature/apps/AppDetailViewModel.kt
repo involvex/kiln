@@ -88,6 +88,11 @@ class AppDetailViewModel @Inject constructor(
                 }
             },
             viewModelScope.launch {
+                appUpdateRepository.observeSavedGithubOwnerRepos().collect { repos ->
+                    _uiState.update { it.copy(savedGithubRepos = repos) }
+                }
+            },
+            viewModelScope.launch {
                 rollbackCache.observe(packageName).collect { entries ->
                     val installedCode = _uiState.value.detail?.versionCode
                     val older = entries.filter { installedCode == null || it.versionCode < installedCode }
@@ -179,6 +184,9 @@ class AppDetailViewModel @Inject constructor(
             is AppDetailEvent.LinkFdroidRepo,
             is AppDetailEvent.LinkGithub,
             is AppDetailEvent.SetGitHubChannel,
+            AppDetailEvent.RequestStopTracking,
+            AppDetailEvent.ConfirmStopTracking,
+            AppDetailEvent.DismissStopTracking,
             -> onLinkEvent(event)
 
             AppDetailEvent.OpenUnknownSourcesSettings,
@@ -201,11 +209,41 @@ class AppDetailViewModel @Inject constructor(
     private fun onLinkEvent(event: AppDetailEvent) {
         when (event) {
             AppDetailEvent.OpenLinkSource -> _uiState.update { it.copy(showLinkSourceDialog = true) }
+
             AppDetailEvent.DismissLinkSource -> _uiState.update { it.copy(showLinkSourceDialog = false) }
+
             is AppDetailEvent.LinkFdroidRepo -> linkFdroid(event.repoId)
+
             is AppDetailEvent.LinkGithub -> linkGithub(event.ownerRepo)
+
             is AppDetailEvent.SetGitHubChannel -> setGitHubChannel(event.channel)
+
+            AppDetailEvent.RequestStopTracking ->
+                _uiState.update { it.copy(showStopTrackingConfirm = true) }
+
+            AppDetailEvent.DismissStopTracking ->
+                _uiState.update { it.copy(showStopTrackingConfirm = false) }
+
+            AppDetailEvent.ConfirmStopTracking -> confirmStopTracking()
+
             else -> Unit
+        }
+    }
+
+    private fun confirmStopTracking() {
+        val pkg = packageName ?: return
+        viewModelScope.launch {
+            when (val result = appUpdateRepository.unlinkManagedPackage(pkg)) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(showStopTrackingConfirm = false) }
+                    showMessage("unlinked")
+                }
+
+                is Result.Failure -> {
+                    _uiState.update { it.copy(showStopTrackingConfirm = false) }
+                    showMessage(result.message.ifBlank { "unlink_failed" })
+                }
+            }
         }
     }
 

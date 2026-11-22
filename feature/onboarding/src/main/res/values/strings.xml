@@ -21,16 +21,26 @@
     <string name="onboarding_chip_high">High</string>
     <string name="onboarding_chip_medium">Review</string>
     <string name="onboarding_chip_warning">Signature</string>
-    <string name="onboarding_chip_none">None</string>
+    <string name="onboarding_chip_none">No match</string>
     <string name="onboarding_rationale_signer_match">Package and signing certificate match this repo.</string>
     <string name="onboarding_rationale_index_no_signers">Package found in the index, but the repo listed no signers to verify.</string>
     <string name="onboarding_rationale_github_map">Suggested from the on-device GitHub map (no F-Droid index hit).</string>
     <string name="onboarding_rationale_signer_mismatch">Same package id, different signing certificate than the index entry.</string>
     <string name="onboarding_rationale_not_found">Not in the synced index or GitHub map.</string>
+    <string name="onboarding_tracking_from">Tracking updates from %1$s.</string>
+    <string name="onboarding_tracking_unspecified">Linked for update checks, but no source is set yet.</string>
     <string name="onboarding_also_in_repos">Also listed in: %1$s</string>
     <string name="onboarding_accept_warning">Accept anyway</string>
     <string name="onboarding_link_source">Link source…</string>
     <string name="onboarding_change_source">Change source…</string>
+    <string name="onboarding_stop_tracking">Stop tracking</string>
+    <string name="onboarding_stop_tracking_title">Stop tracking %1$s?</string>
+    <string name="onboarding_stop_tracking_body">Kiln will remove the update source for this app. The app stays installed. You can link a source again later.</string>
+    <string name="onboarding_stop_tracking_confirm">Stop tracking</string>
+    <string name="onboarding_stop_tracking_cancel">Cancel</string>
+    <string name="onboarding_unlinked">Stopped tracking.</string>
+    <string name="onboarding_unlink_failed">Could not stop tracking.</string>
+    <string name="onboarding_link_saved_github_section">Saved GitHub repos</string>
     <string name="onboarding_warning_confirm_title">Accept signature mismatch?</string>
     <string name="onboarding_warning_confirm_body">%1$s would track updates from %2$s even though the signing certificate does not match. Future updates from that source stay blocked until the signature matches. Pin this choice?</string>
     <string name="onboarding_warning_confirm_accept">Pin &amp; accept</string>
@@ -45,6 +55,7 @@
     <string name="onboarding_link_cancel">Cancel</string>
     <string name="onboarding_link_bad_github">Use owner/repo (one slash).</string>
     <string name="onboarding_link_failed">Could not save the link.</string>
+    <string name="onboarding_link_no_saved_github">No GitHub sources saved yet. Add one under Sources or type owner/repo below.</string>
 
     <string name="privilege_setup_title">Privilege setup</string>
     <string name="privilege_setup_intro">Privileged actions (silent install, later cache clean / debloat) need Shizuku or ShizukuPlus. Without it, Kiln stays on Tier NONE with system dialogs.</string>

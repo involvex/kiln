@@ -76,6 +76,7 @@ fun AppDetailContent(
     onUpdateCooldownChanged: (days: Int?) -> Unit = {},
     managedLink: ManagedSourceLink? = null,
     onOpenLinkSource: () -> Unit = {},
+    onStopTracking: () -> Unit = {},
     onGitHubChannelChange: (GitHubReleaseChannel) -> Unit = {},
     hasGitHubToken: Boolean = false,
     onInstallUpdate: () -> Unit = {},
@@ -128,6 +129,7 @@ fun AppDetailContent(
             ManagedSourceSection(
                 managedLink = managedLink,
                 onOpenLinkSource = onOpenLinkSource,
+                onStopTracking = onStopTracking,
                 onGitHubChannelChange = onGitHubChannelChange,
                 hasGitHubToken = hasGitHubToken,
                 showOpenInPlayStore = PlayStoreLinks.shouldOfferOpenInPlayStore(
@@ -466,6 +468,7 @@ private fun RollbackSection(
 private fun ManagedSourceSection(
     managedLink: ManagedSourceLink?,
     onOpenLinkSource: () -> Unit,
+    onStopTracking: () -> Unit,
     onGitHubChannelChange: (GitHubReleaseChannel) -> Unit,
     hasGitHubToken: Boolean,
     showOpenInPlayStore: Boolean,
@@ -545,6 +548,11 @@ private fun ManagedSourceSection(
                     },
                 ),
             )
+        }
+        if (managedLink != null) {
+            OutlinedButton(onClick = onStopTracking, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.feature_apps_stop_tracking))
+            }
         }
     }
 }
