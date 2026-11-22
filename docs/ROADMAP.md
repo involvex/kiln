@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M47** Polish + signed release Done (#86). App version **0.2.5** (code 8), tag `v0.2.5` (`kiln-0.2.5.apk` upload-keystore signed). HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M48** Storage large files + trash In progress (`m48-storage-large-files-trash`). App version **0.2.5** (code 8), tag `v0.2.5`. Next: M49 split backup restore, M50 component lists → **0.2.6**. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -62,6 +62,9 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M45** | Hilt stability + App Detail overhaul | Done | [`prompts/M45-stability-app-detail.md`](./prompts/M45-stability-app-detail.md) · [#79](https://github.com/involvex/kiln/pull/79) | KSP incremental off + Hilt VM map guard; App Detail hero/actions/cards; kilnHiltViewModel harden |
 | **M46** | Widget rework | Done | [`prompts/M46-widget-rework.md`](./prompts/M46-widget-rework.md) · [#81](https://github.com/involvex/kiln/pull/81) | Updates list+Check; Cache widget; Processes mem/CPU+kill (Shizuku) |
 | **M47** | Polish + signed 0.2.5 | Done | [`prompts/M47-polish-signed-release.md`](./prompts/M47-polish-signed-release.md) · [#86](https://github.com/involvex/kiln/pull/86) | Require upload signing + apksigner; icon decode perf; tag `v0.2.5` |
+| **M48** | Storage large files + trash | In progress | [`prompts/M48-storage-large-files-trash.md`](./prompts/M48-storage-large-files-trash.md) · `m48-storage-large-files-trash` | SAF ≥50MB files; same-size+hash duplicates; `.kiln-trash` undo/purge; maintenance age-prune |
+| **M49** | Split backup restore | Planned | — | Restore enqueue all APKs from archive (M39 installer) |
+| **M50** | App component lists | Planned | — | Exported services/receivers/providers (read-only) |
 
 ---
 
@@ -125,7 +128,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Background controls | ✅ HyperOS Autostart + battery Unrestricted/Optimized/Restricted | SHIZUKU (`MANAGE_APP_OPS`) |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; ✅ M39 multi-session + `install-multiple` for `.apks`/`.xapk`/`.apkm` (SAF + Share/VIEW) | NONE / SHIZUKU |
-| Storage / cleaner | ✅ Size bars; APK leftovers; orphan Android/data+obb; cache clear | NONE / SHIZUKU (`CLEAR_CACHE`, `ACCESS_ANDROID_DATA`) |
+| Storage / cleaner | ✅ Size bars; APK leftovers; **M48** large files (≥50MB) + same-size/hash duplicates; `.kiln-trash` undo/purge (14d maintenance prune); orphan Android/data+obb; cache clear | NONE / SHIZUKU (`CLEAR_CACHE`, `ACCESS_ANDROID_DATA`) |
 | APK tools (inspect / compare / resign / merge) | ✅ M29 inspect+compare; ✅ M31 resign + split export; ✅ M35 universal merge (#56) | NONE |
 | Freeze / hibernate | ✅ M36 (#58) — `pm suspend`/`unsuspend`; Settings list (separate from Debloat) | ≥ SHIZUKU (`DEBLOAT`) |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |

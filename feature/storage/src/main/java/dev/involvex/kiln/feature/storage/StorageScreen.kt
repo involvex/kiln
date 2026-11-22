@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package dev.involvex.kiln.feature.storage
 
 import android.content.Intent
@@ -46,6 +48,7 @@ import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.core.model.ApkLeftover
 import dev.involvex.kiln.core.model.AppStorageStats
+import dev.involvex.kiln.core.model.DuplicateFileGroup
 import dev.involvex.kiln.core.model.OrphanStorageDir
 
 @Composable
@@ -104,6 +107,13 @@ fun StorageRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, onOp
         onPickLeftoverFolder = { treePicker.launch(null) },
         onToggleLeftover = viewModel::toggleLeftover,
         onRequestDeleteLeftovers = viewModel::requestDeleteSelectedLeftovers,
+        onToggleLargeFile = viewModel::toggleLargeFile,
+        onRequestDeleteLargeFiles = viewModel::requestDeleteSelectedLargeFiles,
+        onToggleDuplicate = viewModel::toggleDuplicate,
+        onRequestDeleteDuplicates = viewModel::requestDeleteSelectedDuplicates,
+        onToggleTrash = viewModel::toggleTrash,
+        onRequestRestoreTrash = viewModel::requestRestoreSelectedTrash,
+        onRequestPurgeTrash = viewModel::requestPurgeSelectedTrash,
         onRefreshOrphans = viewModel::loadOrphans,
         onToggleOrphan = viewModel::toggleOrphan,
         onRequestDeleteOrphans = viewModel::requestDeleteSelectedOrphans,
@@ -132,6 +142,13 @@ fun StorageScreen(
     onPickLeftoverFolder: () -> Unit,
     onToggleLeftover: (String) -> Unit,
     onRequestDeleteLeftovers: () -> Unit,
+    onToggleLargeFile: (String) -> Unit,
+    onRequestDeleteLargeFiles: () -> Unit,
+    onToggleDuplicate: (String) -> Unit,
+    onRequestDeleteDuplicates: () -> Unit,
+    onToggleTrash: (String) -> Unit,
+    onRequestRestoreTrash: () -> Unit,
+    onRequestPurgeTrash: () -> Unit,
     onRefreshOrphans: () -> Unit,
     onToggleOrphan: (OrphanStorageDir) -> Unit,
     onRequestDeleteOrphans: () -> Unit,
@@ -167,6 +184,13 @@ fun StorageScreen(
                 onPickLeftoverFolder = onPickLeftoverFolder,
                 onToggleLeftover = onToggleLeftover,
                 onRequestDeleteLeftovers = onRequestDeleteLeftovers,
+                onToggleLargeFile = onToggleLargeFile,
+                onRequestDeleteLargeFiles = onRequestDeleteLargeFiles,
+                onToggleDuplicate = onToggleDuplicate,
+                onRequestDeleteDuplicates = onRequestDeleteDuplicates,
+                onToggleTrash = onToggleTrash,
+                onRequestRestoreTrash = onRequestRestoreTrash,
+                onRequestPurgeTrash = onRequestPurgeTrash,
                 onRefreshOrphans = onRefreshOrphans,
                 onToggleOrphan = onToggleOrphan,
                 onRequestDeleteOrphans = onRequestDeleteOrphans,
@@ -183,34 +207,76 @@ fun StorageScreen(
             )
         }
         state.pendingDelete?.let { pending ->
-            val body = when (pending) {
-                is PendingStorageDelete.Leftovers -> stringResource(
-                    R.string.storage_confirm_delete_leftovers,
-                    pending.items.size,
-                )
-
-                is PendingStorageDelete.Orphans -> stringResource(
-                    R.string.storage_confirm_delete_orphans,
-                    pending.items.size,
-                )
-            }
-            AlertDialog(
-                onDismissRequest = { if (!state.deleting) onDismissDelete() },
-                title = { Text(stringResource(R.string.storage_confirm_title)) },
-                text = { Text(body) },
-                confirmButton = {
-                    TextButton(onClick = onConfirmDelete, enabled = !state.deleting) {
-                        Text(stringResource(R.string.storage_delete_confirm))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = onDismissDelete, enabled = !state.deleting) {
-                        Text(stringResource(R.string.storage_cancel))
-                    }
-                },
+            PendingDeleteDialog(
+                pending = pending,
+                deleting = state.deleting,
+                onConfirm = onConfirmDelete,
+                onDismiss = onDismissDelete,
             )
         }
     }
+}
+
+@Composable
+private fun PendingDeleteDialog(pending: PendingStorageDelete, deleting: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val body = pendingDeleteBody(pending)
+    val confirmLabel = when (pending) {
+        is PendingStorageDelete.TrashRestore -> stringResource(R.string.storage_restore_confirm)
+
+        is PendingStorageDelete.TrashPurge,
+        is PendingStorageDelete.Orphans,
+        -> stringResource(R.string.storage_delete_confirm)
+
+        else -> stringResource(R.string.storage_trash_confirm)
+    }
+    AlertDialog(
+        onDismissRequest = { if (!deleting) onDismiss() },
+        title = { Text(stringResource(R.string.storage_confirm_title)) },
+        text = { Text(body) },
+        confirmButton = {
+            TextButton(onClick = onConfirm, enabled = !deleting) {
+                Text(confirmLabel)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !deleting) {
+                Text(stringResource(R.string.storage_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun pendingDeleteBody(pending: PendingStorageDelete): String = when (pending) {
+    is PendingStorageDelete.Leftovers -> stringResource(
+        R.string.storage_confirm_trash_leftovers,
+        pending.items.size,
+    )
+
+    is PendingStorageDelete.LargeFiles -> stringResource(
+        R.string.storage_confirm_trash_large,
+        pending.items.size,
+    )
+
+    is PendingStorageDelete.Duplicates -> stringResource(
+        R.string.storage_confirm_trash_duplicates,
+        pending.items.size,
+    )
+
+    is PendingStorageDelete.TrashRestore -> stringResource(
+        R.string.storage_confirm_trash_restore,
+        pending.items.size,
+    )
+
+    is PendingStorageDelete.TrashPurge -> stringResource(
+        R.string.storage_confirm_trash_purge,
+        pending.items.size,
+    )
+
+    is PendingStorageDelete.Orphans -> stringResource(
+        R.string.storage_confirm_delete_orphans,
+        pending.items.size,
+    )
 }
 
 @Composable
@@ -251,6 +317,13 @@ private fun StorageContent(
     onPickLeftoverFolder: () -> Unit,
     onToggleLeftover: (String) -> Unit,
     onRequestDeleteLeftovers: () -> Unit,
+    onToggleLargeFile: (String) -> Unit,
+    onRequestDeleteLargeFiles: () -> Unit,
+    onToggleDuplicate: (String) -> Unit,
+    onRequestDeleteDuplicates: () -> Unit,
+    onToggleTrash: (String) -> Unit,
+    onRequestRestoreTrash: () -> Unit,
+    onRequestPurgeTrash: () -> Unit,
     onRefreshOrphans: () -> Unit,
     onToggleOrphan: (OrphanStorageDir) -> Unit,
     onRequestDeleteOrphans: () -> Unit,
@@ -290,6 +363,28 @@ private fun StorageContent(
             )
         }
         item {
+            LargeFilesSection(
+                state = state,
+                onToggle = onToggleLargeFile,
+                onDelete = onRequestDeleteLargeFiles,
+            )
+        }
+        item {
+            DuplicatesSection(
+                state = state,
+                onToggle = onToggleDuplicate,
+                onDelete = onRequestDeleteDuplicates,
+            )
+        }
+        item {
+            TrashSection(
+                state = state,
+                onToggle = onToggleTrash,
+                onRestore = onRequestRestoreTrash,
+                onPurge = onRequestPurgeTrash,
+            )
+        }
+        item {
             OrphansSection(
                 state = state,
                 onOpenPrivilegeSetup = onOpenPrivilegeSetup,
@@ -300,20 +395,7 @@ private fun StorageContent(
         }
         state.message?.let { message ->
             item {
-                val text = when {
-                    message == "capability_missing" -> stringResource(R.string.storage_capability_missing)
-
-                    message.startsWith("done:") -> {
-                        val parts = message.removePrefix("done:").split(':')
-                        stringResource(
-                            R.string.storage_result_fmt,
-                            parts.getOrNull(0)?.toIntOrNull() ?: 0,
-                            parts.getOrNull(1)?.toIntOrNull() ?: 0,
-                        )
-                    }
-
-                    else -> message
-                }
+                val text = storageMessageText(message)
                 Text(text = text, style = MaterialTheme.typography.bodyMedium)
                 TextButton(onClick = onClearMessage) {
                     Text(stringResource(R.string.storage_cancel))
@@ -332,6 +414,27 @@ private fun StorageContent(
             )
         }
     }
+}
+
+@Composable
+private fun storageMessageText(message: String): String = when {
+    message == "capability_missing" -> stringResource(R.string.storage_capability_missing)
+    message == "no_tree" -> stringResource(R.string.storage_no_tree)
+    message.startsWith("done:") -> resultFmt(R.string.storage_result_fmt, message.removePrefix("done:"))
+    message.startsWith("trashed:") -> resultFmt(R.string.storage_result_trashed, message.removePrefix("trashed:"))
+    message.startsWith("restored:") -> resultFmt(R.string.storage_result_restored, message.removePrefix("restored:"))
+    message.startsWith("purged:") -> resultFmt(R.string.storage_result_purged, message.removePrefix("purged:"))
+    else -> message
+}
+
+@Composable
+private fun resultFmt(resId: Int, payload: String): String {
+    val parts = payload.split(':')
+    return stringResource(
+        resId,
+        parts.getOrNull(0)?.toIntOrNull() ?: 0,
+        parts.getOrNull(1)?.toIntOrNull() ?: 0,
+    )
 }
 
 private const val MIN_BAR_FRACTION = 0.02f
@@ -410,6 +513,158 @@ private fun LeftoversSection(state: StorageUiState, onPickFolder: () -> Unit, on
 
 @Composable
 private fun LeftoverRow(item: ApkLeftover, selected: Boolean, onToggle: () -> Unit) {
+    SelectableSizeRow(
+        label = stringResource(
+            R.string.storage_leftovers_item,
+            item.displayName,
+            ByteSizeFormatter.format(item.sizeBytes),
+        ),
+        selected = selected,
+        onToggle = onToggle,
+    )
+}
+
+@Composable
+private fun LargeFilesSection(state: StorageUiState, onToggle: (String) -> Unit, onDelete: () -> Unit) {
+    if (state.treeUri == null && state.largeFiles.isEmpty()) return
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(stringResource(R.string.storage_large_files_title), style = MaterialTheme.typography.titleSmall)
+        when {
+            state.leftoversLoading -> CircularProgressIndicator()
+
+            state.largeFiles.isEmpty() -> Text(
+                stringResource(R.string.storage_large_files_empty),
+                style = MaterialTheme.typography.bodySmall,
+            )
+
+            else -> {
+                state.largeFiles.forEach { item ->
+                    SelectableSizeRow(
+                        label = stringResource(
+                            R.string.storage_leftovers_item,
+                            item.relativePath,
+                            ByteSizeFormatter.format(item.sizeBytes),
+                        ),
+                        selected = item.id in state.selectedLargeFileIds,
+                        onToggle = { onToggle(item.id) },
+                    )
+                }
+                OutlinedButton(
+                    onClick = onDelete,
+                    enabled = state.selectedLargeFileIds.isNotEmpty() && !state.deleting,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.storage_large_files_delete))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DuplicatesSection(state: StorageUiState, onToggle: (String) -> Unit, onDelete: () -> Unit) {
+    if (state.treeUri == null && state.duplicates.isEmpty()) return
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(stringResource(R.string.storage_duplicates_title), style = MaterialTheme.typography.titleSmall)
+        when {
+            state.leftoversLoading -> Unit
+
+            state.duplicates.isEmpty() -> Text(
+                stringResource(R.string.storage_duplicates_empty),
+                style = MaterialTheme.typography.bodySmall,
+            )
+
+            else -> {
+                state.duplicates.forEach { group ->
+                    DuplicateGroupBlock(group = group, selectedIds = state.selectedDuplicateIds, onToggle = onToggle)
+                }
+                OutlinedButton(
+                    onClick = onDelete,
+                    enabled = state.selectedDuplicateIds.isNotEmpty() && !state.deleting,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.storage_duplicates_delete))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DuplicateGroupBlock(group: DuplicateFileGroup, selectedIds: Set<String>, onToggle: (String) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            text = stringResource(
+                R.string.storage_duplicates_group,
+                ByteSizeFormatter.format(group.sizeBytes),
+                group.files.size,
+                group.sha256.take(12),
+            ),
+            style = MaterialTheme.typography.labelMedium,
+        )
+        group.files.forEach { file ->
+            SelectableSizeRow(
+                label = stringResource(
+                    R.string.storage_leftovers_item,
+                    file.relativePath,
+                    ByteSizeFormatter.format(file.sizeBytes),
+                ),
+                selected = file.id in selectedIds,
+                onToggle = { onToggle(file.id) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun TrashSection(state: StorageUiState, onToggle: (String) -> Unit, onRestore: () -> Unit, onPurge: () -> Unit) {
+    if (state.treeUri == null && state.trash.isEmpty()) return
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(stringResource(R.string.storage_trash_title), style = MaterialTheme.typography.titleSmall)
+        Text(
+            stringResource(R.string.storage_trash_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        when {
+            state.trash.isEmpty() -> Text(
+                stringResource(R.string.storage_trash_empty),
+                style = MaterialTheme.typography.bodySmall,
+            )
+
+            else -> {
+                state.trash.forEach { entry ->
+                    SelectableSizeRow(
+                        label = stringResource(
+                            R.string.storage_trash_item,
+                            entry.displayName,
+                            ByteSizeFormatter.format(entry.sizeBytes),
+                        ),
+                        selected = entry.id in state.selectedTrashIds,
+                        onToggle = { onToggle(entry.id) },
+                    )
+                }
+                OutlinedButton(
+                    onClick = onRestore,
+                    enabled = state.selectedTrashIds.isNotEmpty() && !state.deleting,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.storage_trash_restore))
+                }
+                OutlinedButton(
+                    onClick = onPurge,
+                    enabled = state.selectedTrashIds.isNotEmpty() && !state.deleting,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.storage_trash_purge))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectableSizeRow(label: String, selected: Boolean, onToggle: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -418,11 +673,7 @@ private fun LeftoverRow(item: ApkLeftover, selected: Boolean, onToggle: () -> Un
     ) {
         Checkbox(checked = selected, onCheckedChange = { onToggle() })
         Text(
-            text = stringResource(
-                R.string.storage_leftovers_item,
-                item.displayName,
-                ByteSizeFormatter.format(item.sizeBytes),
-            ),
+            text = label,
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(start = 4.dp),
         )

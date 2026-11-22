@@ -23,10 +23,12 @@ import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.InstallerPreferences
 import dev.involvex.kiln.core.model.KilnConfigRepository
+import dev.involvex.kiln.core.model.KilnTrashJanitor
 import dev.involvex.kiln.core.model.MaintenancePreferences
 import dev.involvex.kiln.core.model.MaintenanceRunStore
 import dev.involvex.kiln.core.model.MaintenanceScheduler
 import dev.involvex.kiln.core.model.NetworkProxyPreferences
+import dev.involvex.kiln.core.model.StorageTreePreferences
 import dev.involvex.kiln.core.model.TermuxPreferences
 import dev.involvex.kiln.core.model.UpdateObservationStore
 import dev.involvex.kiln.core.model.WatchlistRepository
@@ -53,6 +55,8 @@ import dev.involvex.kiln.feature.sources.DefaultAppUpdateRepository
 import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.updatecheck.DefaultBackgroundUpdateScheduler
 import dev.involvex.kiln.feature.sources.updatecheck.PrefsUpdateObservationStore
+import dev.involvex.kiln.feature.storage.data.DataStoreStorageTreePreferences
+import dev.involvex.kiln.feature.storage.data.KilnTrashRepository
 import dev.involvex.kiln.feature.termux.data.DataStoreTermuxPreferences
 import dev.involvex.kiln.feature.widgets.WidgetCountPublisher
 import dev.involvex.kiln.feature.widgets.data.DataStoreWidgetPreferences
@@ -150,6 +154,14 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindApkDownloadJanitor(impl: DefaultApkDownloadJanitor): ApkDownloadJanitor
+
+    @Binds
+    @Singleton
+    abstract fun bindStorageTreePreferences(impl: DataStoreStorageTreePreferences): StorageTreePreferences
+
+    @Binds
+    @Singleton
+    abstract fun bindKilnTrashJanitor(impl: KilnTrashRepository): KilnTrashJanitor
 
     @Binds
     @Singleton

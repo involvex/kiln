@@ -3,6 +3,7 @@ package dev.involvex.kiln.feature.maintenance
 import android.content.Context
 import dev.involvex.kiln.core.model.ApkDownloadJanitor
 import dev.involvex.kiln.core.model.ApkRollbackCache
+import dev.involvex.kiln.core.model.KilnTrashJanitor
 import dev.involvex.kiln.core.model.MaintenanceDefaults
 import dev.involvex.kiln.core.model.MaintenancePrefs
 import dev.involvex.kiln.core.model.PrivilegeStatus
@@ -40,11 +41,13 @@ class MaintenanceRunnerTest {
         )
         val downloads = mockk<ApkDownloadJanitor>()
         coEvery { downloads.pruneOlderThan(any(), any()) } returns 10L
+        val trash = mockk<KilnTrashJanitor>()
+        coEvery { trash.pruneOlderThan(any(), any()) } returns 0L
         val rollback = FakeRollbackCache()
         val context = mockk<Context>()
         every { context.cacheDir } returns temp
 
-        val runner = MaintenanceRunner(context, executor, downloads, rollback)
+        val runner = MaintenanceRunner(context, executor, downloads, rollback, trash)
         val record = runner.run(
             MaintenancePrefs(
                 enabled = true,
@@ -58,6 +61,7 @@ class MaintenanceRunnerTest {
         val trim = record.tasks.first { it.taskId == MaintenanceDefaults.TASK_TRIM }
         assertEquals(MaintenanceDefaults.STATUS_SKIPPED, trim.status)
         assertEquals("skipped_no_privilege", trim.detail)
+        assertTrue(record.tasks.any { it.taskId == MaintenanceDefaults.TASK_TRASH })
         assertTrue(record.ok)
     }
 }

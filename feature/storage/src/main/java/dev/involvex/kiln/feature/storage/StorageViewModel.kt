@@ -8,14 +8,20 @@ import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ActivityLogEvents
 import dev.involvex.kiln.core.model.ActivityLogRecorder
 import dev.involvex.kiln.core.model.ActivityLogType
+import dev.involvex.kiln.core.model.ApkLeftover
 import dev.involvex.kiln.core.model.AppStorageStats
+import dev.involvex.kiln.core.model.KilnTrashEntry
 import dev.involvex.kiln.core.model.OrphanStorageDir
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
+import dev.involvex.kiln.core.model.SafTreeFile
 import dev.involvex.kiln.core.model.StorageOrphanGate
-import dev.involvex.kiln.feature.storage.data.ApkLeftoverRepository
+import dev.involvex.kiln.core.model.StorageTreePreferences
+import dev.involvex.kiln.feature.storage.data.KilnTrashRepository
 import dev.involvex.kiln.feature.storage.data.OrphanStorageRepository
+import dev.involvex.kiln.feature.storage.data.SafTreeScanRepository
 import dev.involvex.kiln.feature.storage.data.StorageStatsRepository
+import dev.involvex.kiln.feature.storage.data.TrashMoveRequest
 import dev.involvex.kiln.feature.storage.data.UsageAccessChecker
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,10 +31,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
+@Suppress("TooManyFunctions") // Storage hub: stats, leftovers, large files, duplicates, trash, orphans.
 class StorageViewModel @Inject constructor(
     private val repository: StorageStatsRepository,
-    private val leftoverRepository: ApkLeftoverRepository,
+    private val scanRepository: SafTreeScanRepository,
+    private val trashRepository: KilnTrashRepository,
     private val orphanRepository: OrphanStorageRepository,
+    private val treePreferences: StorageTreePreferences,
     private val usageAccessChecker: UsageAccessChecker,
     private val privilegedExecutor: PrivilegedExecutor,
     private val activityLog: ActivityLogRecorder,
@@ -45,6 +54,13 @@ class StorageViewModel @Inject constructor(
                         canAccessAndroidData = StorageOrphanGate.canAccessAndroidData(status.capabilities),
                     )
                 }
+            }
+        }
+        viewModelScope.launch {
+            val saved = treePreferences.treeUri()
+            if (!saved.isNullOrBlank()) {
+                _uiState.update { it.copy(treeUri = saved) }
+                scanTree(Uri.parse(saved))
             }
         }
         refreshPermissionAndLoad()
@@ -197,24 +213,9 @@ class StorageViewModel @Inject constructor(
 
     fun scanLeftovers(treeUri: Uri) {
         viewModelScope.launch {
-            _uiState.update { it.copy(leftoversLoading = true, message = null) }
-            when (val result = leftoverRepository.scanTree(treeUri)) {
-                is Result.Failure -> {
-                    _uiState.update {
-                        it.copy(leftoversLoading = false, message = result.message, leftovers = emptyList())
-                    }
-                }
-
-                is Result.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            leftoversLoading = false,
-                            leftovers = result.value,
-                            selectedLeftoverIds = emptySet(),
-                        )
-                    }
-                }
-            }
+            treePreferences.setTreeUri(treeUri.toString())
+            _uiState.update { it.copy(treeUri = treeUri.toString()) }
+            scanTree(treeUri)
         }
     }
 
@@ -226,11 +227,63 @@ class StorageViewModel @Inject constructor(
         }
     }
 
+    fun toggleLargeFile(id: String) {
+        _uiState.update { state ->
+            val next = state.selectedLargeFileIds.toMutableSet()
+            if (!next.add(id)) next.remove(id)
+            state.copy(selectedLargeFileIds = next)
+        }
+    }
+
+    fun toggleDuplicate(id: String) {
+        _uiState.update { state ->
+            val next = state.selectedDuplicateIds.toMutableSet()
+            if (!next.add(id)) next.remove(id)
+            state.copy(selectedDuplicateIds = next)
+        }
+    }
+
+    fun toggleTrash(id: String) {
+        _uiState.update { state ->
+            val next = state.selectedTrashIds.toMutableSet()
+            if (!next.add(id)) next.remove(id)
+            state.copy(selectedTrashIds = next)
+        }
+    }
+
     fun requestDeleteSelectedLeftovers() {
         val state = _uiState.value
         val items = state.leftovers.filter { it.id in state.selectedLeftoverIds }
         if (items.isEmpty()) return
         _uiState.update { it.copy(pendingDelete = PendingStorageDelete.Leftovers(items)) }
+    }
+
+    fun requestDeleteSelectedLargeFiles() {
+        val state = _uiState.value
+        val items = state.largeFiles.filter { it.id in state.selectedLargeFileIds }
+        if (items.isEmpty()) return
+        _uiState.update { it.copy(pendingDelete = PendingStorageDelete.LargeFiles(items)) }
+    }
+
+    fun requestDeleteSelectedDuplicates() {
+        val state = _uiState.value
+        val items = state.duplicates.flatMap { it.files }.filter { it.id in state.selectedDuplicateIds }
+        if (items.isEmpty()) return
+        _uiState.update { it.copy(pendingDelete = PendingStorageDelete.Duplicates(items)) }
+    }
+
+    fun requestRestoreSelectedTrash() {
+        val state = _uiState.value
+        val items = state.trash.filter { it.id in state.selectedTrashIds }
+        if (items.isEmpty()) return
+        _uiState.update { it.copy(pendingDelete = PendingStorageDelete.TrashRestore(items)) }
+    }
+
+    fun requestPurgeSelectedTrash() {
+        val state = _uiState.value
+        val items = state.trash.filter { it.id in state.selectedTrashIds }
+        if (items.isEmpty()) return
+        _uiState.update { it.copy(pendingDelete = PendingStorageDelete.TrashPurge(items)) }
     }
 
     fun loadOrphans() {
@@ -297,20 +350,20 @@ class StorageViewModel @Inject constructor(
             _uiState.update { it.copy(deleting = true, pendingDelete = null, message = null) }
             when (pending) {
                 is PendingStorageDelete.Leftovers -> {
-                    val results = leftoverRepository.delete(pending.items)
-                    val ok = results.count { it.second }
-                    val fail = results.size - ok
-                    _uiState.update {
-                        it.copy(
-                            deleting = false,
-                            selectedLeftoverIds = emptySet(),
-                            message = "done:$ok:$fail",
-                        )
-                    }
-                    // Refresh leftover list without requiring a new tree pick if empties remain.
-                    val remaining = results.filterNot { it.second }.map { it.first }
-                    _uiState.update { it.copy(leftovers = remaining) }
+                    moveToTrash(pending.items.map { it.toMoveRequest() })
                 }
+
+                is PendingStorageDelete.LargeFiles -> {
+                    moveToTrash(pending.items.map { it.toMoveRequest() })
+                }
+
+                is PendingStorageDelete.Duplicates -> {
+                    moveToTrash(pending.items.map { it.toMoveRequest() })
+                }
+
+                is PendingStorageDelete.TrashRestore -> restoreTrash(pending.items)
+
+                is PendingStorageDelete.TrashPurge -> purgeTrash(pending.items)
 
                 is PendingStorageDelete.Orphans -> {
                     val results = orphanRepository.delete(pending.items)
@@ -330,4 +383,116 @@ class StorageViewModel @Inject constructor(
     }
 
     fun clearMessage() = _uiState.update { it.copy(message = null) }
+
+    private suspend fun scanTree(treeUri: Uri) {
+        _uiState.update { it.copy(leftoversLoading = true, message = null) }
+        when (val result = scanRepository.scanTree(treeUri)) {
+            is Result.Failure -> {
+                _uiState.update {
+                    it.copy(
+                        leftoversLoading = false,
+                        message = result.message,
+                        leftovers = emptyList(),
+                        largeFiles = emptyList(),
+                        duplicates = emptyList(),
+                    )
+                }
+            }
+
+            is Result.Success -> {
+                val trash = when (val trashResult = trashRepository.list(treeUri)) {
+                    is Result.Success -> trashResult.value
+                    is Result.Failure -> emptyList()
+                }
+                _uiState.update {
+                    it.copy(
+                        leftoversLoading = false,
+                        leftovers = result.value.leftovers,
+                        largeFiles = result.value.largeFiles,
+                        duplicates = result.value.duplicates,
+                        trash = trash,
+                        selectedLeftoverIds = emptySet(),
+                        selectedLargeFileIds = emptySet(),
+                        selectedDuplicateIds = emptySet(),
+                        selectedTrashIds = emptySet(),
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun moveToTrash(items: List<TrashMoveRequest>) {
+        val treeUri = currentTreeUri()
+        if (treeUri == null) {
+            _uiState.update { it.copy(deleting = false, message = "no_tree") }
+            return
+        }
+        val results = trashRepository.moveToTrash(treeUri, items)
+        val ok = results.count { it.second }
+        val fail = results.size - ok
+        _uiState.update {
+            it.copy(
+                deleting = false,
+                selectedLeftoverIds = emptySet(),
+                selectedLargeFileIds = emptySet(),
+                selectedDuplicateIds = emptySet(),
+                message = "trashed:$ok:$fail",
+            )
+        }
+        scanTree(treeUri)
+    }
+
+    private suspend fun restoreTrash(items: List<KilnTrashEntry>) {
+        val treeUri = currentTreeUri()
+        if (treeUri == null) {
+            _uiState.update { it.copy(deleting = false, message = "no_tree") }
+            return
+        }
+        val results = trashRepository.restore(treeUri, items)
+        val ok = results.count { it.second }
+        val fail = results.size - ok
+        _uiState.update {
+            it.copy(
+                deleting = false,
+                selectedTrashIds = emptySet(),
+                message = "restored:$ok:$fail",
+            )
+        }
+        scanTree(treeUri)
+    }
+
+    private suspend fun purgeTrash(items: List<KilnTrashEntry>) {
+        val treeUri = currentTreeUri()
+        if (treeUri == null) {
+            _uiState.update { it.copy(deleting = false, message = "no_tree") }
+            return
+        }
+        val results = trashRepository.permanentlyDelete(treeUri, items)
+        val ok = results.count { it.second }
+        val fail = results.size - ok
+        _uiState.update {
+            it.copy(
+                deleting = false,
+                selectedTrashIds = emptySet(),
+                message = "purged:$ok:$fail",
+            )
+        }
+        scanTree(treeUri)
+    }
+
+    private fun currentTreeUri(): Uri? = _uiState.value.treeUri?.let { Uri.parse(it) }
+
+    private fun ApkLeftover.toMoveRequest() = TrashMoveRequest(
+        displayName = displayName,
+        sizeBytes = sizeBytes,
+        uriString = uriString,
+        relativePath = relativePath,
+    )
+
+    private fun SafTreeFile.toMoveRequest() = TrashMoveRequest(
+        displayName = displayName,
+        sizeBytes = sizeBytes,
+        uriString = uriString,
+        relativePath = relativePath,
+    )
 }

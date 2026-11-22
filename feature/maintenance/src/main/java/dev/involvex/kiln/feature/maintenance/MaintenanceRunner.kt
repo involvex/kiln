@@ -5,12 +5,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ApkDownloadJanitor
 import dev.involvex.kiln.core.model.ApkRollbackCache
+import dev.involvex.kiln.core.model.KilnTrashJanitor
 import dev.involvex.kiln.core.model.MaintenanceDefaults
 import dev.involvex.kiln.core.model.MaintenancePrefs
 import dev.involvex.kiln.core.model.MaintenanceRunRecord
 import dev.involvex.kiln.core.model.MaintenanceTaskResult
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
+import dev.involvex.kiln.core.model.StorageCleanerLogic
 import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -22,6 +24,7 @@ class MaintenanceRunner @Inject constructor(
     private val privilegedExecutor: PrivilegedExecutor,
     private val downloadJanitor: ApkDownloadJanitor,
     private val rollbackCache: ApkRollbackCache,
+    private val trashJanitor: KilnTrashJanitor,
 ) {
     suspend fun run(prefs: MaintenancePrefs, nowEpochMs: Long = System.currentTimeMillis()): MaintenanceRunRecord {
         val started = nowEpochMs
@@ -37,6 +40,7 @@ class MaintenanceRunner @Inject constructor(
         }
         if (prefs.pruneBackupTemp) {
             tasks += runPruneBackupTemp()
+            tasks += runPruneTrash(nowEpochMs)
         }
         val finished = System.currentTimeMillis()
         val ok = tasks.none { it.status == MaintenanceDefaults.STATUS_FAILED }
@@ -129,6 +133,23 @@ class MaintenanceRunner @Inject constructor(
             taskId = MaintenanceDefaults.TASK_BACKUP_TEMP,
             status = MaintenanceDefaults.STATUS_FAILED,
             detail = error.message ?: "prune_backup_temp_failed",
+        )
+    }
+
+    private suspend fun runPruneTrash(nowEpochMs: Long): MaintenanceTaskResult = try {
+        val maxAge = TimeUnit.DAYS.toMillis(StorageCleanerLogic.TRASH_MAX_AGE_DAYS)
+        val freed = trashJanitor.pruneOlderThan(maxAge, nowEpochMs)
+        MaintenanceTaskResult(
+            taskId = MaintenanceDefaults.TASK_TRASH,
+            status = MaintenanceDefaults.STATUS_OK,
+            detail = "kiln_trash",
+            bytesFreed = freed,
+        )
+    } catch (@Suppress("TooGenericExceptionCaught") error: Exception) {
+        MaintenanceTaskResult(
+            taskId = MaintenanceDefaults.TASK_TRASH,
+            status = MaintenanceDefaults.STATUS_FAILED,
+            detail = error.message ?: "prune_trash_failed",
         )
     }
 

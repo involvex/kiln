@@ -74,6 +74,7 @@ object MaintenanceDefaults {
     const val TASK_DOWNLOADS = "prune_downloads"
     const val TASK_ROLLBACK = "prune_rollback"
     const val TASK_BACKUP_TEMP = "prune_backup_temp"
+    const val TASK_TRASH = "prune_kiln_trash"
     const val STATUS_OK = "ok"
     const val STATUS_SKIPPED = "skipped"
     const val STATUS_FAILED = "failed"
