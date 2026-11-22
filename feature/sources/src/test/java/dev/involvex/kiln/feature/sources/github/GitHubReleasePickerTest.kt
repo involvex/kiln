@@ -57,4 +57,43 @@ class GitHubReleasePickerTest {
         )
         assertNull(GitHubReleasePicker.pick(releases, apk, GitHubReleaseChannel.STABLE))
     }
+
+    @Test
+    fun `prefers device abi asset when several apks match`() {
+        val releases = listOf(
+            GitHubReleaseDto(
+                tagName = "v158.0.8127.42",
+                assets = listOf(
+                    GitHubAssetDto(
+                        "158.0.8127.42-1-armeabi-v7a.apk",
+                        "https://example.com/v7a.apk",
+                        10,
+                    ),
+                    GitHubAssetDto(
+                        "158.0.8127.42-1-arm64-v8a.apk",
+                        "https://example.com/v8a.apk",
+                        20,
+                    ),
+                ),
+            ),
+        )
+        val pick = GitHubReleasePicker.pick(
+            releases = releases,
+            assetRegex = apk,
+            channel = GitHubReleaseChannel.STABLE,
+            preferredAbis = listOf("arm64-v8a", "armeabi-v7a"),
+        )
+        assertEquals("158.0.8127.42-1-arm64-v8a.apk", pick?.assetName)
+        assertEquals("https://example.com/v8a.apk", pick?.downloadUrl)
+    }
+
+    @Test
+    fun `preferAbiAsset falls back to first match`() {
+        val assets = listOf(
+            GitHubAssetDto("app-universal.apk", "https://example.com/u.apk", 1),
+            GitHubAssetDto("app-x86.apk", "https://example.com/x86.apk", 2),
+        )
+        val chosen = GitHubReleasePicker.preferAbiAsset(assets, listOf("arm64-v8a"))
+        assertEquals("app-universal.apk", chosen?.name)
+    }
 }

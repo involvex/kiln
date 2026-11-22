@@ -349,6 +349,8 @@ class SourcesViewModel @Inject constructor(
                 githubOwnerRepo = ownerRepo,
                 githubAssetRegex = ".*\\.apk$",
                 githubChannel = "STABLE",
+                // So Sync all / checkForUpdates probes this repo before any installed package is linked.
+                watchOnly = true,
             ),
         )
         return "github_added:$ownerRepo"

@@ -126,6 +126,8 @@ fun AppDetailScreen(
     val rollbackNeedsPrivilege = stringResource(R.string.feature_apps_rollback_needs_privilege)
     val linkOk = stringResource(R.string.feature_apps_link_ok)
     val badGithub = stringResource(R.string.feature_apps_link_bad_github)
+    val unlinked = stringResource(R.string.feature_apps_unlinked)
+    val unlinkFailed = stringResource(R.string.feature_apps_unlink_failed)
     val activityStartNotFound = stringResource(R.string.feature_apps_activities_start_not_found)
     val activityStartSecurity = stringResource(R.string.feature_apps_activities_start_security)
     val activityShortcutRequested = stringResource(R.string.feature_apps_activities_shortcut_requested)
@@ -138,6 +140,8 @@ fun AppDetailScreen(
             "rollback_needs_privilege" -> rollbackNeedsPrivilege
             "link_ok" -> linkOk
             "bad_github" -> badGithub
+            "unlinked" -> unlinked
+            "unlink_failed" -> unlinkFailed
             "activity_start_not_found" -> activityStartNotFound
             "activity_start_security" -> activityStartSecurity
             "activity_shortcut_requested" -> activityShortcutRequested
@@ -206,6 +210,7 @@ fun AppDetailScreen(
                     onUpdateCooldownChanged = { onEvent(AppDetailEvent.UpdateCooldownChanged(it)) },
                     managedLink = state.managedLink,
                     onOpenLinkSource = { onEvent(AppDetailEvent.OpenLinkSource) },
+                    onStopTracking = { onEvent(AppDetailEvent.RequestStopTracking) },
                     onGitHubChannelChange = { onEvent(AppDetailEvent.SetGitHubChannel(it)) },
                     hasGitHubToken = state.hasGitHubToken,
                     onInstallUpdate = { onEvent(AppDetailEvent.InstallUpdate) },
@@ -283,9 +288,35 @@ fun AppDetailScreen(
             appLabel = state.detail?.label.orEmpty(),
             initialGithub = state.managedLink?.githubOwnerRepo.orEmpty(),
             enabledRepos = state.enabledRepos,
+            savedGithubRepos = state.savedGithubRepos,
             onDismiss = { onEvent(AppDetailEvent.DismissLinkSource) },
             onLinkFdroid = { onEvent(AppDetailEvent.LinkFdroidRepo(it)) },
             onLinkGithub = { onEvent(AppDetailEvent.LinkGithub(it)) },
+        )
+    }
+
+    if (state.showStopTrackingConfirm) {
+        AlertDialog(
+            onDismissRequest = { onEvent(AppDetailEvent.DismissStopTracking) },
+            title = {
+                Text(
+                    stringResource(
+                        R.string.feature_apps_stop_tracking_title,
+                        state.detail?.label.orEmpty(),
+                    ),
+                )
+            },
+            text = { Text(stringResource(R.string.feature_apps_stop_tracking_body)) },
+            confirmButton = {
+                TextButton(onClick = { onEvent(AppDetailEvent.ConfirmStopTracking) }) {
+                    Text(stringResource(R.string.feature_apps_stop_tracking_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(AppDetailEvent.DismissStopTracking) }) {
+                    Text(stringResource(R.string.feature_apps_stop_tracking_cancel))
+                }
+            },
         )
     }
 
@@ -346,6 +377,7 @@ private fun AppLinkSourceDialog(
     appLabel: String,
     initialGithub: String,
     enabledRepos: List<RepoConfig>,
+    savedGithubRepos: List<String>,
     onDismiss: () -> Unit,
     onLinkFdroid: (String) -> Unit,
     onLinkGithub: (String) -> Unit,
@@ -369,6 +401,26 @@ private fun AppLinkSourceDialog(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+                Text(
+                    stringResource(R.string.feature_apps_link_saved_github_section),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                if (savedGithubRepos.isEmpty()) {
+                    Text(
+                        stringResource(R.string.feature_apps_link_no_saved_github),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        savedGithubRepos.forEach { ownerRepo ->
+                            AssistChip(onClick = { onLinkGithub(ownerRepo) }, label = { Text(ownerRepo) })
+                        }
+                    }
                 }
                 Text(stringResource(R.string.feature_apps_link_github_section), style = MaterialTheme.typography.titleSmall)
                 OutlinedTextField(

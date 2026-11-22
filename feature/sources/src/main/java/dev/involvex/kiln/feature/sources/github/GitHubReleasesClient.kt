@@ -1,5 +1,6 @@
 package dev.involvex.kiln.feature.sources.github
 
+import android.os.Build
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.network.KilnHttpClient
@@ -32,13 +33,18 @@ data class GitHubReleasePick(
 )
 
 object GitHubReleasePicker {
-    fun pick(releases: List<GitHubReleaseDto>, assetRegex: Regex, channel: GitHubReleaseChannel): GitHubReleasePick? {
+    fun pick(
+        releases: List<GitHubReleaseDto>,
+        assetRegex: Regex,
+        channel: GitHubReleaseChannel,
+        preferredAbis: List<String> = emptyList(),
+    ): GitHubReleasePick? {
         val includePre = channel != GitHubReleaseChannel.STABLE
         return releases
             .asSequence()
             .filter { includePre || !it.prerelease }
             .mapNotNull { release ->
-                val asset = release.assets.firstOrNull { assetRegex.containsMatchIn(it.name) }
+                val asset = preferAbiAsset(release.assets.filter { assetRegex.containsMatchIn(it.name) }, preferredAbis)
                     ?: return@mapNotNull null
                 GitHubReleasePick(
                     tagName = release.tagName,
@@ -49,6 +55,19 @@ object GitHubReleasePicker {
                 )
             }
             .firstOrNull()
+    }
+
+    /**
+     * Among assets matching the regex, prefer a name that contains the device ABI
+     * (e.g. arm64-v8a before armeabi-v7a). Falls back to the first match.
+     */
+    fun preferAbiAsset(assets: List<GitHubAssetDto>, preferredAbis: List<String>): GitHubAssetDto? {
+        if (assets.isEmpty()) return null
+        for (abi in preferredAbis) {
+            if (abi.isBlank()) continue
+            assets.firstOrNull { it.name.contains(abi, ignoreCase = true) }?.let { return it }
+        }
+        return assets.first()
     }
 }
 
@@ -68,7 +87,12 @@ class GitHubReleasesClient @Inject constructor(private val http: KilnHttpClient,
         }
         return try {
             val releases = json.decodeFromString<List<GitHubReleaseDto>>(body)
-            val pick = GitHubReleasePicker.pick(releases, assetRegex, channel)
+            val pick = GitHubReleasePicker.pick(
+                releases = releases,
+                assetRegex = assetRegex,
+                channel = channel,
+                preferredAbis = Build.SUPPORTED_ABIS.toList(),
+            )
             if (pick == null) {
                 Result.failure("no_matching_github_asset")
             } else {

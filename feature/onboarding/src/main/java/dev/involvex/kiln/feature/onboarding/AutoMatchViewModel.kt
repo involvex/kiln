@@ -36,18 +36,24 @@ data class AutoMatchUiState(
     val selected: Set<String> = emptySet(),
     val indexEmpty: Boolean = false,
     val enabledRepos: List<LinkableRepo> = emptyList(),
+    /** Distinct GitHub owner/repo values already saved (for one-tap link chips). */
+    val savedGithubRepos: List<String> = emptyList(),
     /** One-shot snackbar count after a successful link; UI clears via [AutoMatchViewModel.consumeSnackbar]. */
     val snackbarLinkedCount: Int? = null,
-    /** String-resource key: `bad_github` | `link_failed` | raw message. */
+    /** One-shot snackbar after stop-tracking. */
+    val snackbarUnlinked: Boolean = false,
+    /** String-resource key: `bad_github` | `link_failed` | `unlink_failed` | raw message. */
     val messageErrorKey: String? = null,
     val linkTarget: MatchCandidate? = null,
     val warningConfirmTarget: MatchCandidate? = null,
+    val unlinkConfirmTarget: MatchCandidate? = null,
     val searchQuery: String = "",
     val confidenceFilter: AutoMatchConfidenceFilter = AutoMatchConfidenceFilter.ALL,
     val showLinked: Boolean = false,
 )
 
 @HiltViewModel
+@Suppress("TooManyFunctions") // Match hub: filters, accept/link/unlink, and rematch share one VM.
 class AutoMatchViewModel @Inject constructor(
     private val installedAppsReader: InstalledAppsReader,
     private val indexDao: IndexDao,
@@ -81,7 +87,7 @@ class AutoMatchViewModel @Inject constructor(
     }
 
     fun consumeSnackbar() {
-        _uiState.update { it.copy(snackbarLinkedCount = null) }
+        _uiState.update { it.copy(snackbarLinkedCount = null, snackbarUnlinked = false) }
     }
 
     fun toggle(packageName: String) {
@@ -110,6 +116,44 @@ class AutoMatchViewModel @Inject constructor(
 
     fun dismissWarningConfirm() {
         _uiState.update { it.copy(warningConfirmTarget = null) }
+    }
+
+    fun requestUnlink(candidate: MatchCandidate) {
+        _uiState.update { it.copy(unlinkConfirmTarget = candidate) }
+    }
+
+    fun dismissUnlinkConfirm() {
+        _uiState.update { it.copy(unlinkConfirmTarget = null) }
+    }
+
+    fun confirmUnlink() {
+        val target = _uiState.value.unlinkConfirmTarget ?: return
+        viewModelScope.launch {
+            val result = withContext(ioDispatcher) {
+                appUpdateRepository.unlinkManagedPackage(target.packageName)
+            }
+            when (result) {
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            unlinkConfirmTarget = null,
+                            messageErrorKey = null,
+                            snackbarUnlinked = true,
+                        )
+                    }
+                    rematch(announceCount = null)
+                }
+
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            unlinkConfirmTarget = null,
+                            messageErrorKey = result.message.ifBlank { "unlink_failed" },
+                        )
+                    }
+                }
+            }
+        }
     }
 
     fun confirmWarningAccept() {
@@ -235,21 +279,35 @@ class AutoMatchViewModel @Inject constructor(
             val installed = installedAppsReader.userApps()
             val indexed = indexDao.allPackages()
             val repos = repoDao.getAll()
-            val managed = managedAppDao.getAll().map { it.packageName }.toSet()
+            val managedRows = managedAppDao.getAll()
+            val managedByPackage = managedRows.associateBy { it.packageName }
+            val repoNames = repos.associate { it.id to it.name }
             val matches = AutoMatchEngine.match(
                 installed = installed,
                 indexed = indexed,
                 repoPriority = repos.associate { it.id to it.priority },
-                repoNames = repos.associate { it.id to it.name },
+                repoNames = repoNames,
                 githubMap = githubMap,
             ).map { candidate ->
-                candidate.copy(alreadyLinked = candidate.packageName in managed)
+                val managed = managedByPackage[candidate.packageName]
+                if (managed == null) {
+                    candidate
+                } else {
+                    candidate.copy(
+                        alreadyLinked = true,
+                        trackedSourceLabel = trackedLabelFor(managed, repoNames),
+                    )
+                }
             }
             MatchSnapshot(
                 matches = matches,
                 indexEmpty = indexed.isEmpty(),
                 enabledRepos = repos.filter { it.enabled }.sortedBy { it.priority }
                     .map { LinkableRepo(it.id, it.name) },
+                savedGithubRepos = managedRows
+                    .mapNotNull { it.githubOwnerRepo?.takeIf { repo -> repo.contains('/') } }
+                    .distinctBy { it.lowercase() }
+                    .sortedBy { it.lowercase() },
             )
         }
         val high = snapshot.matches.filter { it.confidence == MatchConfidence.HIGH }
@@ -264,10 +322,26 @@ class AutoMatchViewModel @Inject constructor(
                 selected = pendingHigh.map { c -> c.packageName }.toSet(),
                 indexEmpty = snapshot.indexEmpty,
                 enabledRepos = snapshot.enabledRepos,
+                savedGithubRepos = snapshot.savedGithubRepos,
                 snackbarLinkedCount = announceCount?.takeIf { count -> count > 0 },
             )
         }
     }
 
-    private data class MatchSnapshot(val matches: List<MatchCandidate>, val indexEmpty: Boolean, val enabledRepos: List<LinkableRepo>)
+    private fun trackedLabelFor(managed: ManagedAppEntity, repoNames: Map<String, String>): String {
+        managed.githubOwnerRepo?.takeIf { it.contains('/') }?.let { return "GitHub $it" }
+        val sourceId = managed.sourceId
+        if (sourceId.isBlank() || sourceId == "manual") return ""
+        if (sourceId.startsWith("github:")) {
+            return "GitHub ${sourceId.removePrefix("github:")}"
+        }
+        return repoNames[sourceId] ?: sourceId
+    }
+
+    private data class MatchSnapshot(
+        val matches: List<MatchCandidate>,
+        val indexEmpty: Boolean,
+        val enabledRepos: List<LinkableRepo>,
+        val savedGithubRepos: List<String>,
+    )
 }

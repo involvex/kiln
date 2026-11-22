@@ -22,6 +22,11 @@ data class MatchCandidate(
     val rationaleKey: String = Rationale.NONE,
     /** True when this package already has a ManagedApp row (set by ViewModel after match). */
     val alreadyLinked: Boolean = false,
+    /**
+     * Display label of the saved update source when [alreadyLinked] (e.g. `GitHub owner/repo` or repo name).
+     * Empty when the managed row has no usable source yet (`manual` / ignore-only).
+     */
+    val trackedSourceLabel: String = "",
 ) {
     object Rationale {
         const val NONE = "none"

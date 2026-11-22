@@ -8,6 +8,7 @@ import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstalledAppMatchInput
 import dev.involvex.kiln.core.model.InstalledAppsReader
+import dev.involvex.kiln.core.model.MatchConfidence
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.github.GitHubActionsClient
 import dev.involvex.kiln.feature.sources.github.GitHubReleasePick
@@ -17,7 +18,9 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -105,6 +108,75 @@ class DefaultAppUpdateRepositoryRefreshTest {
         every { gitHubTokenStore.getToken() } returns null
 
         val result = repository.checkForUpdates()
+        assertTrue(result is Result.Success)
+        coVerify(atLeast = 1) {
+            gitHubReleasesClient.latestMatchingRelease(
+                "owner/repo",
+                any(),
+                GitHubReleaseChannel.STABLE,
+            )
+        }
+    }
+
+    @Test
+    fun unlinkManagedPackage_deletesRowAndClearsBadge() = runBlocking {
+        coEvery {
+            gitHubReleasesClient.latestMatchingRelease(any(), any(), any())
+        } returns Result.success(
+            GitHubReleasePick(
+                tagName = "v2.0",
+                assetName = "app.apk",
+                downloadUrl = "https://example.com/app.apk",
+                sizeBytes = 10L,
+                releaseNotes = null,
+            ),
+        )
+        repository.checkForUpdates()
+        assertEquals(1, repository.updates().first().size)
+
+        coEvery { managedAppDao.getAll() } returns emptyList()
+        val result = repository.unlinkManagedPackage(PKG)
+        assertTrue(result is Result.Success)
+        coVerify { managedAppDao.delete(PKG) }
+        assertTrue(repository.updates().first().isEmpty())
+    }
+
+    @Test
+    fun linkManagedSource_withGitHub_probesImmediately() = runBlocking {
+        coEvery { managedAppDao.get(PKG) } returns null
+        coEvery {
+            gitHubReleasesClient.latestMatchingRelease(any(), any(), any())
+        } returns Result.success(
+            GitHubReleasePick(
+                tagName = "v2.0",
+                assetName = "app.apk",
+                downloadUrl = "https://example.com/app.apk",
+                sizeBytes = 10L,
+                releaseNotes = null,
+            ),
+        )
+        // After upsert, getAll must still return the linked row for recompute.
+        coEvery { managedAppDao.getAll() } returns listOf(
+            ManagedAppEntity(
+                packageName = PKG,
+                sourceId = "github:owner/repo",
+                confidence = "MEDIUM",
+                pinned = true,
+                ignoreUpdates = false,
+                githubOwnerRepo = "owner/repo",
+                githubAssetRegex = ".*\\.apk$",
+                githubChannel = "STABLE",
+            ),
+        )
+
+        val result = repository.linkManagedSource(
+            packageName = PKG,
+            sourceId = "github:owner/repo",
+            confidence = MatchConfidence.MEDIUM,
+            githubOwnerRepo = "owner/repo",
+            githubAssetRegex = ".*\\.apk$",
+            pinned = true,
+        )
         assertTrue(result is Result.Success)
         coVerify(atLeast = 1) {
             gitHubReleasesClient.latestMatchingRelease(

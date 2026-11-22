@@ -189,6 +189,12 @@ class DefaultAppUpdateRepository @Inject constructor(
             }
     }
 
+    override fun observeSavedGithubOwnerRepos(): Flow<List<String>> = managedAppDao.observeAll().map { apps ->
+        apps.mapNotNull { it.githubOwnerRepo?.takeIf { repo -> repo.contains('/') } }
+            .distinctBy { it.lowercase() }
+            .sortedBy { it.lowercase() }
+    }
+
     override fun observeIsWatching(packageName: String): Flow<Boolean> = managedAppDao.observe(packageName).map { it?.watchOnly == true }
 
     override fun observeWatchlist(): Flow<List<WatchlistEntry>> = channelFlow {
@@ -286,6 +292,17 @@ class DefaultAppUpdateRepository @Inject constructor(
                 watchOnly = false,
             ),
         )
+        // GitHub badges need a live probe; local index refresh alone leaves them empty.
+        if (!githubOwnerRepo.isNullOrBlank()) {
+            recomputeUpdates(includeGitHub = true)
+        } else {
+            refreshUpdates()
+        }
+        return Result.success(Unit)
+    }
+
+    override suspend fun unlinkManagedPackage(packageName: String): Result<Unit> {
+        managedAppDao.delete(packageName)
         refreshUpdates()
         return Result.success(Unit)
     }
@@ -427,7 +444,7 @@ class DefaultAppUpdateRepository @Inject constructor(
         is Result.Success -> {
             val pick = result.value
             val remoteCode = GitHubVersionCode.parse(pick.tagName)
-            if (!isRemoteNewer(local.versionCode, local.versionName, remoteCode, pick.tagName)) {
+            if (!isGitHubRemoteNewer(local.versionCode, local.versionName, remoteCode, pick.tagName)) {
                 null
             } else {
                 AppUpdateInfo(
@@ -468,7 +485,7 @@ class DefaultAppUpdateRepository @Inject constructor(
             is Result.Success -> {
                 val pick = result.value
                 val remoteCode = if (pick.runNumber > 0) pick.runNumber else GitHubVersionCode.parse(pick.versionLabel)
-                if (!isRemoteNewer(local.versionCode, local.versionName, remoteCode, pick.versionLabel)) {
+                if (!isGitHubRemoteNewer(local.versionCode, local.versionName, remoteCode, pick.versionLabel)) {
                     null
                 } else {
                     AppUpdateInfo(
