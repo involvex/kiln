@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6] — 2026-11-22
+
 ### Added
 
+- Storage: large files (≥ 50 MB) and same-size SHA-256 duplicates in the picked SAF folder; soft-delete into `.kiln-trash` with restore / permanent purge; 14-day maintenance prune (M48)
+- Backup restore installs every APK in the archive (base + splits) via the existing multi-session installer; aborts if metadata claims splits but only one APK is present (M49)
+- App Detail: exported services, receivers, and providers (read-only) (M50)
 - Sources hub (Repositories, Watchlist, GitHub stars, Import, Match) like Settings
 - Starred-repo search filter with clear; Apps Library search clear (X)
 - `scripts/release.ps1` for patch-default version bump, changelog, tag, and push
@@ -17,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - App Detail “Update available” banner no longer crushed beside long version names
+
+### Changed
+
+- Version **0.2.6** (versionCode 9)
 
 ## [0.2.5] — 2026-11-17
 
@@ -150,7 +159,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - No telemetry; HTTPS-only network; signature checks on updates; tokens not logged
 
-[Unreleased]: https://github.com/involvex/kiln/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/involvex/kiln/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/involvex/kiln/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/involvex/kiln/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/involvex/kiln/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/involvex/kiln/compare/v0.2.0...v0.2.3

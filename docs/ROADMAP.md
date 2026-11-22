@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M48** Storage large files + trash In progress (`m48-storage-large-files-trash`). App version **0.2.5** (code 8), tag `v0.2.5`. Next: M49 split backup restore, M50 component lists → **0.2.6**. HyperOS M1–M8 checklist remains a separate release gate; F-Droid submit / dual-user unscheduled.
+**Current status:** **M48–M50** Done on `main`. App version **0.2.6** (code 9). Tag `v0.2.6` after HyperOS M1–M8 release-gate checks. F-Droid submit / dual-user unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -64,7 +64,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M47** | Polish + signed 0.2.5 | Done | [`prompts/M47-polish-signed-release.md`](./prompts/M47-polish-signed-release.md) · [#86](https://github.com/involvex/kiln/pull/86) | Require upload signing + apksigner; icon decode perf; tag `v0.2.5` |
 | **M48** | Storage large files + trash | Done | [`prompts/M48-storage-large-files-trash.md`](./prompts/M48-storage-large-files-trash.md) · `m48-storage-large-files-trash` | SAF ≥50MB files; same-size+hash duplicates; `.kiln-trash` undo/purge; maintenance age-prune |
 | **M49** | Split backup restore | Done | [`prompts/M49-split-backup-restore.md`](./prompts/M49-split-backup-restore.md) · `m49-split-backup-restore` | Restore enqueue all APKs from archive (M39 installer) |
-| **M50** | App component lists | In progress | [`prompts/M50-app-components.md`](./prompts/M50-app-components.md) · `m50-app-components` | Exported services/receivers/providers (read-only) |
+| **M50** | App component lists | Done | [`prompts/M50-app-components.md`](./prompts/M50-app-components.md) · `m50-app-components` | Exported services/receivers/providers (read-only) |
 
 ---
 
@@ -105,7 +105,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 Update after each milestone. Tier = active `PrivilegedExecutor`.
 
-| Feature | Now (main, post-M28) | Needs tier |
+| Feature | Now (main, post-M50 / 0.2.6) | Needs tier |
 | --- | --- | --- |
 | Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
 | List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
@@ -137,7 +137,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Repo priority | ✅ Sources ↑↓ reorder; `ensureKnownRepos` preserves user priority; Auto-match / update conflict tie-break | NONE |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
-| Release / store prep | ✅ version `0.2.4` (code 7); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG; F-Droid submit deferred | — |
+| Release / store prep | ✅ version `0.2.6` (code 9); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG; F-Droid submit deferred | — |
 | App Discovery | ✅ Apps → Library\|Discover; home shelves + categories; catalog refresh; icons; detail; search; GitHub tab; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
 | Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage; **M42** `kilnHiltViewModel` Activity scope (Nav3 Hilt map miss) | NONE |
@@ -339,10 +339,14 @@ flowchart LR
   M44 --> M45[M45 Hilt + App Detail]
   M45 --> M46[M46 Widget rework]
   M46 --> M47[M47 Polish signed 0.2.5]
+  M47 --> M48[M48 Large files trash]
+  M48 --> M49[M49 Split restore]
+  M49 --> M50[M50 Components]
+  M50 --> v026[v0.2.6]
 ```
 
-1. **M0–M46** on main (#81); **M47** cuts **0.2.5** with mandatory upload-signed GitHub Releases.
-2. Next after M47: PLAN §12 leftovers (dual-user / tablet / cloud backup) or HyperOS release gates.
+1. **M48–M50** on `main`; cut **0.2.6** (code 9) after HyperOS M1–M8 release-gate checks.
+2. Next after 0.2.6: PLAN §12 leftovers (dual-user / tablet / cloud backup / ROOT backup) or F-Droid submit.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 
