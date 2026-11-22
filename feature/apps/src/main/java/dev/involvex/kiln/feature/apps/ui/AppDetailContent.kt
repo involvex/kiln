@@ -477,66 +477,16 @@ private fun ManagedSourceSection(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.feature_apps_managed_source_section), style = MaterialTheme.typography.titleSmall)
         if (managedLink == null) {
-            Text(
-                stringResource(R.string.feature_apps_managed_source_none),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            ManagedSourceUnlinked(
+                showOpenInPlayStore = showOpenInPlayStore,
+                onOpenInPlayStore = onOpenInPlayStore,
             )
-            if (showOpenInPlayStore) {
-                OutlinedButton(onClick = onOpenInPlayStore, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.feature_apps_open_in_play_store))
-                }
-            }
         } else {
-            Text(
-                stringResource(
-                    R.string.feature_apps_managed_source_current,
-                    managedLink.sourceId,
-                    managedLink.confidence.name,
-                ),
+            ManagedSourceLinked(
+                managedLink = managedLink,
+                onGitHubChannelChange = onGitHubChannelChange,
+                hasGitHubToken = hasGitHubToken,
             )
-            if (managedLink.pinned) {
-                Text(
-                    stringResource(R.string.feature_apps_managed_source_pinned),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            if (!managedLink.githubOwnerRepo.isNullOrBlank()) {
-                Text(
-                    stringResource(R.string.feature_apps_github_channel_label),
-                    style = MaterialTheme.typography.titleSmall,
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    GitHubReleaseChannel.entries.forEach { channel ->
-                        FilterChip(
-                            selected = managedLink.githubChannel == channel,
-                            onClick = { onGitHubChannelChange(channel) },
-                            label = {
-                                Text(
-                                    stringResource(
-                                        when (channel) {
-                                            GitHubReleaseChannel.STABLE -> R.string.feature_apps_github_channel_stable
-                                            GitHubReleaseChannel.PRE_RELEASE -> R.string.feature_apps_github_channel_pre_release
-                                            GitHubReleaseChannel.NIGHTLY -> R.string.feature_apps_github_channel_nightly
-                                        },
-                                    ),
-                                )
-                            },
-                        )
-                    }
-                }
-                if (managedLink.githubChannel == GitHubReleaseChannel.NIGHTLY && !hasGitHubToken) {
-                    Text(
-                        stringResource(R.string.feature_apps_github_channel_nightly_needs_pat),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            }
         }
         OutlinedButton(onClick = onOpenLinkSource, modifier = Modifier.fillMaxWidth()) {
             Text(
@@ -554,6 +504,90 @@ private fun ManagedSourceSection(
                 Text(stringResource(R.string.feature_apps_stop_tracking))
             }
         }
+    }
+}
+
+@Composable
+private fun ManagedSourceUnlinked(showOpenInPlayStore: Boolean, onOpenInPlayStore: () -> Unit) {
+    Text(
+        stringResource(R.string.feature_apps_managed_source_none),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    if (showOpenInPlayStore) {
+        OutlinedButton(onClick = onOpenInPlayStore, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.feature_apps_open_in_play_store))
+        }
+    }
+}
+
+@Composable
+private fun ManagedSourceLinked(
+    managedLink: ManagedSourceLink,
+    onGitHubChannelChange: (GitHubReleaseChannel) -> Unit,
+    hasGitHubToken: Boolean,
+) {
+    Text(
+        stringResource(
+            R.string.feature_apps_managed_source_current,
+            managedLink.sourceId,
+            managedLink.confidence.name,
+        ),
+    )
+    if (managedLink.pinned) {
+        Text(
+            stringResource(R.string.feature_apps_managed_source_pinned),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    if (!managedLink.githubOwnerRepo.isNullOrBlank()) {
+        ManagedGitHubChannelRow(
+            selected = managedLink.githubChannel,
+            onGitHubChannelChange = onGitHubChannelChange,
+            hasGitHubToken = hasGitHubToken,
+        )
+    }
+}
+
+@Composable
+private fun ManagedGitHubChannelRow(
+    selected: GitHubReleaseChannel,
+    onGitHubChannelChange: (GitHubReleaseChannel) -> Unit,
+    hasGitHubToken: Boolean,
+) {
+    Text(
+        stringResource(R.string.feature_apps_github_channel_label),
+        style = MaterialTheme.typography.titleSmall,
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        GitHubReleaseChannel.entries.forEach { channel ->
+            FilterChip(
+                selected = selected == channel,
+                onClick = { onGitHubChannelChange(channel) },
+                label = {
+                    Text(
+                        stringResource(
+                            when (channel) {
+                                GitHubReleaseChannel.STABLE -> R.string.feature_apps_github_channel_stable
+                                GitHubReleaseChannel.PRE_RELEASE -> R.string.feature_apps_github_channel_pre_release
+                                GitHubReleaseChannel.NIGHTLY -> R.string.feature_apps_github_channel_nightly
+                            },
+                        ),
+                    )
+                },
+            )
+        }
+    }
+    if (selected == GitHubReleaseChannel.NIGHTLY && !hasGitHubToken) {
+        Text(
+            stringResource(R.string.feature_apps_github_channel_nightly_needs_pat),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
     }
 }
 

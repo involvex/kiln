@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package dev.involvex.kiln.feature.onboarding
 
 import android.graphics.drawable.Drawable
@@ -723,7 +725,6 @@ private fun PackageIcon(packageName: String, modifier: Modifier = Modifier) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LinkSourceDialog(
     candidate: MatchCandidate,
@@ -734,86 +735,23 @@ private fun LinkSourceDialog(
     onLinkGithub: (ownerRepo: String) -> Unit,
 ) {
     var githubInput by remember(candidate.packageName) {
-        mutableStateOf(
-            candidate.githubOwnerRepo
-                ?: candidate.trackedSourceLabel
-                    .removePrefix("GitHub ")
-                    .takeIf { it.contains('/') }
-                ?: candidate.sourceCodeSuggestion
-                    ?.substringAfter("github.com/")
-                    ?.trim('/')
-                    ?.takeWhile { it != '#' && it != '?' }
-                    .orEmpty(),
-        )
+        mutableStateOf(initialGithubInput(candidate))
     }
     val suggestedRepos = remember(candidate, enabledRepos) {
-        buildList {
-            if (candidate.repoId.isNotBlank() && !candidate.repoId.startsWith("github:")) {
-                add(LinkableRepo(candidate.repoId, candidate.sourceLabel.ifBlank { candidate.repoId }))
-            }
-            candidate.alternateRepoIds.zip(candidate.alternateRepoLabels).forEach { (id, label) ->
-                if (none { it.id == id }) add(LinkableRepo(id, label))
-            }
-            enabledRepos.forEach { repo ->
-                if (none { it.id == repo.id }) add(repo)
-            }
-        }
+        suggestedFdroidRepos(candidate, enabledRepos)
     }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.onboarding_link_dialog_title, candidate.label)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(R.string.onboarding_link_dialog_body), style = MaterialTheme.typography.bodyMedium)
-                Text(stringResource(R.string.onboarding_link_fdroid_section), style = MaterialTheme.typography.titleSmall)
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    suggestedRepos.forEach { repo ->
-                        AssistChip(onClick = { onLinkFdroid(repo.id) }, label = { Text(repo.name) })
-                    }
-                }
-                if (suggestedRepos.isEmpty()) {
-                    Text(
-                        stringResource(R.string.onboarding_link_no_repos),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Text(
-                    stringResource(R.string.onboarding_link_saved_github_section),
-                    style = MaterialTheme.typography.titleSmall,
-                )
-                if (savedGithubRepos.isEmpty()) {
-                    Text(
-                        stringResource(R.string.onboarding_link_no_saved_github),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                } else {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        savedGithubRepos.forEach { ownerRepo ->
-                            AssistChip(onClick = { onLinkGithub(ownerRepo) }, label = { Text(ownerRepo) })
-                        }
-                    }
-                }
-                Text(stringResource(R.string.onboarding_link_github_section), style = MaterialTheme.typography.titleSmall)
-                OutlinedTextField(
-                    value = githubInput,
-                    onValueChange = { githubInput = it },
-                    label = { Text(stringResource(R.string.onboarding_link_github_hint)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Uri,
-                        imeAction = ImeAction.Done,
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
+            LinkSourceDialogBody(
+                suggestedRepos = suggestedRepos,
+                savedGithubRepos = savedGithubRepos,
+                githubInput = githubInput,
+                onGithubInputChange = { githubInput = it },
+                onLinkFdroid = onLinkFdroid,
+                onLinkGithub = onLinkGithub,
+            )
         },
         confirmButton = {
             TextButton(onClick = { onLinkGithub(githubInput) }, enabled = githubInput.contains('/')) {
@@ -826,4 +764,89 @@ private fun LinkSourceDialog(
             }
         },
     )
+}
+
+private fun initialGithubInput(candidate: MatchCandidate): String = candidate.githubOwnerRepo
+    ?: candidate.trackedSourceLabel
+        .removePrefix("GitHub ")
+        .takeIf { it.contains('/') }
+    ?: candidate.sourceCodeSuggestion
+        ?.substringAfter("github.com/")
+        ?.trim('/')
+        ?.takeWhile { it != '#' && it != '?' }
+        .orEmpty()
+
+private fun suggestedFdroidRepos(candidate: MatchCandidate, enabledRepos: List<LinkableRepo>): List<LinkableRepo> = buildList {
+    if (candidate.repoId.isNotBlank() && !candidate.repoId.startsWith("github:")) {
+        add(LinkableRepo(candidate.repoId, candidate.sourceLabel.ifBlank { candidate.repoId }))
+    }
+    candidate.alternateRepoIds.zip(candidate.alternateRepoLabels).forEach { (id, label) ->
+        if (none { it.id == id }) add(LinkableRepo(id, label))
+    }
+    enabledRepos.forEach { repo ->
+        if (none { it.id == repo.id }) add(repo)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun LinkSourceDialogBody(
+    suggestedRepos: List<LinkableRepo>,
+    savedGithubRepos: List<String>,
+    githubInput: String,
+    onGithubInputChange: (String) -> Unit,
+    onLinkFdroid: (repoId: String) -> Unit,
+    onLinkGithub: (ownerRepo: String) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(stringResource(R.string.onboarding_link_dialog_body), style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.onboarding_link_fdroid_section), style = MaterialTheme.typography.titleSmall)
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            suggestedRepos.forEach { repo ->
+                AssistChip(onClick = { onLinkFdroid(repo.id) }, label = { Text(repo.name) })
+            }
+        }
+        if (suggestedRepos.isEmpty()) {
+            Text(
+                stringResource(R.string.onboarding_link_no_repos),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(
+            stringResource(R.string.onboarding_link_saved_github_section),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        if (savedGithubRepos.isEmpty()) {
+            Text(
+                stringResource(R.string.onboarding_link_no_saved_github),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                savedGithubRepos.forEach { ownerRepo ->
+                    AssistChip(onClick = { onLinkGithub(ownerRepo) }, label = { Text(ownerRepo) })
+                }
+            }
+        }
+        Text(stringResource(R.string.onboarding_link_github_section), style = MaterialTheme.typography.titleSmall)
+        OutlinedTextField(
+            value = githubInput,
+            onValueChange = onGithubInputChange,
+            label = { Text(stringResource(R.string.onboarding_link_github_hint)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Uri,
+                imeAction = ImeAction.Done,
+            ),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }

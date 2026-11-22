@@ -53,6 +53,7 @@ data class AutoMatchUiState(
 )
 
 @HiltViewModel
+@Suppress("TooManyFunctions") // Match hub: filters, accept/link/unlink, and rematch share one VM.
 class AutoMatchViewModel @Inject constructor(
     private val installedAppsReader: InstalledAppsReader,
     private val indexDao: IndexDao,
