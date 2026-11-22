@@ -47,7 +47,11 @@ import dev.involvex.kiln.feature.settings.SettingsRoute
 import dev.involvex.kiln.feature.settings.SettingsToolsRoute
 import dev.involvex.kiln.feature.settings.SettingsUpdatesRoute
 import dev.involvex.kiln.feature.settings.activity.ActivityLogRoute
+import dev.involvex.kiln.feature.sources.SourcesImportRoute
+import dev.involvex.kiln.feature.sources.SourcesReposRoute
 import dev.involvex.kiln.feature.sources.SourcesRoute
+import dev.involvex.kiln.feature.sources.SourcesStarsRoute
+import dev.involvex.kiln.feature.sources.SourcesWatchlistRoute
 import dev.involvex.kiln.feature.sources.discovery.CatalogDetailRoute
 import dev.involvex.kiln.feature.sources.discovery.DiscoveryRoute
 import dev.involvex.kiln.feature.termux.TermuxRoute
@@ -76,7 +80,11 @@ import dev.involvex.kiln.navigation.SettingsMaintenanceKey
 import dev.involvex.kiln.navigation.SettingsNetworkKey
 import dev.involvex.kiln.navigation.SettingsToolsKey
 import dev.involvex.kiln.navigation.SettingsUpdatesKey
+import dev.involvex.kiln.navigation.SourcesImportKey
 import dev.involvex.kiln.navigation.SourcesKey
+import dev.involvex.kiln.navigation.SourcesReposKey
+import dev.involvex.kiln.navigation.SourcesStarsKey
+import dev.involvex.kiln.navigation.SourcesWatchlistKey
 import dev.involvex.kiln.navigation.TermuxKey
 import dev.involvex.kiln.navigation.TopLevelBackStack
 
@@ -203,12 +211,30 @@ private fun EntryProviderScope<Any>.kilnNavEntries(
     }
     entry<SourcesKey> {
         SourcesRoute(
+            onOpenRepos = { topLevelBackStack.add(SourcesReposKey) },
+            onOpenWatchlist = { topLevelBackStack.add(SourcesWatchlistKey) },
+            onOpenStars = { topLevelBackStack.add(SourcesStarsKey) },
+            onOpenImport = { topLevelBackStack.add(SourcesImportKey) },
             onOpenAutoMatch = { topLevelBackStack.add(AutoMatchKey) },
+        )
+    }
+    entry<SourcesReposKey> {
+        SourcesReposRoute(onBack = { topLevelBackStack.removeLast() })
+    }
+    entry<SourcesWatchlistKey> {
+        SourcesWatchlistRoute(onBack = { topLevelBackStack.removeLast() })
+    }
+    entry<SourcesStarsKey> {
+        SourcesStarsRoute(
+            onBack = { topLevelBackStack.removeLast() },
             onOpenGithubTokenSettings = {
                 topLevelBackStack.addTopLevel(SettingsKey)
                 topLevelBackStack.add(SettingsUpdatesKey)
             },
         )
+    }
+    entry<SourcesImportKey> {
+        SourcesImportRoute(onBack = { topLevelBackStack.removeLast() })
     }
     entry<AutoMatchKey> {
         AutoMatchRoute(onBack = { topLevelBackStack.removeLast() })

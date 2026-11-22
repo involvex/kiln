@@ -6,10 +6,42 @@
 `build-logic/convention/.../KilnAndroid.kt`. Bump both for every store or
 GitHub release. Keep [CHANGELOG.md](../CHANGELOG.md) in sync.
 
+Settings → About reads the installed APK version via `PackageManager` (no
+hardcoded string).
+
+## Automated cut (recommended)
+
+From a clean `main` that matches the latest `v*` tag:
+
+```powershell
+# Preview (writes nothing)
+.\scripts\release.ps1
+
+# Patch bump (default), commit, annotated tag, push → Release workflow
+.\scripts\release.ps1 -Yes
+
+# Optional: -Bump minor | -Bump major
+.\scripts\release.ps1 -Bump minor -Yes
+```
+
+The script:
+
+1. Refuses a dirty tree, a non-`main` branch, or a `versionName` that does not
+   match the latest `v*` tag.
+2. Builds a Keep a Changelog section from `## [Unreleased]` plus conventional
+   commits since that tag (`feat` → Added, `fix` → Fixed, `refactor`/`perf` →
+   Changed; docs/tests/chores skipped).
+3. Updates `KilnAndroid.kt`, `CHANGELOG.md`, `README.md` version lines, and the
+   current-status paragraph in `docs/ROADMAP.md`.
+4. With `-Yes`: commits `chore: release X.Y.Z`, creates `vX.Y.Z`, pushes branch
+   and tag. CI opens the GitHub Release (the script does not call
+   `gh release create`).
+
 ## GitHub Release (CI)
 
-1. Merge the release PR to `main`.
-2. Tag: `git tag -a v0.2.5 -m "Kiln 0.2.5" && git push origin v0.2.5`
+1. Merge feature work to `main`.
+2. Run `.\scripts\release.ps1 -Yes` (or tag manually:
+   `git tag -a v0.2.6 -m "Kiln 0.2.6" && git push origin v0.2.6`).
 3. Workflow [`.github/workflows/release.yml`](../.github/workflows/release.yml)
    builds a **upload-keystore signed** release APK (`kiln-<version>.apk`),
    verifies it with `apksigner`, and attaches it to the GitHub Release.

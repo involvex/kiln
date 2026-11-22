@@ -2,6 +2,20 @@
 <resources>
     <string name="feature_sources_title">Quellen</string>
     <string name="feature_sources_description">F-Droid-Repos synchronisieren, GitHub-PAT verwalten und Obtainium-/Discoverium-Exporte importieren. Updates erscheinen unter Apps.</string>
+    <string name="sources_category_back">Zurück</string>
+    <string name="sources_hub_repos">Repositories</string>
+    <string name="sources_hub_repos_sub">F-Droid-Repos, Spiegel und Priorität</string>
+    <string name="sources_hub_watchlist">Watchlist</string>
+    <string name="sources_hub_watchlist_sub">Apps, die du auf neue Katalogversionen beobachtest</string>
+    <string name="sources_hub_stars">GitHub-Sterne</string>
+    <string name="sources_hub_stars_sub">Markierte Repos als Updatequellen importieren</string>
+    <string name="sources_hub_import">Import</string>
+    <string name="sources_hub_import_sub">Obtainium-/Discoverium-JSON-Export</string>
+    <string name="sources_hub_match">Installierte Apps zuordnen</string>
+    <string name="sources_hub_match_sub">Pakete mit F-Droid- oder GitHub-Quellen verknüpfen</string>
+    <string name="sources_stars_search_hint">Markierte Repos filtern</string>
+    <string name="sources_stars_search_clear">Suche leeren</string>
+    <string name="sources_stars_search_count">%1$d von %2$d angezeigt</string>
     <string name="sources_sync_all">Alle Repos synchronisieren</string>
     <string name="sources_cancel_sync">Sync abbrechen</string>
     <string name="sources_syncing">Repos werden synchronisiert…</string>

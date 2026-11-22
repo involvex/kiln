@@ -5,6 +5,7 @@
     <string name="apps_segment_discover">Discover</string>
     <string name="apps_filters_menu">Filters and sort</string>
     <string name="feature_apps_search_hint">Search name or package</string>
+    <string name="feature_apps_search_clear">Clear search</string>
     <string name="feature_apps_filter_user">User</string>
     <string name="feature_apps_filter_system">System</string>
     <string name="feature_apps_filter_all">All</string>
