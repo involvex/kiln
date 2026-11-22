@@ -69,4 +69,35 @@
     <string name="freeze_msg_capability">DEBLOAT privilege is missing. Open Privilege setup.</string>
     <string name="freeze_msg_invalid_package">Invalid package name.</string>
     <string name="freeze_msg_service">Shizuku UserService unavailable. Reconnect Shizuku.</string>
+
+    <string name="processes_title">Processes</string>
+    <string name="processes_explain">Top apps by memory (same snapshot as the Processes home widget). Force-stop needs Shizuku and always asks for confirmation.</string>
+    <string name="processes_need_shizuku">Shizuku with shell diagnostics is required to list processes.</string>
+    <string name="processes_open_setup">Open Privilege setup</string>
+    <string name="processes_refresh">Refresh</string>
+    <string name="processes_empty">No processes returned.</string>
+    <string name="processes_error">Could not read processes (%1$s).</string>
+    <string name="processes_mem_line">%1$s MB</string>
+    <string name="processes_force_stop">Force stop</string>
+    <string name="processes_force_stop_title">Force-stop this app?</string>
+    <string name="processes_force_stop_body">%1$s will be stopped. Unsaved work in that app may be lost.</string>
+    <string name="processes_force_stop_confirm">Force stop</string>
+    <string name="processes_force_stop_cancel">Cancel</string>
+    <string name="processes_force_stop_ok">App force-stopped.</string>
+    <string name="processes_force_stop_blocked">Force-stop was blocked.</string>
+
+    <string name="users_title">Android users</string>
+    <string name="users_explain">Read-only list from pm list users. HyperOS Dual Apps / Second space may not appear as normal Android users. Kiln still installs only for user 0.</string>
+    <string name="users_need_shizuku">Shizuku with shell diagnostics is required to list users.</string>
+    <string name="users_open_setup">Open Privilege setup</string>
+    <string name="users_refresh">Refresh</string>
+    <string name="users_current">Kiln is running as user %1$d</string>
+    <string name="users_empty">No users returned.</string>
+    <string name="users_error">Could not list users (%1$s).</string>
+    <string name="users_only_owner">Only the owner user (0) is visible. Dual Apps is not exposed as a separate user on this device, or privilege cannot see it.</string>
+    <string name="users_row_title">User %1$d — %2$s</string>
+    <string name="users_row_current_running">Current · running</string>
+    <string name="users_row_current">Current</string>
+    <string name="users_row_running">Running</string>
+    <string name="users_row_stopped">Not running</string>
 </resources>

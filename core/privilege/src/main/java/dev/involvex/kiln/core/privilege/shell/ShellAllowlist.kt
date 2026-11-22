@@ -19,6 +19,9 @@ object ShellAllowlist {
     const val PM_TRIM_CACHES = "pm_trim_caches"
     const val PM_DISABLE_USER = "pm_disable_user"
     const val PM_ENABLE = "pm_enable"
+    const val PM_ENABLE_COMPONENT = "pm_enable_component"
+    const val PM_DISABLE_COMPONENT = "pm_disable_component"
+    const val PM_LIST_USERS = "pm_list_users"
     const val PM_INSTALL_EXISTING = "pm_install_existing"
     const val PM_SUSPEND = "pm_suspend"
     const val PM_UNSUSPEND = "pm_unsuspend"
@@ -37,6 +40,9 @@ object ShellAllowlist {
 
     private val PACKAGE_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
     private val PERMISSION_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
+
+    /** Component class: absolute, relative (`.Foo`), or inner (`Foo$Bar`). */
+    private val COMPONENT_CLASS = Regex("^[a-zA-Z_.][a-zA-Z0-9_$.]*$")
     private val APK_PATH = Regex("^/[\\w./\\-+]+\\.apk$", RegexOption.IGNORE_CASE)
 
     /** Staging tar under Kiln app external cache only. */
@@ -119,6 +125,14 @@ object ShellAllowlist {
             } else {
                 listOf("pm", "enable", "--user", "0", packageName)
             }
+        }
+
+        PM_ENABLE_COMPONENT -> buildComponentEnableDisableArgv(args, enable = true)
+
+        PM_DISABLE_COMPONENT -> buildComponentEnableDisableArgv(args, enable = false)
+
+        PM_LIST_USERS -> {
+            if (args.isNotEmpty()) null else listOf("pm", "list", "users")
         }
 
         PM_INSTALL_EXISTING -> {
@@ -258,6 +272,12 @@ object ShellAllowlist {
 
     fun isSafePackageName(value: String): Boolean = value.length in 3..255 && PACKAGE_NAME.matches(value)
 
+    fun isSafeComponentClassName(value: String): Boolean {
+        if (value.length !in 1..255) return false
+        if (value.contains("..") || value.contains('/') || value.contains('\\')) return false
+        return COMPONENT_CLASS.matches(value)
+    }
+
     fun isSafePermissionName(value: String): Boolean = value.length in 8..255 && PERMISSION_NAME.matches(value)
 
     fun isAllowedAppOp(value: String): Boolean = value in ALLOWED_APP_OPS
@@ -292,6 +312,19 @@ object ShellAllowlist {
 
     /** Cap split count so argv stays bounded for UserService. */
     private const val MAX_INSTALL_MULTIPLE = 64
+
+    /**
+     * Builds `pm enable|disable package/class` from two validated tokens.
+     * Never concatenates unvalidated user input into a shell string.
+     */
+    private fun buildComponentEnableDisableArgv(args: List<String>, enable: Boolean): List<String>? {
+        if (args.size != 2) return null
+        val packageName = args[0]
+        val className = args[1]
+        if (!isSafePackageName(packageName) || !isSafeComponentClassName(className)) return null
+        val component = "$packageName/$className"
+        return listOf("pm", if (enable) "enable" else "disable", "--user", "0", component)
+    }
 
     private fun buildInstallMultipleArgv(args: List<String>, downgrade: Boolean): List<String>? {
         if (args.isEmpty() || args.size > MAX_INSTALL_MULTIPLE) return null

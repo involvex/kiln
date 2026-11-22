@@ -35,6 +35,8 @@ import dev.involvex.kiln.feature.onboarding.privilege.PrivilegeSetupRoute
 import dev.involvex.kiln.feature.permissions.PermissionAuditRoute
 import dev.involvex.kiln.feature.permissions.background.BackgroundControlsRoute
 import dev.involvex.kiln.feature.permissions.freeze.FreezeRoute
+import dev.involvex.kiln.feature.permissions.processes.ProcessesRoute
+import dev.involvex.kiln.feature.permissions.users.UsersRoute
 import dev.involvex.kiln.feature.settings.SettingsAboutRoute
 import dev.involvex.kiln.feature.settings.SettingsAppearanceRoute
 import dev.involvex.kiln.feature.settings.SettingsAutomationRoute
@@ -69,6 +71,7 @@ import dev.involvex.kiln.navigation.FreezeKey
 import dev.involvex.kiln.navigation.ManageKey
 import dev.involvex.kiln.navigation.PermissionAuditKey
 import dev.involvex.kiln.navigation.PrivilegeSetupKey
+import dev.involvex.kiln.navigation.ProcessesKey
 import dev.involvex.kiln.navigation.SettingsAboutKey
 import dev.involvex.kiln.navigation.SettingsAppearanceKey
 import dev.involvex.kiln.navigation.SettingsAutomationKey
@@ -87,6 +90,7 @@ import dev.involvex.kiln.navigation.SourcesStarsKey
 import dev.involvex.kiln.navigation.SourcesWatchlistKey
 import dev.involvex.kiln.navigation.TermuxKey
 import dev.involvex.kiln.navigation.TopLevelBackStack
+import dev.involvex.kiln.navigation.UsersKey
 
 private data class TopLevelDestination(val key: Any, val labelRes: Int, val icon: ImageVector)
 
@@ -198,6 +202,7 @@ private fun EntryProviderScope<Any>.kilnNavEntries(
     }
     entry<AppDetailKey> { key ->
         AppDetailRoute(
+            onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
             packageName = key.packageName,
             onBack = { topLevelBackStack.removeLast() },
         )
@@ -301,6 +306,8 @@ private fun EntryProviderScope<Any>.kilnNavEntries(
             onOpenPermissionAudit = { topLevelBackStack.add(PermissionAuditKey) },
             onOpenBackgroundControls = { topLevelBackStack.add(BackgroundControlsKey) },
             onOpenFreeze = { topLevelBackStack.add(FreezeKey) },
+            onOpenProcesses = { topLevelBackStack.add(ProcessesKey) },
+            onOpenUsers = { topLevelBackStack.add(UsersKey) },
             onOpenTermux = { topLevelBackStack.add(TermuxKey) },
             onOpenActivityLog = { topLevelBackStack.add(ActivityLogKey) },
         )
@@ -334,6 +341,18 @@ private fun EntryProviderScope<Any>.kilnNavEntries(
     }
     entry<FreezeKey> {
         FreezeRoute(
+            onBack = { topLevelBackStack.removeLast() },
+            onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
+        )
+    }
+    entry<ProcessesKey> {
+        ProcessesRoute(
+            onBack = { topLevelBackStack.removeLast() },
+            onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
+        )
+    }
+    entry<UsersKey> {
+        UsersRoute(
             onBack = { topLevelBackStack.removeLast() },
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
         )

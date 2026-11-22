@@ -87,6 +87,12 @@ data object BackgroundControlsKey
 data object FreezeKey
 
 @Serializable
+data object ProcessesKey
+
+@Serializable
+data object UsersKey
+
+@Serializable
 data object TermuxKey
 
 @Serializable

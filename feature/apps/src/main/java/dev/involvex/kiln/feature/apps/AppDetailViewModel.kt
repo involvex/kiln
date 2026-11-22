@@ -4,10 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.involvex.kiln.core.common.Result
+import dev.involvex.kiln.core.model.ActivityLogEvents
+import dev.involvex.kiln.core.model.ActivityLogRecorder
+import dev.involvex.kiln.core.model.ActivityLogType
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.ApkRollbackCache
+import dev.involvex.kiln.core.model.AppComponentInfo
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
+import dev.involvex.kiln.core.model.ComponentTogglePolicy
 import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallQueue
@@ -18,6 +23,7 @@ import dev.involvex.kiln.core.model.RollbackApkEntry
 import dev.involvex.kiln.feature.apps.activities.AppActivitiesRepository
 import dev.involvex.kiln.feature.apps.data.InstalledAppsRepository
 import dev.involvex.kiln.feature.apps.data.InstallerLabels
+import dev.involvex.kiln.feature.apps.denylist.AppProtectedPackageResolver
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +43,8 @@ class AppDetailViewModel @Inject constructor(
     private val privilegedExecutor: PrivilegedExecutor,
     private val gitHubAuth: GitHubAuthHeaderProvider,
     private val backgroundUpdatePreferences: BackgroundUpdatePreferences,
+    private val protectedPackageResolver: AppProtectedPackageResolver,
+    private val activityLog: ActivityLogRecorder,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppDetailUiState())
     val uiState: StateFlow<AppDetailUiState> = _uiState.asStateFlow()
@@ -101,8 +109,15 @@ class AppDetailViewModel @Inject constructor(
             },
             viewModelScope.launch {
                 privilegedExecutor.observeStatus().collect { status ->
+                    val deny = protectedPackageResolver.resolve()
+                    val pkg = packageName
                     _uiState.update {
-                        it.copy(canSilentDowngrade = PrivilegeCapability.SILENT_INSTALL in status.capabilities)
+                        it.copy(
+                            canSilentDowngrade = PrivilegeCapability.SILENT_INSTALL in status.capabilities,
+                            canToggleComponents = PrivilegeCapability.DEBLOAT in status.capabilities,
+                            componentPackageDenylisted = pkg != null &&
+                                ComponentTogglePolicy.isDenylisted(pkg, deny.keys),
+                        )
                     }
                 }
             },
@@ -173,11 +188,13 @@ class AppDetailViewModel @Inject constructor(
 
             is AppDetailEvent.UpdateCooldownChanged -> setUpdateCooldownDays(event.days)
 
-            is AppDetailEvent.RequestRollback -> requestRollback(event.entry)
-
-            AppDetailEvent.DismissRollback -> _uiState.update { it.copy(pendingRollback = null) }
-
-            AppDetailEvent.ConfirmRollback -> confirmRollback()
+            is AppDetailEvent.RequestRollback,
+            AppDetailEvent.DismissRollback,
+            AppDetailEvent.ConfirmRollback,
+            is AppDetailEvent.RequestComponentToggle,
+            AppDetailEvent.DismissComponentToggle,
+            AppDetailEvent.ConfirmComponentToggle,
+            -> onConfirmableEvent(event)
 
             AppDetailEvent.OpenLinkSource,
             AppDetailEvent.DismissLinkSource,
@@ -202,6 +219,8 @@ class AppDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(activitiesLoading = true) }
             val components = activitiesRepository.exportedComponents(pkg)
+            val deny = protectedPackageResolver.resolve()
+            val caps = privilegedExecutor.currentStatus().capabilities
             _uiState.update {
                 it.copy(
                     activities = components.activities,
@@ -209,7 +228,82 @@ class AppDetailViewModel @Inject constructor(
                     receivers = components.receivers,
                     providers = components.providers,
                     activitiesLoading = false,
+                    canToggleComponents = PrivilegeCapability.DEBLOAT in caps,
+                    componentPackageDenylisted = ComponentTogglePolicy.isDenylisted(pkg, deny.keys),
                 )
+            }
+        }
+    }
+
+    private fun onConfirmableEvent(event: AppDetailEvent) {
+        when (event) {
+            is AppDetailEvent.RequestRollback -> requestRollback(event.entry)
+            AppDetailEvent.DismissRollback -> _uiState.update { it.copy(pendingRollback = null) }
+            AppDetailEvent.ConfirmRollback -> confirmRollback()
+            is AppDetailEvent.RequestComponentToggle -> requestComponentToggle(event.component, event.enable)
+            AppDetailEvent.DismissComponentToggle -> _uiState.update { it.copy(pendingComponentToggle = null) }
+            AppDetailEvent.ConfirmComponentToggle -> confirmComponentToggle()
+            else -> Unit
+        }
+    }
+
+    private fun requestComponentToggle(component: AppComponentInfo, enable: Boolean) {
+        val deny = protectedPackageResolver.resolve()
+        if (!ComponentTogglePolicy.canOfferToggle(
+                exported = component.exported,
+                hasDebloatCapability = _uiState.value.canToggleComponents,
+                packageName = component.packageName,
+                denylistedPackages = deny.keys,
+            )
+        ) {
+            showMessage(
+                when {
+                    !_uiState.value.canToggleComponents -> "component_needs_privilege"
+                    ComponentTogglePolicy.isDenylisted(component.packageName, deny.keys) -> "component_denylisted"
+                    !component.exported -> "component_not_exported"
+                    else -> "component_toggle_blocked"
+                },
+            )
+            return
+        }
+        _uiState.update {
+            it.copy(pendingComponentToggle = PendingComponentToggle(component = component, enable = enable))
+        }
+    }
+
+    private fun confirmComponentToggle() {
+        val pending = _uiState.value.pendingComponentToggle ?: return
+        val deny = protectedPackageResolver.resolve()
+        if (ComponentTogglePolicy.isDenylisted(pending.component.packageName, deny.keys)) {
+            _uiState.update { it.copy(pendingComponentToggle = null) }
+            showMessage("component_denylisted")
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(componentToggleInProgress = true, pendingComponentToggle = null) }
+            val result = if (pending.enable) {
+                privilegedExecutor.enableComponent(pending.component.packageName, pending.component.className)
+            } else {
+                privilegedExecutor.disableComponent(pending.component.packageName, pending.component.className)
+            }
+            val ok = result is Result.Success
+            activityLog.record(
+                ActivityLogEvents.create(
+                    type = ActivityLogType.SHELL,
+                    action = if (pending.enable) "component_enable" else "component_disable",
+                    success = ok,
+                    packageName = pending.component.packageName,
+                    detailKey = pending.component.className.substringAfterLast('.').take(COMPONENT_DETAIL_MAX),
+                ),
+            )
+            _uiState.update { it.copy(componentToggleInProgress = false) }
+            when (result) {
+                is Result.Success -> {
+                    showMessage(if (pending.enable) "component_enabled" else "component_disabled")
+                    loadActivities()
+                }
+
+                is Result.Failure -> showMessage(result.message)
             }
         }
     }
@@ -419,5 +513,9 @@ class AppDetailViewModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    companion object {
+        private const val COMPONENT_DETAIL_MAX = 64
     }
 }

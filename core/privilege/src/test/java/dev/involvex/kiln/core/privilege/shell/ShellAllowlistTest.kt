@@ -139,6 +139,30 @@ class ShellAllowlistTest {
     }
 
     @Test
+    fun pm_component_enable_disable_and_list_users() {
+        val pkg = "com.example.app"
+        val cls = "com.example.app.MyService"
+        assertEquals(
+            listOf("pm", "enable", "--user", "0", "$pkg/$cls"),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_ENABLE_COMPONENT, listOf(pkg, cls)),
+        )
+        assertEquals(
+            listOf("pm", "disable", "--user", "0", "$pkg/.MyReceiver"),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_DISABLE_COMPONENT, listOf(pkg, ".MyReceiver")),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_ENABLE_COMPONENT, listOf(pkg, "evil;rm")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_DISABLE_COMPONENT, listOf("bad;pkg", cls)))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_ENABLE_COMPONENT, listOf(pkg)))
+        assertEquals(
+            listOf("pm", "list", "users"),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_LIST_USERS, emptyList()),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_LIST_USERS, listOf("0")))
+        assertTrue(ShellAllowlist.isSafeComponentClassName("com.foo.Bar\$Inner"))
+        assertFalse(ShellAllowlist.isSafeComponentClassName("../Evil"))
+    }
+
+    @Test
     fun suspendAndUnsuspend_requireSafePackage() {
         val pkg = "com.example.app"
         assertEquals(

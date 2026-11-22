@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M48–M50** Done on `main`. App version **0.2.6** (code 9). Tag `v0.2.6` after HyperOS M1–M8 release-gate checks. F-Droid submit / dual-user unscheduled.
+**Current status:** **M51–M53** Done on `main`. App version **0.2.7** (code 10). Tag `v0.2.7` after HyperOS checks for the three new screens. F-Droid submit / dual-user installs / cloud / ROOT backup unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -65,6 +65,9 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M48** | Storage large files + trash | Done | [`prompts/M48-storage-large-files-trash.md`](./prompts/M48-storage-large-files-trash.md) · `m48-storage-large-files-trash` | SAF ≥50MB files; same-size+hash duplicates; `.kiln-trash` undo/purge; maintenance age-prune |
 | **M49** | Split backup restore | Done | [`prompts/M49-split-backup-restore.md`](./prompts/M49-split-backup-restore.md) · `m49-split-backup-restore` | Restore enqueue all APKs from archive (M39 installer) |
 | **M50** | App component lists | Done | [`prompts/M50-app-components.md`](./prompts/M50-app-components.md) · `m50-app-components` | Exported services/receivers/providers (read-only) |
+| **M51** | Component enable / disable | Done | [`prompts/M51-component-toggles.md`](./prompts/M51-component-toggles.md) · `m51-component-toggles` | Shizuku `pm enable`/`disable` one component; denylist; NONE read-only |
+| **M52** | In-app process list | Done | [`prompts/M52-manage-processes.md`](./prompts/M52-manage-processes.md) · `m52-manage-processes` | Settings → Tools processes; force-stop confirm; reuse widget snapshot |
+| **M53** | Read-only user census | Done | [`prompts/M53-user-census.md`](./prompts/M53-user-census.md) · `m53-user-census` | `pm list users` + current user id; no `--user N` installs |
 
 ---
 
@@ -89,7 +92,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | SAF backup rotation / data tiers / encryption | Done (M40 #69) | SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM; ROOT / cloud deferred |
 | APK tools 2 (inspect + compare) | Done | M29 (#47); M31 (#49); universal merge M35 (#56) |
 | Mirrors / proxy | Done | M30 #48 |
-| Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); dual-user / tablet unscheduled |
+| Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); M53 read-only user census; dual-user installs / tablet unscheduled |
 | Publishing / F-Droid submit | Partial | M47: tag workflow requires upload signing + apksigner; screenshots / F-Droid submit deferred |
 | HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
@@ -105,11 +108,11 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 Update after each milestone. Tier = active `PrivilegedExecutor`.
 
-| Feature | Now (main, post-M50 / 0.2.6) | Needs tier |
+| Feature | Now (main, post-M53 / 0.2.7) | Needs tier |
 | --- | --- | --- |
 | Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
 | List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
-| App detail | ✅ Version, installer, SHA-256, paths, permissions; **M43** exported activities + Start/pin shortcut; **M50** exported services/receivers/providers (read-only); rollback list + Shizuku downgrade confirm | NONE / SHIZUKU |
+| App detail | ✅ Version, installer, SHA-256, paths, permissions; **M43** activities + Start/pin; **M50/M51** services/receivers/providers with enable/disable (Shizuku + denylist; non-exported read-only); rollback + Shizuku downgrade | NONE / SHIZUKU |
 | APK export (single / batch) | ✅ `.apk` / `.apks` STORED / `.xapk`; SAF + share + WorkManager batch | NONE |
 | Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
 | Sources / updates | ✅ F-Droid/Izzy/Guardian defaults + FP upsert; `fdroidrepo(s):` / `?fingerprint=` deep links; index-v2 + entry.jar verify; GitHub; **M42** starred import (PAT review → multi-select); Obtainium import; Room cache; per-repo mirrors (M30) | NONE (+ network) |
@@ -124,6 +127,8 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Kiln-Config export/import | ✅ SAF JSON merge of repos, managed apps, non-secret prefs (no PAT) | NONE |
 | Activity log | ✅ Room-backed searchable log (install/backup/cache/maintenance/shell/…) | NONE |
 | Widgets / QS | ✅ M46: Updates (preview+Check); Cache (confirm/`CLEAR_CACHE`); Processes (mem/CPU+`FORCE_STOP`); QS Check now | NONE / SHIZUKU (`CLEAR_CACHE`, `RUN_SHELL_DIAGNOSTIC`, `FORCE_STOP`) |
+| In-app processes | ✅ **M52** Settings → Tools → Processes (same meminfo + force-stop gate as widget) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`, `FORCE_STOP`) |
+| Android user census | ✅ **M53** Settings → Tools → Android users (`pm list users` read-only; installs still `--user 0`) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`) |
 | Permission audit | ✅ Dangerous overview; `pm revoke` + basic AppOps set | NONE / SHIZUKU (`MANAGE_APP_OPS`) |
 | Background controls | ✅ HyperOS Autostart + battery Unrestricted/Optimized/Restricted | SHIZUKU (`MANAGE_APP_OPS`) |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
@@ -137,7 +142,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Repo priority | ✅ Sources ↑↓ reorder; `ensureKnownRepos` preserves user priority; Auto-match / update conflict tie-break | NONE |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
-| Release / store prep | ✅ version `0.2.6` (code 9); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG; F-Droid submit deferred | — |
+| Release / store prep | ✅ version `0.2.7` (code 10); About links; `docs/PRIVACY.md`; fastlane en/de; tag `v*` workflow; CHANGELOG; F-Droid submit deferred | — |
 | App Discovery | ✅ Apps → Library\|Discover; home shelves + categories; catalog refresh; icons; detail; search; GitHub tab; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
 | Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage; **M42** `kilnHiltViewModel` Activity scope (Nav3 Hilt map miss) | NONE |
@@ -343,10 +348,14 @@ flowchart LR
   M48 --> M49[M49 Split restore]
   M49 --> M50[M50 Components]
   M50 --> v026[v0.2.6]
+  v026 --> M51[M51 Component toggles]
+  M51 --> M52[M52 In-app processes]
+  M52 --> M53[M53 User census]
+  M53 --> v027[v0.2.7]
 ```
 
-1. **M48–M50** on `main`; cut **0.2.6** (code 9) after HyperOS M1–M8 release-gate checks.
-2. Next after 0.2.6: PLAN §12 leftovers (dual-user / tablet / cloud backup / ROOT backup) or F-Droid submit.
+1. **M51–M53** Done; cut **0.2.7** (code 10) after HyperOS checks for the three new screens.
+2. After 0.2.7: `--user N` installs only if M53 shows extra user ids on device; else tablet / cloud / ROOT backup / F-Droid when requested.
 3. F-Droid submit still deferred unless explicitly requested.
 4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
 

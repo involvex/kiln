@@ -1,5 +1,6 @@
 package dev.involvex.kiln.feature.apps.activities
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.pm.ComponentInfo
 import android.content.pm.PackageManager
@@ -7,7 +8,6 @@ import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.involvex.kiln.core.common.IoDispatcher
 import dev.involvex.kiln.core.model.AppActivityInfo
-import dev.involvex.kiln.core.model.AppComponentFilter
 import dev.involvex.kiln.core.model.AppComponentInfo
 import dev.involvex.kiln.core.model.AppComponentKind
 import javax.inject.Inject
@@ -34,7 +34,8 @@ class AppActivitiesRepository @Inject constructor(
     suspend fun exportedComponents(packageName: String): ExportedComponents = withContext(ioDispatcher) {
         val info = packageInfoOrNull(packageName)
             ?: return@withContext ExportedComponents(emptyList(), emptyList(), emptyList(), emptyList())
-        val activities = AppComponentFilter.exportedOnly(info.activities?.toList().orEmpty()) { it.exported }
+        val activities = info.activities?.toList().orEmpty()
+            .filter { it.exported }
             .map { activity ->
                 AppActivityInfo(
                     packageName = packageName,
@@ -49,24 +50,38 @@ class AppActivitiesRepository @Inject constructor(
             .sortedBy { it.label.lowercase() }
         ExportedComponents(
             activities = activities,
-            services = mapExported(packageName, info.services?.toList().orEmpty(), AppComponentKind.SERVICE),
-            receivers = mapExported(packageName, info.receivers?.toList().orEmpty(), AppComponentKind.RECEIVER),
-            providers = mapExported(packageName, info.providers?.toList().orEmpty(), AppComponentKind.PROVIDER),
+            services = mapComponents(packageName, info.services?.toList().orEmpty(), AppComponentKind.SERVICE),
+            receivers = mapComponents(packageName, info.receivers?.toList().orEmpty(), AppComponentKind.RECEIVER),
+            providers = mapComponents(packageName, info.providers?.toList().orEmpty(), AppComponentKind.PROVIDER),
         )
     }
 
-    private fun mapExported(packageName: String, items: List<ComponentInfo>, kind: AppComponentKind): List<AppComponentInfo> =
-        AppComponentFilter.exportedOnly(items) { it.exported }
-            .map { component ->
-                AppComponentInfo(
-                    packageName = packageName,
-                    className = component.name,
-                    label = componentLabel(component),
-                    exported = true,
-                    kind = kind,
-                )
-            }
-            .sortedBy { it.label.lowercase() }
+    private fun mapComponents(packageName: String, items: List<ComponentInfo>, kind: AppComponentKind): List<AppComponentInfo> = items
+        .map { component ->
+            AppComponentInfo(
+                packageName = packageName,
+                className = component.name,
+                label = componentLabel(component),
+                exported = component.exported,
+                enabled = isComponentEnabled(packageName, component),
+                kind = kind,
+            )
+        }
+        .sortedWith(compareByDescending<AppComponentInfo> { it.exported }.thenBy { it.label.lowercase() })
+
+    private fun isComponentEnabled(packageName: String, component: ComponentInfo): Boolean {
+        val state = packageManager.getComponentEnabledSetting(ComponentName(packageName, component.name))
+        return when (state) {
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER,
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED,
+            -> false
+
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
+
+            else -> component.enabled
+        }
+    }
 
     private fun componentLabel(component: ComponentInfo): String =
         component.loadLabel(packageManager)?.toString()?.takeIf { it.isNotBlank() }

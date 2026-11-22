@@ -125,7 +125,7 @@ Die UI fragt nie „ist Shizuku da?", sondern `capabilities: Set<Capability>` au
 
 - Daten-/Cache-Größe → M5 (`PACKAGE_USAGE_STATS` / `StorageStatsManager`)
 - Update-Badge → M2
-- Komponentenliste (Activities/Services/…) → Backlog / spätere Meilensteine
+- Komponentenliste (Activities/Services/…) → M43 activities; M50 lists; M51 enable/disable
 - Cache leeren → M5; Backup → M7
 
 ### 4.2 Sources & Updates (`feature:sources`)
@@ -460,3 +460,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 27. **M49** Split backup restore (all APKs via LocalInstallRequest) → Done
 28. **M50** Exported services / receivers / providers (read-only) → Done
 29. Cut **0.2.6** (versionCode 9) after HyperOS M1–M8 release-gate checks
+30. **M51** Component enable / disable (Shizuku; denylist; NONE read-only) → Done
+31. **M52** In-app process list (reuse widget meminfo + force-stop gate) → Done
+32. **M53** Read-only `pm list users` census (no `--user N` installs yet) → Done
+33. Cut **0.2.7** (versionCode 10) after HyperOS checks for M51–M53

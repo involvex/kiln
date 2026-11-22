@@ -96,6 +96,11 @@ fun AppDetailContent(
     onActivitiesQueryChange: (String) -> Unit = {},
     showActivitiesSearch: Boolean = false,
     onActivityMessage: (String) -> Unit = {},
+    canToggleComponents: Boolean = false,
+    componentPackageDenylisted: Boolean = false,
+    componentToggleInProgress: Boolean = false,
+    onRequestComponentToggle: (AppComponentInfo, Boolean) -> Unit = { _, _ -> },
+    onOpenPrivilegeSetup: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -204,6 +209,11 @@ fun AppDetailContent(
                     hint = stringResource(R.string.feature_apps_components_hint),
                     emptyLabel = stringResource(R.string.feature_apps_services_empty),
                     components = services,
+                    canToggleComponents = canToggleComponents,
+                    packageDenylisted = componentPackageDenylisted,
+                    toggleInProgress = componentToggleInProgress,
+                    onRequestToggle = onRequestComponentToggle,
+                    onOpenPrivilegeSetup = onOpenPrivilegeSetup,
                 )
             }
             ComponentToggle(
@@ -216,6 +226,11 @@ fun AppDetailContent(
                     hint = stringResource(R.string.feature_apps_components_hint),
                     emptyLabel = stringResource(R.string.feature_apps_receivers_empty),
                     components = receivers,
+                    canToggleComponents = canToggleComponents,
+                    packageDenylisted = componentPackageDenylisted,
+                    toggleInProgress = componentToggleInProgress,
+                    onRequestToggle = onRequestComponentToggle,
+                    onOpenPrivilegeSetup = onOpenPrivilegeSetup,
                 )
             }
             ComponentToggle(
@@ -228,6 +243,11 @@ fun AppDetailContent(
                     hint = stringResource(R.string.feature_apps_components_hint),
                     emptyLabel = stringResource(R.string.feature_apps_providers_empty),
                     components = providers,
+                    canToggleComponents = canToggleComponents,
+                    packageDenylisted = componentPackageDenylisted,
+                    toggleInProgress = componentToggleInProgress,
+                    onRequestToggle = onRequestComponentToggle,
+                    onOpenPrivilegeSetup = onOpenPrivilegeSetup,
                 )
             }
         }

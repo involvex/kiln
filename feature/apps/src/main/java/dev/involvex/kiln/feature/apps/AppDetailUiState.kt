@@ -14,6 +14,8 @@ import dev.involvex.kiln.core.model.RollbackApkEntry
 import dev.involvex.kiln.feature.apps.activities.AppActivityInfoQuery
 import dev.involvex.kiln.feature.apps.activities.AppActivityLabels
 
+data class PendingComponentToggle(val component: AppComponentInfo, val enable: Boolean)
+
 data class AppDetailUiState(
     val isLoading: Boolean = true,
     val detail: InstalledAppDetail? = null,
@@ -46,6 +48,10 @@ data class AppDetailUiState(
     val providers: List<AppComponentInfo> = emptyList(),
     val activitiesLoading: Boolean = false,
     val activitiesQuery: String = "",
+    val canToggleComponents: Boolean = false,
+    val componentPackageDenylisted: Boolean = false,
+    val pendingComponentToggle: PendingComponentToggle? = null,
+    val componentToggleInProgress: Boolean = false,
 ) {
     val filteredActivities: List<AppActivityInfo>
         get() = activities.filter {
@@ -98,4 +104,7 @@ sealed interface AppDetailEvent {
     data class RequestRollback(val entry: RollbackApkEntry) : AppDetailEvent
     data object ConfirmRollback : AppDetailEvent
     data object DismissRollback : AppDetailEvent
+    data class RequestComponentToggle(val component: AppComponentInfo, val enable: Boolean) : AppDetailEvent
+    data object ConfirmComponentToggle : AppDetailEvent
+    data object DismissComponentToggle : AppDetailEvent
 }

@@ -16,6 +16,8 @@ fun SettingsToolsRoute(
     onOpenPermissionAudit: () -> Unit,
     onOpenBackgroundControls: () -> Unit,
     onOpenFreeze: () -> Unit,
+    onOpenProcesses: () -> Unit,
+    onOpenUsers: () -> Unit,
     onOpenTermux: () -> Unit,
     onOpenActivityLog: () -> Unit,
     modifier: Modifier = Modifier,
@@ -55,6 +57,18 @@ fun SettingsToolsRoute(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.settings_freeze))
+            }
+            OutlinedButton(
+                onClick = onOpenProcesses,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.settings_processes))
+            }
+            OutlinedButton(
+                onClick = onOpenUsers,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.settings_users))
             }
             OutlinedButton(
                 onClick = onOpenTermux,
