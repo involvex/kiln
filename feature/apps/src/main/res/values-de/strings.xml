@@ -122,7 +122,9 @@
     <string name="feature_apps_detail_section_security">Sicherheit</string>
     <string name="feature_apps_detail_section_technical">Technisch</string>
     <string name="feature_apps_detail_chip_system">System</string>
-    <string name="feature_apps_detail_chip_update">Update verfügbar</string>
+    <string name="feature_apps_detail_update_banner_title">Update verfügbar</string>
+    <string name="feature_apps_detail_update_banner_body">%1$s · %2$s</string>
+    <string name="feature_apps_update_version_transition">Installiert %1$s → %2$s</string>
     <string name="feature_apps_detail_meta_version">Version</string>
     <string name="feature_apps_detail_meta_sdk">SDK</string>
     <string name="feature_apps_detail_meta_installed">Installiert</string>
