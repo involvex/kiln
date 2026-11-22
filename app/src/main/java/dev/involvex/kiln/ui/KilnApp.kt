@@ -27,6 +27,7 @@ import dev.involvex.kiln.R
 import dev.involvex.kiln.core.designsystem.scroll.LocalScrollToTopSignal
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopSignal
 import dev.involvex.kiln.feature.apps.AppDetailRoute
+import dev.involvex.kiln.feature.apps.UpdatesDeepLinkStore
 import dev.involvex.kiln.feature.apps.apktools.IncomingApkInstallStore
 import dev.involvex.kiln.feature.debloat.DebloatRoute
 import dev.involvex.kiln.feature.onboarding.AutoMatchRoute
@@ -86,6 +87,7 @@ fun KilnApp(
     modifier: Modifier = Modifier,
     manageDeepLinkStore: ManageDeepLinkStore? = null,
     privilegeSetupDeepLinkStore: PrivilegeSetupDeepLinkStore? = null,
+    updatesDeepLinkStore: UpdatesDeepLinkStore? = null,
     incomingApkInstallStore: IncomingApkInstallStore? = null,
 ) {
     val destinations = listOf(
@@ -112,6 +114,17 @@ fun KilnApp(
             privilegeSetupDeepLinkStore.pending.collect { pending ->
                 if (pending && privilegeSetupDeepLinkStore.consume()) {
                     topLevelBackStack.add(PrivilegeSetupKey)
+                }
+            }
+        }
+    }
+
+    // Do not consume here — AppsViewModel applies the Updates filter and clears the flag.
+    if (updatesDeepLinkStore != null) {
+        LaunchedEffect(updatesDeepLinkStore) {
+            updatesDeepLinkStore.pending.collect { pending ->
+                if (pending) {
+                    topLevelBackStack.addTopLevel(AppsKey)
                 }
             }
         }

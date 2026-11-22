@@ -41,6 +41,7 @@ class AppsViewModel @Inject constructor(
     private val apkExporter: ApkExporter,
     private val appUpdateRepository: AppUpdateRepository,
     private val installQueue: InstallQueue,
+    private val updatesDeepLinkStore: UpdatesDeepLinkStore,
 ) : ViewModel() {
     private val query = MutableStateFlow("")
     private val filter = MutableStateFlow(AppListFilter.USER)
@@ -190,6 +191,14 @@ class AppsViewModel @Inject constructor(
         viewModelScope.launch {
             appUpdateRepository.refreshUpdates()
         }
+        viewModelScope.launch {
+            updatesDeepLinkStore.pending.collect { pending ->
+                if (pending && updatesDeepLinkStore.consume()) {
+                    openUpdatesFilter()
+                    appUpdateRepository.refreshUpdates()
+                }
+            }
+        }
     }
 
     fun onEvent(event: AppsEvent) {
@@ -270,9 +279,16 @@ class AppsViewModel @Inject constructor(
         if (filter.value == AppListFilter.UPDATES) {
             filter.value = filterBeforeUpdates
         } else {
-            filterBeforeUpdates = filter.value
-            filter.value = AppListFilter.UPDATES
+            openUpdatesFilter()
         }
+    }
+
+    private fun openUpdatesFilter() {
+        if (filter.value != AppListFilter.UPDATES) {
+            filterBeforeUpdates = filter.value
+        }
+        filter.value = AppListFilter.UPDATES
+        updateCheckMessage.value = null
     }
 
     private fun requestUpdateAll() {

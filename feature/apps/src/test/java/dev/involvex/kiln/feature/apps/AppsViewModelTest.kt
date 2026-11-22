@@ -64,7 +64,7 @@ class AppsViewModelTest {
                 summary("com.sys", "System App", isSystem = true),
             ),
         )
-        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), FakeUpdates(), FakeInstallQueue())
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), FakeUpdates(), FakeInstallQueue(), UpdatesDeepLinkStore())
 
         viewModel.uiState.test {
             var state = awaitItem()
@@ -106,7 +106,7 @@ class AppsViewModelTest {
                 ),
             ),
         )
-        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), updates, FakeInstallQueue())
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), updates, FakeInstallQueue(), UpdatesDeepLinkStore())
         advanceUntilIdle()
 
         viewModel.onEvent(AppsEvent.FilterChanged(AppListFilter.UPDATES))
@@ -133,7 +133,7 @@ class AppsViewModelTest {
                 ),
             ),
         )
-        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), updates, FakeInstallQueue())
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), updates, FakeInstallQueue(), UpdatesDeepLinkStore())
         advanceUntilIdle()
 
         viewModel.onEvent(AppsEvent.FilterChanged(AppListFilter.ALL))
@@ -147,6 +147,39 @@ class AppsViewModelTest {
         viewModel.onEvent(AppsEvent.ToggleUpdatesFilter)
         advanceUntilIdle()
         assertEquals(AppListFilter.ALL, viewModel.uiState.value.filter)
+    }
+
+    @Test
+    fun `updates deep link opens updates filter and clears check message`() = runTest {
+        val repo = FakeRepository(listOf(summary("com.user", "User App", isSystem = false)))
+        val updates = FakeUpdates(
+            mapOf(
+                "com.user" to AppUpdateInfo(
+                    packageName = "com.user",
+                    availableVersionName = "2.0",
+                    availableVersionCode = 2,
+                    sourceId = "fdroid",
+                    sourceLabel = "F-Droid",
+                    confidence = MatchConfidence.HIGH,
+                    signatureMatches = true,
+                ),
+            ),
+        )
+        val deepLink = UpdatesDeepLinkStore()
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), updates, FakeInstallQueue(), deepLink)
+        advanceUntilIdle()
+
+        viewModel.onEvent(AppsEvent.FilterChanged(AppListFilter.ALL))
+        viewModel.onEvent(AppsEvent.DismissUpdateCheckMessage)
+        advanceUntilIdle()
+
+        deepLink.offer()
+        advanceUntilIdle()
+
+        assertEquals(AppListFilter.UPDATES, viewModel.uiState.value.filter)
+        assertNull(viewModel.uiState.value.updateCheckMessage)
+        assertFalse(deepLink.pending.value)
+        assertEquals(listOf("com.user"), viewModel.uiState.value.visibleApps.map { it.packageName })
     }
 
     @Test
@@ -167,7 +200,7 @@ class AppsViewModelTest {
             ),
         )
         val queue = FakeInstallQueue()
-        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), updates, queue)
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), updates, queue, UpdatesDeepLinkStore())
         advanceUntilIdle()
 
         viewModel.onEvent(AppsEvent.RequestUpdateAll)
@@ -185,7 +218,7 @@ class AppsViewModelTest {
     @Test
     fun `selection mode toggles and opens export dialog`() = runTest {
         val repo = FakeRepository(listOf(summary("com.user", "User App", isSystem = false)))
-        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), FakeUpdates(), FakeInstallQueue())
+        val viewModel = AppsViewModel(repo, fakeScheduler(), ApkExporter(), FakeUpdates(), FakeInstallQueue(), UpdatesDeepLinkStore())
         advanceUntilIdle()
 
         viewModel.onEvent(AppsEvent.LongPressed("com.user"))

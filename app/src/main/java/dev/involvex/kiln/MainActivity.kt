@@ -29,6 +29,7 @@ import dev.involvex.kiln.core.model.KilnLanguage
 import dev.involvex.kiln.core.model.KilnLocales
 import dev.involvex.kiln.core.model.KilnThemeStyle
 import dev.involvex.kiln.core.model.WidgetIntents
+import dev.involvex.kiln.feature.apps.UpdatesDeepLinkStore
 import dev.involvex.kiln.feature.apps.apktools.IncomingApkInstallStore
 import dev.involvex.kiln.feature.sources.IncomingRepoLinkStore
 import dev.involvex.kiln.feature.widgets.ManageDeepLinkStore
@@ -54,6 +55,9 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var privilegeSetupDeepLinkStore: PrivilegeSetupDeepLinkStore
 
+    @Inject
+    lateinit var updatesDeepLinkStore: UpdatesDeepLinkStore
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -72,6 +76,7 @@ class MainActivity : AppCompatActivity() {
                 dynamicColor = appearance.dynamicColor,
                 manageDeepLinkStore = manageDeepLinkStore,
                 privilegeSetupDeepLinkStore = privilegeSetupDeepLinkStore,
+                updatesDeepLinkStore = updatesDeepLinkStore,
                 incomingApkInstallStore = incomingApkInstallStore,
             )
         }
@@ -106,6 +111,9 @@ class MainActivity : AppCompatActivity() {
         }
         if (intent.getBooleanExtra(WidgetIntents.EXTRA_OPEN_PRIVILEGE_SETUP, false)) {
             privilegeSetupDeepLinkStore.offer()
+        }
+        if (intent.getBooleanExtra(WidgetIntents.EXTRA_OPEN_UPDATES, false)) {
+            updatesDeepLinkStore.offer()
         }
     }
 
@@ -194,6 +202,7 @@ private fun KilnRoot(
     dynamicColor: Boolean,
     manageDeepLinkStore: ManageDeepLinkStore,
     privilegeSetupDeepLinkStore: PrivilegeSetupDeepLinkStore,
+    updatesDeepLinkStore: UpdatesDeepLinkStore,
     incomingApkInstallStore: IncomingApkInstallStore,
 ) {
     val view = LocalView.current
@@ -217,6 +226,7 @@ private fun KilnRoot(
             KilnApp(
                 manageDeepLinkStore = manageDeepLinkStore,
                 privilegeSetupDeepLinkStore = privilegeSetupDeepLinkStore,
+                updatesDeepLinkStore = updatesDeepLinkStore,
                 incomingApkInstallStore = incomingApkInstallStore,
             )
         }
