@@ -416,28 +416,26 @@ private fun tierLabel(tier: BackupContentTier): String = when (tier) {
 }
 
 @Composable
-private fun userMessage(raw: String): String = when {
-    raw.startsWith("backup_ok:") ->
-        stringResource(R.string.backup_msg_ok, raw.removePrefix("backup_ok:"))
+private fun userMessage(raw: String): String {
+    if (raw.startsWith("backup_ok:")) {
+        return stringResource(R.string.backup_msg_ok, raw.removePrefix("backup_ok:"))
+    }
+    if (raw.startsWith("restore_queued:")) {
+        return stringResource(R.string.backup_msg_restore_queued)
+    }
+    return errorMessage(raw) ?: raw
+}
 
-    raw.startsWith("restore_queued:") -> stringResource(R.string.backup_msg_restore_queued)
-
-    raw == "package_not_found" -> stringResource(R.string.backup_err_package_not_found)
-
-    raw == "apk_unreadable" || raw == "apk_missing" -> stringResource(R.string.backup_err_apk)
-
-    raw == "metadata_missing" -> stringResource(R.string.backup_err_metadata)
-
-    raw == "could_not_open_output" || raw == "could_not_open_input" ->
-        stringResource(R.string.backup_err_saf)
-
-    raw == "tree_not_set" -> stringResource(R.string.backup_err_tree)
-
-    raw == "tree_create_failed" -> stringResource(R.string.backup_err_tree_create)
-
-    raw == "password_required" -> stringResource(R.string.backup_err_password)
-
-    raw == "decrypt_failed" -> stringResource(R.string.backup_err_decrypt)
-
-    else -> raw
+@Composable
+private fun errorMessage(raw: String): String? = when (raw) {
+    "package_not_found" -> stringResource(R.string.backup_err_package_not_found)
+    "apk_unreadable", "apk_missing" -> stringResource(R.string.backup_err_apk)
+    "splits_incomplete" -> stringResource(R.string.backup_err_splits_incomplete)
+    "metadata_missing" -> stringResource(R.string.backup_err_metadata)
+    "could_not_open_output", "could_not_open_input" -> stringResource(R.string.backup_err_saf)
+    "tree_not_set" -> stringResource(R.string.backup_err_tree)
+    "tree_create_failed" -> stringResource(R.string.backup_err_tree_create)
+    "password_required" -> stringResource(R.string.backup_err_password)
+    "decrypt_failed" -> stringResource(R.string.backup_err_decrypt)
+    else -> null
 }

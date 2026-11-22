@@ -7,7 +7,7 @@
     <string name="backup_tier_shizuku">SHIZUKU (APK + Android/data + OBB when present)</string>
     <string name="backup_tier_root">ROOT (full /data/data still deferred)</string>
     <string name="backup_honesty_apk_only">Archives are .kilnbackup.zip with metadata.json. Optional AES-GCM password encryption is available. Private /data/data is not included without Root.</string>
-    <string name="backup_honesty_none">No Shizuku: APK-only archives. Restore installs the base APK via PackageInstaller (system confirm) or silent install when Shizuku is ready.</string>
+    <string name="backup_honesty_none">No Shizuku: APK-only archives. Restore installs every APK in the archive (base + splits) via PackageInstaller (system confirm) or silent install when Shizuku is ready.</string>
     <string name="backup_honesty_shizuku">Shizuku is ready: backups can include Android/data and OBB for the selected package when those folders exist. Root /data/data remains deferred.</string>
     <string name="backup_honesty_root">Root capability seen, but Kiln still does not package /data/data. Shizuku Android/data + OBB apply when that capability is available.</string>
     <string name="backup_tree_title">Backup folder (SAF)</string>
@@ -26,11 +26,12 @@
     <string name="backup_refresh">Refresh</string>
     <string name="backup_search">Search apps</string>
     <string name="backup_app_meta">%1$s · %2$s %3$s</string>
-    <string name="backup_has_splits">(splits; restore uses base APK)</string>
+    <string name="backup_has_splits">(includes splits; restore installs all APKs)</string>
     <string name="backup_msg_ok">Backup saved for %1$s</string>
     <string name="backup_msg_restore_queued">Restore queued — confirm the system install dialog if shown; shared data restores when Shizuku can write Android/data</string>
     <string name="backup_restore_confirm_title">Restore from archive?</string>
-    <string name="backup_restore_confirm_body">Kiln extracts the base APK and queues an install. When the archive includes Android/data or OBB and Shizuku is available, Kiln also restores those folders after the package is present. A system confirm may appear.</string>
+    <string name="backup_restore_confirm_body">Kiln extracts every APK in the archive (base + splits) and queues a multi-session install. When the archive includes Android/data or OBB and Shizuku is available, Kiln also restores those folders after the package is present. A system confirm may appear.</string>
+    <string name="backup_err_splits_incomplete">Archive claims splits but only one APK was found — restore aborted so a broken install is not queued.</string>
     <string name="backup_restore_confirm_action">Choose archive</string>
     <string name="backup_cancel">Cancel</string>
     <string name="backup_err_package_not_found">Package not found</string>

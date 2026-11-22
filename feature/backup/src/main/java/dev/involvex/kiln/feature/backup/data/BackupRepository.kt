@@ -23,6 +23,7 @@ import dev.involvex.kiln.core.model.PrivilegedExecutor
 import dev.involvex.kiln.feature.backup.archive.BackupArchiveReader
 import dev.involvex.kiln.feature.backup.archive.BackupExtractResult
 import dev.involvex.kiln.feature.backup.archive.BackupMetadataCodec
+import dev.involvex.kiln.feature.backup.archive.BackupRestoreApks
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -167,12 +168,17 @@ class BackupRepository @Inject constructor(
 
     private suspend fun enqueueRestore(extracted: BackupExtractResult): Result<String> {
         val meta = extracted.metadata
+        if (BackupRestoreApks.isIncompleteSplitArchive(meta.hasSplits, extracted.allApkFiles.size)) {
+            logRestoreFail("splits_incomplete")
+            return Result.failure("splits_incomplete")
+        }
+        val apkPaths = BackupRestoreApks.orderedAbsolutePaths(extracted.baseApk, extracted.allApkFiles)
         val queued = installQueue.enqueueLocal(
             LocalInstallRequest(
                 packageName = meta.packageName,
                 versionName = meta.versionName ?: meta.versionCode.toString(),
                 versionCode = meta.versionCode,
-                apkAbsolutePath = extracted.baseApk.absolutePath,
+                apkAbsolutePaths = apkPaths,
                 expectedSha256 = null,
             ),
         )

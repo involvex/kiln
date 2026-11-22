@@ -62,8 +62,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M45** | Hilt stability + App Detail overhaul | Done | [`prompts/M45-stability-app-detail.md`](./prompts/M45-stability-app-detail.md) · [#79](https://github.com/involvex/kiln/pull/79) | KSP incremental off + Hilt VM map guard; App Detail hero/actions/cards; kilnHiltViewModel harden |
 | **M46** | Widget rework | Done | [`prompts/M46-widget-rework.md`](./prompts/M46-widget-rework.md) · [#81](https://github.com/involvex/kiln/pull/81) | Updates list+Check; Cache widget; Processes mem/CPU+kill (Shizuku) |
 | **M47** | Polish + signed 0.2.5 | Done | [`prompts/M47-polish-signed-release.md`](./prompts/M47-polish-signed-release.md) · [#86](https://github.com/involvex/kiln/pull/86) | Require upload signing + apksigner; icon decode perf; tag `v0.2.5` |
-| **M48** | Storage large files + trash | In progress | [`prompts/M48-storage-large-files-trash.md`](./prompts/M48-storage-large-files-trash.md) · `m48-storage-large-files-trash` | SAF ≥50MB files; same-size+hash duplicates; `.kiln-trash` undo/purge; maintenance age-prune |
-| **M49** | Split backup restore | Planned | — | Restore enqueue all APKs from archive (M39 installer) |
+| **M48** | Storage large files + trash | Done | [`prompts/M48-storage-large-files-trash.md`](./prompts/M48-storage-large-files-trash.md) · `m48-storage-large-files-trash` | SAF ≥50MB files; same-size+hash duplicates; `.kiln-trash` undo/purge; maintenance age-prune |
+| **M49** | Split backup restore | In progress | [`prompts/M49-split-backup-restore.md`](./prompts/M49-split-backup-restore.md) · `m49-split-backup-restore` | Restore enqueue all APKs from archive (M39 installer) |
 | **M50** | App component lists | Planned | — | Exported services/receivers/providers (read-only) |
 
 ---
@@ -132,7 +132,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | APK tools (inspect / compare / resign / merge) | ✅ M29 inspect+compare; ✅ M31 resign + split export; ✅ M35 universal merge (#56) | NONE |
 | Freeze / hibernate | ✅ M36 (#58) — `pm suspend`/`unsuspend`; Settings list (separate from Debloat) | ≥ SHIZUKU (`DEBLOAT`) |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
-| Backup (APK) | ✅ `.kilnbackup.zip`; **M40** SAF tree + keep-N; Shizuku Android/data+obb when capable; optional AES-GCM; ROOT `/data/data` deferred | NONE (APK) / SHIZUKU (`ACCESS_ANDROID_DATA`) |
+| Backup (APK) | ✅ `.kilnbackup.zip`; **M40** SAF tree + keep-N; Shizuku Android/data+obb when capable; optional AES-GCM; **M49** restore installs all split APKs; ROOT `/data/data` deferred | NONE (APK) / SHIZUKU (`ACCESS_ANDROID_DATA`) |
 | Background auto-update | ✅ Settings hub → Updates; 12h / daily / weekly PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; global + per-app cooldown; APK rollback keep-N (1–5); ignored-updates overview; GitHub PAT under Updates | NONE (+ network; silent install/downgrade if SHIZUKU) |
 | Repo priority | ✅ Sources ↑↓ reorder; `ensureKnownRepos` preserves user priority; Auto-match / update conflict tie-break | NONE |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
@@ -206,7 +206,7 @@ Code on `m7-backup`. Tier NONE is enough for APK round-trip; Shizuku optional fo
 - [ ] Honesty banner: APK-only; no claim of `/data/data` without Root; Shizuku Android/data marked deferred
 - [ ] Backup APK writes `.kilnbackup.zip` via SAF; archive contains APK(s) + `metadata.json`
 - [ ] Restore confirms, then queues install; system PackageInstaller dialog (or silent when Shizuku ready)
-- [ ] Split app: archive includes splits; restore installs base APK only (documented in UI)
+- [ ] Split app: archive includes splits; restore installs **all** APKs via multi-session / install-multiple (M49)
 - [ ] Destructive restore always confirms before SAF picker
 
 Deferred: Android/data + OBB (SHIZUKU), full `/data/data` (ROOT), encryption, cloud targets.
