@@ -58,6 +58,8 @@ data class IndexedReleaseEntity(
     val signerSha256Csv: String,
     /** F-Droid index-v2 `whatsNew` (localized plain text); null when absent. */
     val whatsNew: String? = null,
+    /** Comma-separated ABIs from `manifest.nativecode`; empty means universal. */
+    val nativeCodesCsv: String = "",
 )
 
 @Entity(tableName = "managed_apps")

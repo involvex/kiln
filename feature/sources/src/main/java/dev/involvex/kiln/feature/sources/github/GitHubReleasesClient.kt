@@ -75,8 +75,27 @@ object GitHubReleasePicker {
 class GitHubReleasesClient @Inject constructor(private val http: KilnHttpClient, private val tokenStore: GitHubTokenStore) {
     private val json = Json { ignoreUnknownKeys = true }
 
-    suspend fun latestMatchingRelease(ownerRepo: String, assetRegex: Regex, channel: GitHubReleaseChannel): Result<GitHubReleasePick> {
-        val url = "https://api.github.com/repos/$ownerRepo/releases?per_page=20"
+    suspend fun latestMatchingRelease(ownerRepo: String, assetRegex: Regex, channel: GitHubReleaseChannel): Result<GitHubReleasePick> =
+        when (val listed = listReleases(ownerRepo)) {
+            is Result.Failure -> listed
+
+            is Result.Success -> {
+                val pick = GitHubReleasePicker.pick(
+                    releases = listed.value,
+                    assetRegex = assetRegex,
+                    channel = channel,
+                    preferredAbis = Build.SUPPORTED_ABIS.toList(),
+                )
+                if (pick == null) {
+                    Result.failure("no_matching_github_asset")
+                } else {
+                    Result.success(pick)
+                }
+            }
+        }
+
+    suspend fun listReleases(ownerRepo: String, perPage: Int = 20): Result<List<GitHubReleaseDto>> {
+        val url = "https://api.github.com/repos/$ownerRepo/releases?per_page=$perPage"
         val headers = buildMap {
             put("Accept", "application/vnd.github+json")
             tokenStore.getToken()?.let { put("Authorization", "Bearer $it") }
@@ -86,18 +105,7 @@ class GitHubReleasesClient @Inject constructor(private val http: KilnHttpClient,
             is Result.Failure -> return r
         }
         return try {
-            val releases = json.decodeFromString<List<GitHubReleaseDto>>(body)
-            val pick = GitHubReleasePicker.pick(
-                releases = releases,
-                assetRegex = assetRegex,
-                channel = channel,
-                preferredAbis = Build.SUPPORTED_ABIS.toList(),
-            )
-            if (pick == null) {
-                Result.failure("no_matching_github_asset")
-            } else {
-                Result.success(pick)
-            }
+            Result.success(json.decodeFromString<List<GitHubReleaseDto>>(body))
         } catch (error: SerializationException) {
             Result.failure(error.message ?: "github_parse_failed", error)
         } catch (error: IllegalArgumentException) {

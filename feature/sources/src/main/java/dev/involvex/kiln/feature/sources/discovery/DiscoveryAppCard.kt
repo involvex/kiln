@@ -4,11 +4,13 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -28,9 +30,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
 import dev.involvex.kiln.feature.sources.R
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -79,41 +82,47 @@ fun DiscoveryAppCard(
 
 @Composable
 private fun CompactDiscoveryAppCardBody(row: DiscoveryAppRow, onInstall: () -> Unit) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(horizontal = 12.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         DiscoveryListIcon(
             name = row.name,
             iconUrl = row.iconUrl,
-            sizeDp = 40,
+            sizeDp = 64,
         )
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
+        Text(
+            text = row.name,
+            style = MaterialTheme.typography.titleSmall,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
+        row.summary?.takeIf { it.isNotBlank() }?.let { summary ->
             Text(
-                text = row.name,
-                style = MaterialTheme.typography.titleSmall,
+                text = summary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
             )
-            row.summary?.takeIf { it.isNotBlank() }?.let { summary ->
-                Text(
-                    text = summary,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
         }
+        Text(
+            text = row.versionName?.takeIf { it.isNotBlank() }
+                ?: stringResource(R.string.discovery_placeholder),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
         FilledTonalButton(
             onClick = onInstall,
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(stringResource(R.string.discovery_install))
         }
@@ -196,23 +205,37 @@ private fun DiscoveryCategoryRow(categories: List<String>, limit: Int = 4) {
 }
 
 @Composable
-private fun DiscoveryListIcon(name: String, iconUrl: String?, sizeDp: Int = 48) {
+internal fun DiscoveryListIcon(name: String, iconUrl: String?, sizeDp: Int = 48) {
     val size = sizeDp.dp
+    val shape = RoundedCornerShape(10.dp)
     if (iconUrl != null) {
-        AsyncImage(
+        SubcomposeAsyncImage(
             model = iconUrl,
             contentDescription = null,
             modifier = Modifier
                 .size(size)
-                .clip(RoundedCornerShape(10.dp)),
+                .clip(shape),
             contentScale = ContentScale.Crop,
+            loading = {
+                LetterIconFallback(name = name, sizeDp = sizeDp)
+            },
+            error = {
+                LetterIconFallback(name = name, sizeDp = sizeDp)
+            },
         )
     } else {
-        Surface(
-            modifier = Modifier.size(size),
-            shape = RoundedCornerShape(10.dp),
-            color = MaterialTheme.colorScheme.primaryContainer,
-        ) {
+        LetterIconFallback(name = name, sizeDp = sizeDp)
+    }
+}
+
+@Composable
+private fun LetterIconFallback(name: String, sizeDp: Int) {
+    Surface(
+        modifier = Modifier.size(sizeDp.dp),
+        shape = RoundedCornerShape(10.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+    ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 text = name.firstOrNull()?.uppercase() ?: "?",
                 style = if (sizeDp <= 40) {
@@ -220,7 +243,6 @@ private fun DiscoveryListIcon(name: String, iconUrl: String?, sizeDp: Int = 48) 
                 } else {
                     MaterialTheme.typography.titleLarge
                 },
-                modifier = Modifier.padding(if (sizeDp <= 40) 8.dp else 10.dp),
             )
         }
     }

@@ -51,6 +51,17 @@ class CatalogDetailViewModel @Inject constructor(
         }
     }
 
+    fun installVariantActions(): InstallVariantActions = InstallVariantActions(
+        loadFdroid = repository::loadFdroidInstallOptions,
+        installFdroid = repository::installFdroidVariant,
+        loadGithub = repository::loadGithubInstallOptions,
+        installGithub = repository::installGithubVariant,
+    )
+
+    fun reportInstallResult(message: String, isError: Boolean) {
+        _uiState.update { it.copy(message = message, messageIsError = isError) }
+    }
+
     fun install() {
         val row = _uiState.value.row ?: return
         viewModelScope.launch {

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sources hub (Repositories, Watchlist, GitHub stars, Import, Match) like Settings
 - Starred-repo search filter with clear; Apps Library search clear (X)
 - `scripts/release.ps1` for patch-default version bump, changelog, tag, and push
+- Discover vertical tiles with catalog icons; Install picks version + ABI (F-Droid and GitHub)
 
 ### Fixed
 

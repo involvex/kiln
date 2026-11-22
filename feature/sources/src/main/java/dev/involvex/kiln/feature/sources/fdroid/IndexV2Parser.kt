@@ -38,6 +38,8 @@ data class ParsedIndexRelease(
     val sizeBytes: Long?,
     val signerSha256: List<String>,
     val whatsNew: String? = null,
+    /** F-Droid index-v2 `manifest.nativecode` ABIs; empty means universal / any ABI. */
+    val nativeCodes: List<String> = emptyList(),
 )
 
 data class EntryIndexPointer(val name: String, val sha256: String, val size: Long?)
@@ -189,6 +191,7 @@ object IndexV2Parser {
             ?.jsonArray
             ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
             .orEmpty()
+        val nativeCodes = parseNativeCodes(manifest["nativecode"])
         return ParsedIndexRelease(
             versionName = versionName,
             versionCode = versionCode,
@@ -197,7 +200,17 @@ object IndexV2Parser {
             sizeBytes = file["size"]?.jsonPrimitive?.longOrNull,
             signerSha256 = signerList,
             whatsNew = localized(obj["whatsNew"]),
+            nativeCodes = nativeCodes,
         )
+    }
+
+    private fun parseNativeCodes(element: JsonElement?): List<String> {
+        if (element == null) return emptyList()
+        return when (element) {
+            is JsonArray -> element.mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.takeIf { c -> c.isNotBlank() } }
+            is JsonPrimitive -> element.contentOrNull?.takeIf { it.isNotBlank() }?.let { listOf(it) }.orEmpty()
+            else -> emptyList()
+        }
     }
 
     private fun localized(element: JsonElement?): String? {

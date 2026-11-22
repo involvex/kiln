@@ -29,6 +29,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -53,6 +56,7 @@ fun DiscoveryRoute(
     // Nav3 entry ViewModelStoreOwner can miss Hilt’s map; Activity owner resolves @HiltViewModel.
     val viewModel = kilnHiltViewModel<DiscoveryViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var installTarget by remember { mutableStateOf<InstallVariantTarget?>(null) }
     DiscoveryScreen(
         state = state,
         onBack = onBack,
@@ -63,14 +67,34 @@ fun DiscoveryRoute(
         onQueryChange = viewModel::setQuery,
         onCategory = viewModel::setCategory,
         onRefreshCatalog = viewModel::refreshCatalog,
-        onInstall = viewModel::install,
+        onInstall = { row ->
+            installTarget = InstallVariantTarget.Fdroid(
+                packageName = row.packageName,
+                repoId = row.repoId,
+                displayName = row.name,
+            )
+        },
         onGithubQueryChange = viewModel::setGithubQuery,
         onLookupGithub = viewModel::lookupGithub,
         onLookupSavedGithub = viewModel::lookupSavedGithub,
-        onInstallGithub = viewModel::installGithub,
+        onInstallGithub = { row ->
+            installTarget = InstallVariantTarget.Github(
+                ownerRepo = row.ownerRepo,
+                packageName = row.packageName,
+                displayName = row.displayName,
+            )
+        },
         onClearMessage = viewModel::clearMessage,
         modifier = modifier,
     )
+    installTarget?.let { target ->
+        InstallVariantSheet(
+            target = target,
+            actions = viewModel.installVariantActions(),
+            onDismiss = { installTarget = null },
+            onInstalled = viewModel::reportInstallResult,
+        )
+    }
 }
 
 @Composable
@@ -440,7 +464,7 @@ private fun DiscoverShelfSection(
             DiscoveryAppCard(
                 row = row,
                 compact = true,
-                modifier = Modifier.width(220.dp),
+                modifier = Modifier.width(156.dp),
                 onOpenDetail = onOpenCatalogDetail?.let { open ->
                     { open(row.packageName, row.repoId) }
                 },
@@ -559,7 +583,7 @@ private fun GithubAppCard(row: DiscoveryGithubRow, onInstall: () -> Unit, onLook
 }
 
 @Composable
-private fun formatDiscoveryMessage(code: String): String = when {
+internal fun formatDiscoveryMessage(code: String): String = when {
     code.startsWith("catalog_ok:") ->
         stringResource(R.string.discovery_msg_catalog_ok, code.substringAfter(':'))
 
@@ -582,6 +606,8 @@ private fun formatDiscoveryMessage(code: String): String = when {
     code == "github_release_missing" -> stringResource(R.string.discovery_msg_github_release_missing)
 
     code == "no_matching_github_asset" -> stringResource(R.string.discovery_msg_github_no_apk)
+
+    code == "github_nightly_use_library" -> stringResource(R.string.discovery_msg_github_nightly_library)
 
     code == "index_oom" -> stringResource(R.string.sources_msg_index_oom)
 

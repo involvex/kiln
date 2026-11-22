@@ -114,6 +114,17 @@ class DiscoveryViewModel @Inject constructor(
         lookupGithub()
     }
 
+    fun installVariantActions(): InstallVariantActions = InstallVariantActions(
+        loadFdroid = repository::loadFdroidInstallOptions,
+        installFdroid = repository::installFdroidVariant,
+        loadGithub = repository::loadGithubInstallOptions,
+        installGithub = repository::installGithubVariant,
+    )
+
+    fun reportInstallResult(message: String, isError: Boolean) {
+        _uiState.update { it.copy(message = message, messageIsError = isError) }
+    }
+
     fun install(row: DiscoveryAppRow) {
         viewModelScope.launch {
             when (val result = repository.install(row)) {
