@@ -108,6 +108,23 @@ interface PrivilegedExecutor {
     /** `pm enable --user 0`. Requires [PrivilegeCapability.DEBLOAT]. */
     suspend fun enablePackage(packageName: String): Result<Unit>
 
+    /**
+     * `pm enable --user 0 package/class` for one component.
+     * Requires [PrivilegeCapability.DEBLOAT]. Caller must enforce denylist.
+     */
+    suspend fun enableComponent(packageName: String, className: String): Result<Unit>
+
+    /**
+     * `pm disable --user 0 package/class` for one component.
+     * Requires [PrivilegeCapability.DEBLOAT]. Caller must enforce denylist.
+     */
+    suspend fun disableComponent(packageName: String, className: String): Result<Unit>
+
+    /**
+     * `pm list users` — read-only census (M53). Requires [PrivilegeCapability.RUN_SHELL_DIAGNOSTIC].
+     */
+    suspend fun listAndroidUsers(): Result<List<AndroidUserInfo>>
+
     /** `pm install-existing --user 0` after user uninstall. Requires [PrivilegeCapability.DEBLOAT]. */
     suspend fun installExistingPackage(packageName: String): Result<Unit>
 

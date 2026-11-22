@@ -40,6 +40,8 @@
     <string name="settings_permission_audit">Permission audit</string>
     <string name="settings_background_controls">Background controls</string>
     <string name="settings_freeze">Freeze apps</string>
+    <string name="settings_processes">Processes</string>
+    <string name="settings_users">Android users</string>
     <string name="settings_termux">Termux</string>
     <string name="settings_activity_log">Activity log</string>
     <string name="settings_activity_log_title">Activity log</string>

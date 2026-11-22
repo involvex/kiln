@@ -1,34 +1,21 @@
 package dev.involvex.kiln.feature.debloat.denylist
 
+import dev.involvex.kiln.core.model.ProtectedPackages
+
 /**
  * Hard denylist packages that must never be selectable for debloat actions (PLAN §4.10).
  * Dynamic roles (launcher/IME/dialer/SMS) are merged by [DebloatDenylistResolver].
+ * Canonical set lives in [ProtectedPackages] (shared with component toggles).
  */
 object DebloatDenylist {
-    const val REASON_HARD = "hard_denylist"
-    const val REASON_SELF = "kiln_self"
-    const val REASON_LAUNCHER = "default_launcher"
-    const val REASON_IME = "default_ime"
-    const val REASON_DIALER = "default_dialer"
-    const val REASON_SMS = "default_sms"
+    const val REASON_HARD = ProtectedPackages.REASON_HARD
+    const val REASON_SELF = ProtectedPackages.REASON_SELF
+    const val REASON_LAUNCHER = ProtectedPackages.REASON_LAUNCHER
+    const val REASON_IME = ProtectedPackages.REASON_IME
+    const val REASON_DIALER = ProtectedPackages.REASON_DIALER
+    const val REASON_SMS = ProtectedPackages.REASON_SMS
 
-    val HARD_PACKAGES: Set<String> = setOf(
-        "moe.shizuku.privileged.api",
-        "af.shizuku.plus.api",
-        "com.android.systemui",
-        "com.android.settings",
-        "com.android.phone",
-        "com.android.server.telecom",
-        "com.android.telephony",
-        "com.android.packageinstaller",
-        "com.google.android.packageinstaller",
-        "com.android.permissioncontroller",
-        "com.google.android.permissioncontroller",
-        "com.android.webview",
-        "com.google.android.webview",
-        "com.android.providers.settings",
-        "android",
-    )
+    val HARD_PACKAGES: Set<String> get() = ProtectedPackages.HARD_PACKAGES
 
-    fun isHardBlocked(packageName: String): Boolean = packageName in HARD_PACKAGES
+    fun isHardBlocked(packageName: String): Boolean = ProtectedPackages.isHardBlocked(packageName)
 }

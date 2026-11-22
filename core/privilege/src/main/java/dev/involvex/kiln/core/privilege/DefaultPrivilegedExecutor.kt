@@ -14,6 +14,8 @@ import dev.involvex.kiln.core.model.ActivityLogEvents
 import dev.involvex.kiln.core.model.ActivityLogRecorder
 import dev.involvex.kiln.core.model.ActivityLogType
 import dev.involvex.kiln.core.model.AndroidSharedRoot
+import dev.involvex.kiln.core.model.AndroidUserInfo
+import dev.involvex.kiln.core.model.AndroidUserListParser
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegeStatus
 import dev.involvex.kiln.core.model.PrivilegeTier
@@ -235,6 +237,29 @@ class DefaultPrivilegedExecutor @Inject constructor(
         runDebloatCommand(ShellAllowlist.PM_DISABLE_USER, packageName)
 
     override suspend fun enablePackage(packageName: String): Result<Unit> = runDebloatCommand(ShellAllowlist.PM_ENABLE, packageName)
+
+    override suspend fun enableComponent(packageName: String, className: String): Result<Unit> =
+        runComponentCommand(ShellAllowlist.PM_ENABLE_COMPONENT, packageName, className)
+
+    override suspend fun disableComponent(packageName: String, className: String): Result<Unit> =
+        runComponentCommand(ShellAllowlist.PM_DISABLE_COMPONENT, packageName, className)
+
+    override suspend fun listAndroidUsers(): Result<List<AndroidUserInfo>> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.RUN_SHELL_DIAGNOSTIC !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:RUN_SHELL_DIAGNOSTIC")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.PM_LIST_USERS, emptyList())) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    Result.success(AndroidUserListParser.parse(out.value))
+                }
+            }
+        }
+    }
 
     override suspend fun installExistingPackage(packageName: String): Result<Unit> =
         runDebloatCommand(ShellAllowlist.PM_INSTALL_EXISTING, packageName)
@@ -556,6 +581,30 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
+    private suspend fun runComponentCommand(commandId: String, packageName: String, className: String): Result<Unit> =
+        withContext(ioDispatcher) {
+            if (PrivilegeCapability.DEBLOAT !in currentStatus().capabilities) {
+                return@withContext Result.failure("capability_missing:DEBLOAT")
+            }
+            if (!ShellAllowlist.isSafePackageName(packageName)) {
+                return@withContext Result.failure("invalid_package")
+            }
+            if (!ShellAllowlist.isSafeComponentClassName(className)) {
+                return@withContext Result.failure("invalid_component")
+            }
+            when (val out = invokeAllowlisted(commandId, listOf(packageName, className))) {
+                is Result.Failure -> out
+
+                is Result.Success -> {
+                    if (out.value.startsWith("ERR:")) {
+                        Result.failure(out.value)
+                    } else {
+                        Result.success(Unit)
+                    }
+                }
+            }
+        }
+
     private suspend fun invokeAllowlisted(commandId: String, args: List<String>): Result<String> {
         val service = ensureUserService()
             ?: return Result.failure("user_service_unavailable").also {
@@ -588,8 +637,11 @@ class DefaultPrivilegedExecutor @Inject constructor(
             ShellAllowlist.PM_INSTALL_MULTIPLE,
             ShellAllowlist.PM_INSTALL_MULTIPLE_DOWNGRADE,
             ShellAllowlist.PM_TRIM_CACHES,
+            ShellAllowlist.PM_LIST_USERS,
             ShellAllowlist.ID,
             ShellAllowlist.LS_ANDROID_ROOT,
+            ShellAllowlist.DUMPSYS_MEMINFO,
+            ShellAllowlist.DUMPSYS_CPUINFO,
             -> null
 
             ShellAllowlist.DU_ANDROID_PKG,

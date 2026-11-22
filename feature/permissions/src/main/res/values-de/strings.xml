@@ -69,4 +69,35 @@
     <string name="freeze_msg_capability">DEBLOAT-Privilege fehlt. Privilege-Einrichtung öffnen.</string>
     <string name="freeze_msg_invalid_package">Ungültiger Paketname.</string>
     <string name="freeze_msg_service">Shizuku UserService nicht verfügbar. Shizuku neu verbinden.</string>
+
+    <string name="processes_title">Prozesse</string>
+    <string name="processes_explain">Top-Apps nach Speicher (gleicher Snapshot wie das Prozesse-Widget). Force-Stop braucht Shizuku und fragt immer nach.</string>
+    <string name="processes_need_shizuku">Zum Anzeigen der Prozesse braucht es Shizuku mit Shell-Diagnose.</string>
+    <string name="processes_open_setup">Privilege-Einrichtung öffnen</string>
+    <string name="processes_refresh">Aktualisieren</string>
+    <string name="processes_empty">Keine Prozesse zurückgegeben.</string>
+    <string name="processes_error">Prozesse konnten nicht gelesen werden (%1$s).</string>
+    <string name="processes_mem_line">%1$s MB</string>
+    <string name="processes_force_stop">Beenden</string>
+    <string name="processes_force_stop_title">App beenden?</string>
+    <string name="processes_force_stop_body">%1$s wird beendet. Ungespeicherte Arbeit in der App kann verloren gehen.</string>
+    <string name="processes_force_stop_confirm">Beenden</string>
+    <string name="processes_force_stop_cancel">Abbrechen</string>
+    <string name="processes_force_stop_ok">App beendet.</string>
+    <string name="processes_force_stop_blocked">Force-Stop wurde blockiert.</string>
+
+    <string name="users_title">Android-Benutzer</string>
+    <string name="users_explain">Nur lesen aus pm list users. HyperOS Dual Apps / Zweiter Bereich erscheinen oft nicht als normale Android-Benutzer. Kiln installiert weiterhin nur für Benutzer 0.</string>
+    <string name="users_need_shizuku">Zum Auflisten der Benutzer braucht es Shizuku mit Shell-Diagnose.</string>
+    <string name="users_open_setup">Privilege-Einrichtung öffnen</string>
+    <string name="users_refresh">Aktualisieren</string>
+    <string name="users_current">Kiln läuft als Benutzer %1$d</string>
+    <string name="users_empty">Keine Benutzer zurückgegeben.</string>
+    <string name="users_error">Benutzer konnten nicht gelistet werden (%1$s).</string>
+    <string name="users_only_owner">Nur der Owner-Benutzer (0) ist sichtbar. Dual Apps ist auf diesem Gerät kein eigener User, oder Privilege sieht ihn nicht.</string>
+    <string name="users_row_title">Benutzer %1$d — %2$s</string>
+    <string name="users_row_current_running">Aktuell · läuft</string>
+    <string name="users_row_current">Aktuell</string>
+    <string name="users_row_running">Läuft</string>
+    <string name="users_row_stopped">Gestoppt</string>
 </resources>

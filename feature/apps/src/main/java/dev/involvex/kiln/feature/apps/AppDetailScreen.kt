@@ -61,7 +61,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun AppDetailRoute(packageName: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun AppDetailRoute(packageName: String, onBack: () -> Unit, onOpenPrivilegeSetup: () -> Unit = {}, modifier: Modifier = Modifier) {
     val viewModel = kilnHiltViewModel<AppDetailViewModel>()
     LaunchedEffect(packageName) {
         viewModel.load(packageName)
@@ -74,6 +74,7 @@ fun AppDetailRoute(packageName: String, onBack: () -> Unit, modifier: Modifier =
         setExportInProgress = viewModel::setExportInProgress,
         showMessage = viewModel::showMessage,
         onActivitiesQueryChange = viewModel::setActivitiesQuery,
+        onOpenPrivilegeSetup = onOpenPrivilegeSetup,
         modifier = modifier,
     )
 }
@@ -88,6 +89,7 @@ fun AppDetailScreen(
     setExportInProgress: (Boolean) -> Unit,
     showMessage: (String) -> Unit,
     onActivitiesQueryChange: (String) -> Unit,
+    onOpenPrivilegeSetup: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -133,6 +135,12 @@ fun AppDetailScreen(
     val activityShortcutRequested = stringResource(R.string.feature_apps_activities_shortcut_requested)
     val activityShortcutRejected = stringResource(R.string.feature_apps_activities_shortcut_rejected)
     val activityShortcutUnsupported = stringResource(R.string.feature_apps_activities_shortcut_unsupported)
+    val componentEnabled = stringResource(R.string.feature_apps_components_enabled)
+    val componentDisabled = stringResource(R.string.feature_apps_components_disabled)
+    val componentNeedsPrivilege = stringResource(R.string.feature_apps_components_need_privilege)
+    val componentDenylisted = stringResource(R.string.feature_apps_components_denylisted)
+    val componentNotExported = stringResource(R.string.feature_apps_components_not_exported)
+    val componentToggleBlocked = stringResource(R.string.feature_apps_components_toggle_blocked)
     LaunchedEffect(state.snackbarMessage) {
         val raw = state.snackbarMessage ?: return@LaunchedEffect
         val message = when (raw) {
@@ -147,6 +155,12 @@ fun AppDetailScreen(
             "activity_shortcut_requested" -> activityShortcutRequested
             "activity_shortcut_rejected" -> activityShortcutRejected
             "activity_shortcut_unsupported" -> activityShortcutUnsupported
+            "component_enabled" -> componentEnabled
+            "component_disabled" -> componentDisabled
+            "component_needs_privilege" -> componentNeedsPrivilege
+            "component_denylisted" -> componentDenylisted
+            "component_not_exported" -> componentNotExported
+            "component_toggle_blocked" -> componentToggleBlocked
             else -> raw
         }
         snackbarHostState.showSnackbar(message)
@@ -236,10 +250,53 @@ fun AppDetailScreen(
                     onActivitiesQueryChange = onActivitiesQueryChange,
                     showActivitiesSearch = state.activities.size > ACTIVITIES_SEARCH_THRESHOLD,
                     onActivityMessage = showMessage,
+                    canToggleComponents = state.canToggleComponents,
+                    componentPackageDenylisted = state.componentPackageDenylisted,
+                    componentToggleInProgress = state.componentToggleInProgress,
+                    onRequestComponentToggle = { component, enable ->
+                        onEvent(AppDetailEvent.RequestComponentToggle(component, enable))
+                    },
+                    onOpenPrivilegeSetup = onOpenPrivilegeSetup,
                     modifier = Modifier.padding(padding),
                 )
             }
         }
+    }
+
+    state.pendingComponentToggle?.let { pending ->
+        AlertDialog(
+            onDismissRequest = { onEvent(AppDetailEvent.DismissComponentToggle) },
+            title = {
+                Text(
+                    stringResource(
+                        if (pending.enable) {
+                            R.string.feature_apps_components_enable_title
+                        } else {
+                            R.string.feature_apps_components_disable_title
+                        },
+                    ),
+                )
+            },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.feature_apps_components_toggle_body,
+                        pending.component.label,
+                        pending.component.className,
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { onEvent(AppDetailEvent.ConfirmComponentToggle) }) {
+                    Text(stringResource(R.string.feature_apps_components_toggle_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(AppDetailEvent.DismissComponentToggle) }) {
+                    Text(stringResource(R.string.feature_apps_components_toggle_cancel))
+                }
+            },
+        )
     }
 
     if (state.confirmSignatureMismatchInstall) {

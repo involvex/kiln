@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.7] — 2026-11-22
+
+### Added
+
+- App Detail: enable / disable package components via Shizuku (`pm enable` / `pm disable`); denylist; Tier NONE read-only; non-exported listed read-only (M51)
+- Settings → Tools: in-app process list with force-stop confirm (same gates as Processes widget) (M52)
+- Settings → Tools: read-only Android user census from `pm list users` (M53)
+
+### Changed
+
+- Version **0.2.7** (versionCode 10)
+
 ## [0.2.6] — 2026-11-22
 
 ### Added
