@@ -2,6 +2,20 @@
 <resources>
     <string name="feature_sources_title">Sources</string>
     <string name="feature_sources_description">Sync F-Droid-format repos, manage GitHub PAT, and import Obtainium/Discoverium exports. Updates are shown in Apps.</string>
+    <string name="sources_category_back">Back</string>
+    <string name="sources_hub_repos">Repositories</string>
+    <string name="sources_hub_repos_sub">F-Droid-format repos, mirrors, and priority</string>
+    <string name="sources_hub_watchlist">Watchlist</string>
+    <string name="sources_hub_watchlist_sub">Apps you watch for new catalog versions</string>
+    <string name="sources_hub_stars">GitHub stars</string>
+    <string name="sources_hub_stars_sub">Import starred repos as update sources</string>
+    <string name="sources_hub_import">Import</string>
+    <string name="sources_hub_import_sub">Obtainium / Discoverium JSON export</string>
+    <string name="sources_hub_match">Match installed apps</string>
+    <string name="sources_hub_match_sub">Link packages to F-Droid or GitHub sources</string>
+    <string name="sources_stars_search_hint">Filter starred repos</string>
+    <string name="sources_stars_search_clear">Clear search</string>
+    <string name="sources_stars_search_count">Showing %1$d of %2$d</string>
     <string name="sources_sync_all">Sync all repos</string>
     <string name="sources_cancel_sync">Cancel sync</string>
     <string name="sources_syncing">Syncing repos…</string>

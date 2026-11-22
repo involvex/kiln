@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -92,6 +93,16 @@ fun AppsListPane(
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 placeholder = { Text(stringResource(R.string.feature_apps_search_hint)) },
+                trailingIcon = {
+                    if (state.query.isNotEmpty()) {
+                        IconButton(onClick = { onQueryChange("") }) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = stringResource(R.string.feature_apps_search_clear),
+                            )
+                        }
+                    }
+                },
             )
             IconButton(onClick = { filtersExpanded = !filtersExpanded }) {
                 Icon(

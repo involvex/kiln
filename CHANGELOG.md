@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Sources hub (Repositories, Watchlist, GitHub stars, Import, Match) like Settings
+- Starred-repo search filter with clear; Apps Library search clear (X)
+- `scripts/release.ps1` for patch-default version bump, changelog, tag, and push
+
+### Fixed
+
+- App Detail “Update available” banner no longer crushed beside long version names
+
 ## [0.2.5] — 2026-11-17
 
 ### Added
