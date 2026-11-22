@@ -456,6 +456,6 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 23. **M45** Hilt/KSP stability + App Detail overhaul → **Done (#79)**
 24. **M46** Widget rework (Updates / Cache / Processes) → **Done (#81)**
 25. **M47** Polish + signed 0.2.5 → **Done (#86)**
-26. **M48** Storage large files + `.kiln-trash` → In progress
-27. **M49** Split backup restore (all APKs via LocalInstallRequest)
-28. **M50** Exported services / receivers / providers (read-only)
+26. **M48** Storage large files + `.kiln-trash` → Done
+27. **M49** Split backup restore (all APKs via LocalInstallRequest) → Done
+28. **M50** Exported services / receivers / providers (read-only) → In progress

@@ -201,8 +201,16 @@ class AppDetailViewModel @Inject constructor(
         val pkg = packageName ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(activitiesLoading = true) }
-            val list = activitiesRepository.exportedActivities(pkg)
-            _uiState.update { it.copy(activities = list, activitiesLoading = false) }
+            val components = activitiesRepository.exportedComponents(pkg)
+            _uiState.update {
+                it.copy(
+                    activities = components.activities,
+                    services = components.services,
+                    receivers = components.receivers,
+                    providers = components.providers,
+                    activitiesLoading = false,
+                )
+            }
         }
     }
 

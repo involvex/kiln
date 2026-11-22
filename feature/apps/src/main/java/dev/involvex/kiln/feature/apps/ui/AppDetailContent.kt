@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.involvex.kiln.core.model.AppActivityInfo
+import dev.involvex.kiln.core.model.AppComponentInfo
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallJobState
@@ -87,6 +88,9 @@ fun AppDetailContent(
     rollbackInProgress: Boolean = false,
     onRequestRollback: (RollbackApkEntry) -> Unit = {},
     activities: List<AppActivityInfo> = emptyList(),
+    services: List<AppComponentInfo> = emptyList(),
+    receivers: List<AppComponentInfo> = emptyList(),
+    providers: List<AppComponentInfo> = emptyList(),
     activitiesLoading: Boolean = false,
     activitiesQuery: String = "",
     onActivitiesQueryChange: (String) -> Unit = {},
@@ -96,6 +100,9 @@ fun AppDetailContent(
 ) {
     val context = LocalContext.current
     var activitiesExpanded by rememberSaveable { mutableStateOf(false) }
+    var servicesExpanded by rememberSaveable { mutableStateOf(false) }
+    var receiversExpanded by rememberSaveable { mutableStateOf(false) }
+    var providersExpanded by rememberSaveable { mutableStateOf(false) }
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
@@ -187,7 +194,59 @@ fun AppDetailContent(
                     onMessage = onActivityMessage,
                 )
             }
+            ComponentToggle(
+                title = stringResource(R.string.feature_apps_detail_services_collapsed, services.size),
+                expanded = servicesExpanded,
+                onToggle = { servicesExpanded = !servicesExpanded },
+            ) {
+                AppComponentsSection(
+                    title = stringResource(R.string.feature_apps_services_title),
+                    hint = stringResource(R.string.feature_apps_components_hint),
+                    emptyLabel = stringResource(R.string.feature_apps_services_empty),
+                    components = services,
+                )
+            }
+            ComponentToggle(
+                title = stringResource(R.string.feature_apps_detail_receivers_collapsed, receivers.size),
+                expanded = receiversExpanded,
+                onToggle = { receiversExpanded = !receiversExpanded },
+            ) {
+                AppComponentsSection(
+                    title = stringResource(R.string.feature_apps_receivers_title),
+                    hint = stringResource(R.string.feature_apps_components_hint),
+                    emptyLabel = stringResource(R.string.feature_apps_receivers_empty),
+                    components = receivers,
+                )
+            }
+            ComponentToggle(
+                title = stringResource(R.string.feature_apps_detail_providers_collapsed, providers.size),
+                expanded = providersExpanded,
+                onToggle = { providersExpanded = !providersExpanded },
+            ) {
+                AppComponentsSection(
+                    title = stringResource(R.string.feature_apps_providers_title),
+                    hint = stringResource(R.string.feature_apps_components_hint),
+                    emptyLabel = stringResource(R.string.feature_apps_providers_empty),
+                    components = providers,
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun ComponentToggle(title: String, expanded: Boolean, onToggle: () -> Unit, content: @Composable () -> Unit) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(vertical = 4.dp),
+    )
+    if (expanded) {
+        content()
     }
 }
 

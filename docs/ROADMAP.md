@@ -63,8 +63,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M46** | Widget rework | Done | [`prompts/M46-widget-rework.md`](./prompts/M46-widget-rework.md) · [#81](https://github.com/involvex/kiln/pull/81) | Updates list+Check; Cache widget; Processes mem/CPU+kill (Shizuku) |
 | **M47** | Polish + signed 0.2.5 | Done | [`prompts/M47-polish-signed-release.md`](./prompts/M47-polish-signed-release.md) · [#86](https://github.com/involvex/kiln/pull/86) | Require upload signing + apksigner; icon decode perf; tag `v0.2.5` |
 | **M48** | Storage large files + trash | Done | [`prompts/M48-storage-large-files-trash.md`](./prompts/M48-storage-large-files-trash.md) · `m48-storage-large-files-trash` | SAF ≥50MB files; same-size+hash duplicates; `.kiln-trash` undo/purge; maintenance age-prune |
-| **M49** | Split backup restore | In progress | [`prompts/M49-split-backup-restore.md`](./prompts/M49-split-backup-restore.md) · `m49-split-backup-restore` | Restore enqueue all APKs from archive (M39 installer) |
-| **M50** | App component lists | Planned | — | Exported services/receivers/providers (read-only) |
+| **M49** | Split backup restore | Done | [`prompts/M49-split-backup-restore.md`](./prompts/M49-split-backup-restore.md) · `m49-split-backup-restore` | Restore enqueue all APKs from archive (M39 installer) |
+| **M50** | App component lists | In progress | [`prompts/M50-app-components.md`](./prompts/M50-app-components.md) · `m50-app-components` | Exported services/receivers/providers (read-only) |
 
 ---
 
@@ -109,7 +109,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | --- | --- | --- |
 | Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
 | List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
-| App detail | ✅ Version, installer, SHA-256, paths, permissions; **M43** exported activities + Start/pin shortcut; rollback list + Shizuku downgrade confirm | NONE / SHIZUKU |
+| App detail | ✅ Version, installer, SHA-256, paths, permissions; **M43** exported activities + Start/pin shortcut; **M50** exported services/receivers/providers (read-only); rollback list + Shizuku downgrade confirm | NONE / SHIZUKU |
 | APK export (single / batch) | ✅ `.apk` / `.apks` STORED / `.xapk`; SAF + share + WorkManager batch | NONE |
 | Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
 | Sources / updates | ✅ F-Droid/Izzy/Guardian defaults + FP upsert; `fdroidrepo(s):` / `?fingerprint=` deep links; index-v2 + entry.jar verify; GitHub; **M42** starred import (PAT review → multi-select); Obtainium import; Room cache; per-repo mirrors (M30) | NONE (+ network) |

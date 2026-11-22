@@ -2,6 +2,8 @@ package dev.involvex.kiln.feature.apps
 
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.AppActivityInfo
+import dev.involvex.kiln.core.model.AppComponentFilter
+import dev.involvex.kiln.core.model.AppComponentInfo
 import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallJobState
@@ -39,6 +41,9 @@ data class AppDetailUiState(
     val rollbackInProgress: Boolean = false,
     val confirmSignatureMismatchInstall: Boolean = false,
     val activities: List<AppActivityInfo> = emptyList(),
+    val services: List<AppComponentInfo> = emptyList(),
+    val receivers: List<AppComponentInfo> = emptyList(),
+    val providers: List<AppComponentInfo> = emptyList(),
     val activitiesLoading: Boolean = false,
     val activitiesQuery: String = "",
 ) {
@@ -48,6 +53,21 @@ data class AppDetailUiState(
                 AppActivityInfoQuery(label = it.label, className = it.className),
                 activitiesQuery,
             )
+        }
+
+    val filteredServices: List<AppComponentInfo>
+        get() = services.filter {
+            AppComponentFilter.matchesQuery(it.label, it.className, activitiesQuery)
+        }
+
+    val filteredReceivers: List<AppComponentInfo>
+        get() = receivers.filter {
+            AppComponentFilter.matchesQuery(it.label, it.className, activitiesQuery)
+        }
+
+    val filteredProviders: List<AppComponentInfo>
+        get() = providers.filter {
+            AppComponentFilter.matchesQuery(it.label, it.className, activitiesQuery)
         }
 }
 
