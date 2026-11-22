@@ -38,6 +38,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,17 +59,31 @@ import dev.involvex.kiln.feature.sources.R
 fun CatalogDetailRoute(packageName: String, repoId: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val viewModel = kilnHiltViewModel<CatalogDetailViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var showInstallSheet by remember { mutableStateOf(false) }
     LaunchedEffect(packageName, repoId) {
         viewModel.load(packageName, repoId)
     }
     CatalogDetailScreen(
         state = state,
         onBack = onBack,
-        onInstall = viewModel::install,
+        onInstall = { showInstallSheet = true },
         onToggleWatch = viewModel::toggleWatch,
         onClearMessage = viewModel::clearMessage,
         modifier = modifier,
     )
+    val row = state.row
+    if (showInstallSheet && row != null) {
+        InstallVariantSheet(
+            target = InstallVariantTarget.Fdroid(
+                packageName = row.packageName,
+                repoId = row.repoId,
+                displayName = row.name,
+            ),
+            actions = viewModel.installVariantActions(),
+            onDismiss = { showInstallSheet = false },
+            onInstalled = viewModel::reportInstallResult,
+        )
+    }
 }
 
 @Composable
@@ -445,31 +462,7 @@ private fun CatalogScreenshotsSection(screenshotUrls: List<String>) {
 
 @Composable
 private fun CatalogIcon(name: String, iconUrl: String?, size: Int) {
-    val shape = RoundedCornerShape(20.dp)
-    if (iconUrl != null) {
-        AsyncImage(
-            model = iconUrl,
-            contentDescription = null,
-            modifier = Modifier
-                .size(size.dp)
-                .clip(shape),
-            contentScale = ContentScale.Crop,
-        )
-    } else {
-        Surface(
-            modifier = Modifier.size(size.dp),
-            shape = shape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-        ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Text(
-                    text = name.firstOrNull()?.uppercase() ?: "?",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-            }
-        }
-    }
+    DiscoveryListIcon(name = name, iconUrl = iconUrl, sizeDp = size)
 }
 
 @OptIn(ExperimentalLayoutApi::class)

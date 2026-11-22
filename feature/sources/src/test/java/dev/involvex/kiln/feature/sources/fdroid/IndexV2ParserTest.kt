@@ -134,4 +134,42 @@ class IndexV2ParserTest {
         assertEquals("icons/icon.png", pkg.iconPath?.trimStart('/'))
         assertEquals(listOf("phone/ss1.png", "phone/ss2.png"), pkg.phoneScreenshotPaths)
     }
+
+    @Test
+    fun `parses icons-640 locale map and nativecode`() {
+        val index = """
+            {
+              "packages": {
+                "net.drawpile": {
+                  "metadata": {
+                    "name": {"en-US": "Drawpile"},
+                    "icon": {
+                      "en-US": {
+                        "name": "/icons-640/net.drawpile.123.png",
+                        "sha256": "aa",
+                        "size": 12
+                      }
+                    }
+                  },
+                  "versions": {
+                    "v1": {
+                      "file": {"name": "drawpile.apk", "sha256": "bb", "size": 99},
+                      "manifest": {
+                        "versionName": "2.3.1",
+                        "versionCode": 231,
+                        "nativecode": ["arm64-v8a", "armeabi-v7a"],
+                        "signer": {"sha256": ["CC"]}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+        val result = IndexV2Parser.parsePackages(index)
+        assertTrue(result is Result.Success)
+        val pkg = (result as Result.Success).value.single()
+        assertEquals("icons-640/net.drawpile.123.png", pkg.iconPath?.trimStart('/'))
+        assertEquals(listOf("arm64-v8a", "armeabi-v7a"), pkg.releases.single().nativeCodes)
+    }
 }

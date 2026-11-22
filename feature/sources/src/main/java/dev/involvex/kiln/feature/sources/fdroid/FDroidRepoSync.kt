@@ -127,7 +127,7 @@ class FDroidRepoSync @Inject constructor(
                     val parseResult = file.inputStream().use { input ->
                         IndexV2StreamParser.parseAllPackages(input) { pkg ->
                             packages += toPackageEntity(repo.id, pkg)
-                            pkg.releases.firstOrNull()?.let { rel ->
+                            pkg.releases.take(CATALOG_RELEASE_LIMIT).forEach { rel ->
                                 releases += toReleaseEntity(repo.id, pkg.packageName, rel)
                             }
                         }
@@ -199,6 +199,7 @@ class FDroidRepoSync @Inject constructor(
         sizeBytes = rel.sizeBytes,
         signerSha256Csv = rel.signerSha256.joinToString(","),
         whatsNew = ReleaseNotesText.normalize(rel.whatsNew),
+        nativeCodesCsv = rel.nativeCodes.joinToString(","),
     )
 
     private fun sha256FileHex(file: java.io.File): String {
@@ -216,5 +217,6 @@ class FDroidRepoSync @Inject constructor(
 
     private companion object {
         const val DEFAULT_BUFFER = 64 * 1024
+        const val CATALOG_RELEASE_LIMIT = 8
     }
 }

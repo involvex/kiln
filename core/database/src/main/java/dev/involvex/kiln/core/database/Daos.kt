@@ -157,6 +157,15 @@ interface IndexDao {
         SELECT * FROM indexed_releases
         WHERE packageName = :packageName AND repoId = :repoId
         ORDER BY versionCode DESC
+        """,
+    )
+    suspend fun releasesFor(packageName: String, repoId: String): List<IndexedReleaseEntity>
+
+    @Query(
+        """
+        SELECT * FROM indexed_releases
+        WHERE packageName = :packageName AND repoId = :repoId
+        ORDER BY versionCode DESC
         LIMIT 1
         """,
     )
