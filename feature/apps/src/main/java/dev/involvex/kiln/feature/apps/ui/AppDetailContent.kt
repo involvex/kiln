@@ -102,13 +102,19 @@ fun AppDetailContent(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        HeroCard(detail = detail, hasUpdate = availableUpdate != null)
+        HeroCard(detail = detail, availableUpdate = availableUpdate)
+        // Update details sit above Launch/Export so the CTA is visible without scrolling.
+        UpdateSection(
+            availableUpdate = availableUpdate,
+            installJob = installJob,
+            installedVersionName = detail.versionName,
+            onInstallUpdate = onInstallUpdate,
+            onRequestInstallDespiteSignature = onRequestInstallDespiteSignature,
+            onOpenUnknownSources = onOpenUnknownSources,
+        )
         PrimaryActions(
             detail = detail,
             context = context,
-            availableUpdate = availableUpdate,
-            installJob = installJob,
-            onInstallUpdate = onInstallUpdate,
             onExport = onExport,
         )
         if (!detail.canUninstall) {
@@ -118,13 +124,6 @@ fun AppDetailContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        UpdateSection(
-            availableUpdate = availableUpdate,
-            installJob = installJob,
-            onInstallUpdate = onInstallUpdate,
-            onRequestInstallDespiteSignature = onRequestInstallDespiteSignature,
-            onOpenUnknownSources = onOpenUnknownSources,
-        )
         DetailSectionCard(title = stringResource(R.string.feature_apps_detail_section_updates)) {
             ManagedSourceSection(
                 managedLink = managedLink,
@@ -214,124 +213,129 @@ private fun DetailSectionCard(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun HeroCard(detail: InstalledAppDetail, hasUpdate: Boolean) {
+private fun HeroCard(detail: InstalledAppDetail, availableUpdate: AppUpdateInfo?) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         shape = RoundedCornerShape(20.dp),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AsyncImage(
-                model = PackageIconModel(detail.packageName, detail.lastUpdateTime),
-                contentDescription = null,
-                modifier = Modifier.size(72.dp),
-            )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+        Column {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = detail.label,
-                    style = MaterialTheme.typography.headlineSmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                AsyncImage(
+                    model = PackageIconModel(detail.packageName, detail.lastUpdateTime),
+                    contentDescription = null,
+                    modifier = Modifier.size(72.dp),
                 )
-                Text(
-                    text = detail.packageName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                    ) {
-                        Text(
-                            text = stringResource(
-                                R.string.feature_apps_detail_version,
-                                detail.versionName ?: "—",
-                                detail.versionCode,
-                            ),
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                    }
-                    if (detail.isSystem) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.feature_apps_detail_chip_system),
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelLarge,
-                            )
-                        }
-                    }
-                    if (hasUpdate) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.tertiaryContainer,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.feature_apps_detail_chip_update),
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelLarge,
-                            )
-                        }
-                    }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = detail.label,
+                        style = MaterialTheme.typography.headlineSmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = detail.packageName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    HeroVersionChips(detail = detail)
                 }
+            }
+            availableUpdate?.let { update ->
+                HeroUpdateBanner(update = update)
             }
         }
     }
 }
 
 @Composable
-private fun PrimaryActions(
-    detail: InstalledAppDetail,
-    context: Context,
-    availableUpdate: AppUpdateInfo?,
-    installJob: InstallJobState?,
-    onInstallUpdate: () -> Unit,
-    onExport: () -> Unit,
-) {
-    val busy = installJob?.status == InstallJobStatus.DOWNLOADING ||
-        installJob?.status == InstallJobStatus.INSTALLING ||
-        installJob?.status == InstallJobStatus.VERIFYING
-    val canUpdate = availableUpdate != null &&
-        !availableUpdate.downloadUrl.isNullOrBlank() &&
-        availableUpdate.signatureMatches &&
-        !busy
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+private fun HeroVersionChips(detail: InstalledAppDetail) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer,
         ) {
-            if (detail.hasLaunchIntent) {
-                FilledTonalButton(
-                    onClick = {
-                        context.packageManager.getLaunchIntentForPackage(detail.packageName)?.let {
-                            context.startActivity(it)
-                        }
-                    },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.feature_apps_action_launch))
-                }
+            Text(
+                text = stringResource(
+                    R.string.feature_apps_detail_version,
+                    detail.versionName ?: "—",
+                    detail.versionCode,
+                ),
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (detail.isSystem) {
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+            ) {
+                Text(
+                    text = stringResource(R.string.feature_apps_detail_chip_system),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                )
             }
-            if (canUpdate) {
-                Button(
-                    onClick = onInstallUpdate,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.feature_apps_action_update))
-                }
+        }
+    }
+}
+
+@Composable
+private fun HeroUpdateBanner(update: AppUpdateInfo) {
+    Surface(
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.feature_apps_detail_update_banner_title),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+            Text(
+                text = stringResource(
+                    R.string.feature_apps_detail_update_banner_body,
+                    update.availableVersionName,
+                    update.sourceLabel,
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PrimaryActions(detail: InstalledAppDetail, context: Context, onExport: () -> Unit) {
+    // Install CTA is in UpdateSection (rendered above this block). Avoid a second Download button.
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (detail.hasLaunchIntent) {
+            FilledTonalButton(
+                onClick = {
+                    context.packageManager.getLaunchIntentForPackage(detail.packageName)?.let {
+                        context.startActivity(it)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.feature_apps_action_launch))
             }
         }
         Row(
@@ -667,6 +671,7 @@ private fun UpdatePrefsSection(
 private fun UpdateSection(
     availableUpdate: AppUpdateInfo?,
     installJob: InstallJobState?,
+    installedVersionName: String?,
     onInstallUpdate: () -> Unit,
     onRequestInstallDespiteSignature: () -> Unit,
     onOpenUnknownSources: () -> Unit,
@@ -676,6 +681,7 @@ private fun UpdateSection(
         if (availableUpdate != null) {
             UpdateAvailableBlock(
                 update = availableUpdate,
+                installedVersionName = installedVersionName,
                 installJob = installJob,
                 onInstallUpdate = onInstallUpdate,
                 onRequestInstallDespiteSignature = onRequestInstallDespiteSignature,
@@ -690,10 +696,19 @@ private fun UpdateSection(
 @Composable
 private fun UpdateAvailableBlock(
     update: AppUpdateInfo,
+    installedVersionName: String?,
     installJob: InstallJobState?,
     onInstallUpdate: () -> Unit,
     onRequestInstallDespiteSignature: () -> Unit,
 ) {
+    Text(
+        stringResource(
+            R.string.feature_apps_update_version_transition,
+            installedVersionName ?: "—",
+            update.availableVersionName,
+        ),
+        style = MaterialTheme.typography.titleSmall,
+    )
     Text(
         stringResource(
             R.string.feature_apps_update_available,
@@ -701,6 +716,7 @@ private fun UpdateAvailableBlock(
             update.sourceLabel,
         ),
         style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     val knownMismatch = !update.signatureMatches && update.confidence == MatchConfidence.WARNING
     val unknownSigner = !update.signatureMatches && !knownMismatch
