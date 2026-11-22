@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.involvex.kiln.core.model.WidgetIntents
 import dev.involvex.kiln.feature.sources.R
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,7 +25,8 @@ class UpdateCheckNotifier @Inject constructor(@ApplicationContext private val co
         if (!canPostNotifications()) return
         ensureChannel()
         val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            ?.putExtra(WidgetIntents.EXTRA_OPEN_UPDATES, true)
         val pending = PendingIntent.getActivity(
             context,
             REQUEST_CODE,

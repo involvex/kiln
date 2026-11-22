@@ -94,6 +94,9 @@ object WidgetIntents {
     const val EXTRA_OPEN_MANAGE = "dev.involvex.kiln.extra.OPEN_MANAGE"
     const val EXTRA_OPEN_PRIVILEGE_SETUP = "dev.involvex.kiln.extra.OPEN_PRIVILEGE_SETUP"
 
+    /** Open Apps → Updates filter (notification / Updates widget). */
+    const val EXTRA_OPEN_UPDATES = "dev.involvex.kiln.extra.OPEN_UPDATES"
+
     /** @deprecated Trim moved to Cache widget; kept so old APK broadcasts are ignored safely. */
     const val ACTION_TRIM_REQUEST = "dev.involvex.kiln.widget.TRIM_REQUEST"
     const val ACTION_TRIM_CONFIRM = "dev.involvex.kiln.widget.TRIM_CONFIRM"
