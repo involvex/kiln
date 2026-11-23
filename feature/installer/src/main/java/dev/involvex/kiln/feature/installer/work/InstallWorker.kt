@@ -13,6 +13,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import dev.involvex.kiln.core.common.ApkSigningReader
 import dev.involvex.kiln.core.common.RepoMirrorUrls
 import dev.involvex.kiln.core.common.Result as KilnResult
 import dev.involvex.kiln.core.database.InstallJobDao
@@ -31,6 +32,7 @@ import dev.involvex.kiln.core.network.KilnHttpClient
 import dev.involvex.kiln.feature.installer.ArtifactZipExtractor
 import dev.involvex.kiln.feature.installer.DefaultInstallQueue
 import dev.involvex.kiln.feature.installer.InstallCommitPolicy
+import dev.involvex.kiln.feature.installer.InstallPackageName
 import dev.involvex.kiln.feature.installer.R
 import dev.involvex.kiln.feature.installer.session.PackageInstallerSessionRunner
 import dev.involvex.kiln.feature.installer.verify.ApkHashVerifier
@@ -130,8 +132,23 @@ class InstallWorker @AssistedInject constructor(
 
             is KilnResult.Success -> Unit
         }
+        // Discover GitHub uses provisional github.owner.repo ids; the APK's real id is required
+        // for signature checks and PackageInstaller.setAppPackageName.
+        val apkPackageName = ApkSigningReader.packageArchiveInfo(
+            appContext.packageManager,
+            baseApk.absolutePath,
+        )?.packageName
+        val installPackageName = InstallPackageName.resolve(job.packageName, apkPackageName)
+        if (installPackageName != job.packageName) {
+            Timber.d(
+                "Install job %s: remapping package %s → %s from APK",
+                jobId,
+                job.packageName,
+                installPackageName,
+            )
+        }
         if (!job.allowSignatureMismatch) {
-            when (val sig = ApkSignatureGate.check(appContext.packageManager, job.packageName, baseApk)) {
+            when (val sig = ApkSignatureGate.check(appContext.packageManager, installPackageName, baseApk)) {
                 is KilnResult.Failure -> {
                     cleanupApks(apkFiles)
                     mark(jobId, InstallJobStatus.FAILED, 100, sig.message, null)
@@ -153,14 +170,14 @@ class InstallWorker @AssistedInject constructor(
             return when (val silent = privilegedExecutor.installApks(apkFiles.map { it.absolutePath })) {
                 is KilnResult.Failure -> {
                     Timber.w("Silent install failed (%s); falling back to PackageInstaller", silent.message)
-                    commitWithPackageInstaller(jobId, job.packageName, apkFiles)
+                    commitWithPackageInstaller(jobId, installPackageName, apkFiles)
                 }
 
                 is KilnResult.Success -> {
                     mark(jobId, InstallJobStatus.SUCCEEDED, 100, null, baseApk.absolutePath)
                     if (apkFiles.size == 1) {
                         rollbackCache.rememberSuccessfulInstall(
-                            packageName = job.packageName,
+                            packageName = installPackageName,
                             versionName = job.versionName,
                             versionCode = job.versionCode,
                             apkAbsolutePath = baseApk.absolutePath,
@@ -173,7 +190,7 @@ class InstallWorker @AssistedInject constructor(
         if (preferred == PreferredInstaller.SHIZUKU) {
             Timber.d("Shizuku preferred but SILENT_INSTALL unavailable; using PackageInstaller")
         }
-        return commitWithPackageInstaller(jobId, job.packageName, apkFiles)
+        return commitWithPackageInstaller(jobId, installPackageName, apkFiles)
     }
 
     private fun prepareLocalApks(jobId: String, encodedPaths: String?, downloadDir: File): KilnResult<List<File>> {
