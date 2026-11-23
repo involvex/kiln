@@ -1,0 +1,1 @@
+0.2.7: Eine App-Komponente in den App-Details aktivieren oder deaktivieren, wenn Shizuku eingerichtet ist. Ohne Shizuku bleiben die Komponentenlisten nur lesbar. Einstellungen → Werkzeuge: Prozessliste in der App (Beenden fragt nach) und eine schreibgeschützte Android-Benutzerliste.

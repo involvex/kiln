@@ -22,12 +22,13 @@ All-in-one package, APK, and storage manager for Android.
 | [PRIVACY.md](./PRIVACY.md) | Privacy policy |
 | [SUPPORTING.md](./SUPPORTING.md) | Sponsorships & tips (GitHub Sponsors, Coffee, PayPal) |
 | [RELEASE.md](./RELEASE.md) | Tagging, signing, F-Droid |
+| [STORE.md](./STORE.md) | F-Droid and IzzyOnDroid filing |
 | [reference.md](./reference.md) | Reference apps (read-only; no GPL copy) |
 | [CHANGELOG](https://github.com/involvex/kiln/blob/main/CHANGELOG.md) | User-facing changes |
 
 ## Install (sideload)
 
-Download the latest APK from [Releases](https://github.com/involvex/kiln/releases). Without upload-keystore secrets, CI attaches a **debug-signed** release APK for testing only.
+Download the latest APK from [Releases](https://github.com/involvex/kiln/releases). A tagged release fails unless the four upload-keystore secrets are set, so the APK on GitHub is signed with the upload key. A local `assembleRelease` without those env vars can still be debug-signed. Do not submit that local APK. See [STORE.md](./STORE.md).
 
 ## Supporting this project
 

@@ -1,0 +1,1 @@
+0.2.7: Enable or disable one app component from App Detail when Shizuku is set up. Without it, component lists stay read-only. Settings → Tools adds an in-app process list (force-stop asks first) and a read-only Android user list.
