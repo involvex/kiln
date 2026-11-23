@@ -96,8 +96,7 @@ private fun openHttps(context: android.content.Context, url: String) {
 }
 
 private const val URL_SOURCE: String = "https://github.com/involvex/kiln"
-private const val URL_PRIVACY: String =
-    "https://github.com/involvex/kiln/blob/main/docs/PRIVACY.md"
+private const val URL_PRIVACY: String = "https://involvex.github.io/kiln/PRIVACY.md"
 private const val URL_SUPPORTING: String =
     "https://github.com/involvex/kiln/blob/main/docs/SUPPORTING.md"
 private const val URL_LICENSE: String =

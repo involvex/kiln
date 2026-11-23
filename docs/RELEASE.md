@@ -77,11 +77,14 @@ gh secret set KILN_KEY_PASSWORD -R involvex/kiln
 gh secret list -R involvex/kiln
 ```
 
-## F-Droid
+## F-Droid and IzzyOnDroid
 
-- Metadata scaffold: [`fastlane/metadata/android/`](../fastlane/metadata/android/)
-- F-Droid builds from source; they do not need your upload keystore
-- Provide screenshots under `fastlane/metadata/android/<locale>/images/phoneScreenshots/` before submission (not committed until captured on device)
+Filing steps, the permission note, and the draft fdroiddata recipe are in [STORE.md](./STORE.md).
+
+- Metadata: [`fastlane/metadata/android/`](../fastlane/metadata/android/) (en-US and de-DE, including changelog `10.txt` and `images/icon.png`)
+- F-Droid builds from source and does not need the upload keystore
+- IzzyOnDroid ships the upload-signed GitHub Release APK
+- Phone screenshots still have to be captured on device before either request is filed
 - Application id: `dev.involvex.kiln` · License: Apache-2.0
 
 ## Manual local release build

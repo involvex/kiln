@@ -1,0 +1,42 @@
+# Draft for fdroiddata: metadata/dev.involvex.kiln.yml
+# Paste into a branch named dev.involvex.kiln. Do not commit this file to fdroiddata until
+# phone screenshots are in this repo. See docs/STORE.md.
+Categories:
+  - System
+License: Apache-2.0
+AuthorName: involvex
+WebSite: https://involvex.github.io/kiln/
+SourceCode: https://github.com/involvex/kiln
+IssueTracker: https://github.com/involvex/kiln/issues
+Changelog: https://github.com/involvex/kiln/blob/main/CHANGELOG.md
+Donate: https://github.com/involvex/kiln?sponsor=1
+
+AutoName: Kiln
+Summary: Package manager, APK tools, storage cleanup, and optional Shizuku helpers
+
+RepoType: git
+Repo: https://github.com/involvex/kiln.git
+
+Builds:
+  - versionName: 0.2.7
+    versionCode: 10
+    commit: v0.2.7
+    gradle:
+      - yes
+    output: app/build/outputs/apk/release/app-release.apk
+
+AutoUpdateMode: Version v%v
+UpdateCheckMode: Tags
+CurrentVersion: 0.2.7
+CurrentVersionCode: 10
+
+MaintainerNotes: |
+  Multi-module Gradle build. Run from the repository root. There is no settings.gradle.kts
+  in app/, so do not set subdir.
+  assembleRelease without the KILN_* upload-keystore env vars signs with the debug keystore.
+  F-Droid re-signs the result. Do not set Binaries or AllowedAPKSigningKeys until a
+  reproducible build against the GitHub Release APK is proven.
+  QUERY_ALL_PACKAGES lists installed apps. REQUEST_INSTALL_PACKAGES is the system
+  installer (this is a package manager). PACKAGE_USAGE_STATS is optional storage sizes
+  and stays off until the user grants Usage Access. Auto-install of other apps is off
+  by default and never installs a signature mismatch.

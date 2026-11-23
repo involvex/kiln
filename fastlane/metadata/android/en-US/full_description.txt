@@ -1,10 +1,12 @@
-Kiln (package id dev.involvex.kiln) unifies F-Droid and GitHub update sources, APK export/backup, storage cleanup, and optional debloat in one Apache-2.0 Android app. It is not related to the macOS “Kiln” Android emulator.
+Kiln (package id dev.involvex.kiln) unifies F-Droid and GitHub update sources, APK export and backup, storage cleanup, and optional debloat in one Apache-2.0 Android app. It is not related to the macOS “Kiln” Android emulator.
 
 • List and export installed apps (.apk / .apks / .xapk)
-• Sync F-Droid-compatible repos and GitHub Releases; auto-match installed apps
-• Install updates via the system installer or silently with Shizuku when available
-• Storage analyzer and cache clear; APK backup/restore archives
+• Discover F-Droid catalogs and GitHub releases; sync repos; auto-match installed apps
+• Install updates with the system installer, or silently with Shizuku when you set that up
+• Storage analyzer, cache clear, and APK backup/restore (optional password encryption)
+• Home widgets for update checks, cache trim, and process info
 • Optional debloat with snapshots; optional Termux RUN_COMMAND hooks (off by default)
+• With Shizuku: enable or disable one component, force-stop a process, and read the Android user list
 • No analytics or telemetry — installed-app lists stay on your device
 
-Privileged actions use Shizuku or Root when you set them up; basic features work without them (Tier NONE).
+Privileged actions use Shizuku or Root when you set them up. Basic features work without them. Auto-install of updates is off until you turn it on, and signature mismatches are never installed automatically.
