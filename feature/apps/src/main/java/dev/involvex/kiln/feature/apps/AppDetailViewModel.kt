@@ -209,6 +209,22 @@ class AppDetailViewModel @Inject constructor(
             AppDetailEvent.DismissStopTracking,
             -> onLinkEvent(event)
 
+            AppDetailEvent.Uninstall,
+            AppDetailEvent.ClearOpenSystemUninstall,
+            is AppDetailEvent.SelectDualUser,
+            AppDetailEvent.ConfirmDualUserAction,
+            AppDetailEvent.DismissDualUserAction,
+            -> onDualUserEvent(event)
+
+            AppDetailEvent.OpenUnknownSourcesSettings,
+            AppDetailEvent.Launch,
+            AppDetailEvent.OpenAppInfo,
+            -> Unit // handled in UI via intents
+        }
+    }
+
+    private fun onDualUserEvent(event: AppDetailEvent) {
+        when (event) {
             AppDetailEvent.Uninstall -> requestUninstall()
 
             AppDetailEvent.ClearOpenSystemUninstall ->
@@ -233,14 +249,12 @@ class AppDetailViewModel @Inject constructor(
             AppDetailEvent.DismissDualUserAction ->
                 _uiState.update { it.copy(pendingDualUserAction = null) }
 
-            AppDetailEvent.OpenUnknownSourcesSettings,
-            AppDetailEvent.Launch,
-            AppDetailEvent.OpenAppInfo,
-            -> Unit // handled in UI via intents
+            else -> Unit
         }
     }
 
-    private fun currentUserId(): Int = Process.myUid() / 100_000
+    /** Android multi-user: userId = uid / [ANDROID_PER_USER_RANGE]. */
+    private fun currentUserId(): Int = Process.myUid() / ANDROID_PER_USER_RANGE
 
     private fun requestUninstall() {
         viewModelScope.launch {
@@ -667,5 +681,8 @@ class AppDetailViewModel @Inject constructor(
 
     companion object {
         private const val COMPONENT_DETAIL_MAX = 64
+
+        /** UID range per Android user (`Process.myUid() / this` → user id). */
+        private const val ANDROID_PER_USER_RANGE = 100_000
     }
 }
