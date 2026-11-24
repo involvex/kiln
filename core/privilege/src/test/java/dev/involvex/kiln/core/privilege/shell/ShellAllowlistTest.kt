@@ -20,6 +20,12 @@ class ShellAllowlistTest {
             listOf("pm", "install", "-r", "--user", "0", path),
             ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL, listOf(path)),
         )
+        assertEquals(
+            listOf("pm", "install", "-r", "--user", "10", path),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL, listOf(path, "10")),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL, listOf(path, "10;rm")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL, listOf(path, "-1")))
     }
 
     @Test
@@ -42,6 +48,10 @@ class ShellAllowlistTest {
         assertEquals(
             listOf("pm", "install-multiple", "-r", "-d", "--user", "0", base, abi),
             ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL_MULTIPLE_DOWNGRADE, listOf(base, abi)),
+        )
+        assertEquals(
+            listOf("pm", "install-multiple", "-r", "--user", "10", base, abi),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL_MULTIPLE, listOf(base, abi, "10")),
         )
     }
 
@@ -88,6 +98,28 @@ class ShellAllowlistTest {
         assertEquals(
             listOf("pm", "uninstall", "--user", "0", pkg),
             ShellAllowlist.buildArgv(ShellAllowlist.PM_UNINSTALL, listOf(pkg)),
+        )
+        assertEquals(
+            listOf("pm", "uninstall", "--user", "10", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_UNINSTALL, listOf(pkg, "10")),
+        )
+        assertEquals(
+            listOf("pm", "uninstall", "-k", "--user", "10", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_UNINSTALL, listOf(pkg, "keep", "10")),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_UNINSTALL, listOf(pkg, "abc")))
+    }
+
+    @Test
+    fun pm_install_existing_accepts_user_id() {
+        val pkg = "com.example.app"
+        assertEquals(
+            listOf("pm", "install-existing", "--user", "0", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL_EXISTING, listOf(pkg)),
+        )
+        assertEquals(
+            listOf("pm", "install-existing", "--user", "10", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL_EXISTING, listOf(pkg, "10")),
         )
     }
 

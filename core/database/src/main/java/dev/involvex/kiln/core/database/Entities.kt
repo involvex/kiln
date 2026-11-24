@@ -99,6 +99,8 @@ data class InstallJobEntity(
     val apkAssetRegex: String? = null,
     /** When true, InstallWorker skips ApkSignatureGate (user confirmed known mismatch). */
     val allowSignatureMismatch: Boolean = false,
+    /** Android `--user` id for silent install (M55). Null = default user 0. */
+    val targetUserId: Int? = null,
     val createdAtEpochMs: Long,
     val updatedAtEpochMs: Long,
 )

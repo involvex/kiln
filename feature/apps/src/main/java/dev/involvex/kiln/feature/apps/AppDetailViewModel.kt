@@ -1,5 +1,6 @@
 package dev.involvex.kiln.feature.apps
 
+import android.os.Process
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -7,12 +8,14 @@ import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ActivityLogEvents
 import dev.involvex.kiln.core.model.ActivityLogRecorder
 import dev.involvex.kiln.core.model.ActivityLogType
+import dev.involvex.kiln.core.model.AndroidUserInfo
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.ApkRollbackCache
 import dev.involvex.kiln.core.model.AppComponentInfo
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.ComponentTogglePolicy
+import dev.involvex.kiln.core.model.DualUserInstallGate
 import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallQueue
@@ -206,11 +209,126 @@ class AppDetailViewModel @Inject constructor(
             AppDetailEvent.DismissStopTracking,
             -> onLinkEvent(event)
 
+            AppDetailEvent.Uninstall -> requestUninstall()
+
+            AppDetailEvent.ClearOpenSystemUninstall ->
+                _uiState.update { it.copy(openSystemUninstall = false) }
+
+            is AppDetailEvent.SelectDualUser ->
+                _uiState.update { state ->
+                    val pending = state.pendingDualUserAction ?: return@update state
+                    state.copy(
+                        pendingDualUserAction = pending.copy(
+                            selectedUserId = DualUserInstallGate.resolveTargetUserId(
+                                selectedUserId = event.userId,
+                                users = pending.users,
+                                currentUserId = currentUserId(),
+                            ),
+                        ),
+                    )
+                }
+
+            AppDetailEvent.ConfirmDualUserAction -> confirmDualUserAction()
+
+            AppDetailEvent.DismissDualUserAction ->
+                _uiState.update { it.copy(pendingDualUserAction = null) }
+
             AppDetailEvent.OpenUnknownSourcesSettings,
             AppDetailEvent.Launch,
             AppDetailEvent.OpenAppInfo,
-            AppDetailEvent.Uninstall,
             -> Unit // handled in UI via intents
+        }
+    }
+
+    private fun currentUserId(): Int = Process.myUid() / 100_000
+
+    private fun requestUninstall() {
+        viewModelScope.launch {
+            val caps = privilegedExecutor.currentStatus().capabilities
+            val hasSilent = PrivilegeCapability.SILENT_UNINSTALL in caps
+            val users = loadCensusUsers()
+            if (DualUserInstallGate.showPicker(users, hasSilent)) {
+                _uiState.update {
+                    it.copy(
+                        pendingDualUserAction = PendingDualUserAction(
+                            kind = DualUserPendingKind.Uninstall,
+                            users = users,
+                            selectedUserId = currentUserId(),
+                        ),
+                    )
+                }
+            } else {
+                _uiState.update { it.copy(openSystemUninstall = true) }
+            }
+        }
+    }
+
+    private suspend fun loadCensusUsers(): List<AndroidUserInfo> {
+        val caps = privilegedExecutor.currentStatus().capabilities
+        if (PrivilegeCapability.RUN_SHELL_DIAGNOSTIC !in caps) return emptyList()
+        return when (val result = privilegedExecutor.listAndroidUsers()) {
+            is Result.Success -> result.value
+            is Result.Failure -> emptyList()
+        }
+    }
+
+    private fun maybePromptDualUser(kind: DualUserPendingKind, silentCap: PrivilegeCapability, onSkip: () -> Unit) {
+        viewModelScope.launch {
+            val caps = privilegedExecutor.currentStatus().capabilities
+            val hasSilent = silentCap in caps
+            val users = loadCensusUsers()
+            if (DualUserInstallGate.showPicker(users, hasSilent)) {
+                _uiState.update {
+                    it.copy(
+                        pendingDualUserAction = PendingDualUserAction(
+                            kind = kind,
+                            users = users,
+                            selectedUserId = currentUserId(),
+                        ),
+                    )
+                }
+            } else {
+                onSkip()
+            }
+        }
+    }
+
+    private fun confirmDualUserAction() {
+        val pending = _uiState.value.pendingDualUserAction ?: return
+        val userId = DualUserInstallGate.resolveTargetUserId(
+            selectedUserId = pending.selectedUserId,
+            users = pending.users,
+            currentUserId = currentUserId(),
+        )
+        _uiState.update { it.copy(pendingDualUserAction = null) }
+        when (pending.kind) {
+            DualUserPendingKind.Uninstall -> performSilentUninstall(userId)
+            DualUserPendingKind.InstallUpdate -> enqueueUpdate(allowSignatureMismatch = false, targetUserId = userId)
+            DualUserPendingKind.InstallMismatch -> enqueueUpdate(allowSignatureMismatch = true, targetUserId = userId)
+            DualUserPendingKind.Rollback -> confirmRollback(targetUserId = userId)
+        }
+    }
+
+    private fun performSilentUninstall(targetUserId: Int) {
+        val pkg = packageName ?: return
+        viewModelScope.launch {
+            when (val result = privilegedExecutor.uninstall(pkg, keepData = false, targetUserId = targetUserId)) {
+                is Result.Success -> {
+                    activityLog.record(
+                        ActivityLogEvents.create(
+                            type = ActivityLogType.INSTALL,
+                            action = "uninstall",
+                            success = true,
+                            packageName = pkg,
+                            detailKey = if (targetUserId != currentUserId()) "user:$targetUserId" else null,
+                        ),
+                    )
+                    showMessage("uninstall_ok")
+                    refresh()
+                }
+
+                is Result.Failure -> showMessage(result.message)
+            }
         }
     }
 
@@ -238,11 +356,22 @@ class AppDetailViewModel @Inject constructor(
     private fun onConfirmableEvent(event: AppDetailEvent) {
         when (event) {
             is AppDetailEvent.RequestRollback -> requestRollback(event.entry)
+
             AppDetailEvent.DismissRollback -> _uiState.update { it.copy(pendingRollback = null) }
-            AppDetailEvent.ConfirmRollback -> confirmRollback()
+
+            AppDetailEvent.ConfirmRollback ->
+                maybePromptDualUser(
+                    kind = DualUserPendingKind.Rollback,
+                    silentCap = PrivilegeCapability.SILENT_INSTALL,
+                    onSkip = { confirmRollback(targetUserId = 0) },
+                )
+
             is AppDetailEvent.RequestComponentToggle -> requestComponentToggle(event.component, event.enable)
+
             AppDetailEvent.DismissComponentToggle -> _uiState.update { it.copy(pendingComponentToggle = null) }
+
             AppDetailEvent.ConfirmComponentToggle -> confirmComponentToggle()
+
             else -> Unit
         }
     }
@@ -456,11 +585,17 @@ class AppDetailViewModel @Inject constructor(
         _uiState.update { it.copy(snackbarMessage = message) }
     }
 
-    private fun confirmRollback() {
+    private fun confirmRollback(targetUserId: Int) {
         val entry = _uiState.value.pendingRollback ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(rollbackInProgress = true, pendingRollback = null) }
-            when (val result = privilegedExecutor.installApk(entry.apkAbsolutePath, allowDowngrade = true)) {
+            when (
+                val result = privilegedExecutor.installApk(
+                    apkAbsolutePath = entry.apkAbsolutePath,
+                    allowDowngrade = true,
+                    targetUserId = targetUserId,
+                )
+            ) {
                 is Result.Success -> {
                     showMessage("rollback_ok")
                     refresh()
@@ -474,7 +609,12 @@ class AppDetailViewModel @Inject constructor(
 
     private fun onInstallEvent(event: AppDetailEvent) {
         when (event) {
-            AppDetailEvent.InstallUpdate -> enqueueUpdate(allowSignatureMismatch = false)
+            AppDetailEvent.InstallUpdate ->
+                maybePromptDualUser(
+                    kind = DualUserPendingKind.InstallUpdate,
+                    silentCap = PrivilegeCapability.SILENT_INSTALL,
+                    onSkip = { enqueueUpdate(allowSignatureMismatch = false, targetUserId = null) },
+                )
 
             AppDetailEvent.RequestInstallDespiteSignature ->
                 _uiState.update { it.copy(confirmSignatureMismatchInstall = true) }
@@ -484,17 +624,27 @@ class AppDetailViewModel @Inject constructor(
 
             AppDetailEvent.ConfirmInstallDespiteSignature -> {
                 _uiState.update { it.copy(confirmSignatureMismatchInstall = false) }
-                enqueueUpdate(allowSignatureMismatch = true)
+                maybePromptDualUser(
+                    kind = DualUserPendingKind.InstallMismatch,
+                    silentCap = PrivilegeCapability.SILENT_INSTALL,
+                    onSkip = { enqueueUpdate(allowSignatureMismatch = true, targetUserId = null) },
+                )
             }
 
             else -> Unit
         }
     }
 
-    private fun enqueueUpdate(allowSignatureMismatch: Boolean) {
+    private fun enqueueUpdate(allowSignatureMismatch: Boolean, targetUserId: Int?) {
         val update = _uiState.value.availableUpdate ?: return
         viewModelScope.launch {
-            when (val result = installQueue.enqueue(update, allowSignatureMismatch = allowSignatureMismatch)) {
+            when (
+                val result = installQueue.enqueue(
+                    update = update,
+                    allowSignatureMismatch = allowSignatureMismatch,
+                    targetUserId = targetUserId,
+                )
+            ) {
                 is Result.Success -> Unit
                 is Result.Failure -> showMessage(result.message)
             }

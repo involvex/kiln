@@ -191,6 +191,12 @@
     <string name="feature_apps_action_launch">Starten</string>
     <string name="feature_apps_action_info">App-Info</string>
     <string name="feature_apps_action_uninstall">Deinstallieren</string>
+    <string name="feature_apps_uninstall_ok">Deinstallation ausgelöst.</string>
+    <string name="feature_apps_dual_user_title">Android-Nutzer wählen</string>
+    <string name="feature_apps_dual_user_body">Dieses Gerät hat mehr als einen Android-Nutzer. Wähle, für welchen Nutzer Installation oder Deinstallation gelten soll.</string>
+    <string name="feature_apps_dual_user_option">%1$s (ID %2$d)</string>
+    <string name="feature_apps_dual_user_confirm">Weiter</string>
+    <string name="feature_apps_dual_user_cancel">Abbrechen</string>
     <string name="feature_apps_action_export">APK exportieren</string>
     <string name="feature_apps_action_update">Herunterladen &amp; installieren</string>
     <string name="feature_apps_update_section">Update</string>

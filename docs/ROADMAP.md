@@ -69,7 +69,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M52** | In-app process list | Done | [`prompts/M52-manage-processes.md`](./prompts/M52-manage-processes.md) · `m52-manage-processes` | Settings → Tools processes; force-stop confirm; reuse widget snapshot |
 | **M53** | Read-only user census | Done | [`prompts/M53-user-census.md`](./prompts/M53-user-census.md) · `m53-user-census` | `pm list users` + current user id; no `--user N` installs |
 | **M54** | Store listing packet | Done (packet); listings closed | [STORE.md](./STORE.md) · [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948) · [fdroiddata!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) | Fastlane + screenshots; Izzy AI decline; F-Droid closed until ≥3 months; Distribute via GitHub + Obtainium |
-| **M55** | Dual-user installs | Next | [`prompts/M55-dual-user-installs.md`](./prompts/M55-dual-user-installs.md) · `m55-dual-user-installs` | Best-effort `--user N` on install/uninstall when M53 census has ≥2 users; single-user = unchanged |
+| **M55** | Dual-user installs | Done | [`prompts/M55-dual-user-installs.md`](./prompts/M55-dual-user-installs.md) · `m55-dual-user-installs` | Best-effort `--user N` on install/uninstall when M53 census has ≥2 users; single-user = unchanged |
 
 ---
 
@@ -94,7 +94,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | SAF backup rotation / data tiers / encryption | Done (M40 #69) | SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM; ROOT / cloud deferred |
 | APK tools 2 (inspect + compare) | Done | M29 (#47); M31 (#49); universal merge M35 (#56) |
 | Mirrors / proxy | Done | M30 #48 |
-| Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); M53 census Done; **M55** dual-user installs Next (best-effort); tablet unscheduled |
+| Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); M53 census Done; **M55** dual-user installs Done (best-effort); tablet unscheduled |
 | Publishing / F-Droid + Izzy | Closed for now | Izzy [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948); F-Droid !58920 closed (3‑month rule). Ship via GitHub + Obtainium; F-Droid refile ≈ Feb 2026. Play skipped (US$25) |
 | HyperOS M1–M8 checklist sweep | Optional / low priority | Older acceptance lists; not a gate for M55+. Run ad hoc if something regresses |
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
@@ -130,7 +130,8 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Activity log | ✅ Room-backed searchable log (install/backup/cache/maintenance/shell/…) | NONE |
 | Widgets / QS | ✅ M46: Updates (preview+Check); Cache (confirm/`CLEAR_CACHE`); Processes (mem/CPU+`FORCE_STOP`); QS Check now | NONE / SHIZUKU (`CLEAR_CACHE`, `RUN_SHELL_DIAGNOSTIC`, `FORCE_STOP`) |
 | In-app processes | ✅ **M52** Settings → Tools → Processes (same meminfo + force-stop gate as widget) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`, `FORCE_STOP`) |
-| Android user census | ✅ **M53** Settings → Tools → Android users (`pm list users` read-only; installs still `--user 0`) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`) |
+| Android user census | ✅ **M53** Settings → Tools → Android users (`pm list users` read-only) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`) |
+| Dual-user install/uninstall | ✅ **M55** optional `--user N` when census ≥2 + silent Shizuku; else unchanged | NONE / SHIZUKU (`SILENT_INSTALL` / `SILENT_UNINSTALL`) |
 | Permission audit | ✅ Dangerous overview; `pm revoke` + basic AppOps set | NONE / SHIZUKU (`MANAGE_APP_OPS`) |
 | Background controls | ✅ HyperOS Autostart + battery Unrestricted/Optimized/Restricted | SHIZUKU (`MANAGE_APP_OPS`) |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
@@ -356,9 +357,9 @@ flowchart LR
   M53 --> v027[v0.2.7]
 ```
 
-1. **M55** dual-user installs (best-effort `--user N`) on branch `m55-dual-user-installs` — single-user devices stay as today.
+1. **M55** Done — merge `m55-dual-user-installs`, then cut **0.2.9** when ready.
 2. Store: GitHub + Obtainium; F-Droid refile only after ≈2026-02-08 ([STORE.md](./STORE.md)).
-3. Later backlog when wanted: tablet layouts, cloud backup, ROOT `/data/data` — not gated on HyperOS checklists.
+3. Later backlog when wanted: tablet layouts, cloud backup, ROOT `/data/data`.
 
 ---
 
