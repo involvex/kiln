@@ -2,10 +2,10 @@
 
 Kiln stays off Google Play. A Play Console account costs a one-time US$25 fee, and the free Android Developer Console plan only reaches 20 devices. It does not publish a public store listing.
 
-Free listings to file (phone screenshots are in the repo):
+Free listings:
 
-- **IzzyOnDroid** ships the upload-signed GitHub Release APK. This is the faster listing.
-- **F-Droid** rebuilds `v0.2.7` from source and signs its own copy. Review takes longer. A listing on one store does not remove the other.
+- **IzzyOnDroid** — filed: [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948) (ships the upload-signed GitHub Release APK).
+- **F-Droid** — not filed yet. Rebuilds `v0.2.7` from source; review takes longer. A listing on one store does not remove the other.
 
 Obtainium needs no request. People add `https://github.com/involvex/kiln` themselves.
 
@@ -39,7 +39,9 @@ Izzy flags these until the maintainer explains them. Paste this with the inclusi
 
 ## IzzyOnDroid request
 
-Open a public **App Inclusion Request** on Codeberg: [IzzyOnDroid/repo issues](https://codeberg.org/IzzyOnDroid/repo/issues). Use their template. Paste:
+**Filed:** [IzzyOnDroid/repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948) (Codeberg; the old GitLab `IzzyOnDroid/repo` project is archived).
+
+For a re-file or similar apps, open an **App Inclusion Request** on [IzzyOnDroid/repodata](https://codeberg.org/IzzyOnDroid/repodata/issues) and paste:
 
 ```text
 App: Kiln
@@ -57,14 +59,14 @@ QUERY_ALL_PACKAGES: required to list installed apps. The list is not uploaded.
 REQUEST_INSTALL_PACKAGES: system installer for updates and restores. Auto-install is off by default and never accepts a signature mismatch.
 PACKAGE_USAGE_STATS: optional storage sizes, granted only from the system Usage Access screen.
 
-Not yet submitted to F-Droid. A draft fdroiddata recipe is in docs/fdroid/dev.involvex.kiln.yml and will be filed after this listing's screenshots are in the repo.
+Not yet submitted to F-Droid. A draft fdroiddata recipe is in docs/fdroid/dev.involvex.kiln.yml.
 ```
 
 If the template asks whether the app downloads extra executables: installs happen only when the user asks (or after they opt in to auto-install of signature-matching updates). Kiln does not ship a silent self-updater.
 
 ## F-Droid request
 
-After screenshots are committed and `main` contains this packet:
+Screenshots and listing packet are on `main`. When ready:
 
 1. Fork [fdroiddata](https://gitlab.com/fdroid/fdroiddata).
 2. Branch `dev.involvex.kiln` from `master`.
@@ -72,4 +74,4 @@ After screenshots are committed and `main` contains this packet:
 4. Open the merge request. Let fdroiddata CI build `v0.2.7`.
 5. If CI reports a recipe error (JDK, output path, tag pattern), fix that yml only. Do not claim a reproducible build. `Binaries` stays unset until a rebuild matches `kiln-0.2.7.apk`.
 
-F-Droid builds from the git tag. It does not need the upload keystore. The buildserver currently knows Gradle 9.9.1, which is the wrapper this repo uses.
+F-Droid builds from the git tag. It does not need the upload keystore. The wrapper is Gradle 9.9.2 (in the transparency log).
