@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M51–M53** Done on `main`. App version **0.2.7** (code 10), tag `v0.2.7`. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid listing in progress. Dual-user installs / cloud / ROOT backup unscheduled.
+**Current status:** **M51–M53** Done on `main`. App version **0.2.8** (code 11), tag `v0.2.8`. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid listing in progress. Dual-user installs / cloud / ROOT backup unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 

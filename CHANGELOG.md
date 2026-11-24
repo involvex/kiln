@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.8] — 2026-11-24
+
 ### Fixed
 
 - Release APKs omit Google Play dependency-metadata from the signing block (`dependenciesInfo.includeInApk/includeInBundle = false`) for F-Droid / IzzyOnDroid scanners
@@ -14,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Store docs: IzzyOnDroid inclusion declined under their AI policy ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid remains the free listing path
+
+### Fixed
+
+- omit Google dependency metadata from release APKs
+- bump compileSdk minor to 37.2 for Compose BOM
+- use APK package name for GitHub Discover installs
+
+- Version **0.2.8** (versionCode 11)
 
 ## [0.2.7] — 2026-11-22
 
