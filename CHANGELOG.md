@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Release APKs omit Google Play dependency-metadata from the signing block (`dependenciesInfo.includeInApk/includeInBundle = false`) for F-Droid / IzzyOnDroid scanners
+
+### Changed
+
+- Store docs: IzzyOnDroid inclusion declined under their AI policy ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid remains the free listing path
+
 ## [0.2.7] — 2026-11-22
 
 ### Added
