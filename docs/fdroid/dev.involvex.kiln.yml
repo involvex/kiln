@@ -1,6 +1,5 @@
 # Draft for fdroiddata: metadata/dev.involvex.kiln.yml
-# Paste into a branch named dev.involvex.kiln. Do not commit this file to fdroiddata until
-# phone screenshots are in this repo. See docs/STORE.md.
+# Paste into a branch named dev.involvex.kiln. See docs/STORE.md.
 Categories:
   - System
 License: Apache-2.0
@@ -18,17 +17,17 @@ RepoType: git
 Repo: https://github.com/involvex/kiln.git
 
 Builds:
-  - versionName: 0.2.7
-    versionCode: 10
-    commit: v0.2.7
+  - versionName: 0.2.8
+    versionCode: 11
+    commit: v0.2.8
     gradle:
       - yes
     output: app/build/outputs/apk/release/app-release.apk
 
 AutoUpdateMode: Version v%v
 UpdateCheckMode: Tags
-CurrentVersion: 0.2.7
-CurrentVersionCode: 10
+CurrentVersion: 0.2.8
+CurrentVersionCode: 11
 
 MaintainerNotes: |
   Multi-module Gradle build. Run from the repository root. There is no settings.gradle.kts

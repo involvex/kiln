@@ -1,0 +1,1 @@
+0.2.8: Release-APKs enthalten keine Google-Play-Dependency-Metadaten mehr im Signing-Block (hilft F-Droid-Scannern). Store-Docs: IzzyOnDroid hat die Aufnahme wegen der KI-Richtlinie abgelehnt; F-Droid bleibt der freie Listing-Weg.

@@ -1,0 +1,1 @@
+0.2.8: Release APKs no longer embed Google Play dependency-metadata in the signing block (helps F-Droid scanners). Store docs note IzzyOnDroid declined inclusion under their AI policy; F-Droid remains the free listing path.
