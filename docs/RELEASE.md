@@ -84,7 +84,7 @@ Filing steps, the permission note, and the draft fdroiddata recipe are in [STORE
 - Metadata: [`fastlane/metadata/android/`](../fastlane/metadata/android/) (en-US and de-DE, including changelog `10.txt` and `images/icon.png`)
 - F-Droid builds from source and does not need the upload keystore
 - IzzyOnDroid ships the upload-signed GitHub Release APK
-- Phone screenshots still have to be captured on device before either request is filed
+- Phone screenshots live under `fastlane/metadata/android/en-US/images/phoneScreenshots/`
 - Application id: `dev.involvex.kiln` · License: Apache-2.0
 
 ## Manual local release build

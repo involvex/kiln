@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M51–M53** Done on `main`. App version **0.2.7** (code 10), tag `v0.2.7`. F-Droid and IzzyOnDroid filing waits on phone screenshots ([STORE.md](./STORE.md)). Dual-user installs / cloud / ROOT backup unscheduled.
+**Current status:** **M51–M53** Done on `main`. App version **0.2.7** (code 10), tag `v0.2.7`. Store listing packet ready ([STORE.md](./STORE.md)); F-Droid/Izzy filing still open. Dual-user installs / cloud / ROOT backup unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -68,7 +68,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M51** | Component enable / disable | Done | [`prompts/M51-component-toggles.md`](./prompts/M51-component-toggles.md) · `m51-component-toggles` | Shizuku `pm enable`/`disable` one component; denylist; NONE read-only |
 | **M52** | In-app process list | Done | [`prompts/M52-manage-processes.md`](./prompts/M52-manage-processes.md) · `m52-manage-processes` | Settings → Tools processes; force-stop confirm; reuse widget snapshot |
 | **M53** | Read-only user census | Done | [`prompts/M53-user-census.md`](./prompts/M53-user-census.md) · `m53-user-census` | `pm list users` + current user id; no `--user N` installs |
-| **M54** | Store listing packet | In progress | `m54-store-listing` · [STORE.md](./STORE.md) | Fastlane 0.2.7 copy, icon, F-Droid recipe, Izzy filing text. Screenshots and filing still open |
+| **M54** | Store listing packet | In progress | `m54-store-listing` · [STORE.md](./STORE.md) | Fastlane 0.2.7 copy, icon, screenshots, F-Droid recipe, Izzy filing text. Maintainer filing still open |
 
 ---
 
@@ -94,7 +94,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | APK tools 2 (inspect + compare) | Done | M29 (#47); M31 (#49); universal merge M35 (#56) |
 | Mirrors / proxy | Done | M30 #48 |
 | Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); M53 read-only user census; dual-user installs / tablet unscheduled |
-| Publishing / F-Droid + Izzy | Partial | Fastlane 0.2.7 copy, 512px icon, [STORE.md](./STORE.md) recipe and filing text. Screenshots and maintainer filing still open. Play skipped (US$25) |
+| Publishing / F-Droid + Izzy | Partial | Fastlane 0.2.7 copy, icon, phone screenshots, [STORE.md](./STORE.md). Maintainer filing still open. Play skipped (US$25) |
 | HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
 | GitHub starred repos → Sources | Done (M42 #73) | Review list + multi-select add; APK heuristic; no silent install |
@@ -143,7 +143,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Repo priority | ✅ Sources ↑↓ reorder; `ensureKnownRepos` preserves user priority; Auto-match / update conflict tie-break | NONE |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
-| Release / store prep | ✅ version `0.2.7` (code 10); About privacy page; fastlane en/de including changelog 10 and icon; [STORE.md](./STORE.md); tag `v0.2.7`. Screenshots and F-Droid/Izzy filing still open | — |
+| Release / store prep | ✅ version `0.2.7` (code 10); About privacy page; fastlane en/de, icon, phone screenshots; [STORE.md](./STORE.md); tag `v0.2.7`. F-Droid/Izzy filing still open | — |
 | App Discovery | ✅ Apps → Library\|Discover; home shelves + categories; catalog refresh; icons; detail; search; GitHub tab; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
 | Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage; **M42** `kilnHiltViewModel` Activity scope (Nav3 Hilt map miss) | NONE |
@@ -173,7 +173,7 @@ Code on main (post-#21):
 - [ ] Source / privacy / license buttons open the GitHub URLs
 - [ ] `docs/PRIVACY.md` and `CHANGELOG.md` match the shipped story
 - [ ] Tag `v0.1.0` creates a GitHub Release with an APK (optional; publishing deferred)
-- [ ] Capture phone screenshots into `fastlane/metadata/android/en-US/images/phoneScreenshots/` before F-Droid submit
+- [x] Capture phone screenshots into `fastlane/metadata/android/en-US/images/phoneScreenshots/` before F-Droid submit
 
 ---
 
