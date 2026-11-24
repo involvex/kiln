@@ -1,4 +1,4 @@
-# Draft for fdroiddata: metadata/dev.involvex.kiln.yml
+# Draft for fdroiddata: metadata/dev.involvex.kiln.yml (+ metadata/dev.involvex.kiln/en-US/summary.txt).
 # Paste into a branch named dev.involvex.kiln. See docs/STORE.md.
 Categories:
   - System
@@ -11,7 +11,6 @@ Changelog: https://github.com/involvex/kiln/blob/main/CHANGELOG.md
 Donate: https://github.com/involvex/kiln?sponsor=1
 
 AutoName: Kiln
-Summary: Package manager, APK tools, storage cleanup, and optional Shizuku helpers
 
 RepoType: git
 Repo: https://github.com/involvex/kiln.git
@@ -24,12 +23,6 @@ Builds:
       - yes
     output: app/build/outputs/apk/release/app-release.apk
 
-AutoUpdateMode: Version
-UpdateCheckMode: Tags ^v[\d.]+$
-UpdateCheckData: build-logic/convention/src/main/kotlin/dev/involvex/kiln/convention/KilnAndroid.kt|VERSION_CODE\s*=\s*(\d+)|.|versionName\s*=\s*"([^"]+)"
-CurrentVersion: 0.2.8
-CurrentVersionCode: 11
-
 MaintainerNotes: |
   Multi-module Gradle build. Run from the repository root. There is no settings.gradle.kts
   in app/, so do not set subdir.
@@ -40,3 +33,10 @@ MaintainerNotes: |
   installer (this is a package manager). PACKAGE_USAGE_STATS is optional storage sizes
   and stays off until the user grants Usage Access. Auto-install of other apps is off
   by default and never installs a signature mismatch.
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[\d.]+$
+UpdateCheckData: 
+  build-logic/convention/src/main/kotlin/dev/involvex/kiln/convention/KilnAndroid.kt|VERSION_CODE\s*=\s*(\d+)|.|versionName\s*=\s*"([^"]+)"
+CurrentVersion: 0.2.8
+CurrentVersionCode: 11
