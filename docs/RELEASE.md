@@ -77,14 +77,13 @@ gh secret set KILN_KEY_PASSWORD -R involvex/kiln
 gh secret list -R involvex/kiln
 ```
 
-## F-Droid and IzzyOnDroid
+## Distribution (stores)
 
-Filing steps, the permission note, and the draft fdroiddata recipe are in [STORE.md](./STORE.md).
+Status, Obtainium-first decision, F-Droid refile notes, and the draft fdroiddata recipe: [STORE.md](./STORE.md).
 
-- Metadata: [`fastlane/metadata/android/`](../fastlane/metadata/android/) (en-US and de-DE, including changelog `10.txt` and `images/icon.png`)
-- F-Droid builds from source and does not need the upload keystore
-- IzzyOnDroid ships the upload-signed GitHub Release APK
-- Phone screenshots live under `fastlane/metadata/android/en-US/images/phoneScreenshots/`
+- Ship: GitHub Release APK (upload-signed via `KILN_*`) + Obtainium on `https://github.com/involvex/kiln`
+- IzzyOnDroid and F-Droid main repo: closed for now (see STORE.md)
+- Metadata: [`fastlane/metadata/android/`](../fastlane/metadata/android/) (en-US and de-DE, changelogs, icon, screenshots)
 - Application id: `dev.involvex.kiln` · License: Apache-2.0
 
 ## Manual local release build

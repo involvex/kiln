@@ -2,18 +2,18 @@
 
 Kiln stays off Google Play. A Play Console account costs a one-time US$25 fee, and the free Android Developer Console plan only reaches 20 devices. It does not publish a public store listing.
 
-Free listings:
+## Current distribution (decision)
 
-- **IzzyOnDroid** — filed then **declined** under their [AI policy](https://izzyondroid.org/docs/general/AppInclusionPolicy/) ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)). Cronos APK scan was otherwise fine aside from Google dependency-metadata (fixed in app builds). Do not refile with a lower assistance level.
-- **F-Droid** — preferred free listing. Rebuilds from the git tag; no LLM policy. Recipe draft: [fdroid/dev.involvex.kiln.yml](./fdroid/dev.involvex.kiln.yml).
+**Primary path: GitHub Releases + Obtainium.** No store approval. Users add `https://github.com/involvex/kiln` in Obtainium (or install the Release APK directly).
 
-Obtainium needs no request. People add `https://github.com/involvex/kiln` themselves.
-
-The APK to point reviewers at is the GitHub Release asset (upload-signed via `KILN_*` secrets), for example:
-
-`https://github.com/involvex/kiln/releases/download/v0.2.8/kiln-0.2.8.apk`
-
-(Adjust the version to the tag you are submitting.)
+| Channel | Status | Notes |
+| --- | --- | --- |
+| GitHub Releases | Active | Upload-signed APK via `KILN_*` secrets, e.g. `https://github.com/involvex/kiln/releases/download/v0.2.8/kiln-0.2.8.apk` |
+| Obtainium | Active | No request; point at the GitHub repo |
+| IzzyOnDroid | Closed | Declined under [AI policy](https://izzyondroid.org/docs/general/AppInclusionPolicy/) ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)). Do not refile with a lower assistance level. |
+| F-Droid main repo | Closed until ≥3 months | [fdroiddata!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed by `linsui`: MR template not used; app &lt; 3 months old ([Inclusion Policy](https://f-droid.org/docs/Inclusion_Policy/) Quality §6); “no unique features.” Earliest sensible refile ≈ **2026-02-08** (3 months after first commit 2026-11-08). |
+| Self-hosted F-Droid repo | Deferred | Free to host; not worth the ops cost while Obtainium covers updates. See below. |
+| Google Play | Skipped | US$25 + policy overhead |
 
 ## Already in the repo
 
@@ -24,7 +24,7 @@ The APK to point reviewers at is the GitHub Release asset (upload-signed via `KI
 - Privacy policy: `https://involvex.github.io/kiln/PRIVACY.md`
 - Auto-install of updates is off until the user turns it on. Signature mismatches are never installed automatically
 - Release builds set `dependenciesInfo.includeInApk/includeInBundle = false` (no Google dependency-metadata blob)
-- Draft recipe: [fdroid/dev.involvex.kiln.yml](./fdroid/dev.involvex.kiln.yml)
+- Draft recipe kept for a later refile: [fdroid/dev.involvex.kiln.yml](./fdroid/dev.involvex.kiln.yml)
 
 ## Why the sensitive permissions are there
 
@@ -40,12 +40,44 @@ The APK to point reviewers at is the GitHub Release asset (upload-signed via `KI
 
 See [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948). Inclusion was declined because declared AI assistance was above their threshold. They still ran Cronos on `v0.2.7` and pointed us at F-Droid.
 
-## F-Droid request
+## F-Droid main repo (closed for now)
 
-1. Fork [fdroiddata](https://gitlab.com/fdroid/fdroiddata).
-2. Branch `dev.involvex.kiln` from `master`.
-3. Add `metadata/dev.involvex.kiln.yml` with the contents of [fdroid/dev.involvex.kiln.yml](./fdroid/dev.involvex.kiln.yml) (keep version/tag in sync with the submitted release).
-4. Open the merge request. Let fdroiddata CI build the tagged commit.
-5. If CI reports a recipe error (JDK, output path, tag pattern), fix that yml only. Do not claim a reproducible build. `Binaries` stays unset until a rebuild matches the GitHub Release APK.
+Closed MR: [fdroiddata!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920#note_4310272049).
 
-F-Droid builds from the git tag. It does not need the upload keystore. The wrapper is Gradle 9.9.2 (in the transparency log).
+Do **not** reopen until:
+
+1. **≥3 months** of active development (first commit 2026-11-08 → refile window opens ≈ **2026-02-08**), **or** a clear “proven users” exception with evidence.
+2. The official **Default** MR template is filled (Abstract + Checklist), including a uniqueness pitch.
+3. Recipe uses a **full commit SHA** in `commit:` (template forbids tag/branch there).
+
+### Uniqueness pitch (draft for next MR)
+
+Use something like this in the template’s “why / unique functions” section — adjust with real changelog evidence by then:
+
+> Kiln is an Apache-2.0 **device package workstation**, not another GitHub APK follower. In one app it combines: multi-repo F-Droid index clients + GitHub Releases/channels, signature-aware updates (never auto-install on mismatch), APK inspect/merge/resign/split install, storage cleanup with trash, backup/restore, optional Shizuku component control / processes, and optional Termux `RUN_COMMAND`. Closest F-Droid peers cover slices of this (Obtainium ≈ update follow; F-Droid client ≈ one repo type; App Manager ≈ privileged inspect) but not this FLOSS all-in-one without Play Services or analytics.
+
+Optional first step next time: open an [RFP](https://gitlab.com/fdroid/rfp/-/issues) before the fdroiddata MR. Soft appeal (`team@f-droid.org`) is only worth it with users + uniqueness evidence — not to waive the age rule.
+
+Recipe / CI notes from !58920 (reuse later): Summary lives in `metadata/<id>/en-US/summary.txt`; `AutoUpdateMode: Version`; `UpdateCheckData` points at `KilnAndroid.kt`; auto-update fields after `MaintainerNotes`.
+
+## Self-hosted F-Droid repo (deferred)
+
+**Can it be free?** Yes. Typical stack: `fdroidserver` locally or in GitHub Actions → publish `repo/` (index + APKs or index pointing at Release URLs) to **GitHub Pages**, Codeberg Pages, or Cloudflare Pages. No hosting fee for a one-app repo.
+
+**Effort (rough):**
+
+| Phase | Effort | What |
+| --- | --- | --- |
+| One-time setup | ~4–8 hours | `fdroid init`, separate **repo signing key** (keep forever), metadata, Pages site, document “add this repo URL + fingerprint” |
+| Automation | ~2–4 hours | Workflow on `release`: copy APK → `fdroid update` → deploy Pages |
+| Ongoing | ~15–30 min / release (or fully automated) | Key backup, Pages size/bandwidth, fingerprint in README |
+
+**Why defer:** Obtainium already gives signed updates from GitHub Releases with zero extra infrastructure. A private repo mainly helps people who insist on the F-Droid *client* UX; it does **not** put Kiln in the official catalogue and does **not** replace maintainer review later. Revisit only if users ask for an `fdroidrepos:` URL.
+
+## Install blurb (README / site)
+
+```text
+Install: download the APK from GitHub Releases, or add
+https://github.com/involvex/kiln
+in Obtainium.
+```
