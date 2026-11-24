@@ -84,17 +84,21 @@ interface PrivilegedExecutor {
     /**
      * Silent install via allowlisted `pm install -r` when [PrivilegeCapability.SILENT_INSTALL] is present.
      * When [allowDowngrade] is true, uses `pm install -r -d` (rollback to a lower versionCode).
+     * [targetUserId] is the Android user for `--user` (default 0 / current-user callers).
      */
-    suspend fun installApk(apkAbsolutePath: String, allowDowngrade: Boolean = false): Result<Unit>
+    suspend fun installApk(apkAbsolutePath: String, allowDowngrade: Boolean = false, targetUserId: Int = 0): Result<Unit>
 
     /**
      * Silent multi-APK install via allowlisted `pm install-multiple -r` (split bundles).
      * Paths are base-first; every path is validated before argv is built.
      */
-    suspend fun installApks(apkAbsolutePaths: List<String>, allowDowngrade: Boolean = false): Result<Unit>
+    suspend fun installApks(apkAbsolutePaths: List<String>, allowDowngrade: Boolean = false, targetUserId: Int = 0): Result<Unit>
 
-    /** Silent uninstall when [PrivilegeCapability.SILENT_UNINSTALL] is present. */
-    suspend fun uninstall(packageName: String, keepData: Boolean): Result<Unit>
+    /**
+     * Silent uninstall when [PrivilegeCapability.SILENT_UNINSTALL] is present.
+     * [targetUserId] selects `--user` (M55 best-effort dual-user).
+     */
+    suspend fun uninstall(packageName: String, keepData: Boolean, targetUserId: Int = 0): Result<Unit>
 
     /**
      * Clear cache for [packageName], or trim all caches when null.
@@ -125,8 +129,11 @@ interface PrivilegedExecutor {
      */
     suspend fun listAndroidUsers(): Result<List<AndroidUserInfo>>
 
-    /** `pm install-existing --user 0` after user uninstall. Requires [PrivilegeCapability.DEBLOAT]. */
-    suspend fun installExistingPackage(packageName: String): Result<Unit>
+    /**
+     * `pm install-existing --user N` after user uninstall. Requires [PrivilegeCapability.DEBLOAT].
+     * [targetUserId] defaults to 0 (M55 may pass a census id).
+     */
+    suspend fun installExistingPackage(packageName: String, targetUserId: Int = 0): Result<Unit>
 
     /** `pm suspend --user 0` — app stays installed; reversible. Requires [PrivilegeCapability.DEBLOAT]. */
     suspend fun suspendPackage(packageName: String): Result<Unit>

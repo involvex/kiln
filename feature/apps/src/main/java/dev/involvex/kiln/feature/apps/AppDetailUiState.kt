@@ -1,5 +1,6 @@
 package dev.involvex.kiln.feature.apps
 
+import dev.involvex.kiln.core.model.AndroidUserInfo
 import dev.involvex.kiln.core.model.ApkExportFormat
 import dev.involvex.kiln.core.model.AppActivityInfo
 import dev.involvex.kiln.core.model.AppComponentFilter
@@ -15,6 +16,15 @@ import dev.involvex.kiln.feature.apps.activities.AppActivityInfoQuery
 import dev.involvex.kiln.feature.apps.activities.AppActivityLabels
 
 data class PendingComponentToggle(val component: AppComponentInfo, val enable: Boolean)
+
+enum class DualUserPendingKind {
+    Uninstall,
+    InstallUpdate,
+    InstallMismatch,
+    Rollback,
+}
+
+data class PendingDualUserAction(val kind: DualUserPendingKind, val users: List<AndroidUserInfo>, val selectedUserId: Int)
 
 data class AppDetailUiState(
     val isLoading: Boolean = true,
@@ -42,6 +52,10 @@ data class AppDetailUiState(
     val pendingRollback: RollbackApkEntry? = null,
     val rollbackInProgress: Boolean = false,
     val confirmSignatureMismatchInstall: Boolean = false,
+    /** M55: multi-user confirm; null when single-user / no silent cap. */
+    val pendingDualUserAction: PendingDualUserAction? = null,
+    /** One-shot: UI should launch system uninstall then clear. */
+    val openSystemUninstall: Boolean = false,
     val activities: List<AppActivityInfo> = emptyList(),
     val services: List<AppComponentInfo> = emptyList(),
     val receivers: List<AppComponentInfo> = emptyList(),
@@ -81,6 +95,10 @@ sealed interface AppDetailEvent {
     data object Launch : AppDetailEvent
     data object OpenAppInfo : AppDetailEvent
     data object Uninstall : AppDetailEvent
+    data object ClearOpenSystemUninstall : AppDetailEvent
+    data class SelectDualUser(val userId: Int) : AppDetailEvent
+    data object ConfirmDualUserAction : AppDetailEvent
+    data object DismissDualUserAction : AppDetailEvent
     data object Export : AppDetailEvent
     data object Refresh : AppDetailEvent
     data class FormatSelected(val format: ApkExportFormat) : AppDetailEvent

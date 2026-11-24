@@ -128,67 +128,85 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
-    override suspend fun installApk(apkAbsolutePath: String, allowDowngrade: Boolean): Result<Unit> = withContext(ioDispatcher) {
-        if (PrivilegeCapability.SILENT_INSTALL !in currentStatus().capabilities) {
-            return@withContext Result.failure("capability_missing:SILENT_INSTALL")
-        }
-        if (!ShellAllowlist.isSafeApkPath(apkAbsolutePath)) {
-            return@withContext Result.failure("invalid_apk_path")
-        }
-        val commandId = if (allowDowngrade) {
-            ShellAllowlist.PM_INSTALL_DOWNGRADE
-        } else {
-            ShellAllowlist.PM_INSTALL
-        }
-        when (val out = invokeAllowlisted(commandId, listOf(apkAbsolutePath))) {
-            is Result.Failure -> out
+    override suspend fun installApk(apkAbsolutePath: String, allowDowngrade: Boolean, targetUserId: Int): Result<Unit> =
+        withContext(ioDispatcher) {
+            if (PrivilegeCapability.SILENT_INSTALL !in currentStatus().capabilities) {
+                return@withContext Result.failure("capability_missing:SILENT_INSTALL")
+            }
+            if (!ShellAllowlist.isSafeApkPath(apkAbsolutePath)) {
+                return@withContext Result.failure("invalid_apk_path")
+            }
+            val userToken = targetUserId.toString()
+            if (!ShellAllowlist.isSafeUserId(userToken)) {
+                return@withContext Result.failure("invalid_user_id")
+            }
+            val commandId = if (allowDowngrade) {
+                ShellAllowlist.PM_INSTALL_DOWNGRADE
+            } else {
+                ShellAllowlist.PM_INSTALL
+            }
+            when (val out = invokeAllowlisted(commandId, listOf(apkAbsolutePath, userToken))) {
+                is Result.Failure -> out
 
-            is Result.Success -> {
-                if (out.value.startsWith("ERR:")) {
-                    Result.failure(out.value)
-                } else {
-                    Result.success(Unit)
+                is Result.Success -> {
+                    if (out.value.startsWith("ERR:")) {
+                        Result.failure(out.value)
+                    } else {
+                        Result.success(Unit)
+                    }
                 }
             }
         }
-    }
 
-    override suspend fun installApks(apkAbsolutePaths: List<String>, allowDowngrade: Boolean): Result<Unit> = withContext(ioDispatcher) {
-        if (PrivilegeCapability.SILENT_INSTALL !in currentStatus().capabilities) {
-            return@withContext Result.failure("capability_missing:SILENT_INSTALL")
-        }
-        if (apkAbsolutePaths.isEmpty() || apkAbsolutePaths.any { !ShellAllowlist.isSafeApkPath(it) }) {
-            return@withContext Result.failure("invalid_apk_path")
-        }
-        if (apkAbsolutePaths.size == 1) {
-            return@withContext installApk(apkAbsolutePaths.first(), allowDowngrade)
-        }
-        val commandId = if (allowDowngrade) {
-            ShellAllowlist.PM_INSTALL_MULTIPLE_DOWNGRADE
-        } else {
-            ShellAllowlist.PM_INSTALL_MULTIPLE
-        }
-        when (val out = invokeAllowlisted(commandId, apkAbsolutePaths)) {
-            is Result.Failure -> out
+    override suspend fun installApks(apkAbsolutePaths: List<String>, allowDowngrade: Boolean, targetUserId: Int): Result<Unit> =
+        withContext(ioDispatcher) {
+            if (PrivilegeCapability.SILENT_INSTALL !in currentStatus().capabilities) {
+                return@withContext Result.failure("capability_missing:SILENT_INSTALL")
+            }
+            if (apkAbsolutePaths.isEmpty() || apkAbsolutePaths.any { !ShellAllowlist.isSafeApkPath(it) }) {
+                return@withContext Result.failure("invalid_apk_path")
+            }
+            val userToken = targetUserId.toString()
+            if (!ShellAllowlist.isSafeUserId(userToken)) {
+                return@withContext Result.failure("invalid_user_id")
+            }
+            if (apkAbsolutePaths.size == 1) {
+                return@withContext installApk(apkAbsolutePaths.first(), allowDowngrade, targetUserId)
+            }
+            val commandId = if (allowDowngrade) {
+                ShellAllowlist.PM_INSTALL_MULTIPLE_DOWNGRADE
+            } else {
+                ShellAllowlist.PM_INSTALL_MULTIPLE
+            }
+            when (val out = invokeAllowlisted(commandId, apkAbsolutePaths + userToken)) {
+                is Result.Failure -> out
 
-            is Result.Success -> {
-                if (out.value.startsWith("ERR:")) {
-                    Result.failure(out.value)
-                } else {
-                    Result.success(Unit)
+                is Result.Success -> {
+                    if (out.value.startsWith("ERR:")) {
+                        Result.failure(out.value)
+                    } else {
+                        Result.success(Unit)
+                    }
                 }
             }
         }
-    }
 
-    override suspend fun uninstall(packageName: String, keepData: Boolean): Result<Unit> = withContext(ioDispatcher) {
+    override suspend fun uninstall(packageName: String, keepData: Boolean, targetUserId: Int): Result<Unit> = withContext(ioDispatcher) {
         if (PrivilegeCapability.SILENT_UNINSTALL !in currentStatus().capabilities) {
             return@withContext Result.failure("capability_missing:SILENT_UNINSTALL")
         }
         if (!ShellAllowlist.isSafePackageName(packageName)) {
             return@withContext Result.failure("invalid_package")
         }
-        val args = if (keepData) listOf(packageName, "keep") else listOf(packageName)
+        val userToken = targetUserId.toString()
+        if (!ShellAllowlist.isSafeUserId(userToken)) {
+            return@withContext Result.failure("invalid_user_id")
+        }
+        val args = buildList {
+            add(packageName)
+            if (keepData) add("keep")
+            add(userToken)
+        }
         when (val out = invokeAllowlisted(ShellAllowlist.PM_UNINSTALL, args)) {
             is Result.Failure -> out
 
@@ -261,8 +279,29 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
-    override suspend fun installExistingPackage(packageName: String): Result<Unit> =
-        runDebloatCommand(ShellAllowlist.PM_INSTALL_EXISTING, packageName)
+    override suspend fun installExistingPackage(packageName: String, targetUserId: Int): Result<Unit> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.DEBLOAT !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:DEBLOAT")
+        }
+        if (!ShellAllowlist.isSafePackageName(packageName)) {
+            return@withContext Result.failure("invalid_package")
+        }
+        val userToken = targetUserId.toString()
+        if (!ShellAllowlist.isSafeUserId(userToken)) {
+            return@withContext Result.failure("invalid_user_id")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.PM_INSTALL_EXISTING, listOf(packageName, userToken))) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    Result.success(Unit)
+                }
+            }
+        }
+    }
 
     override suspend fun suspendPackage(packageName: String): Result<Unit> = runDebloatCommand(ShellAllowlist.PM_SUSPEND, packageName)
 

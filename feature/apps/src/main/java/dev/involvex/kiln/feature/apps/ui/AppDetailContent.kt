@@ -68,6 +68,7 @@ fun AppDetailContent(
     installerLabel: String?,
     onCopied: () -> Unit,
     onExport: () -> Unit,
+    onUninstall: () -> Unit = {},
     availableUpdate: AppUpdateInfo? = null,
     installJob: InstallJobState? = null,
     ignoreUpdates: Boolean? = null,
@@ -128,6 +129,7 @@ fun AppDetailContent(
             detail = detail,
             context = context,
             onExport = onExport,
+            onUninstall = onUninstall,
         )
         if (!detail.canUninstall) {
             Text(
@@ -402,7 +404,7 @@ private fun HeroUpdateBanner(update: AppUpdateInfo) {
 }
 
 @Composable
-private fun PrimaryActions(detail: InstalledAppDetail, context: Context, onExport: () -> Unit) {
+private fun PrimaryActions(detail: InstalledAppDetail, context: Context, onExport: () -> Unit, onUninstall: () -> Unit) {
     // Install CTA is in UpdateSection (rendered above this block). Avoid a second Download button.
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (detail.hasLaunchIntent) {
@@ -440,12 +442,7 @@ private fun PrimaryActions(detail: InstalledAppDetail, context: Context, onExpor
             }
         }
         OutlinedButton(
-            onClick = {
-                val intent = Intent(Intent.ACTION_DELETE).apply {
-                    data = Uri.fromParts("package", detail.packageName, null)
-                }
-                context.startActivity(intent)
-            },
+            onClick = onUninstall,
             enabled = detail.canUninstall,
             modifier = Modifier.fillMaxWidth(),
         ) {

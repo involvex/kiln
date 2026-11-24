@@ -36,7 +36,7 @@ class DefaultInstallQueue @Inject constructor(
         }
     }
 
-    override suspend fun enqueue(update: AppUpdateInfo, allowSignatureMismatch: Boolean): Result<String> {
+    override suspend fun enqueue(update: AppUpdateInfo, allowSignatureMismatch: Boolean, targetUserId: Int?): Result<String> {
         val url = update.downloadUrl?.takeIf { it.startsWith("https://") }
             ?: return Result.failure("missing_download_url")
         val installed = installedAppsReader.userApps().any { it.packageName == update.packageName }
@@ -62,6 +62,7 @@ class DefaultInstallQueue @Inject constructor(
             requiresGitHubAuth = update.requiresGitHubAuth,
             apkAssetRegex = update.apkAssetRegex,
             allowSignatureMismatch = skipGate,
+            targetUserId = targetUserId,
         )
     }
 
@@ -84,6 +85,7 @@ class DefaultInstallQueue @Inject constructor(
             requiresGitHubAuth = false,
             apkAssetRegex = null,
             allowSignatureMismatch = false,
+            targetUserId = request.targetUserId,
         )
     }
 
@@ -98,6 +100,7 @@ class DefaultInstallQueue @Inject constructor(
         requiresGitHubAuth: Boolean,
         apkAssetRegex: String?,
         allowSignatureMismatch: Boolean,
+        targetUserId: Int?,
     ): Result<String> {
         val now = System.currentTimeMillis()
         val jobId = UUID.randomUUID().toString()
@@ -117,6 +120,7 @@ class DefaultInstallQueue @Inject constructor(
                 requiresGitHubAuth = requiresGitHubAuth,
                 apkAssetRegex = apkAssetRegex,
                 allowSignatureMismatch = allowSignatureMismatch,
+                targetUserId = targetUserId,
                 createdAtEpochMs = now,
                 updatedAtEpochMs = now,
             ),

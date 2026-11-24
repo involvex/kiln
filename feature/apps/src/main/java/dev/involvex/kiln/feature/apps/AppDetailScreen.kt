@@ -141,6 +141,7 @@ fun AppDetailScreen(
     val componentDenylisted = stringResource(R.string.feature_apps_components_denylisted)
     val componentNotExported = stringResource(R.string.feature_apps_components_not_exported)
     val componentToggleBlocked = stringResource(R.string.feature_apps_components_toggle_blocked)
+    val uninstallOk = stringResource(R.string.feature_apps_uninstall_ok)
     LaunchedEffect(state.snackbarMessage) {
         val raw = state.snackbarMessage ?: return@LaunchedEffect
         val message = when (raw) {
@@ -161,6 +162,7 @@ fun AppDetailScreen(
             "component_denylisted" -> componentDenylisted
             "component_not_exported" -> componentNotExported
             "component_toggle_blocked" -> componentToggleBlocked
+            "uninstall_ok" -> uninstallOk
             else -> raw
         }
         snackbarHostState.showSnackbar(message)
@@ -215,6 +217,7 @@ fun AppDetailScreen(
                     installerLabel = state.installerLabel,
                     onCopied = { showMessage(copiedText) },
                     onExport = { onEvent(AppDetailEvent.Export) },
+                    onUninstall = { onEvent(AppDetailEvent.Uninstall) },
                     availableUpdate = state.availableUpdate,
                     installJob = state.installJob,
                     ignoreUpdates = state.ignoreUpdates,
@@ -317,30 +320,85 @@ fun AppDetailScreen(
         )
     }
 
-    state.pendingRollback?.let { pending ->
+    if (state.pendingDualUserAction == null) {
+        state.pendingRollback?.let { pending ->
+            AlertDialog(
+                onDismissRequest = { onEvent(AppDetailEvent.DismissRollback) },
+                title = { Text(stringResource(R.string.feature_apps_rollback_confirm_title)) },
+                text = {
+                    Text(
+                        stringResource(
+                            R.string.feature_apps_rollback_confirm_body,
+                            pending.versionName,
+                            pending.versionCode,
+                        ),
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { onEvent(AppDetailEvent.ConfirmRollback) }) {
+                        Text(stringResource(R.string.feature_apps_rollback_confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { onEvent(AppDetailEvent.DismissRollback) }) {
+                        Text(stringResource(R.string.feature_apps_rollback_cancel))
+                    }
+                },
+            )
+        }
+    }
+
+    state.pendingDualUserAction?.let { pending ->
         AlertDialog(
-            onDismissRequest = { onEvent(AppDetailEvent.DismissRollback) },
-            title = { Text(stringResource(R.string.feature_apps_rollback_confirm_title)) },
+            onDismissRequest = { onEvent(AppDetailEvent.DismissDualUserAction) },
+            title = { Text(stringResource(R.string.feature_apps_dual_user_title)) },
             text = {
-                Text(
-                    stringResource(
-                        R.string.feature_apps_rollback_confirm_body,
-                        pending.versionName,
-                        pending.versionCode,
-                    ),
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.feature_apps_dual_user_body))
+                    pending.users.forEach { user ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            RadioButton(
+                                selected = pending.selectedUserId == user.id,
+                                onClick = { onEvent(AppDetailEvent.SelectDualUser(user.id)) },
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.feature_apps_dual_user_option,
+                                    user.name,
+                                    user.id,
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
+                }
             },
             confirmButton = {
-                TextButton(onClick = { onEvent(AppDetailEvent.ConfirmRollback) }) {
-                    Text(stringResource(R.string.feature_apps_rollback_confirm))
+                TextButton(onClick = { onEvent(AppDetailEvent.ConfirmDualUserAction) }) {
+                    Text(stringResource(R.string.feature_apps_dual_user_confirm))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { onEvent(AppDetailEvent.DismissRollback) }) {
-                    Text(stringResource(R.string.feature_apps_rollback_cancel))
+                TextButton(onClick = { onEvent(AppDetailEvent.DismissDualUserAction) }) {
+                    Text(stringResource(R.string.feature_apps_dual_user_cancel))
                 }
             },
         )
+    }
+
+    LaunchedEffect(state.openSystemUninstall, state.detail?.packageName) {
+        val pkg = state.detail?.packageName
+        if (state.openSystemUninstall && pkg != null) {
+            context.startActivity(
+                Intent(Intent.ACTION_DELETE).apply {
+                    data = Uri.fromParts("package", pkg, null)
+                },
+            )
+            onEvent(AppDetailEvent.ClearOpenSystemUninstall)
+        }
     }
 
     if (state.showLinkSourceDialog) {

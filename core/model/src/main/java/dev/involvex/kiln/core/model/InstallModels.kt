@@ -36,7 +36,7 @@ interface InstallQueue {
      * ([AppUpdateInfo.confidence] WARNING), pass [allowSignatureMismatch] after an explicit
      * user confirm. Auto-install / Update-all / automation must leave it false.
      */
-    suspend fun enqueue(update: AppUpdateInfo, allowSignatureMismatch: Boolean = false): Result<String>
+    suspend fun enqueue(update: AppUpdateInfo, allowSignatureMismatch: Boolean = false, targetUserId: Int? = null): Result<String>
 
     /** Install a local APK file (backup restore). Skips network download. */
     suspend fun enqueueLocal(request: LocalInstallRequest): Result<String>
@@ -54,6 +54,8 @@ data class LocalInstallRequest(
     val versionCode: Long,
     val apkAbsolutePaths: List<String>,
     val expectedSha256: String? = null,
+    /** Android `--user` for silent install (M55). Null = user 0. */
+    val targetUserId: Int? = null,
 ) {
     init {
         require(apkAbsolutePaths.isNotEmpty()) { "apkAbsolutePaths must not be empty" }
@@ -69,12 +71,14 @@ data class LocalInstallRequest(
             versionCode: Long,
             apkAbsolutePath: String,
             expectedSha256: String? = null,
+            targetUserId: Int? = null,
         ): LocalInstallRequest = LocalInstallRequest(
             packageName = packageName,
             versionName = versionName,
             versionCode = versionCode,
             apkAbsolutePaths = listOf(apkAbsolutePath),
             expectedSha256 = expectedSha256,
+            targetUserId = targetUserId,
         )
     }
 }

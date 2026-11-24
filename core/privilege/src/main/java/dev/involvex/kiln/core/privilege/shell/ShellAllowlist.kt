@@ -55,6 +55,9 @@ object ShellAllowlist {
     /** Desired free-space argument for `pm trim-caches` (digits only, capped length). */
     private val TRIM_BYTES = Regex("^[1-9][0-9]{0,18}$")
 
+    /** Android user id for `--user` (digits only; never free text). */
+    private val USER_ID = Regex("^[0-9]{1,5}$")
+
     val ALLOWED_APP_OPS: Set<String> get() = PermissionAppOpsAllowlist.OPS + BackgroundControlsOps.ALL_OPS
 
     val ALLOWED_APP_OP_MODES: Set<String> get() = PermissionAppOpsAllowlist.MODES + BackgroundControlsOps.MODES
@@ -68,14 +71,18 @@ object ShellAllowlist {
         }
 
         PM_INSTALL -> {
-            val path = args.singleOrNull() ?: return null
-            if (!isSafeApkPath(path)) null else listOf("pm", "install", "-r", "--user", "0", path)
+            val path = args.getOrNull(0) ?: return null
+            val userId = optionalUserId(args, index = 1) ?: return null
+            if (args.size > 2) return null
+            if (!isSafeApkPath(path)) null else listOf("pm", "install", "-r", "--user", userId, path)
         }
 
         PM_INSTALL_DOWNGRADE -> {
-            val path = args.singleOrNull() ?: return null
+            val path = args.getOrNull(0) ?: return null
+            val userId = optionalUserId(args, index = 1) ?: return null
+            if (args.size > 2) return null
             // -d allows installing an older versionCode over a newer one (rollback).
-            if (!isSafeApkPath(path)) null else listOf("pm", "install", "-r", "-d", "--user", "0", path)
+            if (!isSafeApkPath(path)) null else listOf("pm", "install", "-r", "-d", "--user", userId, path)
         }
 
         PM_INSTALL_MULTIPLE -> buildInstallMultipleArgv(args, downgrade = false)
@@ -84,13 +91,15 @@ object ShellAllowlist {
 
         PM_UNINSTALL -> {
             val packageName = args.getOrNull(0) ?: return null
+            if (!isSafePackageName(packageName)) return null
             val keepData = args.getOrNull(1) == "keep"
-            if (!isSafePackageName(packageName)) {
-                null
-            } else if (keepData) {
-                listOf("pm", "uninstall", "-k", "--user", "0", packageName)
+            val userIndex = if (keepData) 2 else 1
+            val userId = optionalUserId(args, index = userIndex) ?: return null
+            if (args.size > userIndex + 1) return null
+            if (keepData) {
+                listOf("pm", "uninstall", "-k", "--user", userId, packageName)
             } else {
-                listOf("pm", "uninstall", "--user", "0", packageName)
+                listOf("pm", "uninstall", "--user", userId, packageName)
             }
         }
 
@@ -136,11 +145,13 @@ object ShellAllowlist {
         }
 
         PM_INSTALL_EXISTING -> {
-            val packageName = args.singleOrNull() ?: return null
+            val packageName = args.getOrNull(0) ?: return null
+            val userId = optionalUserId(args, index = 1) ?: return null
+            if (args.size > 2) return null
             if (!isSafePackageName(packageName)) {
                 null
             } else {
-                listOf("pm", "install-existing", "--user", "0", packageName)
+                listOf("pm", "install-existing", "--user", userId, packageName)
             }
         }
 
@@ -272,6 +283,9 @@ object ShellAllowlist {
 
     fun isSafePackageName(value: String): Boolean = value.length in 3..255 && PACKAGE_NAME.matches(value)
 
+    /** Digits-only Android user id for `--user` (0…99999). */
+    fun isSafeUserId(value: String): Boolean = USER_ID.matches(value) && value.toIntOrNull()?.let { it in 0..99_999 } == true
+
     fun isSafeComponentClassName(value: String): Boolean {
         if (value.length !in 1..255) return false
         if (value.contains("..") || value.contains('/') || value.contains('\\')) return false
@@ -327,16 +341,32 @@ object ShellAllowlist {
     }
 
     private fun buildInstallMultipleArgv(args: List<String>, downgrade: Boolean): List<String>? {
-        if (args.isEmpty() || args.size > MAX_INSTALL_MULTIPLE) return null
-        if (args.any { !isSafeApkPath(it) }) return null
+        if (args.isEmpty()) return null
+        val last = args.last()
+        val (paths, userId) = if (args.size >= 2 && isSafeUserId(last) && !isSafeApkPath(last)) {
+            args.dropLast(1) to last
+        } else {
+            args to "0"
+        }
+        if (paths.isEmpty() || paths.size > MAX_INSTALL_MULTIPLE) return null
+        if (paths.any { !isSafeApkPath(it) }) return null
         return buildList {
             add("pm")
             add("install-multiple")
             add("-r")
             if (downgrade) add("-d")
             add("--user")
-            add("0")
-            addAll(args)
+            add(userId)
+            addAll(paths)
         }
+    }
+
+    /**
+     * Optional trailing `--user` id. Missing arg → `"0"`.
+     * Present but invalid → null (reject the whole command).
+     */
+    private fun optionalUserId(args: List<String>, index: Int): String? {
+        val raw = args.getOrNull(index) ?: return "0"
+        return if (isSafeUserId(raw)) raw else null
     }
 }

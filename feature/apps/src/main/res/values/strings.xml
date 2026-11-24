@@ -191,6 +191,12 @@
     <string name="feature_apps_action_launch">Launch</string>
     <string name="feature_apps_action_info">App info</string>
     <string name="feature_apps_action_uninstall">Uninstall</string>
+    <string name="feature_apps_uninstall_ok">Uninstall requested.</string>
+    <string name="feature_apps_dual_user_title">Choose Android user</string>
+    <string name="feature_apps_dual_user_body">This device has more than one Android user. Pick which user this install or uninstall should target.</string>
+    <string name="feature_apps_dual_user_option">%1$s (id %2$d)</string>
+    <string name="feature_apps_dual_user_confirm">Continue</string>
+    <string name="feature_apps_dual_user_cancel">Cancel</string>
     <string name="feature_apps_action_export">Export APK</string>
     <string name="feature_apps_action_update">Download &amp; install</string>
     <string name="feature_apps_update_section">Update</string>

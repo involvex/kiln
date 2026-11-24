@@ -161,14 +161,27 @@ class InstallWorker @AssistedInject constructor(
 
         mark(jobId, InstallJobStatus.INSTALLING, 95, null, baseApk.absolutePath)
         val preferred = installerPreferences.current()
+        val targetUserId = job.targetUserId ?: 0
         val canSilent = InstallCommitPolicy.useSilentInstall(
             preferred = preferred,
             hasSilentCapability = PrivilegeCapability.SILENT_INSTALL in
                 privilegedExecutor.currentStatus().capabilities,
         )
         if (canSilent) {
-            return when (val silent = privilegedExecutor.installApks(apkFiles.map { it.absolutePath })) {
+            return when (
+                val silent = privilegedExecutor.installApks(
+                    apkAbsolutePaths = apkFiles.map { it.absolutePath },
+                    targetUserId = targetUserId,
+                )
+            ) {
                 is KilnResult.Failure -> {
+                    // Foreign-user installs need silent pm; do not fall back to PackageInstaller (current user).
+                    if (targetUserId != 0) {
+                        Timber.w("Silent install for user %s failed: %s", targetUserId, silent.message)
+                        cleanupApks(apkFiles)
+                        mark(jobId, InstallJobStatus.FAILED, 100, silent.message, null)
+                        return Result.failure(workDataOf(KEY_ERROR to silent.message))
+                    }
                     Timber.w("Silent install failed (%s); falling back to PackageInstaller", silent.message)
                     commitWithPackageInstaller(jobId, installPackageName, apkFiles)
                 }
@@ -186,6 +199,12 @@ class InstallWorker @AssistedInject constructor(
                     Result.success()
                 }
             }
+        }
+        if (targetUserId != 0) {
+            val msg = "silent_install_required_for_user"
+            cleanupApks(apkFiles)
+            mark(jobId, InstallJobStatus.FAILED, 100, msg, null)
+            return Result.failure(workDataOf(KEY_ERROR to msg))
         }
         if (preferred == PreferredInstaller.SHIZUKU) {
             Timber.d("Shizuku preferred but SILENT_INSTALL unavailable; using PackageInstaller")
