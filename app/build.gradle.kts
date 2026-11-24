@@ -11,6 +11,12 @@ android {
     defaultConfig {
         applicationId = "dev.involvex.kiln"
     }
+    // Omit Google Play dependency metadata from the APK/AAB signing block (IzzyOnDroid /
+    // F-Droid scanners; only Google can decrypt that blob).
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
     lint {
         // local.properties is machine-local; do not fail CI/local lint on path escaping.
         disable += setOf("PropertyEscape", "AndroidGradlePluginVersion", "GradleDependency", "NewerVersionAvailable")

@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M51–M53** Done on `main`. App version **0.2.7** (code 10), tag `v0.2.7`. IzzyOnDroid inclusion filed ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid MR still open. Dual-user installs / cloud / ROOT backup unscheduled.
+**Current status:** **M51–M53** Done on `main`. App version **0.2.7** (code 10), tag `v0.2.7`. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid listing in progress. Dual-user installs / cloud / ROOT backup unscheduled.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -68,7 +68,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M51** | Component enable / disable | Done | [`prompts/M51-component-toggles.md`](./prompts/M51-component-toggles.md) · `m51-component-toggles` | Shizuku `pm enable`/`disable` one component; denylist; NONE read-only |
 | **M52** | In-app process list | Done | [`prompts/M52-manage-processes.md`](./prompts/M52-manage-processes.md) · `m52-manage-processes` | Settings → Tools processes; force-stop confirm; reuse widget snapshot |
 | **M53** | Read-only user census | Done | [`prompts/M53-user-census.md`](./prompts/M53-user-census.md) · `m53-user-census` | `pm list users` + current user id; no `--user N` installs |
-| **M54** | Store listing packet | In progress | [STORE.md](./STORE.md) · [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948) | Fastlane + screenshots ready; Izzy filed; F-Droid MR still open |
+| **M54** | Store listing packet | In progress | [STORE.md](./STORE.md) · [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948) | Fastlane + screenshots ready; Izzy declined (AI policy); F-Droid MR in progress |
 
 ---
 
@@ -94,7 +94,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | APK tools 2 (inspect + compare) | Done | M29 (#47); M31 (#49); universal merge M35 (#56) |
 | Mirrors / proxy | Done | M30 #48 |
 | Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); M53 read-only user census; dual-user installs / tablet unscheduled |
-| Publishing / F-Droid + Izzy | Partial | Izzy filed [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948); F-Droid MR still open. Play skipped (US$25) |
+| Publishing / F-Droid + Izzy | Partial | Izzy declined [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948) (AI policy); F-Droid MR in progress. Play skipped (US$25) |
 | HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
 | GitHub starred repos → Sources | Done (M42 #73) | Review list + multi-select add; APK heuristic; no silent install |
@@ -143,7 +143,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Repo priority | ✅ Sources ↑↓ reorder; `ensureKnownRepos` preserves user priority; Auto-match / update conflict tie-break | NONE |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
-| Release / store prep | ✅ version `0.2.7` (code 10); fastlane + screenshots; [STORE.md](./STORE.md); Izzy [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948). F-Droid MR still open | — |
+| Release / store prep | ✅ version `0.2.7` (code 10); fastlane + screenshots; [STORE.md](./STORE.md); Izzy declined; F-Droid path | — |
 | App Discovery | ✅ Apps → Library\|Discover; home shelves + categories; catalog refresh; icons; detail; search; GitHub tab; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
 | Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage; **M42** `kilnHiltViewModel` Activity scope (Nav3 Hilt map miss) | NONE |

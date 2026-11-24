@@ -4,30 +4,29 @@ Kiln stays off Google Play. A Play Console account costs a one-time US$25 fee, a
 
 Free listings:
 
-- **IzzyOnDroid** — filed: [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948) (ships the upload-signed GitHub Release APK).
-- **F-Droid** — not filed yet. Rebuilds `v0.2.7` from source; review takes longer. A listing on one store does not remove the other.
+- **IzzyOnDroid** — filed then **declined** under their [AI policy](https://izzyondroid.org/docs/general/AppInclusionPolicy/) ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)). Cronos APK scan was otherwise fine aside from Google dependency-metadata (fixed in app builds). Do not refile with a lower assistance level.
+- **F-Droid** — preferred free listing. Rebuilds from the git tag; no LLM policy. Recipe draft: [fdroid/dev.involvex.kiln.yml](./fdroid/dev.involvex.kiln.yml).
 
 Obtainium needs no request. People add `https://github.com/involvex/kiln` themselves.
 
-Do not open store accounts from a shared session. The APK to submit is the GitHub asset, not a local debug-signed build:
+The APK to point reviewers at is the GitHub Release asset (upload-signed via `KILN_*` secrets), for example:
 
-`https://github.com/involvex/kiln/releases/download/v0.2.7/kiln-0.2.7.apk`
+`https://github.com/involvex/kiln/releases/download/v0.2.8/kiln-0.2.8.apk`
 
-Tagged releases fail unless all four `KILN_*` upload-keystore secrets are set, so that asset is upload-signed.
+(Adjust the version to the tag you are submitting.)
 
 ## Already in the repo
 
 - Apache-2.0, public source, no analytics or proprietary tracking SDK
-- Fastlane en/de title, short description, full description, and `changelogs/10.txt`
+- Fastlane en/de title, short description, full description, and changelogs
 - Icon: `fastlane/metadata/android/en-US/images/icon.png` (512×512)
-- Phone screenshots: `fastlane/metadata/android/en-US/images/phoneScreenshots/` (Apps, Discover, Sources, Settings, App detail; Manage/Storage optional)
+- Phone screenshots: `fastlane/metadata/android/en-US/images/phoneScreenshots/`
 - Privacy policy: `https://involvex.github.io/kiln/PRIVACY.md`
 - Auto-install of updates is off until the user turns it on. Signature mismatches are never installed automatically
+- Release builds set `dependenciesInfo.includeInApk/includeInBundle = false` (no Google dependency-metadata blob)
 - Draft recipe: [fdroid/dev.involvex.kiln.yml](./fdroid/dev.involvex.kiln.yml)
 
 ## Why the sensitive permissions are there
-
-Izzy flags these until the maintainer explains them. Paste this with the inclusion request:
 
 | Permission | Why Kiln has it |
 | --- | --- |
@@ -37,41 +36,16 @@ Izzy flags these until the maintainer explains them. Paste this with the inclusi
 
 `com.termux.permission.RUN_COMMAND` is optional and off until the user opens the Termux screen and grants it. Shizuku permissions apply only after the user sets Shizuku up.
 
-## IzzyOnDroid request
+## IzzyOnDroid (closed)
 
-**Filed:** [IzzyOnDroid/repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948) (Codeberg; the old GitLab `IzzyOnDroid/repo` project is archived).
-
-For a re-file or similar apps, open an **App Inclusion Request** on [IzzyOnDroid/repodata](https://codeberg.org/IzzyOnDroid/repodata/issues) and paste:
-
-```text
-App: Kiln
-Application ID: dev.involvex.kiln
-License: Apache-2.0
-Source: https://github.com/involvex/kiln
-Release APK: https://github.com/involvex/kiln/releases/download/v0.2.7/kiln-0.2.7.apk
-Summary: Package manager, APK tools, storage cleanup, and optional Shizuku helpers
-Fastlane: fastlane/metadata/android/ (en-US and de-DE), including images/icon.png
-Privacy: https://involvex.github.io/kiln/PRIVACY.md
-
-Kiln lists installed apps, checks F-Droid and GitHub for updates, exports and backs up APKs, and can clean storage. Shizuku and root are optional. There is no analytics SDK. It is not the macOS "Kiln" emulator.
-
-QUERY_ALL_PACKAGES: required to list installed apps. The list is not uploaded.
-REQUEST_INSTALL_PACKAGES: system installer for updates and restores. Auto-install is off by default and never accepts a signature mismatch.
-PACKAGE_USAGE_STATS: optional storage sizes, granted only from the system Usage Access screen.
-
-Not yet submitted to F-Droid. A draft fdroiddata recipe is in docs/fdroid/dev.involvex.kiln.yml.
-```
-
-If the template asks whether the app downloads extra executables: installs happen only when the user asks (or after they opt in to auto-install of signature-matching updates). Kiln does not ship a silent self-updater.
+See [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948). Inclusion was declined because declared AI assistance was above their threshold. They still ran Cronos on `v0.2.7` and pointed us at F-Droid.
 
 ## F-Droid request
 
-Screenshots and listing packet are on `main`. When ready:
-
 1. Fork [fdroiddata](https://gitlab.com/fdroid/fdroiddata).
 2. Branch `dev.involvex.kiln` from `master`.
-3. Add `metadata/dev.involvex.kiln.yml` with the contents of [fdroid/dev.involvex.kiln.yml](./fdroid/dev.involvex.kiln.yml).
-4. Open the merge request. Let fdroiddata CI build `v0.2.7`.
-5. If CI reports a recipe error (JDK, output path, tag pattern), fix that yml only. Do not claim a reproducible build. `Binaries` stays unset until a rebuild matches `kiln-0.2.7.apk`.
+3. Add `metadata/dev.involvex.kiln.yml` with the contents of [fdroid/dev.involvex.kiln.yml](./fdroid/dev.involvex.kiln.yml) (keep version/tag in sync with the submitted release).
+4. Open the merge request. Let fdroiddata CI build the tagged commit.
+5. If CI reports a recipe error (JDK, output path, tag pattern), fix that yml only. Do not claim a reproducible build. `Binaries` stays unset until a rebuild matches the GitHub Release APK.
 
 F-Droid builds from the git tag. It does not need the upload keystore. The wrapper is Gradle 9.9.2 (in the transparency log).

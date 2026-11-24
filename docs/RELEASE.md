@@ -95,6 +95,11 @@ Filing steps, the permission note, and the draft fdroiddata recipe are in [STORE
 # Without KILN_* env vars this may be debug-signed — CI tags always require upload secrets.
 ```
 
+## Dependency metadata
+
+`app/build.gradle.kts` sets `dependenciesInfo.includeInApk/includeInBundle = false` so release
+APKs do not embed Google’s encrypted dependency-info signing block (IzzyOnDroid / F-Droid).
+
 ## Checklist
 
 - [ ] CHANGELOG section for the version
@@ -102,3 +107,4 @@ Filing steps, the permission note, and the draft fdroiddata recipe are in [STORE
 - [ ] `spotlessCheck detekt lint testDebugUnitTest assembleRelease` green
 - [ ] Tag pushed; Release workflow verifies with `apksigner` and uploads `kiln-<version>.apk`
 - [ ] Privacy policy URL still valid (`docs/PRIVACY.md`)
+- [ ] Fastlane `changelogs/<versionCode>.txt` updated when filing stores
