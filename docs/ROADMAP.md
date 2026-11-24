@@ -69,6 +69,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M52** | In-app process list | Done | [`prompts/M52-manage-processes.md`](./prompts/M52-manage-processes.md) · `m52-manage-processes` | Settings → Tools processes; force-stop confirm; reuse widget snapshot |
 | **M53** | Read-only user census | Done | [`prompts/M53-user-census.md`](./prompts/M53-user-census.md) · `m53-user-census` | `pm list users` + current user id; no `--user N` installs |
 | **M54** | Store listing packet | Done (packet); listings closed | [STORE.md](./STORE.md) · [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948) · [fdroiddata!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) | Fastlane + screenshots; Izzy AI decline; F-Droid closed until ≥3 months; Distribute via GitHub + Obtainium |
+| **M55** | Dual-user installs | Next | [`prompts/M55-dual-user-installs.md`](./prompts/M55-dual-user-installs.md) · `m55-dual-user-installs` | Best-effort `--user N` on install/uninstall when M53 census has ≥2 users; single-user = unchanged |
 
 ---
 
@@ -93,9 +94,9 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | SAF backup rotation / data tiers / encryption | Done (M40 #69) | SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM; ROOT / cloud deferred |
 | APK tools 2 (inspect + compare) | Done | M29 (#47); M31 (#49); universal merge M35 (#56) |
 | Mirrors / proxy | Done | M30 #48 |
-| Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); M53 read-only user census; dual-user installs / tablet unscheduled |
+| Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); M53 census Done; **M55** dual-user installs Next (best-effort); tablet unscheduled |
 | Publishing / F-Droid + Izzy | Closed for now | Izzy [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948); F-Droid !58920 closed (3‑month rule). Ship via GitHub + Obtainium; F-Droid refile ≈ Feb 2026. Play skipped (US$25) |
-| HyperOS M1–M8 checklist sweep | Open | Release gate — do not mix into feature milestones |
+| HyperOS M1–M8 checklist sweep | Optional / low priority | Older acceptance lists; not a gate for M55+. Run ad hoc if something regresses |
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
 | GitHub starred repos → Sources | Done (M42 #73) | Review list + multi-select add; APK heuristic; no silent install |
 | App activity viewer / launcher | Done (M43 #75) | Exported-only list under App Detail; Tier NONE Start + pin shortcut |
@@ -355,10 +356,9 @@ flowchart LR
   M53 --> v027[v0.2.7]
 ```
 
-1. **M51–M53** Done; cut **0.2.7** (code 10) after HyperOS checks for the three new screens.
-2. After 0.2.7: `--user N` installs only if M53 shows extra user ids on device; else tablet / cloud / ROOT backup when requested.
-3. Store: stay on GitHub + Obtainium; F-Droid refile only after ≈2026-02-08 with template + uniqueness pitch ([STORE.md](./STORE.md)).
-4. Open HyperOS checklists (M1–M8) are a **release gate**, not a feature milestone.
+1. **M55** dual-user installs (best-effort `--user N`) on branch `m55-dual-user-installs` — single-user devices stay as today.
+2. Store: GitHub + Obtainium; F-Droid refile only after ≈2026-02-08 ([STORE.md](./STORE.md)).
+3. Later backlog when wanted: tablet layouts, cloud backup, ROOT `/data/data` — not gated on HyperOS checklists.
 
 ---
 
