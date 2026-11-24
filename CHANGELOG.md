@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.9] — 2026-11-24
+
+### Added
+
+- M55 best-effort dual-user install and uninstall
+
+### Fixed
+
+- lower AppDetailViewModel detekt complexity for M55
+
+### Changed
+
+- Version **0.2.9** (versionCode 12)
+
 ## [0.2.8] — 2026-11-24
 
 ### Fixed
