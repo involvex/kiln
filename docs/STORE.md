@@ -2,14 +2,14 @@
 
 Kiln stays off Google Play. A Play Console account costs a one-time US$25 fee, and the free Android Developer Console plan only reaches 20 devices. It does not publish a public store listing.
 
-Free listings to file, after phone screenshots are in the repo:
+Free listings to file (phone screenshots are in the repo):
 
 - **IzzyOnDroid** ships the upload-signed GitHub Release APK. This is the faster listing.
 - **F-Droid** rebuilds `v0.2.7` from source and signs its own copy. Review takes longer. A listing on one store does not remove the other.
 
 Obtainium needs no request. People add `https://github.com/involvex/kiln` themselves.
 
-Do not open store accounts from a shared session, and do not file either request before the screenshots below are committed. The APK to submit is the GitHub asset, not a local debug-signed build:
+Do not open store accounts from a shared session. The APK to submit is the GitHub asset, not a local debug-signed build:
 
 `https://github.com/involvex/kiln/releases/download/v0.2.7/kiln-0.2.7.apk`
 
@@ -20,20 +20,10 @@ Tagged releases fail unless all four `KILN_*` upload-keystore secrets are set, s
 - Apache-2.0, public source, no analytics or proprietary tracking SDK
 - Fastlane en/de title, short description, full description, and `changelogs/10.txt`
 - Icon: `fastlane/metadata/android/en-US/images/icon.png` (512×512)
+- Phone screenshots: `fastlane/metadata/android/en-US/images/phoneScreenshots/` (Apps, Discover, Sources, Settings, App detail; Manage/Storage optional)
 - Privacy policy: `https://involvex.github.io/kiln/PRIVACY.md`
 - Auto-install of updates is off until the user turns it on. Signature mismatches are never installed automatically
 - Draft recipe: [fdroid/dev.involvex.kiln.yml](./fdroid/dev.involvex.kiln.yml)
-
-## Screenshots still required
-
-IzzyOnDroid requires phone screenshots in fastlane. Capture PNG at about 1080 px wide on your phone and put them in `fastlane/metadata/android/en-US/images/phoneScreenshots/`:
-
-1. Apps list
-2. Discover
-3. App detail
-4. Sources
-5. Storage or Manage
-6. Settings
 
 ## Why the sensitive permissions are there
 
