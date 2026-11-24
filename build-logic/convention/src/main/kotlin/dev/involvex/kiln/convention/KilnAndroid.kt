@@ -13,6 +13,7 @@ internal val Project.libs: VersionCatalog
     get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 private const val COMPILE_SDK = 37
+
 // Compose BOM 2026.11+ / foundation 1.13 require API 37.1+ (AAR metadata).
 private const val COMPILE_SDK_MINOR = 2
 private const val TARGET_SDK = 37
