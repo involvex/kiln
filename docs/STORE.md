@@ -8,7 +8,7 @@ Kiln stays off Google Play. A Play Console account costs a one-time US$25 fee, a
 
 | Channel | Status | Notes |
 | --- | --- | --- |
-| GitHub Releases | Active | Upload-signed APK via `KILN_*` secrets, e.g. `https://github.com/involvex/kiln/releases/download/v0.2.8/kiln-0.2.8.apk` |
+| GitHub Releases | Active | Upload-signed APK via `KILN_*` secrets, e.g. `https://github.com/involvex/kiln/releases/download/v0.2.9/kiln-0.2.9.apk` |
 | Obtainium | Active | No request; point at the GitHub repo |
 | IzzyOnDroid | Closed | Declined under [AI policy](https://izzyondroid.org/docs/general/AppInclusionPolicy/) ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)). Do not refile with a lower assistance level. |
 | F-Droid main repo | Closed until ≥3 months | [fdroiddata!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed by `linsui`: MR template not used; app &lt; 3 months old ([Inclusion Policy](https://f-droid.org/docs/Inclusion_Policy/) Quality §6); “no unique features.” Earliest sensible refile ≈ **2026-02-08** (3 months after first commit 2026-11-08). |

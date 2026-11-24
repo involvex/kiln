@@ -145,7 +145,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Repo priority | ✅ Sources ↑↓ reorder; `ensureKnownRepos` preserves user priority; Auto-match / update conflict tie-break | NONE |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
-| Release / store prep | ✅ version `0.2.8` (code 11); fastlane + screenshots; [STORE.md](./STORE.md); Izzy + F-Droid closed; Obtainium | — |
+| Release / store prep | ✅ version `0.2.9` (code 12); fastlane + screenshots; [STORE.md](./STORE.md); Izzy + F-Droid closed; Obtainium | — |
 | App Discovery | ✅ Apps → Library\|Discover; home shelves + categories; catalog refresh; icons; detail; search; GitHub tab; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
 | Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage; **M42** `kilnHiltViewModel` Activity scope (Nav3 Hilt map miss) | NONE |

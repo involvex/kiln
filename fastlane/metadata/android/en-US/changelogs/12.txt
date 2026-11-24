@@ -1,0 +1,1 @@
+0.2.9: Best-effort dual-user install and uninstall from App Detail when privilege allows (M55). Obtainium / GitHub Releases remain the primary update path.

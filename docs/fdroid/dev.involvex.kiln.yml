@@ -16,9 +16,9 @@ RepoType: git
 Repo: https://github.com/involvex/kiln.git
 
 Builds:
-  - versionName: 0.2.8
-    versionCode: 11
-    commit: v0.2.8
+  - versionName: 0.2.9
+    versionCode: 12
+    commit: 65d31698bf03f7f198939fcabe0ac506adfe7010
     gradle:
       - yes
     output: app/build/outputs/apk/release/app-release.apk
@@ -38,5 +38,5 @@ AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[\d.]+$
 UpdateCheckData: 
   build-logic/convention/src/main/kotlin/dev/involvex/kiln/convention/KilnAndroid.kt|VERSION_CODE\s*=\s*(\d+)|.|versionName\s*=\s*"([^"]+)"
-CurrentVersion: 0.2.8
-CurrentVersionCode: 11
+CurrentVersion: 0.2.9
+CurrentVersionCode: 12
