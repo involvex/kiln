@@ -1,11 +1,14 @@
 package dev.involvex.kiln.feature.debloat
 
+import android.os.Process
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.involvex.kiln.core.common.Result
+import dev.involvex.kiln.core.model.AndroidUserInfo
 import dev.involvex.kiln.core.model.DebloatAction
 import dev.involvex.kiln.core.model.DebloatPackageState
+import dev.involvex.kiln.core.model.DualUserInstallGate
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
 import dev.involvex.kiln.feature.debloat.data.DebloatRepository
@@ -81,12 +84,37 @@ class DebloatViewModel @Inject constructor(private val repository: DebloatReposi
 
     fun requestApply() {
         if (_uiState.value.selected.isEmpty()) return
-        _uiState.update { it.copy(pendingConfirm = true, confirmText = "") }
+        viewModelScope.launch {
+            val users = loadCensusUsersForPicker()
+            _uiState.update {
+                it.copy(
+                    pendingConfirm = true,
+                    confirmText = "",
+                    confirmUsers = users,
+                    selectedUserId = currentUserId(),
+                )
+            }
+        }
     }
 
-    fun dismissConfirm() = _uiState.update { it.copy(pendingConfirm = false, confirmText = "") }
+    fun dismissConfirm() = _uiState.update {
+        it.copy(pendingConfirm = false, confirmText = "", confirmUsers = emptyList())
+    }
 
     fun setConfirmText(text: String) = _uiState.update { it.copy(confirmText = text) }
+
+    fun selectConfirmUser(userId: Int) {
+        _uiState.update { state ->
+            if (!state.pendingConfirm) return@update state
+            state.copy(
+                selectedUserId = DualUserInstallGate.resolveTargetUserId(
+                    selectedUserId = userId,
+                    users = state.confirmUsers,
+                    currentUserId = currentUserId(),
+                ),
+            )
+        }
+    }
 
     fun confirmApply() {
         val state = _uiState.value
@@ -103,9 +131,27 @@ class DebloatViewModel @Inject constructor(private val repository: DebloatReposi
             } ?: return@mapNotNull null
             row.packageName to action
         }
+        val userId = DualUserInstallGate.resolveTargetUserId(
+            selectedUserId = state.selectedUserId,
+            users = state.confirmUsers,
+            currentUserId = currentUserId(),
+        )
+        val current = currentUserId()
         viewModelScope.launch {
-            _uiState.update { it.copy(running = true, pendingConfirm = false, message = null) }
-            val results = repository.applyActions(targets)
+            _uiState.update {
+                it.copy(
+                    running = true,
+                    pendingConfirm = false,
+                    confirmText = "",
+                    confirmUsers = emptyList(),
+                    message = null,
+                )
+            }
+            val results = repository.applyActions(
+                targets = targets,
+                targetUserId = userId,
+                currentUserId = current,
+            )
             val ok = results.count { it.success }
             val fail = results.size - ok
             _uiState.update {
@@ -138,9 +184,10 @@ class DebloatViewModel @Inject constructor(private val repository: DebloatReposi
     }
 
     fun restoreSnapshot() {
+        val current = currentUserId()
         viewModelScope.launch {
             _uiState.update { it.copy(running = true, message = null) }
-            val results = repository.restoreSnapshot()
+            val results = repository.restoreSnapshot(targetUserId = current, currentUserId = current)
             val ok = results.count { it.success }
             val fail = results.size - ok
             _uiState.update {
@@ -161,7 +208,22 @@ class DebloatViewModel @Inject constructor(private val repository: DebloatReposi
         return DebloatPolicy.canSelect(row, state.batchAction, state.expertMode)
     }
 
+    private suspend fun loadCensusUsersForPicker(): List<AndroidUserInfo> {
+        val caps = privilegedExecutor.currentStatus().capabilities
+        val hasDebloat = PrivilegeCapability.DEBLOAT in caps
+        if (PrivilegeCapability.RUN_SHELL_DIAGNOSTIC !in caps) return emptyList()
+        val users = when (val result = privilegedExecutor.listAndroidUsers()) {
+            is Result.Success -> result.value
+            is Result.Failure -> emptyList()
+        }
+        return if (DualUserInstallGate.showPicker(users, hasDebloat)) users else emptyList()
+    }
+
+    private fun currentUserId(): Int = Process.myUid() / ANDROID_PER_USER_RANGE
+
     companion object {
+        private const val ANDROID_PER_USER_RANGE = 100_000
+
         fun isTypedConfirmValid(text: String): Boolean {
             val normalized = text.trim().uppercase()
             return normalized == "I UNDERSTAND" || normalized == "ICH VERSTEHE"

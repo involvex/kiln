@@ -35,6 +35,8 @@
     <string name="debloat_confirm_title">Debloat bestätigen</string>
     <string name="debloat_confirm_body">%2$s auf %1$d Paket(e)? Fehler werden pro Paket gemeldet. Nach großen Batches neu starten und testen.</string>
     <string name="debloat_confirm_more">…und %1$d weitere</string>
+    <string name="debloat_dual_user_body">Dieses Gerät hat mehr als einen Android-Nutzer. Wähle, für welchen Nutzer dieser Debloat-Batch gelten soll.</string>
+    <string name="debloat_dual_user_option">%1$s (id %2$d)</string>
     <string name="debloat_type_confirm_hint">ICH VERSTEHE oder I UNDERSTAND tippen</string>
     <string name="debloat_confirm_action">Bestätigen</string>
     <string name="debloat_cancel">Abbrechen</string>

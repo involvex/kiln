@@ -251,10 +251,11 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
-    override suspend fun disableUserPackage(packageName: String): Result<Unit> =
-        runDebloatCommand(ShellAllowlist.PM_DISABLE_USER, packageName)
+    override suspend fun disableUserPackage(packageName: String, targetUserId: Int): Result<Unit> =
+        runDebloatCommand(ShellAllowlist.PM_DISABLE_USER, packageName, targetUserId)
 
-    override suspend fun enablePackage(packageName: String): Result<Unit> = runDebloatCommand(ShellAllowlist.PM_ENABLE, packageName)
+    override suspend fun enablePackage(packageName: String, targetUserId: Int): Result<Unit> =
+        runDebloatCommand(ShellAllowlist.PM_ENABLE, packageName, targetUserId)
 
     override suspend fun enableComponent(packageName: String, className: String, targetUserId: Int): Result<Unit> =
         runComponentCommand(ShellAllowlist.PM_ENABLE_COMPONENT, packageName, className, targetUserId)

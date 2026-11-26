@@ -106,11 +106,16 @@ interface PrivilegedExecutor {
      */
     suspend fun clearCache(packageName: String?): Result<Long>
 
-    /** `pm disable-user --user 0` — reversible. Requires [PrivilegeCapability.DEBLOAT]. */
-    suspend fun disableUserPackage(packageName: String): Result<Unit>
+    /**
+     * `pm disable-user --user N` — reversible (M57; default user 0).
+     * Requires [PrivilegeCapability.DEBLOAT].
+     */
+    suspend fun disableUserPackage(packageName: String, targetUserId: Int = 0): Result<Unit>
 
-    /** `pm enable --user 0`. Requires [PrivilegeCapability.DEBLOAT]. */
-    suspend fun enablePackage(packageName: String): Result<Unit>
+    /**
+     * `pm enable --user N` (M57; default user 0). Requires [PrivilegeCapability.DEBLOAT].
+     */
+    suspend fun enablePackage(packageName: String, targetUserId: Int = 0): Result<Unit>
 
     /**
      * `pm enable --user N package/class` for one component (M56; default user 0).

@@ -1,5 +1,6 @@
 package dev.involvex.kiln.feature.debloat
 
+import dev.involvex.kiln.core.model.AndroidUserInfo
 import dev.involvex.kiln.core.model.DebloatAction
 import dev.involvex.kiln.core.model.DebloatActionResult
 import dev.involvex.kiln.core.model.DebloatAppRow
@@ -26,6 +27,8 @@ data class DebloatUiState(
     val snapshotAtEpochMs: Long? = null,
     val pendingConfirm: Boolean = false,
     val confirmText: String = "",
+    val confirmUsers: List<AndroidUserInfo> = emptyList(),
+    val selectedUserId: Int = 0,
     val running: Boolean = false,
     val lastResults: List<DebloatActionResult> = emptyList(),
     val message: String? = null,
