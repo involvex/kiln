@@ -7,15 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.11] — 2026-11-26
+
+### Added
+
+- M57 best-effort dual-user debloat batch (disable / enable / uninstall-for-user / install-existing; census picker on confirm)
+
+### Changed
+
+- Version **0.2.11** (versionCode 14)
+
 ## [0.2.10] — 2026-11-26
 
 ### Added
 
-- M56 best-effort dual-user component enable/disable and freeze/unfreeze (census picker; debloat batch stays user 0)
-
-### Added
-
-- M56 per-user component toggles and freeze
+- M56 best-effort dual-user component enable/disable and freeze/unfreeze (census picker)
 
 ### Changed
 

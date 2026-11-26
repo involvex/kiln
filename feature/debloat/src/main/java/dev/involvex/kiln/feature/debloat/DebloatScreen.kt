@@ -18,6 +18,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,6 +55,7 @@ fun DebloatRoute(onBack: () -> Unit, onOpenPrivilegeSetup: () -> Unit, modifier:
         onRequestApply = viewModel::requestApply,
         onDismissConfirm = viewModel::dismissConfirm,
         onConfirmText = viewModel::setConfirmText,
+        onSelectConfirmUser = viewModel::selectConfirmUser,
         onConfirmApply = viewModel::confirmApply,
         onCreateSnapshot = viewModel::createSnapshot,
         onRestoreSnapshot = viewModel::restoreSnapshot,
@@ -76,6 +78,7 @@ fun DebloatScreen(
     onRequestApply: () -> Unit,
     onDismissConfirm: () -> Unit,
     onConfirmText: (String) -> Unit,
+    onSelectConfirmUser: (Int) -> Unit,
     onConfirmApply: () -> Unit,
     onCreateSnapshot: () -> Unit,
     onRestoreSnapshot: () -> Unit,
@@ -134,6 +137,7 @@ fun DebloatScreen(
                 state = state,
                 onDismiss = onDismissConfirm,
                 onConfirmText = onConfirmText,
+                onSelectConfirmUser = onSelectConfirmUser,
                 onConfirm = onConfirmApply,
             )
         }
@@ -301,7 +305,13 @@ private fun DebloatRow(row: DebloatAppRow, selected: Boolean, canSelect: Boolean
 }
 
 @Composable
-private fun DebloatConfirmDialog(state: DebloatUiState, onDismiss: () -> Unit, onConfirmText: (String) -> Unit, onConfirm: () -> Unit) {
+private fun DebloatConfirmDialog(
+    state: DebloatUiState,
+    onDismiss: () -> Unit,
+    onConfirmText: (String) -> Unit,
+    onSelectConfirmUser: (Int) -> Unit,
+    onConfirm: () -> Unit,
+) {
     val typedOk = !state.needsTypedConfirm || DebloatViewModel.isTypedConfirmValid(state.confirmText)
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -320,6 +330,32 @@ private fun DebloatConfirmDialog(state: DebloatUiState, onDismiss: () -> Unit, o
                 }
                 if (state.selectedRows.size > 12) {
                     Text(stringResource(R.string.debloat_confirm_more, state.selectedRows.size - 12))
+                }
+                if (state.confirmUsers.size >= 2) {
+                    Text(
+                        stringResource(R.string.debloat_dual_user_body),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    state.confirmUsers.forEach { user ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            RadioButton(
+                                selected = state.selectedUserId == user.id,
+                                onClick = { onSelectConfirmUser(user.id) },
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.debloat_dual_user_option,
+                                    user.name,
+                                    user.id,
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
                 }
                 if (state.needsTypedConfirm) {
                     Text(stringResource(R.string.debloat_type_confirm_hint))

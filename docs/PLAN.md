@@ -421,7 +421,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 
 - **P1 — Geplante Wartung**: wöchentlich Cache leeren, alte APKs aufräumen, Kiln-Temps (WorkManager, Laden/WLAN, Protokoll). SAF-Nutzer-Backups bewusst später. → **M23**
 - **P2 — Apps einfrieren/hibernieren**: Selten genutzte Apps pausieren statt löschen (spart Akku und Hintergrundaktivität). → **shipped M36** (#58).
-- **P3 — Dual Apps / Zweiter Bereich / Work-Profile**: Install/uninstall → **M55**; component/freeze → **M56**; Debloat-Batch und Backup pro User noch offen.
+- **P3 — Dual Apps / Zweiter Bereich / Work-Profile**: Install/uninstall → **M55**; component/freeze → **M56**; Debloat-Batch → **M57**; Backup pro User noch offen.
 
 ### UX
 
@@ -466,4 +466,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 33. Cut **0.2.7** (versionCode 10) after HyperOS checks for M51–M53
 34. **M55** Dual-user install/uninstall → Done
 35. Cut **0.2.9** (versionCode 12)
-36. **M56** Per-user component toggles + freeze → Done on `m56-per-user-state`
+36. **M56** Per-user component toggles + freeze → Done
+37. Cut **0.2.10** (versionCode 13)
+38. **M57** Debloat batch per user → Done on `m57-debloat-per-user`
+39. Cut **0.2.11** (versionCode 14)

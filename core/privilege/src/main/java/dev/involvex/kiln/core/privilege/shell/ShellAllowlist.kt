@@ -119,20 +119,24 @@ object ShellAllowlist {
         }
 
         PM_DISABLE_USER -> {
-            val packageName = args.singleOrNull() ?: return null
+            val packageName = args.getOrNull(0) ?: return null
+            val userId = optionalUserId(args, index = 1) ?: return null
+            if (args.size > 2) return null
             if (!isSafePackageName(packageName)) {
                 null
             } else {
-                listOf("pm", "disable-user", "--user", "0", packageName)
+                listOf("pm", "disable-user", "--user", userId, packageName)
             }
         }
 
         PM_ENABLE -> {
-            val packageName = args.singleOrNull() ?: return null
+            val packageName = args.getOrNull(0) ?: return null
+            val userId = optionalUserId(args, index = 1) ?: return null
+            if (args.size > 2) return null
             if (!isSafePackageName(packageName)) {
                 null
             } else {
-                listOf("pm", "enable", "--user", "0", packageName)
+                listOf("pm", "enable", "--user", userId, packageName)
             }
         }
 

@@ -83,7 +83,11 @@ class DebloatRepository @Inject constructor(
 
     suspend fun currentSnapshot(): DebloatSnapshot? = snapshotStore.load()
 
-    suspend fun applyActions(targets: List<Pair<String, DebloatAction>>): List<DebloatActionResult> = withContext(ioDispatcher) {
+    suspend fun applyActions(
+        targets: List<Pair<String, DebloatAction>>,
+        targetUserId: Int = 0,
+        currentUserId: Int = 0,
+    ): List<DebloatActionResult> = withContext(ioDispatcher) {
         if (PrivilegeCapability.DEBLOAT !in privilegedExecutor.currentStatus().capabilities) {
             return@withContext targets.map {
                 DebloatActionResult(it.first, it.second, false, "capability_missing:DEBLOAT")
@@ -96,10 +100,15 @@ class DebloatRepository @Inject constructor(
                 return@map DebloatActionResult(pkg, action, false, "denylisted")
             }
             val result = when (action) {
-                DebloatAction.DISABLE -> privilegedExecutor.disableUserPackage(pkg)
-                DebloatAction.ENABLE -> privilegedExecutor.enablePackage(pkg)
-                DebloatAction.UNINSTALL_FOR_USER -> privilegedExecutor.uninstall(pkg, keepData = false)
-                DebloatAction.INSTALL_EXISTING -> privilegedExecutor.installExistingPackage(pkg)
+                DebloatAction.DISABLE -> privilegedExecutor.disableUserPackage(pkg, targetUserId)
+
+                DebloatAction.ENABLE -> privilegedExecutor.enablePackage(pkg, targetUserId)
+
+                DebloatAction.UNINSTALL_FOR_USER ->
+                    privilegedExecutor.uninstall(pkg, keepData = false, targetUserId = targetUserId)
+
+                DebloatAction.INSTALL_EXISTING ->
+                    privilegedExecutor.installExistingPackage(pkg, targetUserId = targetUserId)
             }
             when (result) {
                 is Result.Failure -> {
@@ -110,7 +119,7 @@ class DebloatRepository @Inject constructor(
                             action = action.name.lowercase(),
                             success = false,
                             packageName = pkg,
-                            detailKey = result.message,
+                            detailKey = buildDebloatDetailKey(targetUserId, currentUserId, result.message),
                         ),
                     )
                     DebloatActionResult(pkg, action, false, result.message)
@@ -123,6 +132,7 @@ class DebloatRepository @Inject constructor(
                             action = action.name.lowercase(),
                             success = true,
                             packageName = pkg,
+                            detailKey = buildDebloatDetailKey(targetUserId, currentUserId, failureDetail = null),
                         ),
                     )
                     DebloatActionResult(pkg, action, true, null)
@@ -131,7 +141,7 @@ class DebloatRepository @Inject constructor(
         }
     }
 
-    suspend fun restoreSnapshot(): List<DebloatActionResult> = withContext(ioDispatcher) {
+    suspend fun restoreSnapshot(targetUserId: Int = 0, currentUserId: Int = 0): List<DebloatActionResult> = withContext(ioDispatcher) {
         val snapshot = snapshotStore.load()
             ?: return@withContext emptyList()
         val current = loadRows().associateBy { it.packageName }
@@ -163,8 +173,16 @@ class DebloatRepository @Inject constructor(
             }
             if (action != null) plan.add(entry.packageName to action)
         }
-        applyActions(plan)
+        applyActions(plan, targetUserId = targetUserId, currentUserId = currentUserId)
     }
+
+    private fun buildDebloatDetailKey(targetUserId: Int, currentUserId: Int, failureDetail: String?): String? = buildString {
+        if (targetUserId != currentUserId) append("user:$targetUserId")
+        if (failureDetail != null) {
+            if (isNotEmpty()) append(';')
+            append(failureDetail)
+        }
+    }.ifEmpty { null }
 
     private fun resolveState(info: ApplicationInfo): DebloatPackageState {
         val installed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

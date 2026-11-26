@@ -164,10 +164,21 @@ class ShellAllowlistTest {
             ShellAllowlist.buildArgv(ShellAllowlist.PM_ENABLE, listOf(pkg)),
         )
         assertEquals(
+            listOf("pm", "disable-user", "--user", "10", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_DISABLE_USER, listOf(pkg, "10")),
+        )
+        assertEquals(
+            listOf("pm", "enable", "--user", "10", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_ENABLE, listOf(pkg, "10")),
+        )
+        assertEquals(
             listOf("pm", "install-existing", "--user", "0", pkg),
             ShellAllowlist.buildArgv(ShellAllowlist.PM_INSTALL_EXISTING, listOf(pkg)),
         )
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_DISABLE_USER, listOf("a;b")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_DISABLE_USER, listOf(pkg, "evil")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_ENABLE, listOf(pkg, "evil")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_DISABLE_USER, listOf(pkg, "10", "extra")))
     }
 
     @Test
