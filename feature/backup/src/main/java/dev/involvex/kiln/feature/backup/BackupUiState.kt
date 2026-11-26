@@ -1,5 +1,6 @@
 package dev.involvex.kiln.feature.backup
 
+import dev.involvex.kiln.core.model.AndroidUserInfo
 import dev.involvex.kiln.core.model.BackupAppCandidate
 import dev.involvex.kiln.core.model.BackupContentTier
 import dev.involvex.kiln.core.model.BackupPrefs
@@ -16,6 +17,11 @@ data class BackupUiState(
     val message: String? = null,
     val pendingBackupPackage: String? = null,
     val pendingRestore: Boolean = false,
+    val pendingBackupUserConfirm: Boolean = false,
+    /** Non-null → UI should launch CreateDocument with this suggested name. */
+    val pendingCreateDocumentName: String? = null,
+    val confirmUsers: List<AndroidUserInfo> = emptyList(),
+    val selectedUserId: Int = 0,
     val passwordPrompt: BackupPasswordPrompt? = null,
     val encryptEnabled: Boolean = false,
     val passwordDraft: String = "",

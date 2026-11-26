@@ -27,7 +27,11 @@ class BackupArchiveBuilder @Inject constructor(
 ) {
     fun canIncludeAndroidData(): Boolean = PrivilegeCapability.ACCESS_ANDROID_DATA in privilegedExecutor.currentStatus().capabilities
 
-    suspend fun build(packageName: String, password: CharArray?): Result<Pair<ByteArray, BackupArchiveMetadata>> {
+    suspend fun build(
+        packageName: String,
+        password: CharArray?,
+        targetUserId: Int? = null,
+    ): Result<Pair<ByteArray, BackupArchiveMetadata>> {
         val detail = packageLoader.loadDetail(packageName)
             ?: return Result.failure("package_not_found")
         if (detail.apkFiles.isEmpty()) {
@@ -45,7 +49,7 @@ class BackupArchiveBuilder @Inject constructor(
                 SharedArchiveParts(null, null, included = false)
             }
             val encrypted = password != null && password.isNotEmpty()
-            val metadata = metadataFor(detail, shared, encrypted, includeData)
+            val metadata = metadataFor(detail, shared, encrypted, includeData, targetUserId)
             val zipBytes = writeZip(detail.apkFiles, metadata, shared)
             val payload = maybeEncrypt(zipBytes, password, encrypted)
             Result.success(payload to metadata)
@@ -73,6 +77,7 @@ class BackupArchiveBuilder @Inject constructor(
         shared: SharedArchiveParts,
         encrypted: Boolean,
         includeData: Boolean,
+        targetUserId: Int?,
     ): BackupArchiveMetadata {
         val formatVersion = if (encrypted || shared.included) FORMAT_V2 else FORMAT_V1
         val contentTier = if (includeData) BackupContentTier.SHIZUKU else BackupContentTier.NONE
@@ -92,6 +97,7 @@ class BackupArchiveBuilder @Inject constructor(
             encrypted = encrypted,
             androidDataEntry = shared.dataEntryName,
             androidObbEntry = shared.obbEntryName,
+            targetUserId = targetUserId,
         )
     }
 

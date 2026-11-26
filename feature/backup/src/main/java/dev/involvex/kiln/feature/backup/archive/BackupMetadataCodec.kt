@@ -38,6 +38,7 @@ object BackupMetadataCodec {
         val encrypted: Boolean = false,
         val androidDataEntry: String? = null,
         val androidObbEntry: String? = null,
+        val targetUserId: Int? = null,
     ) {
         fun toModel(): BackupArchiveMetadata = BackupArchiveMetadata(
             formatVersion = formatVersion,
@@ -55,6 +56,7 @@ object BackupMetadataCodec {
             encrypted = encrypted,
             androidDataEntry = androidDataEntry,
             androidObbEntry = androidObbEntry,
+            targetUserId = targetUserId,
         )
 
         companion object {
@@ -74,6 +76,7 @@ object BackupMetadataCodec {
                 encrypted = metadata.encrypted,
                 androidDataEntry = metadata.androidDataEntry,
                 androidObbEntry = metadata.androidObbEntry,
+                targetUserId = metadata.targetUserId,
             )
         }
     }

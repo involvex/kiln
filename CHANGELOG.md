@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.12] — 2026-11-26
+
+### Added
+
+- M58 best-effort dual-user backup/restore targeting (census picker on confirm; install queue `targetUserId`; metadata honesty note; Android/data stays current-user paths)
+
+### Changed
+
+- Version **0.2.12** (versionCode 15)
+
 ## [0.2.11] — 2026-11-26
 
 ### Added

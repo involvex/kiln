@@ -65,14 +65,28 @@ class BackupRepository @Inject constructor(
         targetUri: Uri,
         contentResolver: ContentResolver,
         password: CharArray? = null,
+        targetUserId: Int? = null,
+        currentUserId: Int = 0,
     ): Result<BackupArchiveMetadata> = withContext(ioDispatcher) {
-        when (val built = archiveBuilder.build(packageName, password)) {
+        when (val built = archiveBuilder.build(packageName, password, targetUserId)) {
             is Result.Failure -> built
-            is Result.Success -> writeBytesToUri(built.value.first, targetUri, contentResolver, built.value.second)
+
+            is Result.Success -> writeBytesToUri(
+                built.value.first,
+                targetUri,
+                contentResolver,
+                built.value.second,
+                currentUserId,
+            )
         }
     }
 
-    suspend fun backupToTree(packageName: String, password: CharArray? = null): Result<BackupArchiveMetadata> = withContext(ioDispatcher) {
+    suspend fun backupToTree(
+        packageName: String,
+        password: CharArray? = null,
+        targetUserId: Int? = null,
+        currentUserId: Int = 0,
+    ): Result<BackupArchiveMetadata> = withContext(ioDispatcher) {
         val prefs = backupPreferences.current()
         val treeUri = prefs.treeUri ?: return@withContext Result.failure("tree_not_set")
         val detail = packageLoader.loadDetail(packageName)
@@ -80,11 +94,17 @@ class BackupRepository @Inject constructor(
         val fileName = suggestedFileName(packageName, detail.candidate.versionName)
         val doc = treeStore.createBackupFile(treeUri, packageName, fileName)
             ?: return@withContext Result.failure("tree_create_failed")
-        when (val built = archiveBuilder.build(packageName, password)) {
+        when (val built = archiveBuilder.build(packageName, password, targetUserId)) {
             is Result.Failure -> built
 
             is Result.Success -> {
-                val written = writeBytesToUri(built.value.first, doc.uri, context.contentResolver, built.value.second)
+                val written = writeBytesToUri(
+                    built.value.first,
+                    doc.uri,
+                    context.contentResolver,
+                    built.value.second,
+                    currentUserId,
+                )
                 if (written is Result.Success) {
                     treeStore.prunePackageArchives(treeUri, packageName, prefs.keepN)
                 }
@@ -93,27 +113,36 @@ class BackupRepository @Inject constructor(
         }
     }
 
-    suspend fun restoreFromUri(uri: Uri, contentResolver: ContentResolver, password: CharArray? = null): Result<String> =
-        withContext(ioDispatcher) {
-            when (val opened = openZipStream(uri, contentResolver, password)) {
-                is Result.Failure -> opened
+    suspend fun restoreFromUri(
+        uri: Uri,
+        contentResolver: ContentResolver,
+        password: CharArray? = null,
+        targetUserId: Int? = null,
+        currentUserId: Int = 0,
+    ): Result<String> = withContext(ioDispatcher) {
+        when (val opened = openZipStream(uri, contentResolver, password)) {
+            is Result.Failure -> opened
 
-                is Result.Success -> {
-                    val outDir = File(context.cacheDir, "backup_restore").apply {
-                        deleteRecursively()
-                        mkdirs()
+            is Result.Success -> {
+                val outDir = File(context.cacheDir, "backup_restore").apply {
+                    deleteRecursively()
+                    mkdirs()
+                }
+                when (val extracted = opened.value.use { BackupArchiveReader.extract(it, outDir) }) {
+                    is Result.Failure -> {
+                        logRestoreFail(extracted.message)
+                        extracted
                     }
-                    when (val extracted = opened.value.use { BackupArchiveReader.extract(it, outDir) }) {
-                        is Result.Failure -> {
-                            logRestoreFail(extracted.message)
-                            extracted
-                        }
 
-                        is Result.Success -> enqueueRestore(extracted.value)
-                    }
+                    is Result.Success -> enqueueRestore(
+                        extracted = extracted.value,
+                        targetUserId = targetUserId,
+                        currentUserId = currentUserId,
+                    )
                 }
             }
         }
+    }
 
     fun suggestedFileName(packageName: String, versionName: String?): String {
         val ver = versionName?.replace(Regex("[^A-Za-z0-9._-]"), "_") ?: "backup"
@@ -166,12 +195,13 @@ class BackupRepository @Inject constructor(
         }
     }
 
-    private suspend fun enqueueRestore(extracted: BackupExtractResult): Result<String> {
+    private suspend fun enqueueRestore(extracted: BackupExtractResult, targetUserId: Int?, currentUserId: Int): Result<String> {
         val meta = extracted.metadata
         if (BackupRestoreApks.isIncompleteSplitArchive(meta.hasSplits, extracted.allApkFiles.size)) {
             logRestoreFail("splits_incomplete")
             return Result.failure("splits_incomplete")
         }
+        val resolvedUserId = targetUserId ?: meta.targetUserId
         val apkPaths = BackupRestoreApks.orderedAbsolutePaths(extracted.baseApk, extracted.allApkFiles)
         val queued = installQueue.enqueueLocal(
             LocalInstallRequest(
@@ -180,6 +210,7 @@ class BackupRepository @Inject constructor(
                 versionCode = meta.versionCode,
                 apkAbsolutePaths = apkPaths,
                 expectedSha256 = null,
+                targetUserId = resolvedUserId,
             ),
         )
         return when (queued) {
@@ -190,7 +221,7 @@ class BackupRepository @Inject constructor(
                         action = "restore_failed",
                         success = false,
                         packageName = meta.packageName,
-                        detailKey = queued.message,
+                        detailKey = buildUserDetailKey(resolvedUserId, currentUserId, queued.message),
                     ),
                 )
                 queued
@@ -213,6 +244,7 @@ class BackupRepository @Inject constructor(
                         versionName = meta.versionName,
                         versionCode = meta.versionCode,
                         refId = queued.value,
+                        detailKey = buildUserDetailKey(resolvedUserId, currentUserId, failureDetail = null),
                     ),
                 )
                 queued
@@ -225,6 +257,7 @@ class BackupRepository @Inject constructor(
         targetUri: Uri,
         contentResolver: ContentResolver,
         metadata: BackupArchiveMetadata,
+        currentUserId: Int,
     ): Result<BackupArchiveMetadata> {
         return try {
             val stream = contentResolver.openOutputStream(targetUri)
@@ -240,6 +273,7 @@ class BackupRepository @Inject constructor(
                     packageName = metadata.packageName,
                     versionName = metadata.versionName,
                     versionCode = metadata.versionCode,
+                    detailKey = buildUserDetailKey(metadata.targetUserId, currentUserId, failureDetail = null),
                 ),
             )
             Result.success(metadata)
@@ -253,6 +287,14 @@ class BackupRepository @Inject constructor(
             Result.failure(e.message ?: "backup_failed", e)
         }
     }
+
+    private fun buildUserDetailKey(targetUserId: Int?, currentUserId: Int, failureDetail: String?): String? = buildString {
+        if (targetUserId != null && targetUserId != currentUserId) append("user:$targetUserId")
+        if (failureDetail != null) {
+            if (isNotEmpty()) append(';')
+            append(failureDetail)
+        }
+    }.ifEmpty { null }
 
     private suspend fun restoreSharedDataAfterInstall(packageName: String, dataTar: File?, obbTar: File?) {
         val stage = archiveBuilder.stagingDir().apply { mkdirs() }

@@ -27,6 +27,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +40,7 @@ import dev.involvex.kiln.core.common.ByteSizeFormatter
 import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
+import dev.involvex.kiln.core.model.AndroidUserInfo
 import dev.involvex.kiln.core.model.BackupAppCandidate
 import dev.involvex.kiln.core.model.BackupContentTier
 import dev.involvex.kiln.core.model.BackupPrefs
@@ -75,38 +77,33 @@ fun BackupRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true) {
         }
     }
 
+    LaunchedEffect(state.pendingCreateDocumentName) {
+        val name = state.pendingCreateDocumentName ?: return@LaunchedEffect
+        viewModel.consumeCreateDocument()
+        createDoc.launch(name)
+    }
+
     BackupScreen(
         state = state,
         onRefresh = viewModel::refresh,
         onQueryChange = viewModel::setQuery,
         onSelect = viewModel::select,
-        onRequestBackup = {
-            val needsCreate = viewModel.requestBackup()
-            if (needsCreate) {
-                val pkg = state.selectedPackage ?: return@BackupScreen
-                createDoc.launch(viewModel.suggestedFileName(pkg))
-            }
-        },
+        onRequestBackup = viewModel::requestBackup,
         onRequestRestore = viewModel::requestRestore,
         onConfirmRestore = {
-            viewModel.dismissRestore()
+            viewModel.confirmRestore()
             openDoc.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
         },
         onDismissRestore = viewModel::dismissRestore,
+        onSelectConfirmUser = viewModel::selectConfirmUser,
+        onConfirmBackupUser = viewModel::confirmBackupUser,
+        onDismissBackupUser = viewModel::dismissBackupUserConfirm,
         onPickTree = { openTree.launch(null) },
         onClearTree = { viewModel.clearTree(context.contentResolver) },
         onKeepNChange = viewModel::setKeepN,
         onEncryptChange = viewModel::setEncryptEnabled,
         onPasswordDraftChange = viewModel::setPasswordDraft,
-        onConfirmPassword = {
-            val needsCreate = viewModel.confirmPasswordPrompt(context.contentResolver)
-            if (needsCreate) {
-                val pkg = viewModel.uiState.value.pendingBackupPackage
-                    ?: viewModel.uiState.value.selectedPackage
-                    ?: return@BackupScreen
-                createDoc.launch(viewModel.suggestedFileName(pkg))
-            }
-        },
+        onConfirmPassword = { viewModel.confirmPasswordPrompt(context.contentResolver) },
         onDismissPassword = viewModel::dismissPasswordPrompt,
         showTopBar = showTopBar,
         modifier = modifier,
@@ -123,6 +120,9 @@ fun BackupScreen(
     onRequestRestore: () -> Unit,
     onConfirmRestore: () -> Unit,
     onDismissRestore: () -> Unit,
+    onSelectConfirmUser: (Int) -> Unit,
+    onConfirmBackupUser: () -> Unit,
+    onDismissBackupUser: () -> Unit,
     onPickTree: () -> Unit,
     onClearTree: () -> Unit,
     onKeepNChange: (Int) -> Unit,
@@ -169,8 +169,20 @@ fun BackupScreen(
 
     if (state.pendingRestore) {
         RestoreConfirmDialog(
+            users = state.confirmUsers,
+            selectedUserId = state.selectedUserId,
+            onSelectUser = onSelectConfirmUser,
             onConfirm = onConfirmRestore,
             onDismiss = onDismissRestore,
+        )
+    }
+    if (state.pendingBackupUserConfirm) {
+        BackupUserConfirmDialog(
+            users = state.confirmUsers,
+            selectedUserId = state.selectedUserId,
+            onSelectUser = onSelectConfirmUser,
+            onConfirm = onConfirmBackupUser,
+            onDismiss = onDismissBackupUser,
         )
     }
     if (state.passwordPrompt != null) {
@@ -196,11 +208,27 @@ private fun BackupLoading(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun RestoreConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+private fun RestoreConfirmDialog(
+    users: List<AndroidUserInfo>,
+    selectedUserId: Int,
+    onSelectUser: (Int) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.backup_restore_confirm_title)) },
-        text = { Text(stringResource(R.string.backup_restore_confirm_body)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.backup_restore_confirm_body))
+                DualUserPicker(
+                    users = users,
+                    selectedUserId = selectedUserId,
+                    bodyRes = R.string.backup_dual_user_restore_body,
+                    onSelectUser = onSelectUser,
+                )
+            }
+        },
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text(stringResource(R.string.backup_restore_confirm_action))
@@ -212,6 +240,69 @@ private fun RestoreConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
             }
         },
     )
+}
+
+@Composable
+private fun BackupUserConfirmDialog(
+    users: List<AndroidUserInfo>,
+    selectedUserId: Int,
+    onSelectUser: (Int) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.backup_dual_user_backup_title)) },
+        text = {
+            DualUserPicker(
+                users = users,
+                selectedUserId = selectedUserId,
+                bodyRes = R.string.backup_dual_user_backup_body,
+                onSelectUser = onSelectUser,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.backup_dual_user_backup_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.backup_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun DualUserPicker(users: List<AndroidUserInfo>, selectedUserId: Int, bodyRes: Int, onSelectUser: (Int) -> Unit) {
+    if (users.size < 2) return
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            stringResource(bodyRes),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        users.forEach { user ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                RadioButton(
+                    selected = selectedUserId == user.id,
+                    onClick = { onSelectUser(user.id) },
+                )
+                Text(
+                    text = stringResource(
+                        R.string.backup_dual_user_option,
+                        user.name,
+                        user.id,
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+    }
 }
 
 @Composable
