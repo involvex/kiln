@@ -182,6 +182,15 @@ class ShellAllowlistTest {
             listOf("pm", "disable", "--user", "0", "$pkg/.MyReceiver"),
             ShellAllowlist.buildArgv(ShellAllowlist.PM_DISABLE_COMPONENT, listOf(pkg, ".MyReceiver")),
         )
+        assertEquals(
+            listOf("pm", "enable", "--user", "10", "$pkg/$cls"),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_ENABLE_COMPONENT, listOf(pkg, cls, "10")),
+        )
+        assertEquals(
+            listOf("pm", "disable", "--user", "10", "$pkg/.MyReceiver"),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_DISABLE_COMPONENT, listOf(pkg, ".MyReceiver", "10")),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_ENABLE_COMPONENT, listOf(pkg, cls, "evil")))
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_ENABLE_COMPONENT, listOf(pkg, "evil;rm")))
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_DISABLE_COMPONENT, listOf("bad;pkg", cls)))
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_ENABLE_COMPONENT, listOf(pkg)))
@@ -205,6 +214,15 @@ class ShellAllowlistTest {
             listOf("pm", "unsuspend", "--user", "0", pkg),
             ShellAllowlist.buildArgv(ShellAllowlist.PM_UNSUSPEND, listOf(pkg)),
         )
+        assertEquals(
+            listOf("pm", "suspend", "--user", "10", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_SUSPEND, listOf(pkg, "10")),
+        )
+        assertEquals(
+            listOf("pm", "unsuspend", "--user", "10", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.PM_UNSUSPEND, listOf(pkg, "10")),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_SUSPEND, listOf(pkg, "bad")))
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_SUSPEND, listOf("bad;pkg")))
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.PM_UNSUSPEND, listOf("a")))
     }

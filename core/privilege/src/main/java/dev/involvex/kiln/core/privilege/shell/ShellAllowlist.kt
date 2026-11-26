@@ -156,20 +156,25 @@ object ShellAllowlist {
         }
 
         PM_SUSPEND -> {
-            val packageName = args.singleOrNull() ?: return null
+            // HyperOS may apply suspend only for the calling user; shell failure is surfaced to UI.
+            val packageName = args.getOrNull(0) ?: return null
+            val userId = optionalUserId(args, index = 1) ?: return null
+            if (args.size > 2) return null
             if (!isSafePackageName(packageName)) {
                 null
             } else {
-                listOf("pm", "suspend", "--user", "0", packageName)
+                listOf("pm", "suspend", "--user", userId, packageName)
             }
         }
 
         PM_UNSUSPEND -> {
-            val packageName = args.singleOrNull() ?: return null
+            val packageName = args.getOrNull(0) ?: return null
+            val userId = optionalUserId(args, index = 1) ?: return null
+            if (args.size > 2) return null
             if (!isSafePackageName(packageName)) {
                 null
             } else {
-                listOf("pm", "unsuspend", "--user", "0", packageName)
+                listOf("pm", "unsuspend", "--user", userId, packageName)
             }
         }
 
@@ -328,16 +333,17 @@ object ShellAllowlist {
     private const val MAX_INSTALL_MULTIPLE = 64
 
     /**
-     * Builds `pm enable|disable package/class` from two validated tokens.
-     * Never concatenates unvalidated user input into a shell string.
+     * Builds `pm enable|disable --user N package/class` from validated tokens.
+     * Optional trailing user id (M56); missing → `"0"`. Never concatenates free text.
      */
     private fun buildComponentEnableDisableArgv(args: List<String>, enable: Boolean): List<String>? {
-        if (args.size != 2) return null
+        if (args.size !in 2..3) return null
         val packageName = args[0]
         val className = args[1]
+        val userId = optionalUserId(args, index = 2) ?: return null
         if (!isSafePackageName(packageName) || !isSafeComponentClassName(className)) return null
         val component = "$packageName/$className"
-        return listOf("pm", if (enable) "enable" else "disable", "--user", "0", component)
+        return listOf("pm", if (enable) "enable" else "disable", "--user", userId, component)
     }
 
     private fun buildInstallMultipleArgv(args: List<String>, downgrade: Boolean): List<String>? {

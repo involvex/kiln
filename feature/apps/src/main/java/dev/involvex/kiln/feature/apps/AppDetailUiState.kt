@@ -15,7 +15,13 @@ import dev.involvex.kiln.core.model.RollbackApkEntry
 import dev.involvex.kiln.feature.apps.activities.AppActivityInfoQuery
 import dev.involvex.kiln.feature.apps.activities.AppActivityLabels
 
-data class PendingComponentToggle(val component: AppComponentInfo, val enable: Boolean)
+data class PendingComponentToggle(
+    val component: AppComponentInfo,
+    val enable: Boolean,
+    /** Empty when single-user / no DEBLOAT census — no picker. */
+    val users: List<AndroidUserInfo> = emptyList(),
+    val selectedUserId: Int = 0,
+)
 
 enum class DualUserPendingKind {
     Uninstall,
@@ -123,6 +129,7 @@ sealed interface AppDetailEvent {
     data object ConfirmRollback : AppDetailEvent
     data object DismissRollback : AppDetailEvent
     data class RequestComponentToggle(val component: AppComponentInfo, val enable: Boolean) : AppDetailEvent
+    data class SelectComponentToggleUser(val userId: Int) : AppDetailEvent
     data object ConfirmComponentToggle : AppDetailEvent
     data object DismissComponentToggle : AppDetailEvent
 }

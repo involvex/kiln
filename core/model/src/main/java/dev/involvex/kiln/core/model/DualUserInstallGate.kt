@@ -1,7 +1,7 @@
 package dev.involvex.kiln.core.model
 
 /**
- * Pure gate for M55 dual-user install/uninstall UX.
+ * Pure gate for multi-user confirm UX (M55 install/uninstall; M56 component/freeze).
  * Single-user devices never show a picker.
  */
 object DualUserInstallGate {

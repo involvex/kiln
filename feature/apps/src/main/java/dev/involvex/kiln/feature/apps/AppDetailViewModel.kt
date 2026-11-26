@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-@Suppress("TooManyFunctions") // Detail hub: updates, link, rollback, activities, export.
+@Suppress("TooManyFunctions", "LargeClass") // Detail hub: updates, link, rollback, activities, dual-user, export.
 class AppDetailViewModel @Inject constructor(
     private val repository: InstalledAppsRepository,
     private val activitiesRepository: AppActivitiesRepository,
@@ -195,6 +195,7 @@ class AppDetailViewModel @Inject constructor(
             AppDetailEvent.DismissRollback,
             AppDetailEvent.ConfirmRollback,
             is AppDetailEvent.RequestComponentToggle,
+            is AppDetailEvent.SelectComponentToggleUser,
             AppDetailEvent.DismissComponentToggle,
             AppDetailEvent.ConfirmComponentToggle,
             -> onConfirmableEvent(event)
@@ -382,6 +383,20 @@ class AppDetailViewModel @Inject constructor(
 
             is AppDetailEvent.RequestComponentToggle -> requestComponentToggle(event.component, event.enable)
 
+            is AppDetailEvent.SelectComponentToggleUser ->
+                _uiState.update { state ->
+                    val pending = state.pendingComponentToggle ?: return@update state
+                    state.copy(
+                        pendingComponentToggle = pending.copy(
+                            selectedUserId = DualUserInstallGate.resolveTargetUserId(
+                                selectedUserId = event.userId,
+                                users = pending.users,
+                                currentUserId = currentUserId(),
+                            ),
+                        ),
+                    )
+                }
+
             AppDetailEvent.DismissComponentToggle -> _uiState.update { it.copy(pendingComponentToggle = null) }
 
             AppDetailEvent.ConfirmComponentToggle -> confirmComponentToggle()
@@ -409,8 +424,21 @@ class AppDetailViewModel @Inject constructor(
             )
             return
         }
-        _uiState.update {
-            it.copy(pendingComponentToggle = PendingComponentToggle(component = component, enable = enable))
+        viewModelScope.launch {
+            val caps = privilegedExecutor.currentStatus().capabilities
+            val hasDebloat = PrivilegeCapability.DEBLOAT in caps
+            val users = loadCensusUsers()
+            val showUserPicker = DualUserInstallGate.showPicker(users, hasDebloat)
+            _uiState.update {
+                it.copy(
+                    pendingComponentToggle = PendingComponentToggle(
+                        component = component,
+                        enable = enable,
+                        users = if (showUserPicker) users else emptyList(),
+                        selectedUserId = currentUserId(),
+                    ),
+                )
+            }
         }
     }
 
@@ -422,12 +450,25 @@ class AppDetailViewModel @Inject constructor(
             showMessage("component_denylisted")
             return
         }
+        val targetUserId = DualUserInstallGate.resolveTargetUserId(
+            selectedUserId = pending.selectedUserId,
+            users = pending.users,
+            currentUserId = currentUserId(),
+        )
         viewModelScope.launch {
             _uiState.update { it.copy(componentToggleInProgress = true, pendingComponentToggle = null) }
             val result = if (pending.enable) {
-                privilegedExecutor.enableComponent(pending.component.packageName, pending.component.className)
+                privilegedExecutor.enableComponent(
+                    pending.component.packageName,
+                    pending.component.className,
+                    targetUserId = targetUserId,
+                )
             } else {
-                privilegedExecutor.disableComponent(pending.component.packageName, pending.component.className)
+                privilegedExecutor.disableComponent(
+                    pending.component.packageName,
+                    pending.component.className,
+                    targetUserId = targetUserId,
+                )
             }
             val ok = result is Result.Success
             activityLog.record(
@@ -436,7 +477,10 @@ class AppDetailViewModel @Inject constructor(
                     action = if (pending.enable) "component_enable" else "component_disable",
                     success = ok,
                     packageName = pending.component.packageName,
-                    detailKey = pending.component.className.substringAfterLast('.').take(COMPONENT_DETAIL_MAX),
+                    detailKey = buildString {
+                        append(pending.component.className.substringAfterLast('.').take(COMPONENT_DETAIL_MAX))
+                        if (targetUserId != currentUserId()) append(";user:$targetUserId")
+                    },
                 ),
             )
             _uiState.update { it.copy(componentToggleInProgress = false) }

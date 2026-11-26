@@ -256,11 +256,11 @@ class DefaultPrivilegedExecutor @Inject constructor(
 
     override suspend fun enablePackage(packageName: String): Result<Unit> = runDebloatCommand(ShellAllowlist.PM_ENABLE, packageName)
 
-    override suspend fun enableComponent(packageName: String, className: String): Result<Unit> =
-        runComponentCommand(ShellAllowlist.PM_ENABLE_COMPONENT, packageName, className)
+    override suspend fun enableComponent(packageName: String, className: String, targetUserId: Int): Result<Unit> =
+        runComponentCommand(ShellAllowlist.PM_ENABLE_COMPONENT, packageName, className, targetUserId)
 
-    override suspend fun disableComponent(packageName: String, className: String): Result<Unit> =
-        runComponentCommand(ShellAllowlist.PM_DISABLE_COMPONENT, packageName, className)
+    override suspend fun disableComponent(packageName: String, className: String, targetUserId: Int): Result<Unit> =
+        runComponentCommand(ShellAllowlist.PM_DISABLE_COMPONENT, packageName, className, targetUserId)
 
     override suspend fun listAndroidUsers(): Result<List<AndroidUserInfo>> = withContext(ioDispatcher) {
         if (PrivilegeCapability.RUN_SHELL_DIAGNOSTIC !in currentStatus().capabilities) {
@@ -303,9 +303,11 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
-    override suspend fun suspendPackage(packageName: String): Result<Unit> = runDebloatCommand(ShellAllowlist.PM_SUSPEND, packageName)
+    override suspend fun suspendPackage(packageName: String, targetUserId: Int): Result<Unit> =
+        runDebloatCommand(ShellAllowlist.PM_SUSPEND, packageName, targetUserId)
 
-    override suspend fun unsuspendPackage(packageName: String): Result<Unit> = runDebloatCommand(ShellAllowlist.PM_UNSUSPEND, packageName)
+    override suspend fun unsuspendPackage(packageName: String, targetUserId: Int): Result<Unit> =
+        runDebloatCommand(ShellAllowlist.PM_UNSUSPEND, packageName, targetUserId)
 
     override suspend fun revokeRuntimePermission(packageName: String, permission: String): Result<Unit> = withContext(ioDispatcher) {
         if (PrivilegeCapability.MANAGE_APP_OPS !in currentStatus().capabilities) {
@@ -600,27 +602,37 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
-    private suspend fun runDebloatCommand(commandId: String, packageName: String): Result<Unit> = withContext(ioDispatcher) {
-        if (PrivilegeCapability.DEBLOAT !in currentStatus().capabilities) {
-            return@withContext Result.failure("capability_missing:DEBLOAT")
-        }
-        if (!ShellAllowlist.isSafePackageName(packageName)) {
-            return@withContext Result.failure("invalid_package")
-        }
-        when (val out = invokeAllowlisted(commandId, listOf(packageName))) {
-            is Result.Failure -> out
+    private suspend fun runDebloatCommand(commandId: String, packageName: String, targetUserId: Int? = null): Result<Unit> =
+        withContext(ioDispatcher) {
+            if (PrivilegeCapability.DEBLOAT !in currentStatus().capabilities) {
+                return@withContext Result.failure("capability_missing:DEBLOAT")
+            }
+            if (!ShellAllowlist.isSafePackageName(packageName)) {
+                return@withContext Result.failure("invalid_package")
+            }
+            val args = if (targetUserId != null) {
+                val userToken = targetUserId.toString()
+                if (!ShellAllowlist.isSafeUserId(userToken)) {
+                    return@withContext Result.failure("invalid_user_id")
+                }
+                listOf(packageName, userToken)
+            } else {
+                listOf(packageName)
+            }
+            when (val out = invokeAllowlisted(commandId, args)) {
+                is Result.Failure -> out
 
-            is Result.Success -> {
-                if (out.value.startsWith("ERR:")) {
-                    Result.failure(out.value)
-                } else {
-                    Result.success(Unit)
+                is Result.Success -> {
+                    if (out.value.startsWith("ERR:")) {
+                        Result.failure(out.value)
+                    } else {
+                        Result.success(Unit)
+                    }
                 }
             }
         }
-    }
 
-    private suspend fun runComponentCommand(commandId: String, packageName: String, className: String): Result<Unit> =
+    private suspend fun runComponentCommand(commandId: String, packageName: String, className: String, targetUserId: Int): Result<Unit> =
         withContext(ioDispatcher) {
             if (PrivilegeCapability.DEBLOAT !in currentStatus().capabilities) {
                 return@withContext Result.failure("capability_missing:DEBLOAT")
@@ -631,7 +643,11 @@ class DefaultPrivilegedExecutor @Inject constructor(
             if (!ShellAllowlist.isSafeComponentClassName(className)) {
                 return@withContext Result.failure("invalid_component")
             }
-            when (val out = invokeAllowlisted(commandId, listOf(packageName, className))) {
+            val userToken = targetUserId.toString()
+            if (!ShellAllowlist.isSafeUserId(userToken)) {
+                return@withContext Result.failure("invalid_user_id")
+            }
+            when (val out = invokeAllowlisted(commandId, listOf(packageName, className, userToken))) {
                 is Result.Failure -> out
 
                 is Result.Success -> {

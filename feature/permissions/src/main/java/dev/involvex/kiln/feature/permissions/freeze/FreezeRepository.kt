@@ -46,21 +46,28 @@ class FreezeRepository @Inject constructor(
             .toList()
     }
 
-    suspend fun setFrozen(packageName: String, frozen: Boolean): Result<Unit> = withContext(ioDispatcher) {
+    suspend fun setFrozen(packageName: String, frozen: Boolean, targetUserId: Int = 0): Result<Unit> = withContext(ioDispatcher) {
         if (!canMutate()) return@withContext Result.failure("capability_missing:DEBLOAT")
         val result = if (frozen) {
-            privilegedExecutor.suspendPackage(packageName)
+            privilegedExecutor.suspendPackage(packageName, targetUserId = targetUserId)
         } else {
-            privilegedExecutor.unsuspendPackage(packageName)
+            privilegedExecutor.unsuspendPackage(packageName, targetUserId = targetUserId)
         }
         val success = result is Result.Success
+        val failureDetail = (result as? Result.Failure)?.message
         activityLog.record(
             ActivityLogEvents.create(
                 type = ActivityLogType.DEBLOAT,
                 action = if (frozen) "freeze_suspend" else "freeze_unsuspend",
                 success = success,
                 packageName = packageName,
-                detailKey = (result as? Result.Failure)?.message,
+                detailKey = buildString {
+                    if (targetUserId != 0) append("user:$targetUserId")
+                    if (failureDetail != null) {
+                        if (isNotEmpty()) append(';')
+                        append(failureDetail)
+                    }
+                }.ifEmpty { null },
             ),
         )
         result

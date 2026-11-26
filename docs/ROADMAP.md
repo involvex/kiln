@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M51–M53** Done on `main`. App version **0.2.9** (code 12), tag `v0.2.9`. Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Dual-user installs / cloud / ROOT backup unscheduled.
+**Current status:** **M56** Done on branch `m56-per-user-state` (merge next). App version **0.2.9** (code 12), tag `v0.2.9` until the next cut. Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: tablet layouts, cloud backup, ROOT `/data/data`.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -70,6 +70,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M53** | Read-only user census | Done | [`prompts/M53-user-census.md`](./prompts/M53-user-census.md) · `m53-user-census` | `pm list users` + current user id; no `--user N` installs |
 | **M54** | Store listing packet | Done (packet); listings closed | [STORE.md](./STORE.md) · [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948) · [fdroiddata!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) | Fastlane + screenshots; Izzy AI decline; F-Droid closed until ≥3 months; Distribute via GitHub + Obtainium |
 | **M55** | Dual-user installs | Done | [`prompts/M55-dual-user-installs.md`](./prompts/M55-dual-user-installs.md) · `m55-dual-user-installs` | Best-effort `--user N` on install/uninstall when M53 census has ≥2 users; single-user = unchanged |
+| **M56** | Per-user component / freeze | Done | [`prompts/M56-per-user-state.md`](./prompts/M56-per-user-state.md) · `m56-per-user-state` | Best-effort `--user N` on component enable/disable + freeze/unfreeze; debloat batch stays user 0 |
 
 ---
 
@@ -94,7 +95,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | SAF backup rotation / data tiers / encryption | Done (M40 #69) | SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM; ROOT / cloud deferred |
 | APK tools 2 (inspect + compare) | Done | M29 (#47); M31 (#49); universal merge M35 (#56) |
 | Mirrors / proxy | Done | M30 #48 |
-| Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); M53 census Done; **M55** dual-user installs Done (best-effort); tablet unscheduled |
+| Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); M53 census Done; **M55** install/uninstall Done; **M56** component/freeze Done (best-effort); debloat batch / tablet unscheduled |
 | Publishing / F-Droid + Izzy | Closed for now | Izzy [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948); F-Droid !58920 closed (3‑month rule). Ship via GitHub + Obtainium; F-Droid refile ≈ Feb 2026. Play skipped (US$25) |
 | HyperOS M1–M8 checklist sweep | Optional / low priority | Older acceptance lists; not a gate for M55+. Run ad hoc if something regresses |
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
@@ -110,11 +111,11 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 Update after each milestone. Tier = active `PrivilegedExecutor`.
 
-| Feature | Now (main, post-M53 / 0.2.7) | Needs tier |
+| Feature | Now (main / M56 branch, 0.2.9) | Needs tier |
 | --- | --- | --- |
 | Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
 | List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
-| App detail | ✅ Version, installer, SHA-256, paths, permissions; **M43** activities + Start/pin; **M50/M51** services/receivers/providers with enable/disable (Shizuku + denylist; non-exported read-only); rollback + Shizuku downgrade | NONE / SHIZUKU |
+| App detail | ✅ Version, installer, SHA-256, paths, permissions; **M43** activities + Start/pin; **M50/M51** services/receivers/providers with enable/disable (Shizuku + denylist; non-exported read-only); **M56** component toggle can target census user; rollback + Shizuku downgrade | NONE / SHIZUKU |
 | APK export (single / batch) | ✅ `.apk` / `.apks` STORED / `.xapk`; SAF + share + WorkManager batch | NONE |
 | Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
 | Sources / updates | ✅ F-Droid/Izzy/Guardian defaults + FP upsert; `fdroidrepo(s):` / `?fingerprint=` deep links; index-v2 + entry.jar verify; GitHub; **M42** starred import (PAT review → multi-select); Obtainium import; Room cache; per-repo mirrors (M30) | NONE (+ network) |
@@ -132,13 +133,14 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | In-app processes | ✅ **M52** Settings → Tools → Processes (same meminfo + force-stop gate as widget) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`, `FORCE_STOP`) |
 | Android user census | ✅ **M53** Settings → Tools → Android users (`pm list users` read-only) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`) |
 | Dual-user install/uninstall | ✅ **M55** optional `--user N` when census ≥2 + silent Shizuku; else unchanged | NONE / SHIZUKU (`SILENT_INSTALL` / `SILENT_UNINSTALL`) |
+| Dual-user component / freeze | ✅ **M56** optional `--user N` on component enable/disable + suspend/unsuspend when census ≥2 + DEBLOAT; debloat batch stays user 0 | NONE / SHIZUKU (`DEBLOAT`) |
 | Permission audit | ✅ Dangerous overview; `pm revoke` + basic AppOps set | NONE / SHIZUKU (`MANAGE_APP_OPS`) |
 | Background controls | ✅ HyperOS Autostart + battery Unrestricted/Optimized/Restricted | SHIZUKU (`MANAGE_APP_OPS`) |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; ✅ M39 multi-session + `install-multiple` for `.apks`/`.xapk`/`.apkm` (SAF + Share/VIEW) | NONE / SHIZUKU |
 | Storage / cleaner | ✅ Size bars; APK leftovers; **M48** large files (≥50MB) + same-size/hash duplicates; `.kiln-trash` undo/purge (14d maintenance prune); orphan Android/data+obb; cache clear | NONE / SHIZUKU (`CLEAR_CACHE`, `ACCESS_ANDROID_DATA`) |
 | APK tools (inspect / compare / resign / merge) | ✅ M29 inspect+compare; ✅ M31 resign + split export; ✅ M35 universal merge (#56) | NONE |
-| Freeze / hibernate | ✅ M36 (#58) — `pm suspend`/`unsuspend`; Settings list (separate from Debloat) | ≥ SHIZUKU (`DEBLOAT`) |
+| Freeze / hibernate | ✅ M36 (#58) — `pm suspend`/`unsuspend`; Settings list (separate from Debloat); **M56** optional census user | ≥ SHIZUKU (`DEBLOAT`) |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
 | Backup (APK) | ✅ `.kilnbackup.zip`; **M40** SAF tree + keep-N; Shizuku Android/data+obb when capable; optional AES-GCM; **M49** restore installs all split APKs; ROOT `/data/data` deferred | NONE (APK) / SHIZUKU (`ACCESS_ANDROID_DATA`) |
 | Background auto-update | ✅ Settings hub → Updates; 12h / daily / weekly PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; global + per-app cooldown; APK rollback keep-N (1–5); ignored-updates overview; GitHub PAT under Updates | NONE (+ network; silent install/downgrade if SHIZUKU) |
@@ -357,9 +359,9 @@ flowchart LR
   M53 --> v027[v0.2.7]
 ```
 
-1. **M55** Done — merge `m55-dual-user-installs`, then cut **0.2.9** when ready.
+1. **M56** Done on `m56-per-user-state` — merge, then cut **0.2.10** when ready.
 2. Store: GitHub + Obtainium; F-Droid refile only after ≈2026-02-08 ([STORE.md](./STORE.md)).
-3. Later backlog when wanted: tablet layouts, cloud backup, ROOT `/data/data`.
+3. Later backlog when wanted: debloat per user, tablet layouts, cloud backup, ROOT `/data/data`.
 
 ---
 

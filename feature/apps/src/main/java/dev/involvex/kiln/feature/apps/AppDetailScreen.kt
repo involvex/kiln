@@ -281,13 +281,43 @@ fun AppDetailScreen(
                 )
             },
             text = {
-                Text(
-                    stringResource(
-                        R.string.feature_apps_components_toggle_body,
-                        pending.component.label,
-                        pending.component.className,
-                    ),
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        stringResource(
+                            R.string.feature_apps_components_toggle_body,
+                            pending.component.label,
+                            pending.component.className,
+                        ),
+                    )
+                    if (pending.users.size >= 2) {
+                        Text(
+                            stringResource(R.string.feature_apps_dual_user_body_component),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        pending.users.forEach { user ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                RadioButton(
+                                    selected = pending.selectedUserId == user.id,
+                                    onClick = {
+                                        onEvent(AppDetailEvent.SelectComponentToggleUser(user.id))
+                                    },
+                                )
+                                Text(
+                                    text = stringResource(
+                                        R.string.feature_apps_dual_user_option,
+                                        user.name,
+                                        user.id,
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                        }
+                    }
+                }
             },
             confirmButton = {
                 TextButton(onClick = { onEvent(AppDetailEvent.ConfirmComponentToggle) }) {
