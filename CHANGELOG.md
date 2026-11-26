@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.13] — 2026-11-26
+
+### Fixed
+
+- Census / dual-user honesty: remove stale “installs only for user 0” copy; best-effort Dual Apps wording on install, component, freeze, debloat, and backup pickers (EN+DE)
+
+### Changed
+
+- Version **0.2.13** (versionCode 16)
+
 ## [0.2.12] — 2026-11-26
 
 ### Added

@@ -33,9 +33,9 @@
     <string name="backup_restore_confirm_body">Kiln entpackt alle APKs im Archiv (Base + Splits) und reiht eine Multi-Session-Installation ein. Enthält das Archiv Android/data oder OBB und Shizuku ist verfügbar, stellt Kiln diese Ordner wieder her, sobald das Paket vorhanden ist (Pfade des aktuellen Nutzers). Ein Systemdialog kann erscheinen.</string>
     <string name="backup_err_splits_incomplete">Archiv meldet Splits, enthält aber nur eine APK — Wiederherstellung abgebrochen, damit keine kaputte Installation gestartet wird.</string>
     <string name="backup_restore_confirm_action">Archiv wählen</string>
-    <string name="backup_dual_user_restore_body">Dieses Gerät hat mehr als einen Android-Nutzer. Wähle, für welchen Nutzer die stille Restore-Installation gelten soll. Android/data und OBB nutzen weiterhin die Pfade des aktuellen Nutzers.</string>
+    <string name="backup_dual_user_restore_body">Dieses Gerät hat mehr als einen Android-Nutzer. Wähle, für welchen Nutzer die stille Restore-Installation gelten soll (best effort). Android/data und OBB nutzen weiterhin die Pfade des aktuellen Nutzers.</string>
     <string name="backup_dual_user_backup_title">Android-Nutzer wählen</string>
-    <string name="backup_dual_user_backup_body">Dieses Gerät hat mehr als einen Android-Nutzer. Markiere, für welchen Nutzer dieses Backup gedacht ist. APK-Bytes sind paketweit; Android/data und OBB nutzen weiterhin die Pfade des aktuellen Nutzers.</string>
+    <string name="backup_dual_user_backup_body">Dieses Gerät hat mehr als einen Android-Nutzer. Markiere, für welchen Nutzer dieses Backup gedacht ist (best effort). APK-Bytes sind paketweit; Android/data und OBB nutzen weiterhin die Pfade des aktuellen Nutzers.</string>
     <string name="backup_dual_user_backup_confirm">Weiter</string>
     <string name="backup_dual_user_option">%1$s (id %2$d)</string>
     <string name="backup_cancel">Abbrechen</string>

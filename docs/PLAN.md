@@ -470,5 +470,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 37. Cut **0.2.10** (versionCode 13)
 38. **M57** Debloat batch per user → Done
 39. Cut **0.2.11** (versionCode 14)
-40. **M58** Backup / restore user targeting → Done on `m58-backup-per-user`
+40. **M58** Backup / restore user targeting → Done
 41. Cut **0.2.12** (versionCode 15)
+42. **M59** HyperOS phone polish (dual-user honesty) → Done on `m59-hyperos-polish`
+43. Cut **0.2.13** (versionCode 16)
