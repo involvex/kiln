@@ -66,6 +66,11 @@
     <string name="freeze_confirm_body">%1$s wird pausiert. Sie bleibt installiert, läuft aber erst nach dem Auftauen wieder.</string>
     <string name="freeze_confirm_action">Einfrieren</string>
     <string name="freeze_confirm_cancel">Abbrechen</string>
+    <string name="freeze_unfreeze_confirm_title">App auftauen?</string>
+    <string name="freeze_unfreeze_confirm_body">%1$s wird für den gewählten Android-Nutzer wieder freigegeben.</string>
+    <string name="freeze_unfreeze_confirm_action">Auftauen</string>
+    <string name="freeze_dual_user_body">Dieses Gerät hat mehr als einen Android-Nutzer. Wähle, für welchen Nutzer Einfrieren oder Auftauen gelten soll.</string>
+    <string name="freeze_dual_user_option">%1$s (ID %2$d)</string>
     <string name="freeze_msg_capability">DEBLOAT-Privilege fehlt. Privilege-Einrichtung öffnen.</string>
     <string name="freeze_msg_invalid_package">Ungültiger Paketname.</string>
     <string name="freeze_msg_service">Shizuku UserService nicht verfügbar. Shizuku neu verbinden.</string>

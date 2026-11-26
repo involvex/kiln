@@ -23,6 +23,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -57,7 +58,8 @@ fun FreezeRoute(onBack: () -> Unit, onOpenPrivilegeSetup: () -> Unit, modifier: 
         onIncludeSystemChange = viewModel::setIncludeSystem,
         onFreezeFilterChange = viewModel::setFreezeFilter,
         onRequestFreeze = viewModel::requestFreeze,
-        onUnfreeze = viewModel::unfreeze,
+        onRequestUnfreeze = viewModel::requestUnfreeze,
+        onSelectPendingUser = viewModel::selectPendingUser,
         onConfirmFreeze = viewModel::confirmFreeze,
         onDismissFreezeConfirm = viewModel::dismissFreezeConfirm,
         onClearMessage = viewModel::clearMessage,
@@ -76,7 +78,8 @@ fun FreezeScreen(
     onIncludeSystemChange: (Boolean) -> Unit,
     onFreezeFilterChange: (FreezeListFilter) -> Unit,
     onRequestFreeze: (String) -> Unit,
-    onUnfreeze: (String) -> Unit,
+    onRequestUnfreeze: (String) -> Unit,
+    onSelectPendingUser: (Int) -> Unit,
     onConfirmFreeze: () -> Unit,
     onDismissFreezeConfirm: () -> Unit,
     onClearMessage: () -> Unit,
@@ -157,7 +160,7 @@ fun FreezeScreen(
                                 if (wantFrozen) {
                                     onRequestFreeze(app.packageName)
                                 } else {
-                                    onUnfreeze(app.packageName)
+                                    onRequestUnfreeze(app.packageName)
                                 }
                             },
                         )
@@ -168,16 +171,60 @@ fun FreezeScreen(
         }
     }
 
-    val pending = state.pendingFreezePackage
-    if (pending != null) {
-        val label = state.apps.find { it.packageName == pending }?.label ?: pending
+    state.pendingFreezeAction?.let { pending ->
+        val label = state.apps.find { it.packageName == pending.packageName }?.label ?: pending.packageName
         AlertDialog(
             onDismissRequest = onDismissFreezeConfirm,
-            title = { Text(stringResource(R.string.freeze_confirm_title)) },
-            text = { Text(stringResource(R.string.freeze_confirm_body, label)) },
+            title = {
+                Text(
+                    stringResource(
+                        if (pending.freeze) R.string.freeze_confirm_title else R.string.freeze_unfreeze_confirm_title,
+                    ),
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        stringResource(
+                            if (pending.freeze) R.string.freeze_confirm_body else R.string.freeze_unfreeze_confirm_body,
+                            label,
+                        ),
+                    )
+                    if (pending.users.size >= 2) {
+                        Text(
+                            stringResource(R.string.freeze_dual_user_body),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        pending.users.forEach { user ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                RadioButton(
+                                    selected = pending.selectedUserId == user.id,
+                                    onClick = { onSelectPendingUser(user.id) },
+                                )
+                                Text(
+                                    text = stringResource(
+                                        R.string.freeze_dual_user_option,
+                                        user.name,
+                                        user.id,
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                        }
+                    }
+                }
+            },
             confirmButton = {
                 TextButton(onClick = onConfirmFreeze) {
-                    Text(stringResource(R.string.freeze_confirm_action))
+                    Text(
+                        stringResource(
+                            if (pending.freeze) R.string.freeze_confirm_action else R.string.freeze_unfreeze_confirm_action,
+                        ),
+                    )
                 }
             },
             dismissButton = {

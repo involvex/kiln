@@ -113,16 +113,16 @@ interface PrivilegedExecutor {
     suspend fun enablePackage(packageName: String): Result<Unit>
 
     /**
-     * `pm enable --user 0 package/class` for one component.
+     * `pm enable --user N package/class` for one component (M56; default user 0).
      * Requires [PrivilegeCapability.DEBLOAT]. Caller must enforce denylist.
      */
-    suspend fun enableComponent(packageName: String, className: String): Result<Unit>
+    suspend fun enableComponent(packageName: String, className: String, targetUserId: Int = 0): Result<Unit>
 
     /**
-     * `pm disable --user 0 package/class` for one component.
+     * `pm disable --user N package/class` for one component (M56; default user 0).
      * Requires [PrivilegeCapability.DEBLOAT]. Caller must enforce denylist.
      */
-    suspend fun disableComponent(packageName: String, className: String): Result<Unit>
+    suspend fun disableComponent(packageName: String, className: String, targetUserId: Int = 0): Result<Unit>
 
     /**
      * `pm list users` — read-only census (M53). Requires [PrivilegeCapability.RUN_SHELL_DIAGNOSTIC].
@@ -135,11 +135,16 @@ interface PrivilegedExecutor {
      */
     suspend fun installExistingPackage(packageName: String, targetUserId: Int = 0): Result<Unit>
 
-    /** `pm suspend --user 0` — app stays installed; reversible. Requires [PrivilegeCapability.DEBLOAT]. */
-    suspend fun suspendPackage(packageName: String): Result<Unit>
+    /**
+     * `pm suspend --user N` — app stays installed; reversible (M56; default user 0).
+     * Requires [PrivilegeCapability.DEBLOAT].
+     */
+    suspend fun suspendPackage(packageName: String, targetUserId: Int = 0): Result<Unit>
 
-    /** `pm unsuspend --user 0`. Requires [PrivilegeCapability.DEBLOAT]. */
-    suspend fun unsuspendPackage(packageName: String): Result<Unit>
+    /**
+     * `pm unsuspend --user N` (M56; default user 0). Requires [PrivilegeCapability.DEBLOAT].
+     */
+    suspend fun unsuspendPackage(packageName: String, targetUserId: Int = 0): Result<Unit>
 
     /**
      * Revoke a runtime permission via allowlisted `pm revoke`.
