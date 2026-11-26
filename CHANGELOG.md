@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Explore / Sources GitHub add: when a repo only publishes prereleases with APK assets, fall back to the Pre-release channel and persist it (STABLE still preferred when a stable APK exists; App Detail chips remain the manual override)
+
 ## [0.2.13] — 2026-11-26
 
 ### Fixed

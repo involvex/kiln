@@ -15,11 +15,14 @@ import dev.involvex.kiln.core.database.ManagedAppEntity
 import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.database.RepoEntity
 import dev.involvex.kiln.core.model.AppUpdateRepository
+import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.ManagedApp
 import dev.involvex.kiln.core.model.WatchlistRepository
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoUri
 import dev.involvex.kiln.feature.sources.github.GitHubOwnerRepo
+import dev.involvex.kiln.feature.sources.github.GitHubReleasePicker
+import dev.involvex.kiln.feature.sources.github.GitHubReleasesClient
 import dev.involvex.kiln.feature.sources.github.GitHubStarsClient
 import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.github.StarredApkHint
@@ -51,6 +54,7 @@ class SourcesViewModel @Inject constructor(
     private val sync: FDroidRepoSync,
     private val tokenStore: GitHubTokenStore,
     private val starsClient: GitHubStarsClient,
+    private val gitHubReleasesClient: GitHubReleasesClient,
     private val appUpdateRepository: AppUpdateRepository,
     private val watchlistRepository: WatchlistRepository,
     private val incomingRepoLinkStore: IncomingRepoLinkStore,
@@ -339,6 +343,19 @@ class SourcesViewModel @Inject constructor(
             return "github_exists:$ownerRepo"
         }
         val packageName = GitHubOwnerRepo.provisionalPackageName(ownerRepo)
+        val assetRegex = Regex(".*\\.apk$")
+        val channel = when (val listed = gitHubReleasesClient.listReleases(ownerRepo)) {
+            is Result.Failure -> GitHubReleaseChannel.STABLE
+
+            is Result.Success -> {
+                GitHubReleasePicker.match(
+                    releases = listed.value,
+                    assetRegex = assetRegex,
+                    preferred = GitHubReleaseChannel.STABLE,
+                    fallbackToPreRelease = true,
+                )?.channel ?: GitHubReleaseChannel.STABLE
+            }
+        }
         managedAppDao.upsert(
             ManagedAppEntity(
                 packageName = packageName,
@@ -348,7 +365,7 @@ class SourcesViewModel @Inject constructor(
                 ignoreUpdates = false,
                 githubOwnerRepo = ownerRepo,
                 githubAssetRegex = ".*\\.apk$",
-                githubChannel = "STABLE",
+                githubChannel = channel.name,
                 // So Sync all / checkForUpdates probes this repo before any installed package is linked.
                 watchOnly = true,
             ),

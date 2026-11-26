@@ -197,13 +197,22 @@ class DiscoveryRepository @Inject constructor(
         if (channel == GitHubReleaseChannel.NIGHTLY) {
             return Result.failure("github_nightly_use_library")
         }
+        // New Explore rows: fall back to PRE_RELEASE when the repo only ships prereleases.
+        // Existing STABLE stays strict so App Detail channel chips remain authoritative.
+        val fallbackToPreRelease = existing == null && channel == GitHubReleaseChannel.STABLE
         return when (
-            val result = gitHubReleasesClient.latestMatchingRelease(ownerRepo, regex, channel)
+            val result = gitHubReleasesClient.matchLatestRelease(
+                ownerRepo = ownerRepo,
+                assetRegex = regex,
+                channel = channel,
+                fallbackToPreRelease = fallbackToPreRelease,
+            )
         ) {
             is Result.Failure -> result
 
             is Result.Success -> {
-                val pick = result.value
+                val match = result.value
+                val pick = match.pick
                 if (existing == null) {
                     managedAppDao.upsert(
                         ManagedAppEntity(
@@ -214,7 +223,7 @@ class DiscoveryRepository @Inject constructor(
                             ignoreUpdates = false,
                             githubOwnerRepo = ownerRepo,
                             githubAssetRegex = DEFAULT_APK_REGEX,
-                            githubChannel = GitHubReleaseChannel.STABLE.name,
+                            githubChannel = match.channel.name,
                             watchOnly = true,
                         ),
                     )
@@ -265,21 +274,6 @@ class DiscoveryRepository @Inject constructor(
             is Result.Failure -> listed
 
             is Result.Success -> {
-                if (existing == null) {
-                    managedAppDao.upsert(
-                        ManagedAppEntity(
-                            packageName = packageName,
-                            sourceId = "github:$ownerRepo",
-                            confidence = MatchConfidence.MEDIUM.name,
-                            pinned = true,
-                            ignoreUpdates = false,
-                            githubOwnerRepo = ownerRepo,
-                            githubAssetRegex = DEFAULT_APK_REGEX,
-                            githubChannel = GitHubReleaseChannel.STABLE.name,
-                            watchOnly = true,
-                        ),
-                    )
-                }
                 val apkReleases = listed.value.mapNotNull { release ->
                     val apkAssets = release.assets
                         .filter { regex.containsMatchIn(it.name) }
@@ -308,6 +302,27 @@ class DiscoveryRepository @Inject constructor(
                 if (rows.isEmpty()) {
                     Result.failure("no_matching_github_asset")
                 } else {
+                    if (existing == null) {
+                        val initialChannel =
+                            if (rows.any { !it.prerelease }) {
+                                GitHubReleaseChannel.STABLE
+                            } else {
+                                GitHubReleaseChannel.PRE_RELEASE
+                            }
+                        managedAppDao.upsert(
+                            ManagedAppEntity(
+                                packageName = packageName,
+                                sourceId = "github:$ownerRepo",
+                                confidence = MatchConfidence.MEDIUM.name,
+                                pinned = true,
+                                ignoreUpdates = false,
+                                githubOwnerRepo = ownerRepo,
+                                githubAssetRegex = DEFAULT_APK_REGEX,
+                                githubChannel = initialChannel.name,
+                                watchOnly = true,
+                            ),
+                        )
+                    }
                     Result.success(
                         GithubInstallOptions(
                             ownerRepo = ownerRepo,
