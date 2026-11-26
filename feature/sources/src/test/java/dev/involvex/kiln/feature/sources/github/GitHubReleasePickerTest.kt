@@ -96,4 +96,66 @@ class GitHubReleasePickerTest {
         val chosen = GitHubReleasePicker.preferAbiAsset(assets, listOf("arm64-v8a"))
         assertEquals("app-universal.apk", chosen?.name)
     }
+
+    @Test
+    fun `match without fallback skips prerelease-only`() {
+        val releases = listOf(
+            GitHubReleaseDto(
+                tagName = "v1.0.0-rc1",
+                prerelease = true,
+                assets = listOf(GitHubAssetDto("app.apk", "https://example.com/rc.apk", 10)),
+            ),
+        )
+        assertNull(
+            GitHubReleasePicker.match(
+                releases = releases,
+                assetRegex = apk,
+                preferred = GitHubReleaseChannel.STABLE,
+                fallbackToPreRelease = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `match with fallback uses pre-release when only prereleases have apk`() {
+        val releases = listOf(
+            GitHubReleaseDto(
+                tagName = "v1.0.0-rc1",
+                prerelease = true,
+                assets = listOf(GitHubAssetDto("app.apk", "https://example.com/rc.apk", 10)),
+            ),
+        )
+        val match = GitHubReleasePicker.match(
+            releases = releases,
+            assetRegex = apk,
+            preferred = GitHubReleaseChannel.STABLE,
+            fallbackToPreRelease = true,
+        )
+        assertEquals("v1.0.0-rc1", match?.pick?.tagName)
+        assertEquals(GitHubReleaseChannel.PRE_RELEASE, match?.channel)
+    }
+
+    @Test
+    fun `match with fallback still prefers stable when present`() {
+        val releases = listOf(
+            GitHubReleaseDto(
+                tagName = "v2.0.0-beta",
+                prerelease = true,
+                assets = listOf(GitHubAssetDto("app.apk", "https://example.com/b.apk", 10)),
+            ),
+            GitHubReleaseDto(
+                tagName = "v1.0.0",
+                prerelease = false,
+                assets = listOf(GitHubAssetDto("app.apk", "https://example.com/s.apk", 20)),
+            ),
+        )
+        val match = GitHubReleasePicker.match(
+            releases = releases,
+            assetRegex = apk,
+            preferred = GitHubReleaseChannel.STABLE,
+            fallbackToPreRelease = true,
+        )
+        assertEquals("v1.0.0", match?.pick?.tagName)
+        assertEquals(GitHubReleaseChannel.STABLE, match?.channel)
+    }
 }
