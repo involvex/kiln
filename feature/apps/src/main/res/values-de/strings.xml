@@ -193,8 +193,8 @@
     <string name="feature_apps_action_uninstall">Deinstallieren</string>
     <string name="feature_apps_uninstall_ok">Deinstallation ausgelöst.</string>
     <string name="feature_apps_dual_user_title">Android-Nutzer wählen</string>
-    <string name="feature_apps_dual_user_body">Dieses Gerät hat mehr als einen Android-Nutzer. Wähle, für welchen Nutzer Installation oder Deinstallation gelten soll.</string>
-    <string name="feature_apps_dual_user_body_component">Dieses Gerät hat mehr als einen Android-Nutzer. Wähle, für welchen Nutzer die Komponentenänderung gelten soll.</string>
+    <string name="feature_apps_dual_user_body">Dieses Gerät hat mehr als einen Android-Nutzer. Wähle, für welchen Nutzer Installation oder Deinstallation gelten soll (best effort; Hersteller-Dual-Apps passen ggf. nicht zu dieser Liste).</string>
+    <string name="feature_apps_dual_user_body_component">Dieses Gerät hat mehr als einen Android-Nutzer. Wähle, für welchen Nutzer die Komponentenänderung gelten soll (best effort; Hersteller-Dual-Apps passen ggf. nicht zu dieser Liste).</string>
     <string name="feature_apps_dual_user_option">%1$s (ID %2$d)</string>
     <string name="feature_apps_dual_user_confirm">Weiter</string>
     <string name="feature_apps_dual_user_cancel">Abbrechen</string>

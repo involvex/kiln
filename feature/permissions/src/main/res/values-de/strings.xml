@@ -69,7 +69,7 @@
     <string name="freeze_unfreeze_confirm_title">App auftauen?</string>
     <string name="freeze_unfreeze_confirm_body">%1$s wird für den gewählten Android-Nutzer wieder freigegeben.</string>
     <string name="freeze_unfreeze_confirm_action">Auftauen</string>
-    <string name="freeze_dual_user_body">Dieses Gerät hat mehr als einen Android-Nutzer. Wähle, für welchen Nutzer Einfrieren oder Auftauen gelten soll.</string>
+    <string name="freeze_dual_user_body">Dieses Gerät hat mehr als einen Android-Nutzer. Wähle, für welchen Nutzer Einfrieren oder Auftauen gelten soll (best effort; Hersteller-Dual-Apps passen ggf. nicht zu dieser Liste).</string>
     <string name="freeze_dual_user_option">%1$s (ID %2$d)</string>
     <string name="freeze_msg_capability">DEBLOAT-Privilege fehlt. Privilege-Einrichtung öffnen.</string>
     <string name="freeze_msg_invalid_package">Ungültiger Paketname.</string>
@@ -92,7 +92,7 @@
     <string name="processes_force_stop_blocked">Force-Stop wurde blockiert.</string>
 
     <string name="users_title">Android-Benutzer</string>
-    <string name="users_explain">Nur lesen aus pm list users. HyperOS Dual Apps / Zweiter Bereich erscheinen oft nicht als normale Android-Benutzer. Kiln installiert weiterhin nur für Benutzer 0.</string>
+    <string name="users_explain">Nur lesen aus pm list users. HyperOS Dual Apps / Zweiter Bereich erscheinen hier oft nicht. Sind zwei oder mehr Nutzer gelistet und Shizuku bereit, können Installation, Einfrieren, Debloat und Restore eine gewählte ID ansteuern (best effort).</string>
     <string name="users_need_shizuku">Zum Auflisten der Benutzer braucht es Shizuku mit Shell-Diagnose.</string>
     <string name="users_open_setup">Privilege-Einrichtung öffnen</string>
     <string name="users_refresh">Aktualisieren</string>
