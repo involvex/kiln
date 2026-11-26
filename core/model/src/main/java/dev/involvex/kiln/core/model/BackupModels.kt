@@ -36,6 +36,11 @@ data class BackupArchiveMetadata(
     val encrypted: Boolean = false,
     val androidDataEntry: String? = null,
     val androidObbEntry: String? = null,
+    /**
+     * Intended Android user for restore install (M58 honesty note).
+     * Null = unspecified / current-user default. Does not change Android/data paths.
+     */
+    val targetUserId: Int? = null,
 )
 
 data class BackupPrefs(val treeUri: String? = null, val keepN: Int = DEFAULT_KEEP_N) {

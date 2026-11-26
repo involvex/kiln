@@ -30,9 +30,14 @@
     <string name="backup_msg_ok">Backup saved for %1$s</string>
     <string name="backup_msg_restore_queued">Restore queued — confirm the system install dialog if shown; shared data restores when Shizuku can write Android/data</string>
     <string name="backup_restore_confirm_title">Restore from archive?</string>
-    <string name="backup_restore_confirm_body">Kiln extracts every APK in the archive (base + splits) and queues a multi-session install. When the archive includes Android/data or OBB and Shizuku is available, Kiln also restores those folders after the package is present. A system confirm may appear.</string>
+    <string name="backup_restore_confirm_body">Kiln extracts every APK in the archive (base + splits) and queues a multi-session install. When the archive includes Android/data or OBB and Shizuku is available, Kiln also restores those folders after the package is present (current-user paths). A system confirm may appear.</string>
     <string name="backup_err_splits_incomplete">Archive claims splits but only one APK was found — restore aborted so a broken install is not queued.</string>
     <string name="backup_restore_confirm_action">Choose archive</string>
+    <string name="backup_dual_user_restore_body">This device has more than one Android user. Pick which user the silent restore install should target. Android/data and OBB still use current-user paths.</string>
+    <string name="backup_dual_user_backup_title">Choose Android user</string>
+    <string name="backup_dual_user_backup_body">This device has more than one Android user. Tag which user this backup is intended for. APK bytes are package-wide; Android/data and OBB still use current-user paths.</string>
+    <string name="backup_dual_user_backup_confirm">Continue</string>
+    <string name="backup_dual_user_option">%1$s (id %2$d)</string>
     <string name="backup_cancel">Cancel</string>
     <string name="backup_err_package_not_found">Package not found</string>
     <string name="backup_err_apk">APK missing or unreadable</string>
