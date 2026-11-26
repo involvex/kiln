@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.10] — 2026-11-26
+
 ### Added
 
 - M56 best-effort dual-user component enable/disable and freeze/unfreeze (census picker; debloat batch stays user 0)
+
+### Added
+
+- M56 per-user component toggles and freeze
+
+### Changed
+
+- Version **0.2.10** (versionCode 13)
 
 ## [0.2.9] — 2026-11-24
 
