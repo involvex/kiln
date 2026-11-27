@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.14] — 2026-11-27
+
 ### Added
 
 - **M60** Device diagnostics (Settings → Tools): Shizuku pretty cards for battery, network usage, and CPU top (no raw dumps, no Root)
@@ -14,6 +16,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Explore / Sources GitHub add: when a repo only publishes prereleases with APK assets, fall back to the Pre-release channel and persist it (STABLE still preferred when a stable APK exists; App Detail chips remain the manual override)
+
+### Added
+
+- add Shizuku device diagnostics dashboard
+
+### Fixed
+
+- suppress detekt ReturnCount on NetstatsDumpParser
+- parse HyperOS netstats checkin and UID map
+- fall back to GitHub pre-release when no stable APK
+
+### Changed
+
+- Version **0.2.14** (versionCode 17)
 
 ## [0.2.13] — 2026-11-26
 
