@@ -14,7 +14,13 @@ package dev.involvex.kiln.core.model
  * ```
  * Full dump also has `mAppUidStatsMap:` (`uid rxBytes …`) and Xt `rb=`/`tb=` history.
  */
-@Suppress("CyclomaticComplexMethod", "ComplexCondition", "LoopWithTooManyJumpStatements", "MagicNumber")
+@Suppress(
+    "CyclomaticComplexMethod",
+    "ComplexCondition",
+    "LoopWithTooManyJumpStatements",
+    "MagicNumber",
+    "ReturnCount",
+)
 object NetstatsDumpParser {
     private const val DEFAULT_LIMIT = 8
     private const val APP_UID_MIN = 1000
