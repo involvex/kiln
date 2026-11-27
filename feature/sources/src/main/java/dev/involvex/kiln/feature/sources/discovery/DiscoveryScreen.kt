@@ -605,18 +605,28 @@ private fun formatDiscoveryPrefixedMessage(code: String): String? = when {
 private fun formatDiscoveryExactMessage(code: String): String? {
     val resId = when (code) {
         "no_fdroid_repos" -> R.string.discovery_msg_no_repos
+
         "repo_missing" -> R.string.discovery_msg_repo_missing
+
         "release_missing" -> R.string.discovery_msg_release_missing
+
         "apk_url_invalid" -> R.string.discovery_msg_apk_url
+
         "github_query_invalid" -> R.string.discovery_msg_github_query_invalid
+
         "github_release_missing" -> R.string.discovery_msg_github_release_missing
+
         "no_matching_github_asset",
         "no_matching_gitlab_asset",
         "no_matching_codeberg_asset",
         -> R.string.discovery_msg_github_no_apk
+
         "github_nightly_use_library" -> R.string.discovery_msg_github_nightly_library
+
         "forge_nightly_unsupported" -> R.string.discovery_msg_forge_nightly_unsupported
+
         "index_oom" -> R.string.sources_msg_index_oom
+
         else -> return null
     }
     return stringResource(resId)
