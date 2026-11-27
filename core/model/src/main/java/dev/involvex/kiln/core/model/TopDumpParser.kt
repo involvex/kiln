@@ -107,7 +107,8 @@ object TopDumpParser {
 
     private fun isKernelThread(name: String): Boolean {
         val t = name.trim()
-        if (t.startsWith('[') && t.endsWith(']')) return true
+        // Truncated toybox ARGS may cut the closing `]` (`[kworker/7:11H-+`).
+        if (t.startsWith('[')) return true
         return KERNEL_BRACKET.containsMatchIn(t) && !t.contains('.')
     }
 }

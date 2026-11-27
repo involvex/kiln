@@ -365,7 +365,7 @@ class ShellAllowlistTest {
             ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_BATTERY, emptyList()),
         )
         assertEquals(
-            listOf("dumpsys", "netstats", "--checkin"),
+            listOf("dumpsys", "netstats"),
             ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_NETSTATS, emptyList()),
         )
         assertEquals(

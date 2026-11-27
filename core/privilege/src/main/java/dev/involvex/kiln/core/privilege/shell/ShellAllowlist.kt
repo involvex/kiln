@@ -287,8 +287,9 @@ object ShellAllowlist {
         }
 
         DUMPSYS_NETSTATS -> {
-            // --checkin is a compact AOSP flag; HyperOS may ignore it — truncation still applies.
-            if (args.isNotEmpty()) null else listOf("dumpsys", "netstats", "--checkin")
+            // Full dump: HyperOS --checkin is wifi-bucket only; UID table lives in the full dump.
+            // Output is truncated in ShellRunner (line/byte caps).
+            if (args.isNotEmpty()) null else listOf("dumpsys", "netstats")
         }
 
         TOP_ONCE -> {

@@ -2,31 +2,120 @@ package dev.involvex.kiln.core.model
 
 /**
  * Pure parser for `dumpsys netstats` / `--checkin` output.
- * Drops lines that may carry subscriberId / networkId / SSID.
+ * Redacts subscriberId / wifiNetworkKey; never surfaces them in snapshots.
+ *
+ * HyperOS checkin (compact):
+ * ```
+ * v1,…
+ * xt
+ * c,wifi,-1,all,0
+ * d,3600
+ * b,<start>,<rxBytes>,<rxPackets>,<txBytes>,<txPackets>,…
+ * ```
+ * Full dump also has `mAppUidStatsMap:` (`uid rxBytes …`) and Xt `rb=`/`tb=` history.
  */
 @Suppress("CyclomaticComplexMethod", "ComplexCondition", "LoopWithTooManyJumpStatements", "MagicNumber")
 object NetstatsDumpParser {
     private const val DEFAULT_LIMIT = 8
     private const val APP_UID_MIN = 1000
-    private val PRIVACY = Regex("""subscriberId|networkId|ssid|imsi""", RegexOption.IGNORE_CASE)
+    private val SUBSCRIBER = Regex("""subscriberId=[^,\]\s]+""", RegexOption.IGNORE_CASE)
+    private val WIFI_KEY = Regex("""wifiNetworkKey="[^"]*"""", RegexOption.IGNORE_CASE)
+    private val NETWORK_ID = Regex("""networkId="[^"]*"""", RegexOption.IGNORE_CASE)
+    private val IMSI = Regex("""imsi=[^,\]\s]+""", RegexOption.IGNORE_CASE)
 
     fun parse(stdout: String, limit: Int = DEFAULT_LIMIT): NetstatsSnapshot? {
         if (stdout.isBlank() || stdout.startsWith("ERR:")) return null
-        val safeLines = stdout.lineSequence()
-            .filter { line -> !PRIVACY.containsMatchIn(line) }
+        val lines = stdout.lineSequence()
+            .map { redactPrivacy(it) }
             .toList()
-        if (safeLines.isEmpty()) return null
+        if (lines.isEmpty()) return null
 
-        val checkin = parseCheckin(safeLines, limit)
-        if (checkin != null && hasTraffic(checkin)) return checkin
-        return parseDefaultDump(safeLines, limit) ?: checkin
+        val hyperOs = parseHyperOsCheckin(lines, limit)
+        if (hyperOs != null && hasTraffic(hyperOs)) return mergeUidTable(hyperOs, lines, limit)
+
+        val legacy = parseLegacyCheckin(lines, limit)
+        if (legacy != null && hasTraffic(legacy)) return mergeUidTable(legacy, lines, limit)
+
+        val xt = parseXtHistory(lines, limit)
+        if (xt != null && hasTraffic(xt)) return mergeUidTable(xt, lines, limit)
+
+        val uidOnly = parseUidStatsMap(lines, limit)
+        return uidOnly ?: hyperOs ?: legacy ?: xt
     }
 
     private fun hasTraffic(snap: NetstatsSnapshot): Boolean =
         snap.wifiRxBytes + snap.wifiTxBytes + snap.mobileRxBytes + snap.mobileTxBytes > 0 ||
             snap.topUids.isNotEmpty()
 
-    private fun parseCheckin(lines: List<String>, limit: Int): NetstatsSnapshot? {
+    private fun redactPrivacy(line: String): String = line
+        .replace(SUBSCRIBER, "subscriberId=REDACTED")
+        .replace(WIFI_KEY, "wifiNetworkKey=REDACTED")
+        .replace(NETWORK_ID, "networkId=REDACTED")
+        .replace(IMSI, "imsi=REDACTED")
+
+    private fun mergeUidTable(base: NetstatsSnapshot, lines: List<String>, limit: Int): NetstatsSnapshot {
+        if (base.topUids.isNotEmpty()) return base
+        val uids = parseUidStatsMap(lines, limit) ?: return base
+        return base.copy(topUids = uids.topUids)
+    }
+
+    /** HyperOS / modern Connectivity: `c,wifi` then `b,start,rxB,rxP,txB,txP,…`. */
+    private fun parseHyperOsCheckin(lines: List<String>, limit: Int): NetstatsSnapshot? {
+        var wifiRx = 0L
+        var wifiTx = 0L
+        var mobileRx = 0L
+        var mobileTx = 0L
+        var kind = IfaceKind.OTHER
+        var sawBucket = false
+
+        for (raw in lines) {
+            val line = raw.trim()
+            when {
+                line.startsWith("c,") -> {
+                    val hint = line.lowercase()
+                    kind = when {
+                        hint.contains("wifi") || hint.contains("wlan") -> IfaceKind.WIFI
+
+                        hint.contains("mobile") || hint.contains("rmnet") ||
+                            hint.contains("cellular") || hint.contains("telephony") -> IfaceKind.MOBILE
+
+                        else -> IfaceKind.OTHER
+                    }
+                }
+
+                line.startsWith("b,") -> {
+                    val parts = line.split(',')
+                    // b,<start>,<rxBytes>,<rxPackets>,<txBytes>,<txPackets>,…
+                    if (parts.size < 6) continue
+                    val rx = parts[2].toLongOrNull() ?: continue
+                    val tx = parts[4].toLongOrNull() ?: continue
+                    sawBucket = true
+                    when (kind) {
+                        IfaceKind.WIFI -> {
+                            wifiRx += rx
+                            wifiTx += tx
+                        }
+
+                        IfaceKind.MOBILE -> {
+                            mobileRx += rx
+                            mobileTx += tx
+                        }
+
+                        IfaceKind.OTHER -> Unit
+                    }
+                }
+
+                line.equals("xt", ignoreCase = true) ||
+                    line.equals("uid", ignoreCase = true) ||
+                    line.startsWith("v1,") -> Unit
+            }
+        }
+        if (!sawBucket) return null
+        return snapshotOrNull(wifiRx, wifiTx, mobileRx, mobileTx, emptyMap(), limit)
+    }
+
+    /** Older AOSP checkin: `t,xt,…` / `t,uid,…`. */
+    private fun parseLegacyCheckin(lines: List<String>, limit: Int): NetstatsSnapshot? {
         var wifiRx = 0L
         var wifiTx = 0L
         var mobileRx = 0L
@@ -61,14 +150,14 @@ object NetstatsDumpParser {
                     }
                 }
 
-                "uid" -> accumulateCheckinUid(parts, byUid)
+                "uid" -> accumulateLegacyUid(parts, byUid)
             }
         }
 
         return snapshotOrNull(wifiRx, wifiTx, mobileRx, mobileTx, byUid, limit)
     }
 
-    private fun accumulateCheckinUid(parts: List<String>, byUid: MutableMap<Int, LongArray>) {
+    private fun accumulateLegacyUid(parts: List<String>, byUid: MutableMap<Int, LongArray>) {
         val uid = parts.getOrNull(3)?.toIntOrNull()?.takeIf { it >= APP_UID_MIN }
             ?: parts.drop(3).firstNotNullOfOrNull { token ->
                 token.toIntOrNull()?.takeIf { it >= APP_UID_MIN }
@@ -84,63 +173,75 @@ object NetstatsDumpParser {
         bucket[1] += tx
     }
 
-    private fun parseDefaultDump(lines: List<String>, limit: Int): NetstatsSnapshot? {
+    /** Full dump Xt history: `ident=[{type=0|1…}]` then `st=… rb=… tb=…`. */
+    private fun parseXtHistory(lines: List<String>, limit: Int): NetstatsSnapshot? {
         var wifiRx = 0L
         var wifiTx = 0L
         var mobileRx = 0L
         var mobileTx = 0L
-        val byUid = LinkedHashMap<Int, LongArray>()
-        var currentUid: Int? = null
-        var section = IfaceKind.OTHER
-
-        val uidBlock = Regex("""uid[=:](\d+)""", RegexOption.IGNORE_CASE)
-        val rxBytes = Regex("""(?:rxBytes|rb)=(\d+)""", RegexOption.IGNORE_CASE)
-        val txBytes = Regex("""(?:txBytes|tb)=(\d+)""", RegexOption.IGNORE_CASE)
+        var kind = IfaceKind.OTHER
+        var saw = false
+        val rbRe = Regex("""\brb=(\d+)""")
+        val tbRe = Regex("""\btb=(\d+)""")
 
         for (raw in lines) {
             val line = raw.trim()
-            section = detectSection(line.lowercase(), section)
-            uidBlock.find(line)?.groupValues?.getOrNull(1)?.toIntOrNull()?.let { currentUid = it }
-            val rx = rxBytes.find(line)?.groupValues?.getOrNull(1)?.toLongOrNull() ?: 0L
-            val tx = txBytes.find(line)?.groupValues?.getOrNull(1)?.toLongOrNull() ?: 0L
-            if (rx == 0L && tx == 0L && !line.contains("rxBytes", ignoreCase = true) &&
-                !line.contains("rb=", ignoreCase = true)
-            ) {
-                continue
+            if (line.contains("ident=", ignoreCase = true) && line.contains("type=")) {
+                kind = when {
+                    Regex("""type=1\b""").containsMatchIn(line) ||
+                        line.contains("transports={1}") -> IfaceKind.WIFI
+
+                    Regex("""type=0\b""").containsMatchIn(line) ||
+                        line.contains("transports={0}") -> IfaceKind.MOBILE
+
+                    else -> IfaceKind.OTHER
+                }
             }
-            if (rx == 0L && tx == 0L) continue
-            when (section) {
+            val rx = rbRe.find(line)?.groupValues?.getOrNull(1)?.toLongOrNull()
+            val tx = tbRe.find(line)?.groupValues?.getOrNull(1)?.toLongOrNull()
+            if (rx == null && tx == null) continue
+            saw = true
+            when (kind) {
                 IfaceKind.WIFI -> {
-                    wifiRx += rx
-                    wifiTx += tx
+                    wifiRx += rx ?: 0L
+                    wifiTx += tx ?: 0L
                 }
 
                 IfaceKind.MOBILE -> {
-                    mobileRx += rx
-                    mobileTx += tx
+                    mobileRx += rx ?: 0L
+                    mobileTx += tx ?: 0L
                 }
 
                 IfaceKind.OTHER -> Unit
             }
-            val uid = currentUid
-            if (uid != null && uid >= APP_UID_MIN) {
-                val bucket = byUid.getOrPut(uid) { longArrayOf(0L, 0L) }
-                bucket[0] += rx
-                bucket[1] += tx
-            }
         }
-
-        return snapshotOrNull(wifiRx, wifiTx, mobileRx, mobileTx, byUid, limit)
+        if (!saw) return null
+        return snapshotOrNull(wifiRx, wifiTx, mobileRx, mobileTx, emptyMap(), limit)
     }
 
-    private fun detectSection(lower: String, current: IfaceKind): IfaceKind = when {
-        lower.contains("wifi") && (lower.contains("network") || lower.contains("iface") || lower.startsWith("ident")) ->
-            IfaceKind.WIFI
-
-        lower.contains("mobile") || lower.contains("rmnet") || lower.contains("telephony") ->
-            IfaceKind.MOBILE
-
-        else -> current
+    /** `mAppUidStatsMap:` table: `uid rxBytes rxPackets txBytes txPackets`. */
+    private fun parseUidStatsMap(lines: List<String>, limit: Int): NetstatsSnapshot? {
+        val headerIdx = lines.indexOfFirst { line ->
+            val t = line.trim()
+            t.startsWith("uid ") && t.contains("rxBytes") && t.contains("txBytes")
+        }
+        if (headerIdx < 0) return null
+        val byUid = LinkedHashMap<Int, LongArray>()
+        for (line in lines.drop(headerIdx + 1)) {
+            val parts = line.trim().split(Regex("""\s+"""))
+            if (parts.size < 5) {
+                if (byUid.isNotEmpty()) break
+                continue
+            }
+            val uid = parts[0].toIntOrNull() ?: break
+            if (uid < APP_UID_MIN) continue
+            val rx = parts[1].toLongOrNull() ?: continue
+            val tx = parts[3].toLongOrNull() ?: continue
+            val bucket = byUid.getOrPut(uid) { longArrayOf(0L, 0L) }
+            bucket[0] += rx
+            bucket[1] += tx
+        }
+        return snapshotOrNull(0L, 0L, 0L, 0L, byUid, limit)
     }
 
     private fun ifaceKind(hint: String): IfaceKind = when {

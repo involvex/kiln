@@ -60,42 +60,57 @@ class DiagnosticParsersTest {
     }
 
     @Test
-    fun `netstats parses checkin-like uid rows and strips privacy`() {
+    fun `netstats parses HyperOS checkin wifi buckets`() {
+        val stdout = """
+            v1,1795671310,1795757710
+            xt
+            c,wifi,-1,all,0
+            d,3600
+            b,1795672800,563968382,447592,12850930,91541,0
+            b,1795676400,67462604,88891,8849049,56413,0
+            c,mobile,-1,all,0
+            d,3600
+            b,1795672800,1000,1,2000,2,0
+        """.trimIndent()
+        val snap = NetstatsDumpParser.parse(stdout, limit = 8)
+        assertNotNull(snap)
+        assertEquals(563968382L + 67462604L, snap!!.wifiRxBytes)
+        assertEquals(12850930L + 8849049L, snap.wifiTxBytes)
+        assertEquals(1000L, snap.mobileRxBytes)
+        assertEquals(2000L, snap.mobileTxBytes)
+    }
+
+    @Test
+    fun `netstats parses legacy checkin-like uid rows`() {
         val stdout = """
             t,0,1234567890,1000
             t,xt,wifi,0,1000,10,2000,5
             t,xt,mobile,0,500,2,100,1
             t,uid,wifi,10123,0,0,400,1,50,0
-            t,uid,mobile,10123,0,0,100,0,20,0
             t,uid,wifi,10086,0,0,900,2,100,0
-            ident={type=MOBILE, subType=LTE, subscriberId=310260..., networkId="secret"}
-            rb=999 txBytes=1 uid=99999
         """.trimIndent()
         val snap = NetstatsDumpParser.parse(stdout, limit = 8)
         assertNotNull(snap)
-        assertTrue(snap!!.topUids.none { it.uid == 99999 })
-        assertTrue(snap.topUids.any { it.uid == 10086 })
-        assertTrue(snap.wifiRxBytes + snap.wifiTxBytes + snap.mobileRxBytes + snap.mobileTxBytes > 0)
+        assertTrue(snap!!.topUids.any { it.uid == 10086 })
+        assertTrue(snap.wifiRxBytes + snap.mobileRxBytes > 0)
     }
 
     @Test
-    fun `netstats parses default dump rxBytes txBytes`() {
+    fun `netstats parses mAppUidStatsMap and redacts privacy`() {
         val stdout = """
-            NetworkStats:
-            ident={type=WIFI, networkId="Home"}
-            uid=10100
-              rb=10 tb=20 rxBytes=1000 txBytes=2000
-            ident={type=MOBILE, subscriberId=xxx}
-            uid=10100
-              rxBytes=300 txBytes=50
-            uid=10200
-              rxBytes=5000 txBytes=100
+            Active interfaces:
+              iface=wlan0 ident=[{type=1, subscriberId=262231..., wifiNetworkKey="Home"}]
+            mAppUidStatsMap:
+              uid rxBytes rxPackets txBytes txPackets
+              10799 738427616 553898 10249044 115535
+              1000 161640484 1069953 21788888 124238
+              6102 191994 260 55456 291
         """.trimIndent()
         val snap = NetstatsDumpParser.parse(stdout, limit = 5)
         assertNotNull(snap)
-        // Privacy lines dropped entirely — wifi section may still accumulate from non-privacy lines.
-        assertTrue(snap!!.topUids.isNotEmpty() || snap.wifiRxBytes > 0 || snap.mobileRxBytes > 0)
-        assertFalse(stdout.lineSequence().filter { it.contains("subscriberId") }.any { false })
+        assertEquals(10799, snap!!.topUids.first().uid)
+        assertEquals(738427616L, snap.topUids.first().rxBytes)
+        assertFalse(snap.topUids.any { it.label.contains("262231") })
     }
 
     @Test
@@ -131,12 +146,14 @@ class DiagnosticParsersTest {
             PID PR CPU% S  #THR     VSS     RSS NAME
             3201  0  22  R    40  1.2G   200M com.mi.android.globallauncher
             1000  0   4  S    80  2.0G   300M system_server
+              11  0   3  S     1     0     0 [kworker/7:11H-+
         """.trimIndent()
         val snap = TopDumpParser.parse(stdout, limit = 5)
         assertNotNull(snap)
         assertEquals(10f, snap!!.userPercent)
         assertTrue(snap.rows.isNotEmpty())
         assertEquals(3201, snap.rows.first().pid)
+        assertFalse(snap.rows.any { it.name.startsWith('[') })
     }
 
     @Test

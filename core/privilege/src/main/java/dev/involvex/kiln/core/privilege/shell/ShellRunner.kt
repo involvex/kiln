@@ -15,7 +15,9 @@ object ShellRunner {
     private const val DIAG_TIMEOUT_MS = 8_000L
     private const val BATTERY_MAX_LINES = 80
     private const val TOP_MAX_LINES = 80
-    private const val NETSTATS_MAX_LINES = 400
+
+    // UID stats table (`mAppUidStatsMap`) is often past ~600 lines on HyperOS.
+    private const val NETSTATS_MAX_LINES = 900
     private const val NETSTATS_MAX_BYTES = 256 * 1024
 
     fun run(argv: List<String>): String {
