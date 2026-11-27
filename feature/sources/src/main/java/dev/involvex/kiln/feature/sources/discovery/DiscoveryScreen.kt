@@ -82,6 +82,7 @@ fun DiscoveryRoute(
                 ownerRepo = row.ownerRepo,
                 packageName = row.packageName,
                 displayName = row.displayName,
+                forge = row.forge,
             )
         },
         onClearMessage = viewModel::clearMessage,
@@ -608,6 +609,11 @@ internal fun formatDiscoveryMessage(code: String): String = when {
     code == "no_matching_github_asset" -> stringResource(R.string.discovery_msg_github_no_apk)
 
     code == "github_nightly_use_library" -> stringResource(R.string.discovery_msg_github_nightly_library)
+
+    code == "forge_nightly_unsupported" -> stringResource(R.string.discovery_msg_forge_nightly_unsupported)
+
+    code == "no_matching_gitlab_asset" || code == "no_matching_codeberg_asset" ->
+        stringResource(R.string.discovery_msg_github_no_apk)
 
     code == "index_oom" -> stringResource(R.string.sources_msg_index_oom)
 

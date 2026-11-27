@@ -17,15 +17,21 @@ import dev.involvex.kiln.core.database.RepoEntity
 import dev.involvex.kiln.core.model.AppUpdateRepository
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.ManagedApp
+import dev.involvex.kiln.core.model.ReleaseForge
 import dev.involvex.kiln.core.model.WatchlistRepository
+import dev.involvex.kiln.core.model.parseReleaseForge
+import dev.involvex.kiln.feature.sources.codeberg.CodebergReleasesClient
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoUri
+import dev.involvex.kiln.feature.sources.forge.ForgeRef
+import dev.involvex.kiln.feature.sources.forge.ForgeUrlParse
 import dev.involvex.kiln.feature.sources.github.GitHubOwnerRepo
 import dev.involvex.kiln.feature.sources.github.GitHubReleasePicker
 import dev.involvex.kiln.feature.sources.github.GitHubReleasesClient
 import dev.involvex.kiln.feature.sources.github.GitHubStarsClient
 import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.github.StarredApkHint
+import dev.involvex.kiln.feature.sources.gitlab.GitLabReleasesClient
 import dev.involvex.kiln.feature.sources.obtainium.ObtainiumImport
 import java.text.DateFormat
 import java.util.Date
@@ -55,6 +61,8 @@ class SourcesViewModel @Inject constructor(
     private val tokenStore: GitHubTokenStore,
     private val starsClient: GitHubStarsClient,
     private val gitHubReleasesClient: GitHubReleasesClient,
+    private val gitLabReleasesClient: GitLabReleasesClient,
+    private val codebergReleasesClient: CodebergReleasesClient,
     private val appUpdateRepository: AppUpdateRepository,
     private val watchlistRepository: WatchlistRepository,
     private val incomingRepoLinkStore: IncomingRepoLinkStore,
@@ -152,22 +160,27 @@ class SourcesViewModel @Inject constructor(
             _uiState.update { it.copy(message = "package_page:${pkg.packageName}") }
             return
         }
-        val ownerRepo = ObtainiumImport.githubOwnerRepoFromUrl(raw)
-        if (ownerRepo != null) {
-            addGithubSource(ownerRepo)
+        val forgeRef = ForgeUrlParse.parseUrl(raw)
+        if (forgeRef != null) {
+            addForgeSource(forgeRef)
             return
         }
         _uiState.update { it.copy(message = "share_unrecognized") }
     }
 
     fun addGithubSource(ownerRepo: String) {
+        addForgeSource(ForgeRef(ReleaseForge.GITHUB, ownerRepo))
+    }
+
+    fun addForgeSource(ref: ForgeRef) {
         viewModelScope.launch {
-            val message = withContext(ioDispatcher) { upsertGithubSource(ownerRepo) }
+            val message = withContext(ioDispatcher) { upsertForgeSource(ref) }
             _uiState.update { state ->
                 state.copy(
                     message = message,
                     starredRepos = state.starredRepos.map { row ->
-                        if (row.ownerRepo.equals(ownerRepo, ignoreCase = true) &&
+                        if (ref.forge == ReleaseForge.GITHUB &&
+                            row.ownerRepo.equals(ref.ownerRepo, ignoreCase = true) &&
                             message.startsWith("github_added:")
                         ) {
                             row.copy(alreadyManaged = true, selected = false)
@@ -336,15 +349,28 @@ class SourcesViewModel @Inject constructor(
         }
     }
 
-    private suspend fun upsertGithubSource(ownerRepo: String): String {
-        val existing = managedAppDao.getAll()
-            .firstOrNull { it.githubOwnerRepo.equals(ownerRepo, ignoreCase = true) }
-        if (existing != null) {
-            return "github_exists:$ownerRepo"
+    private suspend fun upsertGithubSource(ownerRepo: String): String = upsertForgeSource(ForgeRef(ReleaseForge.GITHUB, ownerRepo))
+
+    private suspend fun upsertForgeSource(ref: ForgeRef): String {
+        val existing = managedAppDao.getAll().firstOrNull { app ->
+            app.githubOwnerRepo.equals(ref.ownerRepo, ignoreCase = true) &&
+                parseReleaseForge(app.releaseForge) == ref.forge
         }
-        val packageName = GitHubOwnerRepo.provisionalPackageName(ownerRepo)
+        if (existing != null) {
+            return when (ref.forge) {
+                ReleaseForge.GITHUB -> "github_exists:${ref.ownerRepo}"
+                ReleaseForge.GITLAB -> "gitlab_exists:${ref.ownerRepo}"
+                ReleaseForge.CODEBERG -> "codeberg_exists:${ref.ownerRepo}"
+            }
+        }
+        val packageName = ref.provisionalPackageName()
         val assetRegex = Regex(".*\\.apk$")
-        val channel = when (val listed = gitHubReleasesClient.listReleases(ownerRepo)) {
+        val listed = when (ref.forge) {
+            ReleaseForge.GITHUB -> gitHubReleasesClient.listReleases(ref.ownerRepo)
+            ReleaseForge.GITLAB -> gitLabReleasesClient.listReleases(ref.ownerRepo)
+            ReleaseForge.CODEBERG -> codebergReleasesClient.listReleases(ref.ownerRepo)
+        }
+        val channel = when (listed) {
             is Result.Failure -> GitHubReleaseChannel.STABLE
 
             is Result.Success -> {
@@ -359,18 +385,23 @@ class SourcesViewModel @Inject constructor(
         managedAppDao.upsert(
             ManagedAppEntity(
                 packageName = packageName,
-                sourceId = "github:$ownerRepo",
+                sourceId = ref.sourceId,
                 confidence = "MEDIUM",
                 pinned = false,
                 ignoreUpdates = false,
-                githubOwnerRepo = ownerRepo,
+                githubOwnerRepo = ref.ownerRepo,
                 githubAssetRegex = ".*\\.apk$",
                 githubChannel = channel.name,
+                releaseForge = ref.forge.name,
                 // So Sync all / checkForUpdates probes this repo before any installed package is linked.
                 watchOnly = true,
             ),
         )
-        return "github_added:$ownerRepo"
+        return when (ref.forge) {
+            ReleaseForge.GITHUB -> "github_added:${ref.ownerRepo}"
+            ReleaseForge.GITLAB -> "gitlab_added:${ref.ownerRepo}"
+            ReleaseForge.CODEBERG -> "codeberg_added:${ref.ownerRepo}"
+        }
     }
 
     private fun mapStarsError(raw: String): String = when {

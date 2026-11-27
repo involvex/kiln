@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M60** Done / `v0.2.14` ([#111](https://github.com/involvex/kiln/pull/111)). Next: **M61** GitLab + Codeberg release sources (`m61-gitlab-codeberg`). Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: tablet layouts, WebDAV backup, ROOT `/data/data`.
+**Current status:** **M61** Done on `m61-gitlab-codeberg` (after **M60** / `v0.2.14`). Next: **M62** storage treemap. Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: curated debloat DB, tablet layouts, WebDAV backup, ROOT `/data/data`.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -75,7 +75,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M58** | Backup / restore user targeting | Done | [`prompts/M58-backup-per-user.md`](./prompts/M58-backup-per-user.md) · `m58-backup-per-user` | Best-effort restore install `--user N` + backup metadata note when census ≥2 + silent install; Android/data stays current-user paths |
 | **M59** | HyperOS phone polish | Done | [`prompts/M59-hyperos-polish.md`](./prompts/M59-hyperos-polish.md) · `m59-hyperos-polish` | Dual-user honesty copy (no stale “user 0 only”); docs sync; optional short HyperOS checklist (not a gate) |
 | **M60** | Device diagnostics | Done | [`prompts/M60-device-diagnostics.md`](./prompts/M60-device-diagnostics.md) · [#111](https://github.com/involvex/kiln/pull/111) | Shizuku pretty cards: battery / netstats / top; no Root; no raw dumps |
-| **M61** | GitLab + Codeberg sources | Planned | [`prompts/M61-gitlab-codeberg.md`](./prompts/M61-gitlab-codeberg.md) · `m61-gitlab-codeberg` | Release sources for GitLab/Codeberg; same channel/APK heuristic as GitHub |
+| **M61** | GitLab + Codeberg sources | Done | [`prompts/M61-gitlab-codeberg.md`](./prompts/M61-gitlab-codeberg.md) · `m61-gitlab-codeberg` | Release sources for GitLab/Codeberg; same channel/APK heuristic as GitHub |
 
 ---
 
@@ -104,7 +104,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Publishing / F-Droid + Izzy | Closed for now | Izzy [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948); F-Droid !58920 closed (3‑month rule). Ship via GitHub + Obtainium; F-Droid refile ≈ Feb 2026. Play skipped (US$25) |
 | HyperOS M1–M8 checklist sweep | Optional / low priority | Older acceptance lists; **M59** short checklist in prompt only — not a gate. Run ad hoc if something regresses |
 | Device diagnostics (battery / netstats / top) | Done (M60 #111) | Shizuku-only pretty cards; observe adbcaptain commands, no AGPL copy |
-| GitLab / Codeberg release sources | Planned (M61) | Same Stable/Pre-release + APK heuristic as GitHub |
+| GitLab / Codeberg release sources | Done (M61) | Same Stable/Pre-release + APK heuristic as GitHub |
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
 | GitHub starred repos → Sources | Done (M42 #73) | Review list + multi-select add; APK heuristic; no silent install |
 | App activity viewer / launcher | Done (M43 #75) | Exported-only list under App Detail; Tier NONE Start + pin shortcut |
@@ -125,7 +125,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | App detail | ✅ Version, installer, SHA-256, paths, permissions; **M43** activities + Start/pin; **M50/M51** services/receivers/providers with enable/disable (Shizuku + denylist; non-exported read-only); **M56** component toggle can target census user; rollback + Shizuku downgrade | NONE / SHIZUKU |
 | APK export (single / batch) | ✅ `.apk` / `.apks` STORED / `.xapk`; SAF + share + WorkManager batch | NONE |
 | Uninstall (system dialog) | ✅ `ACTION_DELETE`; system apps disabled | NONE |
-| Sources / updates | ✅ F-Droid/Izzy/Guardian defaults + FP upsert; `fdroidrepo(s):` / `?fingerprint=` deep links; index-v2 + entry.jar verify; GitHub; **M42** starred import (PAT review → multi-select); Obtainium import; Room cache; per-repo mirrors (M30) | NONE (+ network) |
+| Sources / updates | ✅ F-Droid/Izzy/Guardian defaults + FP upsert; `fdroidrepo(s):` / `?fingerprint=` deep links; index-v2 + entry.jar verify; GitHub + **M61** GitLab.com / Codeberg Releases; **M42** starred import (PAT review → multi-select); Obtainium import; Room cache; per-repo mirrors (M30) | NONE (+ network) |
 | Network proxy | ✅ HTTP/SOCKS + Orbot SOCKS via `KilnHttpClient` (M30) | NONE |
 | Auto-match | ✅ Confidence tiers; icons/chips/rationale; signer-preferring multi-repo pick; WARNING confirm + manual F-Droid/GitHub link (pinned) | NONE |
 | GitHub channels | ✅ Stable / Pre-release / Nightly (Actions artifacts; PAT required for Nightly) | NONE (+ network; PAT for Nightly) |
@@ -369,9 +369,9 @@ flowchart LR
   M53 --> v027[v0.2.7]
 ```
 
-1. **M61** GitLab + Codeberg release sources on `m61-gitlab-codeberg` ([prompt](./prompts/M61-gitlab-codeberg.md)).
+1. **M62** Storage treemap of largest consumers (PLAN §4.5).
 2. Store: GitHub + Obtainium; F-Droid refile only after ≈2026-02-08 ([STORE.md](./STORE.md)).
-3. Later backlog when wanted: storage treemap, curated debloat DB, tablet layouts, WebDAV backup, ROOT `/data/data`.
+3. Later backlog when wanted: curated debloat DB, tablet layouts, WebDAV backup, ROOT `/data/data`.
 
 ---
 

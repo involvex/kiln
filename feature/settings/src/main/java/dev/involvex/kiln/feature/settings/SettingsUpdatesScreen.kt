@@ -80,6 +80,32 @@ fun SettingsUpdatesRoute(onBack: () -> Unit, onOpenIgnoredUpdates: () -> Unit, m
                 onClear = viewModel::clearGithubToken,
                 onConsumeMessage = viewModel::consumeConfigMessage,
             )
+            ForgeTokenSection(
+                titleRes = R.string.settings_gitlab_pat_section,
+                explainRes = R.string.settings_gitlab_pat_explain,
+                tokenSet = state.gitlabTokenSet,
+                tokenInput = state.gitlabTokenInput,
+                messageKey = state.configMessage,
+                savedKey = "gitlab_token_saved",
+                clearedKey = "gitlab_token_cleared",
+                onTokenChange = viewModel::onGitlabTokenInputChange,
+                onSave = viewModel::saveGitlabToken,
+                onClear = viewModel::clearGitlabToken,
+                onConsumeMessage = viewModel::consumeConfigMessage,
+            )
+            ForgeTokenSection(
+                titleRes = R.string.settings_codeberg_pat_section,
+                explainRes = R.string.settings_codeberg_pat_explain,
+                tokenSet = state.codebergTokenSet,
+                tokenInput = state.codebergTokenInput,
+                messageKey = state.configMessage,
+                savedKey = "codeberg_token_saved",
+                clearedKey = "codeberg_token_cleared",
+                onTokenChange = viewModel::onCodebergTokenInputChange,
+                onSave = viewModel::saveCodebergToken,
+                onClear = viewModel::clearCodebergToken,
+                onConsumeMessage = viewModel::consumeConfigMessage,
+            )
         }
     }
 }
@@ -148,6 +174,69 @@ private fun GithubTokenSection(
             text = when (messageKey) {
                 "github_token_saved" -> stringResource(R.string.settings_github_pat_saved)
                 else -> stringResource(R.string.settings_github_pat_cleared)
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        LaunchedEffect(messageKey) {
+            delay(3_000)
+            onConsumeMessage()
+        }
+    }
+}
+
+@Composable
+private fun ForgeTokenSection(
+    titleRes: Int,
+    explainRes: Int,
+    tokenSet: Boolean,
+    tokenInput: String,
+    messageKey: String?,
+    savedKey: String,
+    clearedKey: String,
+    onTokenChange: (String) -> Unit,
+    onSave: () -> Unit,
+    onClear: () -> Unit,
+    onConsumeMessage: () -> Unit,
+) {
+    Text(
+        text = stringResource(titleRes),
+        style = MaterialTheme.typography.titleMedium,
+    )
+    Text(
+        text = stringResource(explainRes),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Text(
+        text = if (tokenSet) {
+            stringResource(R.string.settings_github_pat_set)
+        } else {
+            stringResource(R.string.settings_github_pat_unset)
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    OutlinedTextField(
+        value = tokenInput,
+        onValueChange = onTokenChange,
+        label = { Text(stringResource(R.string.settings_github_pat_label)) },
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        visualTransformation = PasswordVisualTransformation(),
+    )
+    Button(onClick = onSave, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.settings_github_pat_save))
+    }
+    TextButton(onClick = onClear) {
+        Text(stringResource(R.string.settings_github_pat_clear))
+    }
+    if (messageKey == savedKey || messageKey == clearedKey) {
+        Text(
+            text = if (messageKey == savedKey) {
+                stringResource(R.string.settings_forge_pat_saved)
+            } else {
+                stringResource(R.string.settings_forge_pat_cleared)
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

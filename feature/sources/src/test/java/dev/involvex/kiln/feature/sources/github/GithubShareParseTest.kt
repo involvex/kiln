@@ -1,5 +1,6 @@
 package dev.involvex.kiln.feature.sources.github
 
+import dev.involvex.kiln.feature.sources.forge.ForgeUrlParse
 import dev.involvex.kiln.feature.sources.obtainium.ObtainiumImport
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -15,5 +16,13 @@ class GithubShareParseTest {
     @Test
     fun rejects_non_github() {
         assertNull(ObtainiumImport.githubOwnerRepoFromUrl("https://gitlab.com/foo/bar"))
+    }
+
+    @Test
+    fun forge_parse_accepts_gitlab() {
+        assertEquals(
+            "foo/bar",
+            ForgeUrlParse.parseUrl("https://gitlab.com/foo/bar")?.ownerRepo,
+        )
     }
 }

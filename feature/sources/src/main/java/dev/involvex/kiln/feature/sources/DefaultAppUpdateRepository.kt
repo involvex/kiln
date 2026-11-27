@@ -13,18 +13,25 @@ import dev.involvex.kiln.core.model.InstalledAppMatchInput
 import dev.involvex.kiln.core.model.InstalledAppsReader
 import dev.involvex.kiln.core.model.ManagedSourceLink
 import dev.involvex.kiln.core.model.MatchConfidence
+import dev.involvex.kiln.core.model.ReleaseForge
 import dev.involvex.kiln.core.model.RepoConfig
 import dev.involvex.kiln.core.model.SourceKind
 import dev.involvex.kiln.core.model.UpdateCheckProgress
 import dev.involvex.kiln.core.model.UpdateCheckResult
 import dev.involvex.kiln.core.model.WatchlistEntry
 import dev.involvex.kiln.core.model.WatchlistRepository
+import dev.involvex.kiln.core.model.displayLabel
 import dev.involvex.kiln.core.model.parseGitHubReleaseChannel
+import dev.involvex.kiln.core.model.parseReleaseForge
+import dev.involvex.kiln.core.model.sourceId
+import dev.involvex.kiln.feature.sources.codeberg.CodebergReleasesClient
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
 import dev.involvex.kiln.feature.sources.github.GitHubActionsClient
+import dev.involvex.kiln.feature.sources.github.GitHubReleasePick
 import dev.involvex.kiln.feature.sources.github.GitHubReleasesClient
 import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.github.GitHubVersionCode
+import dev.involvex.kiln.feature.sources.gitlab.GitLabReleasesClient
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.coroutineContext
@@ -45,6 +52,8 @@ class DefaultAppUpdateRepository @Inject constructor(
     private val repoDao: RepoDao,
     private val installedAppsReader: InstalledAppsReader,
     private val gitHubReleasesClient: GitHubReleasesClient,
+    private val gitLabReleasesClient: GitLabReleasesClient,
+    private val codebergReleasesClient: CodebergReleasesClient,
     private val gitHubActionsClient: GitHubActionsClient,
     private val gitHubTokenStore: GitHubTokenStore,
     private val fdroidRepoSync: FDroidRepoSync,
@@ -108,6 +117,7 @@ class DefaultAppUpdateRepository @Inject constructor(
                 ownerRepo = ownerRepo,
                 assetRegex = app.githubAssetRegex,
                 channel = parseGitHubReleaseChannel(app.githubChannel),
+                forge = parseReleaseForge(app.releaseForge),
                 local = local,
                 watchOnly = watchOnly,
             )
@@ -169,6 +179,7 @@ class DefaultAppUpdateRepository @Inject constructor(
                 pinned = it.pinned,
                 githubOwnerRepo = it.githubOwnerRepo,
                 githubChannel = parseGitHubReleaseChannel(it.githubChannel),
+                releaseForge = parseReleaseForge(it.releaseForge),
             )
         }
     }
@@ -233,11 +244,10 @@ class DefaultAppUpdateRepository @Inject constructor(
                 confidence = (update?.confidence ?: MatchConfidence.NONE).name,
                 pinned = false,
                 ignoreUpdates = ignoreUpdates,
-                githubOwnerRepo = update?.sourceId
-                    ?.takeIf { it.startsWith("github:") }
-                    ?.removePrefix("github:"),
+                githubOwnerRepo = ownerRepoFromSourceId(update?.sourceId),
                 githubAssetRegex = ".*\\.apk$",
                 githubChannel = GitHubReleaseChannel.STABLE.name,
+                releaseForge = forgeFromSourceId(update?.sourceId).name,
                 watchOnly = false,
                 updateCooldownDays = null,
             )
@@ -257,11 +267,10 @@ class DefaultAppUpdateRepository @Inject constructor(
                 confidence = (update?.confidence ?: MatchConfidence.NONE).name,
                 pinned = false,
                 ignoreUpdates = false,
-                githubOwnerRepo = update?.sourceId
-                    ?.takeIf { it.startsWith("github:") }
-                    ?.removePrefix("github:"),
+                githubOwnerRepo = ownerRepoFromSourceId(update?.sourceId),
                 githubAssetRegex = ".*\\.apk$",
                 githubChannel = GitHubReleaseChannel.STABLE.name,
+                releaseForge = forgeFromSourceId(update?.sourceId).name,
                 watchOnly = false,
                 updateCooldownDays = sanitized,
             )
@@ -277,8 +286,18 @@ class DefaultAppUpdateRepository @Inject constructor(
         githubAssetRegex: String?,
         pinned: Boolean,
         githubChannel: GitHubReleaseChannel?,
+        releaseForge: ReleaseForge,
     ): Result<Unit> {
         val existing = managedAppDao.get(packageName)
+        val channel = githubChannel ?: parseGitHubReleaseChannel(existing?.githubChannel)
+        val forge = if (githubOwnerRepo.isNullOrBlank()) {
+            ReleaseForge.GITHUB
+        } else {
+            releaseForge
+        }
+        if (channel == GitHubReleaseChannel.NIGHTLY && forge != ReleaseForge.GITHUB) {
+            return Result.failure("forge_nightly_unsupported")
+        }
         managedAppDao.upsert(
             ManagedAppEntity(
                 packageName = packageName,
@@ -288,7 +307,8 @@ class DefaultAppUpdateRepository @Inject constructor(
                 ignoreUpdates = existing?.ignoreUpdates ?: false,
                 githubOwnerRepo = githubOwnerRepo,
                 githubAssetRegex = githubAssetRegex ?: existing?.githubAssetRegex ?: ".*\\.apk$",
-                githubChannel = (githubChannel ?: parseGitHubReleaseChannel(existing?.githubChannel)).name,
+                githubChannel = channel.name,
+                releaseForge = forge.name,
                 watchOnly = false,
             ),
         )
@@ -313,9 +333,29 @@ class DefaultAppUpdateRepository @Inject constructor(
         if (existing.githubOwnerRepo.isNullOrBlank()) {
             return Result.failure("not_github_source")
         }
+        val forge = parseReleaseForge(existing.releaseForge)
+        if (channel == GitHubReleaseChannel.NIGHTLY && forge != ReleaseForge.GITHUB) {
+            return Result.failure("forge_nightly_unsupported")
+        }
         managedAppDao.upsert(existing.copy(githubChannel = channel.name))
         refreshUpdates()
         return Result.success(Unit)
+    }
+
+    private fun ownerRepoFromSourceId(sourceId: String?): String? {
+        val id = sourceId ?: return null
+        return when {
+            id.startsWith("github:") -> id.removePrefix("github:")
+            id.startsWith("gitlab:") -> id.removePrefix("gitlab:")
+            id.startsWith("codeberg:") -> id.removePrefix("codeberg:")
+            else -> null
+        }?.takeIf { it.contains('/') }
+    }
+
+    private fun forgeFromSourceId(sourceId: String?): ReleaseForge = when {
+        sourceId?.startsWith("gitlab:") == true -> ReleaseForge.GITLAB
+        sourceId?.startsWith("codeberg:") == true -> ReleaseForge.CODEBERG
+        else -> ReleaseForge.GITHUB
     }
 
     override suspend fun watchCatalogPackage(packageName: String, repoId: String): Result<Unit> {
@@ -413,16 +453,24 @@ class DefaultAppUpdateRepository @Inject constructor(
         ownerRepo: String,
         assetRegex: String?,
         channel: GitHubReleaseChannel,
+        forge: ReleaseForge,
         local: InstalledAppMatchInput,
         watchOnly: Boolean,
     ): AppUpdateInfo? {
         val regex = runCatching { Regex(assetRegex ?: ".*\\.apk$") }.getOrElse { Regex(".*\\.apk$") }
         return when (channel) {
-            GitHubReleaseChannel.NIGHTLY -> findGitHubNightlyUpdate(packageName, ownerRepo, regex, local, watchOnly)
+            GitHubReleaseChannel.NIGHTLY -> {
+                if (forge != ReleaseForge.GITHUB) {
+                    Timber.d("Nightly skipped for non-GitHub forge %s (%s)", forge.name, packageName)
+                    null
+                } else {
+                    findGitHubNightlyUpdate(packageName, ownerRepo, regex, local, watchOnly)
+                }
+            }
 
             GitHubReleaseChannel.STABLE,
             GitHubReleaseChannel.PRE_RELEASE,
-            -> findGitHubReleaseUpdate(packageName, ownerRepo, regex, channel, local, watchOnly)
+            -> findGitHubReleaseUpdate(packageName, ownerRepo, regex, channel, forge, local, watchOnly)
         }
     }
 
@@ -431,13 +479,14 @@ class DefaultAppUpdateRepository @Inject constructor(
         ownerRepo: String,
         regex: Regex,
         channel: GitHubReleaseChannel,
+        forge: ReleaseForge,
         local: InstalledAppMatchInput,
         watchOnly: Boolean,
     ): AppUpdateInfo? = when (
-        val result = gitHubReleasesClient.latestMatchingRelease(ownerRepo, regex, channel)
+        val result = latestMatchingRelease(forge, ownerRepo, regex, channel)
     ) {
         is Result.Failure -> {
-            Timber.d("GitHub update check failed for %s", packageName)
+            Timber.d("%s update check failed for %s", forge.displayLabel(), packageName)
             null
         }
 
@@ -451,8 +500,8 @@ class DefaultAppUpdateRepository @Inject constructor(
                     packageName = packageName,
                     availableVersionName = pick.tagName,
                     availableVersionCode = remoteCode,
-                    sourceId = "github:$ownerRepo",
-                    sourceLabel = "GitHub $ownerRepo",
+                    sourceId = forge.sourceId(ownerRepo),
+                    sourceLabel = "${forge.displayLabel()} $ownerRepo",
                     confidence = MatchConfidence.MEDIUM,
                     signatureMatches = false,
                     downloadUrl = pick.downloadUrl,
@@ -463,6 +512,17 @@ class DefaultAppUpdateRepository @Inject constructor(
                 )
             }
         }
+    }
+
+    private suspend fun latestMatchingRelease(
+        forge: ReleaseForge,
+        ownerRepo: String,
+        regex: Regex,
+        channel: GitHubReleaseChannel,
+    ): Result<GitHubReleasePick> = when (forge) {
+        ReleaseForge.GITHUB -> gitHubReleasesClient.latestMatchingRelease(ownerRepo, regex, channel)
+        ReleaseForge.GITLAB -> gitLabReleasesClient.latestMatchingRelease(ownerRepo, regex, channel)
+        ReleaseForge.CODEBERG -> codebergReleasesClient.latestMatchingRelease(ownerRepo, regex, channel)
     }
 
     private suspend fun findGitHubNightlyUpdate(

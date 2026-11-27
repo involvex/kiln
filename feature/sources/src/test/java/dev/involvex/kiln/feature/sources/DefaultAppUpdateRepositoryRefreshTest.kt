@@ -52,6 +52,8 @@ class DefaultAppUpdateRepositoryRefreshTest {
             repoDao = repoDao,
             installedAppsReader = installedAppsReader,
             gitHubReleasesClient = gitHubReleasesClient,
+            gitLabReleasesClient = mockk(relaxed = true),
+            codebergReleasesClient = mockk(relaxed = true),
             gitHubActionsClient = gitHubActionsClient,
             gitHubTokenStore = gitHubTokenStore,
             fdroidRepoSync = fdroidRepoSync,

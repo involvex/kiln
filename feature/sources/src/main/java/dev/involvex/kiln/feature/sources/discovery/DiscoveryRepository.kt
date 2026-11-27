@@ -11,15 +11,24 @@ import dev.involvex.kiln.core.model.AppUpdateInfo
 import dev.involvex.kiln.core.model.GitHubReleaseChannel
 import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.MatchConfidence
+import dev.involvex.kiln.core.model.ReleaseForge
 import dev.involvex.kiln.core.model.SourceKind
+import dev.involvex.kiln.core.model.displayLabel
 import dev.involvex.kiln.core.model.parseGitHubReleaseChannel
+import dev.involvex.kiln.core.model.parseReleaseForge
+import dev.involvex.kiln.core.model.sourceId
 import dev.involvex.kiln.feature.sources.FdroidApkUrl
 import dev.involvex.kiln.feature.sources.FdroidMediaUrl
 import dev.involvex.kiln.feature.sources.ReleaseNotesText
+import dev.involvex.kiln.feature.sources.codeberg.CodebergReleasesClient
 import dev.involvex.kiln.feature.sources.fdroid.FDroidRepoSync
-import dev.involvex.kiln.feature.sources.github.GitHubOwnerRepo
+import dev.involvex.kiln.feature.sources.forge.ForgeRef
+import dev.involvex.kiln.feature.sources.forge.ForgeUrlParse
+import dev.involvex.kiln.feature.sources.github.GitHubReleaseDto
+import dev.involvex.kiln.feature.sources.github.GitHubReleaseMatch
 import dev.involvex.kiln.feature.sources.github.GitHubReleasesClient
 import dev.involvex.kiln.feature.sources.github.GitHubVersionCode
+import dev.involvex.kiln.feature.sources.gitlab.GitLabReleasesClient
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -47,6 +56,8 @@ class DiscoveryRepository @Inject constructor(
     private val sync: FDroidRepoSync,
     private val installQueue: InstallQueue,
     private val gitHubReleasesClient: GitHubReleasesClient,
+    private val gitLabReleasesClient: GitLabReleasesClient,
+    private val codebergReleasesClient: CodebergReleasesClient,
 ) {
     suspend fun packageCount(): Int = indexDao.packageCount()
 
@@ -171,38 +182,44 @@ class DiscoveryRepository @Inject constructor(
         return managedAppDao.getAll()
             .mapNotNull { app ->
                 val ownerRepo = app.githubOwnerRepo?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                val forge = parseReleaseForge(app.releaseForge)
                 DiscoveryGithubRow(
                     ownerRepo = ownerRepo,
                     packageName = app.packageName,
-                    displayName = ownerRepo,
+                    displayName = "${forge.displayLabel()} $ownerRepo",
                     tagName = null,
                     assetName = null,
                     sizeBytes = null,
                     downloadUrl = null,
                     saved = true,
+                    forge = forge,
                 )
             }
-            .sortedBy { it.ownerRepo.lowercase() }
+            .sortedBy { it.displayName.lowercase() }
     }
 
     suspend fun lookupGithub(raw: String): Result<DiscoveryGithubRow> {
-        val ownerRepo = GitHubOwnerRepo.parse(raw) ?: return Result.failure("github_query_invalid")
-        val existing = managedAppDao.getAll()
-            .firstOrNull { it.githubOwnerRepo.equals(ownerRepo, ignoreCase = true) }
-        val packageName = existing?.packageName ?: GitHubOwnerRepo.provisionalPackageName(ownerRepo)
+        val ref = ForgeUrlParse.parse(raw) ?: return Result.failure("github_query_invalid")
+        val existing = findManaged(ref)
+        val packageName = existing?.packageName ?: ref.provisionalPackageName()
         val regex = runCatching {
             Regex(existing?.githubAssetRegex ?: DEFAULT_APK_REGEX)
         }.getOrElse { Regex(DEFAULT_APK_REGEX) }
         val channel = parseGitHubReleaseChannel(existing?.githubChannel)
         if (channel == GitHubReleaseChannel.NIGHTLY) {
-            return Result.failure("github_nightly_use_library")
+            return if (ref.forge == ReleaseForge.GITHUB) {
+                Result.failure("github_nightly_use_library")
+            } else {
+                Result.failure("forge_nightly_unsupported")
+            }
         }
         // New Explore rows: fall back to PRE_RELEASE when the repo only ships prereleases.
         // Existing STABLE stays strict so App Detail channel chips remain authoritative.
         val fallbackToPreRelease = existing == null && channel == GitHubReleaseChannel.STABLE
         return when (
-            val result = gitHubReleasesClient.matchLatestRelease(
-                ownerRepo = ownerRepo,
+            val result = matchLatestRelease(
+                forge = ref.forge,
+                ownerRepo = ref.ownerRepo,
                 assetRegex = regex,
                 channel = channel,
                 fallbackToPreRelease = fallbackToPreRelease,
@@ -217,28 +234,30 @@ class DiscoveryRepository @Inject constructor(
                     managedAppDao.upsert(
                         ManagedAppEntity(
                             packageName = packageName,
-                            sourceId = "github:$ownerRepo",
+                            sourceId = ref.sourceId,
                             confidence = MatchConfidence.MEDIUM.name,
                             pinned = true,
                             ignoreUpdates = false,
-                            githubOwnerRepo = ownerRepo,
+                            githubOwnerRepo = ref.ownerRepo,
                             githubAssetRegex = DEFAULT_APK_REGEX,
                             githubChannel = match.channel.name,
+                            releaseForge = ref.forge.name,
                             watchOnly = true,
                         ),
                     )
                 }
                 Result.success(
                     DiscoveryGithubRow(
-                        ownerRepo = ownerRepo,
+                        ownerRepo = ref.ownerRepo,
                         packageName = packageName,
-                        displayName = ownerRepo,
+                        displayName = ref.displayLabel,
                         tagName = pick.tagName,
                         assetName = pick.assetName,
                         sizeBytes = pick.sizeBytes,
                         downloadUrl = pick.downloadUrl,
                         saved = true,
                         releaseNotes = pick.releaseNotes,
+                        forge = ref.forge,
                     ),
                 )
             }
@@ -255,22 +274,25 @@ class DiscoveryRepository @Inject constructor(
             downloadUrl = url,
             sizeBytes = row.sizeBytes,
             releaseNotes = row.releaseNotes,
+            forge = row.forge,
         )
     }
 
     suspend fun loadGithubInstallOptions(ownerRepoRaw: String): Result<GithubInstallOptions> {
-        val ownerRepo = GitHubOwnerRepo.parse(ownerRepoRaw) ?: return Result.failure("github_query_invalid")
-        val existing = managedAppDao.getAll()
-            .firstOrNull { it.githubOwnerRepo.equals(ownerRepo, ignoreCase = true) }
-        val packageName = existing?.packageName ?: GitHubOwnerRepo.provisionalPackageName(ownerRepo)
+        val ref = ForgeUrlParse.parse(ownerRepoRaw) ?: return Result.failure("github_query_invalid")
+        val existing = findManaged(ref)
+        val packageName = existing?.packageName ?: ref.provisionalPackageName()
         val regex = runCatching {
             Regex(existing?.githubAssetRegex ?: DEFAULT_APK_REGEX)
         }.getOrElse { Regex(DEFAULT_APK_REGEX) }
         val channel = parseGitHubReleaseChannel(existing?.githubChannel)
-        if (channel == GitHubReleaseChannel.NIGHTLY) {
+        if (channel == GitHubReleaseChannel.NIGHTLY && ref.forge == ReleaseForge.GITHUB) {
             return Result.failure("github_nightly_use_library")
         }
-        return when (val listed = gitHubReleasesClient.listReleases(ownerRepo)) {
+        if (channel == GitHubReleaseChannel.NIGHTLY && ref.forge != ReleaseForge.GITHUB) {
+            return Result.failure("forge_nightly_unsupported")
+        }
+        return when (val listed = listReleases(ref.forge, ref.ownerRepo)) {
             is Result.Failure -> listed
 
             is Result.Success -> {
@@ -312,22 +334,24 @@ class DiscoveryRepository @Inject constructor(
                         managedAppDao.upsert(
                             ManagedAppEntity(
                                 packageName = packageName,
-                                sourceId = "github:$ownerRepo",
+                                sourceId = ref.sourceId,
                                 confidence = MatchConfidence.MEDIUM.name,
                                 pinned = true,
                                 ignoreUpdates = false,
-                                githubOwnerRepo = ownerRepo,
+                                githubOwnerRepo = ref.ownerRepo,
                                 githubAssetRegex = DEFAULT_APK_REGEX,
                                 githubChannel = initialChannel.name,
+                                releaseForge = ref.forge.name,
                                 watchOnly = true,
                             ),
                         )
                     }
                     Result.success(
                         GithubInstallOptions(
-                            ownerRepo = ownerRepo,
+                            ownerRepo = ref.ownerRepo,
                             packageName = packageName,
                             releases = rows,
+                            forge = ref.forge,
                         ),
                     )
                 }
@@ -342,13 +366,14 @@ class DiscoveryRepository @Inject constructor(
         downloadUrl: String,
         sizeBytes: Long?,
         releaseNotes: String?,
+        forge: ReleaseForge = ReleaseForge.GITHUB,
     ): Result<String> {
         val update = AppUpdateInfo(
             packageName = packageName,
             availableVersionName = tagName,
             availableVersionCode = GitHubVersionCode.parse(tagName),
-            sourceId = "github:$ownerRepo",
-            sourceLabel = "GitHub $ownerRepo",
+            sourceId = forge.sourceId(ownerRepo),
+            sourceLabel = "${forge.displayLabel()} $ownerRepo",
             confidence = MatchConfidence.MEDIUM,
             signatureMatches = false,
             downloadUrl = downloadUrl,
@@ -367,6 +392,46 @@ class DiscoveryRepository @Inject constructor(
         }
     }
 
+    private suspend fun findManaged(ref: ForgeRef): ManagedAppEntity? = managedAppDao.getAll().firstOrNull { app ->
+        app.githubOwnerRepo.equals(ref.ownerRepo, ignoreCase = true) &&
+            parseReleaseForge(app.releaseForge) == ref.forge
+    }
+
+    private suspend fun matchLatestRelease(
+        forge: ReleaseForge,
+        ownerRepo: String,
+        assetRegex: Regex,
+        channel: GitHubReleaseChannel,
+        fallbackToPreRelease: Boolean,
+    ): Result<GitHubReleaseMatch> = when (forge) {
+        ReleaseForge.GITHUB -> gitHubReleasesClient.matchLatestRelease(
+            ownerRepo,
+            assetRegex,
+            channel,
+            fallbackToPreRelease,
+        )
+
+        ReleaseForge.GITLAB -> gitLabReleasesClient.matchLatestRelease(
+            ownerRepo,
+            assetRegex,
+            channel,
+            fallbackToPreRelease,
+        )
+
+        ReleaseForge.CODEBERG -> codebergReleasesClient.matchLatestRelease(
+            ownerRepo,
+            assetRegex,
+            channel,
+            fallbackToPreRelease,
+        )
+    }
+
+    private suspend fun listReleases(forge: ReleaseForge, ownerRepo: String): Result<List<GitHubReleaseDto>> = when (forge) {
+        ReleaseForge.GITHUB -> gitHubReleasesClient.listReleases(ownerRepo)
+        ReleaseForge.GITLAB -> gitLabReleasesClient.listReleases(ownerRepo)
+        ReleaseForge.CODEBERG -> codebergReleasesClient.listReleases(ownerRepo)
+    }
+
     private companion object {
         const val DEFAULT_APK_REGEX = ".*\\.apk$"
     }
@@ -380,7 +445,12 @@ data class FdroidInstallOptions(
     val versions: List<VersionGroup>,
 )
 
-data class GithubInstallOptions(val ownerRepo: String, val packageName: String, val releases: List<GithubReleaseVariantRow>)
+data class GithubInstallOptions(
+    val ownerRepo: String,
+    val packageName: String,
+    val releases: List<GithubReleaseVariantRow>,
+    val forge: ReleaseForge = ReleaseForge.GITHUB,
+)
 
 internal fun IndexedPackageEntity.toDiscoveryRow(repo: RepoEntity?): DiscoveryAppRow {
     val address = repo?.address.orEmpty()

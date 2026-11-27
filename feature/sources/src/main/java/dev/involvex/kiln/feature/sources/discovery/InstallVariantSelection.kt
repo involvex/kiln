@@ -1,6 +1,7 @@
 package dev.involvex.kiln.feature.sources.discovery
 
 import dev.involvex.kiln.core.common.Result
+import dev.involvex.kiln.core.model.ReleaseForge
 
 /**
  * Pure selection helpers for Discover install variant sheets.
@@ -159,7 +160,12 @@ data class GithubApkAsset(val name: String, val downloadUrl: String, val sizeByt
 
 sealed class InstallVariantTarget {
     data class Fdroid(val packageName: String, val repoId: String, val displayName: String) : InstallVariantTarget()
-    data class Github(val ownerRepo: String, val packageName: String?, val displayName: String) : InstallVariantTarget()
+    data class Github(
+        val ownerRepo: String,
+        val packageName: String?,
+        val displayName: String,
+        val forge: ReleaseForge = ReleaseForge.GITHUB,
+    ) : InstallVariantTarget()
 }
 
 class InstallVariantActions(
@@ -182,5 +188,6 @@ class InstallVariantActions(
         downloadUrl: String,
         sizeBytes: Long?,
         releaseNotes: String?,
+        forge: ReleaseForge,
     ) -> Result<String>,
 )

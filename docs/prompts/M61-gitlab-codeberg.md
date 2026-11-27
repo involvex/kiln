@@ -2,6 +2,8 @@
 
 > Branch `m61-gitlab-codeberg`. After M60 / `v0.2.14`. Extend release sources beyond GitHub. No privilege changes.
 
+**Status:** Done on `m61-gitlab-codeberg`.
+
 ## In scope
 
 - Add **GitLab** and **Codeberg** as release source hosts (owner/repo or forge URL)
@@ -20,6 +22,6 @@
 
 ## Done when
 
-- [ ] User can add a GitLab and a Codeberg repo and see a release APK candidate (or honest empty/error)
-- [ ] Existing GitHub flows unchanged
-- [ ] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` + `verifyHiltViewModelMapDebug` green
+- [x] User can add a GitLab and a Codeberg repo and see a release APK candidate (or honest empty/error)
+- [x] Existing GitHub flows unchanged
+- [x] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` + `verifyHiltViewModelMapDebug` green

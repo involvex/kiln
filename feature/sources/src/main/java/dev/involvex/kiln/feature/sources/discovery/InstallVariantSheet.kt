@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.feature.sources.R
+import dev.involvex.kiln.feature.sources.forge.ForgeRef
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,7 +65,9 @@ fun InstallVariantSheet(
             }
 
             is InstallVariantTarget.Github -> when (
-                val result = actions.loadGithub(target.ownerRepo)
+                val result = actions.loadGithub(
+                    ForgeRef(target.forge, target.ownerRepo).asLookupQuery(),
+                )
             ) {
                 is Result.Success -> githubOptions = result.value
                 is Result.Failure -> error = result.message
@@ -252,6 +255,7 @@ private fun GithubVariantContent(
                     asset.downloadUrl,
                     asset.sizeBytes,
                     selected.releaseNotes,
+                    options.forge,
                 )
                 confirming = false
                 when (result) {

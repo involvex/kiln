@@ -73,6 +73,11 @@ data class ManagedAppEntity(
     val githubAssetRegex: String?,
     /** [dev.involvex.kiln.core.model.GitHubReleaseChannel] name; default STABLE. */
     val githubChannel: String = "STABLE",
+    /**
+     * [dev.involvex.kiln.core.model.ReleaseForge] name for [githubOwnerRepo].
+     * Default GITHUB for rows created before M61.
+     */
+    val releaseForge: String = "GITHUB",
     /** True when watching an uninstalled app for new versions (no local install required). */
     val watchOnly: Boolean = false,
     /** Null = use global Settings cooldown for auto-install. */

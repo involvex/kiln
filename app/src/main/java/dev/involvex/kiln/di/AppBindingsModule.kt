@@ -17,6 +17,7 @@ import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.core.model.BackupPreferences
 import dev.involvex.kiln.core.model.DebugLogController
 import dev.involvex.kiln.core.model.DevPreferences
+import dev.involvex.kiln.core.model.ForgeTokenRepository
 import dev.involvex.kiln.core.model.GitHubAuthHeaderProvider
 import dev.involvex.kiln.core.model.GitHubTokenRepository
 import dev.involvex.kiln.core.model.InstallQueue
@@ -52,6 +53,7 @@ import dev.involvex.kiln.feature.settings.data.DataStoreInstallerPreferences
 import dev.involvex.kiln.feature.settings.data.DataStoreMaintenancePreferences
 import dev.involvex.kiln.feature.settings.data.DataStoreNetworkProxyPreferences
 import dev.involvex.kiln.feature.sources.DefaultAppUpdateRepository
+import dev.involvex.kiln.feature.sources.forge.ForgeTokenStore
 import dev.involvex.kiln.feature.sources.github.GitHubTokenStore
 import dev.involvex.kiln.feature.sources.updatecheck.DefaultBackgroundUpdateScheduler
 import dev.involvex.kiln.feature.sources.updatecheck.PrefsUpdateObservationStore
@@ -102,6 +104,10 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindGitHubTokenRepository(impl: GitHubTokenStore): GitHubTokenRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindForgeTokenRepository(impl: ForgeTokenStore): ForgeTokenRepository
 
     @Binds
     @Singleton
