@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 
 @Composable
+@Suppress("LongParameterList") // Hub screen wires many Tools destinations.
 fun SettingsToolsRoute(
     onBack: () -> Unit,
     onOpenPrivilegeSetup: () -> Unit,
@@ -17,6 +18,7 @@ fun SettingsToolsRoute(
     onOpenBackgroundControls: () -> Unit,
     onOpenFreeze: () -> Unit,
     onOpenProcesses: () -> Unit,
+    onOpenDiagnostics: () -> Unit,
     onOpenUsers: () -> Unit,
     onOpenTermux: () -> Unit,
     onOpenActivityLog: () -> Unit,
@@ -63,6 +65,12 @@ fun SettingsToolsRoute(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.settings_processes))
+            }
+            OutlinedButton(
+                onClick = onOpenDiagnostics,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.settings_diagnostics))
             }
             OutlinedButton(
                 onClick = onOpenUsers,

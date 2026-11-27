@@ -16,6 +16,10 @@ import dev.involvex.kiln.core.model.ActivityLogType
 import dev.involvex.kiln.core.model.AndroidSharedRoot
 import dev.involvex.kiln.core.model.AndroidUserInfo
 import dev.involvex.kiln.core.model.AndroidUserListParser
+import dev.involvex.kiln.core.model.BatteryDumpParser
+import dev.involvex.kiln.core.model.BatterySnapshot
+import dev.involvex.kiln.core.model.NetstatsDumpParser
+import dev.involvex.kiln.core.model.NetstatsSnapshot
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegeStatus
 import dev.involvex.kiln.core.model.PrivilegeTier
@@ -24,6 +28,8 @@ import dev.involvex.kiln.core.model.ProcessStat
 import dev.involvex.kiln.core.model.ProcessStatsParser
 import dev.involvex.kiln.core.model.SelfTestReport
 import dev.involvex.kiln.core.model.ShizukuSetupPhase
+import dev.involvex.kiln.core.model.TopDumpParser
+import dev.involvex.kiln.core.model.TopSnapshot
 import dev.involvex.kiln.core.privilege.shell.ShellAllowlist
 import dev.involvex.kiln.core.privilege.shizuku.KilnUserService
 import javax.inject.Inject
@@ -593,6 +599,89 @@ class DefaultPrivilegedExecutor @Inject constructor(
         Result.success(merged)
     }
 
+    override suspend fun readBatteryDump(): Result<BatterySnapshot> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.RUN_SHELL_DIAGNOSTIC !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:RUN_SHELL_DIAGNOSTIC")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.DUMPSYS_BATTERY, emptyList())) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    val snap = BatteryDumpParser.parse(out.value)
+                    if (snap == null) {
+                        Result.failure("parse_failed:battery")
+                    } else {
+                        Result.success(snap)
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun readNetstatsDump(): Result<NetstatsSnapshot> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.RUN_SHELL_DIAGNOSTIC !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:RUN_SHELL_DIAGNOSTIC")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.DUMPSYS_NETSTATS, emptyList())) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    val snap = NetstatsDumpParser.parse(out.value)
+                    if (snap == null) {
+                        Result.failure("parse_failed:netstats")
+                    } else {
+                        Result.success(
+                            snap.copy(
+                                topUids = snap.topUids.map { row ->
+                                    row.copy(label = resolveUidLabel(row.uid))
+                                },
+                            ),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun readTopDump(): Result<TopSnapshot> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.RUN_SHELL_DIAGNOSTIC !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:RUN_SHELL_DIAGNOSTIC")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.TOP_ONCE, emptyList())) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    val snap = TopDumpParser.parse(out.value)
+                    if (snap == null) {
+                        Result.failure("parse_failed:top")
+                    } else {
+                        Result.success(snap)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun resolveUidLabel(uid: Int): String {
+        val pm = context.packageManager
+        val packages = runCatching { pm.getPackagesForUid(uid) }.getOrNull().orEmpty()
+        val pkg = packages.firstOrNull()
+        if (pkg.isNullOrBlank()) return "uid:$uid"
+        return runCatching {
+            val info = pm.getApplicationInfo(pkg, 0)
+            pm.getApplicationLabel(info).toString()
+        }.getOrElse { pkg }
+    }
+
     private fun resolveLabels(packageNames: List<String>): Map<String, String> {
         val pm = context.packageManager
         return packageNames.associateWith { pkg ->
@@ -698,6 +787,9 @@ class DefaultPrivilegedExecutor @Inject constructor(
             ShellAllowlist.LS_ANDROID_ROOT,
             ShellAllowlist.DUMPSYS_MEMINFO,
             ShellAllowlist.DUMPSYS_CPUINFO,
+            ShellAllowlist.DUMPSYS_BATTERY,
+            ShellAllowlist.DUMPSYS_NETSTATS,
+            ShellAllowlist.TOP_ONCE,
             -> null
 
             ShellAllowlist.DU_ANDROID_PKG,

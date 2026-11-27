@@ -215,4 +215,20 @@ interface PrivilegedExecutor {
      * Requires [PrivilegeCapability.RUN_SHELL_DIAGNOSTIC].
      */
     suspend fun listProcessStats(limit: Int = 6): Result<List<ProcessStat>>
+
+    /**
+     * Compact `dumpsys battery` snapshot (M60). Requires [PrivilegeCapability.RUN_SHELL_DIAGNOSTIC].
+     */
+    suspend fun readBatteryDump(): Result<BatterySnapshot>
+
+    /**
+     * Compact `dumpsys netstats` snapshot with UID labels (M60).
+     * Requires [PrivilegeCapability.RUN_SHELL_DIAGNOSTIC]. Never includes SSID / subscriberId.
+     */
+    suspend fun readNetstatsDump(): Result<NetstatsSnapshot>
+
+    /**
+     * Compact `top -n 1` snapshot (M60). Requires [PrivilegeCapability.RUN_SHELL_DIAGNOSTIC].
+     */
+    suspend fun readTopDump(): Result<TopSnapshot>
 }

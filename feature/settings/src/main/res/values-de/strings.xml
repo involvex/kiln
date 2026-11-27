@@ -41,6 +41,7 @@
     <string name="settings_background_controls">Hintergrund-Steuerung</string>
     <string name="settings_freeze">Apps einfrieren</string>
     <string name="settings_processes">Prozesse</string>
+    <string name="settings_diagnostics">Geräte-Diagnose</string>
     <string name="settings_users">Android-Benutzer</string>
     <string name="settings_termux">Termux</string>
     <string name="settings_activity_log">Aktivitätsprotokoll</string>

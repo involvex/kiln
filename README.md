@@ -4,7 +4,7 @@ All-in-one package, APK, and storage manager for Android (`dev.involvex.kiln`).
 
 - **Package:** `dev.involvex.kiln`
 - **License:** [Apache-2.0](./LICENSE)
-- **Status:** `0.2.13` (M59 HyperOS phone polish; dual-user M53–M58 closed). See [docs/ROADMAP.md](./docs/ROADMAP.md)
+- **Status:** `0.2.13` + **M60** Device diagnostics (branch `m60-device-diagnostics`). See [docs/ROADMAP.md](./docs/ROADMAP.md)
 - **Version:** `0.2.13` (versionCode 16)
 
 Kiln unifies F-Droid/GitHub sources, APK tools, app backup, storage cleanup, optional debloat, optional Termux hooks, and F-Droid catalog discovery. Privileged actions run through Shizuku/ShizukuPlus or Root when available; Tier NONE stays useful without them.
@@ -53,7 +53,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 :feature:debloat          Debloat (denylist, snapshot, disable/restore)
 :feature:backup           .kilnbackup.zip (SAF tree + keep-N; Shizuku Android/data+obb; optional AES-GCM) + restore via InstallQueue
 :feature:termux           Optional RUN_COMMAND (feature flag, configurable packageId)
-:feature:settings         Category hub (Appearance, Updates+GitHub PAT, Network, Tools, …); background-update / automation / maintenance prefs
+:feature:settings         Category hub (Appearance, Updates+GitHub PAT, Network, Tools incl. Device diagnostics, …); background-update / automation / maintenance prefs
 :feature:maintenance      Scheduled maintenance WorkManager + run protocol
 ```
 
