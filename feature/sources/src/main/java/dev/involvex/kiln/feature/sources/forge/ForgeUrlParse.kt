@@ -27,17 +27,16 @@ object ForgeUrlParse {
     fun parseUrl(raw: String): ForgeRef? {
         val trimmed = raw.trim()
         if (trimmed.isEmpty()) return null
-        GITHUB.find(trimmed)?.let { m ->
-            return ForgeRef(ReleaseForge.GITHUB, path(m))
+        return HOST_PATTERNS.firstNotNullOfOrNull { (regex, forge) ->
+            regex.find(trimmed)?.let { ForgeRef(forge, path(it)) }
         }
-        GITLAB.find(trimmed)?.let { m ->
-            return ForgeRef(ReleaseForge.GITLAB, path(m))
-        }
-        CODEBERG.find(trimmed)?.let { m ->
-            return ForgeRef(ReleaseForge.CODEBERG, path(m))
-        }
-        return null
     }
 
     private fun path(match: MatchResult): String = "${match.groupValues[1]}/${match.groupValues[2].removeSuffix(".git")}"
+
+    private val HOST_PATTERNS = listOf(
+        GITHUB to ReleaseForge.GITHUB,
+        GITLAB to ReleaseForge.GITLAB,
+        CODEBERG to ReleaseForge.CODEBERG,
+    )
 }

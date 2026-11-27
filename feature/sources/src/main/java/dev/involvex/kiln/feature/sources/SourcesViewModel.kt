@@ -357,34 +357,12 @@ class SourcesViewModel @Inject constructor(
                 parseReleaseForge(app.releaseForge) == ref.forge
         }
         if (existing != null) {
-            return when (ref.forge) {
-                ReleaseForge.GITHUB -> "github_exists:${ref.ownerRepo}"
-                ReleaseForge.GITLAB -> "gitlab_exists:${ref.ownerRepo}"
-                ReleaseForge.CODEBERG -> "codeberg_exists:${ref.ownerRepo}"
-            }
+            return forgeExistsMessage(ref)
         }
-        val packageName = ref.provisionalPackageName()
-        val assetRegex = Regex(".*\\.apk$")
-        val listed = when (ref.forge) {
-            ReleaseForge.GITHUB -> gitHubReleasesClient.listReleases(ref.ownerRepo)
-            ReleaseForge.GITLAB -> gitLabReleasesClient.listReleases(ref.ownerRepo)
-            ReleaseForge.CODEBERG -> codebergReleasesClient.listReleases(ref.ownerRepo)
-        }
-        val channel = when (listed) {
-            is Result.Failure -> GitHubReleaseChannel.STABLE
-
-            is Result.Success -> {
-                GitHubReleasePicker.match(
-                    releases = listed.value,
-                    assetRegex = assetRegex,
-                    preferred = GitHubReleaseChannel.STABLE,
-                    fallbackToPreRelease = true,
-                )?.channel ?: GitHubReleaseChannel.STABLE
-            }
-        }
+        val channel = detectInitialChannel(ref)
         managedAppDao.upsert(
             ManagedAppEntity(
-                packageName = packageName,
+                packageName = ref.provisionalPackageName(),
                 sourceId = ref.sourceId,
                 confidence = "MEDIUM",
                 pinned = false,
@@ -397,11 +375,39 @@ class SourcesViewModel @Inject constructor(
                 watchOnly = true,
             ),
         )
-        return when (ref.forge) {
-            ReleaseForge.GITHUB -> "github_added:${ref.ownerRepo}"
-            ReleaseForge.GITLAB -> "gitlab_added:${ref.ownerRepo}"
-            ReleaseForge.CODEBERG -> "codeberg_added:${ref.ownerRepo}"
+        return forgeAddedMessage(ref)
+    }
+
+    private suspend fun detectInitialChannel(ref: ForgeRef): GitHubReleaseChannel {
+        val listed = when (ref.forge) {
+            ReleaseForge.GITHUB -> gitHubReleasesClient.listReleases(ref.ownerRepo)
+            ReleaseForge.GITLAB -> gitLabReleasesClient.listReleases(ref.ownerRepo)
+            ReleaseForge.CODEBERG -> codebergReleasesClient.listReleases(ref.ownerRepo)
         }
+        return when (listed) {
+            is Result.Failure -> GitHubReleaseChannel.STABLE
+
+            is Result.Success -> {
+                GitHubReleasePicker.match(
+                    releases = listed.value,
+                    assetRegex = Regex(".*\\.apk$"),
+                    preferred = GitHubReleaseChannel.STABLE,
+                    fallbackToPreRelease = true,
+                )?.channel ?: GitHubReleaseChannel.STABLE
+            }
+        }
+    }
+
+    private fun forgeExistsMessage(ref: ForgeRef): String = when (ref.forge) {
+        ReleaseForge.GITHUB -> "github_exists:${ref.ownerRepo}"
+        ReleaseForge.GITLAB -> "gitlab_exists:${ref.ownerRepo}"
+        ReleaseForge.CODEBERG -> "codeberg_exists:${ref.ownerRepo}"
+    }
+
+    private fun forgeAddedMessage(ref: ForgeRef): String = when (ref.forge) {
+        ReleaseForge.GITHUB -> "github_added:${ref.ownerRepo}"
+        ReleaseForge.GITLAB -> "gitlab_added:${ref.ownerRepo}"
+        ReleaseForge.CODEBERG -> "codeberg_added:${ref.ownerRepo}"
     }
 
     private fun mapStarsError(raw: String): String = when {

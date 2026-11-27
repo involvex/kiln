@@ -285,78 +285,87 @@ class DiscoveryRepository @Inject constructor(
         val regex = runCatching {
             Regex(existing?.githubAssetRegex ?: DEFAULT_APK_REGEX)
         }.getOrElse { Regex(DEFAULT_APK_REGEX) }
-        val channel = parseGitHubReleaseChannel(existing?.githubChannel)
-        if (channel == GitHubReleaseChannel.NIGHTLY && ref.forge == ReleaseForge.GITHUB) {
-            return Result.failure("github_nightly_use_library")
-        }
-        if (channel == GitHubReleaseChannel.NIGHTLY && ref.forge != ReleaseForge.GITHUB) {
-            return Result.failure("forge_nightly_unsupported")
+        nightlyBlocked(parseGitHubReleaseChannel(existing?.githubChannel), ref.forge)?.let {
+            return Result.failure(it)
         }
         return when (val listed = listReleases(ref.forge, ref.ownerRepo)) {
             is Result.Failure -> listed
-
-            is Result.Success -> {
-                val apkReleases = listed.value.mapNotNull { release ->
-                    val apkAssets = release.assets
-                        .filter { regex.containsMatchIn(it.name) }
-                        .map {
-                            GithubApkAsset(
-                                name = it.name,
-                                downloadUrl = it.browserDownloadUrl,
-                                sizeBytes = it.size,
-                            )
-                        }
-                    if (apkAssets.isEmpty()) return@mapNotNull null
-                    GithubReleaseVariantRow(
-                        tagName = release.tagName,
-                        releaseName = release.name,
-                        prerelease = release.prerelease,
-                        nightly = InstallVariantSelection.isNightlyLabel(release.tagName, release.name),
-                        latestStable = false,
-                        assets = apkAssets,
-                        releaseNotes = ReleaseNotesText.normalize(release.body),
-                    )
-                }
-                val firstStableTag = apkReleases.firstOrNull { !it.prerelease && !it.nightly }?.tagName
-                val rows = apkReleases.map { row ->
-                    row.copy(latestStable = row.tagName == firstStableTag)
-                }
-                if (rows.isEmpty()) {
-                    Result.failure("no_matching_github_asset")
-                } else {
-                    if (existing == null) {
-                        val initialChannel =
-                            if (rows.any { !it.prerelease }) {
-                                GitHubReleaseChannel.STABLE
-                            } else {
-                                GitHubReleaseChannel.PRE_RELEASE
-                            }
-                        managedAppDao.upsert(
-                            ManagedAppEntity(
-                                packageName = packageName,
-                                sourceId = ref.sourceId,
-                                confidence = MatchConfidence.MEDIUM.name,
-                                pinned = true,
-                                ignoreUpdates = false,
-                                githubOwnerRepo = ref.ownerRepo,
-                                githubAssetRegex = DEFAULT_APK_REGEX,
-                                githubChannel = initialChannel.name,
-                                releaseForge = ref.forge.name,
-                                watchOnly = true,
-                            ),
-                        )
-                    }
-                    Result.success(
-                        GithubInstallOptions(
-                            ownerRepo = ref.ownerRepo,
-                            packageName = packageName,
-                            releases = rows,
-                            forge = ref.forge,
-                        ),
-                    )
-                }
-            }
+            is Result.Success -> buildGithubInstallOptions(ref, existing, packageName, regex, listed.value)
         }
+    }
+
+    private fun nightlyBlocked(channel: GitHubReleaseChannel, forge: ReleaseForge): String? {
+        if (channel != GitHubReleaseChannel.NIGHTLY) return null
+        return if (forge == ReleaseForge.GITHUB) {
+            "github_nightly_use_library"
+        } else {
+            "forge_nightly_unsupported"
+        }
+    }
+
+    private suspend fun buildGithubInstallOptions(
+        ref: ForgeRef,
+        existing: ManagedAppEntity?,
+        packageName: String,
+        regex: Regex,
+        releases: List<GitHubReleaseDto>,
+    ): Result<GithubInstallOptions> {
+        val apkReleases = releases.mapNotNull { release ->
+            val apkAssets = release.assets
+                .filter { regex.containsMatchIn(it.name) }
+                .map {
+                    GithubApkAsset(
+                        name = it.name,
+                        downloadUrl = it.browserDownloadUrl,
+                        sizeBytes = it.size,
+                    )
+                }
+            if (apkAssets.isEmpty()) return@mapNotNull null
+            GithubReleaseVariantRow(
+                tagName = release.tagName,
+                releaseName = release.name,
+                prerelease = release.prerelease,
+                nightly = InstallVariantSelection.isNightlyLabel(release.tagName, release.name),
+                latestStable = false,
+                assets = apkAssets,
+                releaseNotes = ReleaseNotesText.normalize(release.body),
+            )
+        }
+        val firstStableTag = apkReleases.firstOrNull { !it.prerelease && !it.nightly }?.tagName
+        val rows = apkReleases.map { row -> row.copy(latestStable = row.tagName == firstStableTag) }
+        if (rows.isEmpty()) {
+            return Result.failure("no_matching_github_asset")
+        }
+        if (existing == null) {
+            val initialChannel =
+                if (rows.any { !it.prerelease }) {
+                    GitHubReleaseChannel.STABLE
+                } else {
+                    GitHubReleaseChannel.PRE_RELEASE
+                }
+            managedAppDao.upsert(
+                ManagedAppEntity(
+                    packageName = packageName,
+                    sourceId = ref.sourceId,
+                    confidence = MatchConfidence.MEDIUM.name,
+                    pinned = true,
+                    ignoreUpdates = false,
+                    githubOwnerRepo = ref.ownerRepo,
+                    githubAssetRegex = DEFAULT_APK_REGEX,
+                    githubChannel = initialChannel.name,
+                    releaseForge = ref.forge.name,
+                    watchOnly = true,
+                ),
+            )
+        }
+        return Result.success(
+            GithubInstallOptions(
+                ownerRepo = ref.ownerRepo,
+                packageName = packageName,
+                releases = rows,
+                forge = ref.forge,
+            ),
+        )
     }
 
     suspend fun installGithubVariant(
