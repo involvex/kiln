@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M60** In progress on branch `m60-device-diagnostics` (after **M59** Done / `v0.2.13`). Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: tablet layouts, cloud backup, ROOT `/data/data`.
+**Current status:** **M60** Done / `v0.2.14` ([#111](https://github.com/involvex/kiln/pull/111)). Next: **M61** GitLab + Codeberg release sources (`m61-gitlab-codeberg`). Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: tablet layouts, WebDAV backup, ROOT `/data/data`.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -74,7 +74,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M57** | Debloat batch per user | Done | [`prompts/M57-debloat-per-user.md`](./prompts/M57-debloat-per-user.md) · `m57-debloat-per-user` | Best-effort `--user N` on debloat disable/enable/uninstall-for-user/install-existing; snapshot restore stays current user |
 | **M58** | Backup / restore user targeting | Done | [`prompts/M58-backup-per-user.md`](./prompts/M58-backup-per-user.md) · `m58-backup-per-user` | Best-effort restore install `--user N` + backup metadata note when census ≥2 + silent install; Android/data stays current-user paths |
 | **M59** | HyperOS phone polish | Done | [`prompts/M59-hyperos-polish.md`](./prompts/M59-hyperos-polish.md) · `m59-hyperos-polish` | Dual-user honesty copy (no stale “user 0 only”); docs sync; optional short HyperOS checklist (not a gate) |
-| **M60** | Device diagnostics | In progress | [`prompts/M60-device-diagnostics.md`](./prompts/M60-device-diagnostics.md) · `m60-device-diagnostics` | Shizuku pretty cards: battery / netstats / top; no Root; no raw dumps |
+| **M60** | Device diagnostics | Done | [`prompts/M60-device-diagnostics.md`](./prompts/M60-device-diagnostics.md) · [#111](https://github.com/involvex/kiln/pull/111) | Shizuku pretty cards: battery / netstats / top; no Root; no raw dumps |
+| **M61** | GitLab + Codeberg sources | Planned | [`prompts/M61-gitlab-codeberg.md`](./prompts/M61-gitlab-codeberg.md) · `m61-gitlab-codeberg` | Release sources for GitLab/Codeberg; same channel/APK heuristic as GitHub |
 
 ---
 
@@ -102,7 +103,8 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); M53–**M58** dual-user Done; **M59** honesty polish Done; tablet unscheduled |
 | Publishing / F-Droid + Izzy | Closed for now | Izzy [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948); F-Droid !58920 closed (3‑month rule). Ship via GitHub + Obtainium; F-Droid refile ≈ Feb 2026. Play skipped (US$25) |
 | HyperOS M1–M8 checklist sweep | Optional / low priority | Older acceptance lists; **M59** short checklist in prompt only — not a gate. Run ad hoc if something regresses |
-| Device diagnostics (battery / netstats / top) | In progress (M60) | Shizuku-only pretty cards; observe adbcaptain commands, no AGPL copy |
+| Device diagnostics (battery / netstats / top) | Done (M60 #111) | Shizuku-only pretty cards; observe adbcaptain commands, no AGPL copy |
+| GitLab / Codeberg release sources | Planned (M61) | Same Stable/Pre-release + APK heuristic as GitHub |
 | Discover home shelves (absorb Trending) | Done (M41 #71) | Nav3 Hilt fix; shelves + categories on Discover; Library\|Discover only |
 | GitHub starred repos → Sources | Done (M42 #73) | Review list + multi-select add; APK heuristic; no silent install |
 | App activity viewer / launcher | Done (M43 #75) | Exported-only list under App Detail; Tier NONE Start + pin shortcut |
@@ -116,7 +118,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 
 Update after each milestone. Tier = active `PrivilegedExecutor`.
 
-| Feature | Now (main / M59 branch, 0.2.13) | Needs tier |
+| Feature | Now (main / 0.2.14) | Needs tier |
 | --- | --- | --- |
 | Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
 | List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
@@ -136,7 +138,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Activity log | ✅ Room-backed searchable log (install/backup/cache/maintenance/shell/…) | NONE |
 | Widgets / QS | ✅ M46: Updates (preview+Check); Cache (confirm/`CLEAR_CACHE`); Processes (mem/CPU+`FORCE_STOP`); QS Check now | NONE / SHIZUKU (`CLEAR_CACHE`, `RUN_SHELL_DIAGNOSTIC`, `FORCE_STOP`) |
 | In-app processes | ✅ **M52** Settings → Tools → Processes (same meminfo + force-stop gate as widget) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`, `FORCE_STOP`) |
-| Device diagnostics | 🔄 **M60** Settings → Tools → Device diagnostics (battery / netstats / top cards; truncated dumps) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`) |
+| Device diagnostics | ✅ **M60** Settings → Tools → Device diagnostics (battery / netstats / top cards; truncated dumps) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`) |
 | Android user census | ✅ **M53** Settings → Tools → Android users (`pm list users` read-only); **M59** copy reflects best-effort dual-user targeting | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`) |
 | Dual-user install/uninstall | ✅ **M55** optional `--user N` when census ≥2 + silent Shizuku; else unchanged | NONE / SHIZUKU (`SILENT_INSTALL` / `SILENT_UNINSTALL`) |
 | Dual-user component / freeze | ✅ **M56** optional `--user N` on component enable/disable + suspend/unsuspend when census ≥2 + DEBLOAT | NONE / SHIZUKU (`DEBLOAT`) |
@@ -155,7 +157,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Repo priority | ✅ Sources ↑↓ reorder; `ensureKnownRepos` preserves user priority; Auto-match / update conflict tie-break | NONE |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
 | Appearance locales | ✅ AppCompat + localeConfig; EN/DE chips | NONE |
-| Release / store prep | ✅ version `0.2.13` (code 16); fastlane + screenshots; [STORE.md](./STORE.md); Izzy + F-Droid closed; Obtainium | — |
+| Release / store prep | ✅ version `0.2.14` (code 17); fastlane + screenshots; [STORE.md](./STORE.md); Izzy + F-Droid closed; Obtainium | — |
 | App Discovery | ✅ Apps → Library\|Discover; home shelves + categories; catalog refresh; icons; detail; search; GitHub tab; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
 | Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage; **M42** `kilnHiltViewModel` Activity scope (Nav3 Hilt map miss) | NONE |
@@ -367,9 +369,9 @@ flowchart LR
   M53 --> v027[v0.2.7]
 ```
 
-1. **M60** Device diagnostics on `m60-device-diagnostics` (Shizuku battery / netstats / top cards).
+1. **M61** GitLab + Codeberg release sources on `m61-gitlab-codeberg` ([prompt](./prompts/M61-gitlab-codeberg.md)).
 2. Store: GitHub + Obtainium; F-Droid refile only after ≈2026-02-08 ([STORE.md](./STORE.md)).
-3. Later backlog when wanted: tablet layouts, cloud backup, ROOT `/data/data`.
+3. Later backlog when wanted: storage treemap, curated debloat DB, tablet layouts, WebDAV backup, ROOT `/data/data`.
 
 ---
 

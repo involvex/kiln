@@ -2,6 +2,8 @@
 
 > Branch `m60-device-diagnostics`. After M59 / `v0.2.13`. Shizuku-only compact battery / netstats / top cards. No Root, no terminal, no AGPL copy from adbcaptain.
 
+**Status:** Done in [#111](https://github.com/involvex/kiln/pull/111) / `v0.2.14`.
+
 ## In scope
 
 - Settings → Tools → **Device diagnostics**
@@ -20,9 +22,9 @@
 
 ## Done when
 
-- [ ] Refresh with Shizuku shows three cards (or honest per-section error)
-- [ ] No SSID / subscriberId in UI
-- [ ] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` + `verifyHiltViewModelMapDebug` green
+- [x] Refresh with Shizuku shows three cards (or honest per-section error)
+- [x] No SSID / subscriberId in UI
+- [x] `spotlessCheck detekt lint testDebugUnitTest assembleDebug` + `verifyHiltViewModelMapDebug` green
 
 ## HyperOS checklist (manual)
 

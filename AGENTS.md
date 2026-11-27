@@ -5,10 +5,10 @@ Kiln ist eine Android-App (reines Kotlin + Jetpack Compose), die Package-Manager
 - **Package / applicationId:** `dev.involvex.kiln`
 - **Lizenz:** Apache-2.0
 - **Quelle der Wahrheit für Scope und Architektur:** [`docs/PLAN.md`](./docs/PLAN.md). Bei Widersprüchen gewinnt `PLAN.md`; Abweichungen vorher mit dem Nutzer klären.
-- **Roadmap / Status:** [`docs/ROADMAP.md`](./docs/ROADMAP.md) (Capability-Matrix, Meilenstein-Status)
+- **Roadmap / Status:** [`ROADMAP.md`](./ROADMAP.md) (ship loop) · [`docs/ROADMAP.md`](./docs/ROADMAP.md) (Capability-Matrix, Meilenstein-Status)
 - **Prompts pro Meilenstein:** [`docs/prompts/`](./docs/prompts/) (`M0-setup.md`, `M1-installed-apps.md`, …)
 - **Referenzen:** [`docs/reference.md`](./docs/reference.md) — Ideen lesen, GPL-Code nicht kopieren
-- **Current work:** [`docs/ROADMAP.md`](./docs/ROADMAP.md) — **M60** Device diagnostics (`m60-device-diagnostics`)
+- **Current work:** [`ROADMAP.md`](./ROADMAP.md) — **M61** GitLab + Codeberg release sources (`m61-gitlab-codeberg`)
 
 ## Arbeitsweise
 
