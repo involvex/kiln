@@ -10,6 +10,7 @@ dev.involvex.kiln.feature.onboarding.privilege.PrivilegeSetupViewModel
 dev.involvex.kiln.feature.permissions.PermissionAuditViewModel
 dev.involvex.kiln.feature.permissions.background.BackgroundControlsViewModel
 dev.involvex.kiln.feature.permissions.freeze.FreezeViewModel
+dev.involvex.kiln.feature.permissions.diagnostics.DiagnosticsViewModel
 dev.involvex.kiln.feature.permissions.processes.ProcessesViewModel
 dev.involvex.kiln.feature.permissions.users.UsersViewModel
 dev.involvex.kiln.feature.settings.SettingsIgnoredUpdatesViewModel

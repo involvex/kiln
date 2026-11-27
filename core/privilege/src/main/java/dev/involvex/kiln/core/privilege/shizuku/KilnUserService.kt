@@ -33,6 +33,13 @@ class KilnUserService : IKilnUserService.Stub {
             // Full dumpsys meminfo can take minutes and ANR the app over Binder; snapshot only.
             ShellAllowlist.DUMPSYS_MEMINFO -> ShellRunner.runMeminfoSnapshot(argv)
 
+            ShellAllowlist.DUMPSYS_BATTERY -> ShellRunner.runBatterySnapshot(argv)
+
+            // Full dumpsys netstats can be multi-MB; truncate in-process.
+            ShellAllowlist.DUMPSYS_NETSTATS -> ShellRunner.runNetstatsSnapshot(argv)
+
+            ShellAllowlist.TOP_ONCE -> ShellRunner.runTopSnapshot(argv)
+
             else -> ShellRunner.run(argv)
         }
     }

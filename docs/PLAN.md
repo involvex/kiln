@@ -427,6 +427,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 
 - **P2 — Widgets & Quick-Settings-Tile (Glance)**: „X Updates verfügbar", Ein-Klick-Cache-Clean, App-Shortcuts. → **M26** (Done #40)
 - **P2 — Aktivitätsprotokoll**: Lokales, durchsuchbares Log. → **M24** (Done #39; M23 nur Maintenance-Protokoll)
+- **P2 — Geräte-Diagnose (Shizuku)**: Kompakte Cards aus `dumpsys battery` / `dumpsys netstats` / `top -n 1` (kein Raw-Dump, kein Root). → **M60** (In progress)
 - **P3 — Tablet-/Foldable-Layouts** (Adaptive Layouts, Navigation Rail).
 
 ### Empfohlene Reihenfolge (aktuell)
@@ -474,3 +475,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 41. Cut **0.2.12** (versionCode 15)
 42. **M59** HyperOS phone polish (dual-user honesty) → Done on `m59-hyperos-polish`
 43. Cut **0.2.13** (versionCode 16)
+44. **M60** Device diagnostics (Shizuku pretty battery / netstats / top; no Root) → In progress

@@ -90,6 +90,9 @@ data object FreezeKey
 data object ProcessesKey
 
 @Serializable
+data object DiagnosticsKey
+
+@Serializable
 data object UsersKey
 
 @Serializable

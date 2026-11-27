@@ -37,6 +37,9 @@ object ShellAllowlist {
     const val AM_FORCE_STOP = "am_force_stop"
     const val DUMPSYS_MEMINFO = "dumpsys_meminfo"
     const val DUMPSYS_CPUINFO = "dumpsys_cpuinfo"
+    const val DUMPSYS_BATTERY = "dumpsys_battery"
+    const val DUMPSYS_NETSTATS = "dumpsys_netstats"
+    const val TOP_ONCE = "top_once"
 
     private val PACKAGE_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
     private val PERMISSION_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
@@ -277,6 +280,20 @@ object ShellAllowlist {
 
         DUMPSYS_CPUINFO -> {
             if (args.isNotEmpty()) null else listOf("dumpsys", "cpuinfo")
+        }
+
+        DUMPSYS_BATTERY -> {
+            if (args.isNotEmpty()) null else listOf("dumpsys", "battery")
+        }
+
+        DUMPSYS_NETSTATS -> {
+            // --checkin is a compact AOSP flag; HyperOS may ignore it — truncation still applies.
+            if (args.isNotEmpty()) null else listOf("dumpsys", "netstats", "--checkin")
+        }
+
+        TOP_ONCE -> {
+            // toybox: -n 1 one iteration, -m 20 max rows (no pipes / free text).
+            if (args.isNotEmpty()) null else listOf("top", "-n", "1", "-m", "20")
         }
 
         else -> null

@@ -34,6 +34,7 @@ import dev.involvex.kiln.feature.onboarding.AutoMatchRoute
 import dev.involvex.kiln.feature.onboarding.privilege.PrivilegeSetupRoute
 import dev.involvex.kiln.feature.permissions.PermissionAuditRoute
 import dev.involvex.kiln.feature.permissions.background.BackgroundControlsRoute
+import dev.involvex.kiln.feature.permissions.diagnostics.DiagnosticsRoute
 import dev.involvex.kiln.feature.permissions.freeze.FreezeRoute
 import dev.involvex.kiln.feature.permissions.processes.ProcessesRoute
 import dev.involvex.kiln.feature.permissions.users.UsersRoute
@@ -66,6 +67,7 @@ import dev.involvex.kiln.navigation.AutoMatchKey
 import dev.involvex.kiln.navigation.BackgroundControlsKey
 import dev.involvex.kiln.navigation.CatalogDetailKey
 import dev.involvex.kiln.navigation.DebloatKey
+import dev.involvex.kiln.navigation.DiagnosticsKey
 import dev.involvex.kiln.navigation.DiscoveryKey
 import dev.involvex.kiln.navigation.FreezeKey
 import dev.involvex.kiln.navigation.ManageKey
@@ -307,6 +309,7 @@ private fun EntryProviderScope<Any>.kilnNavEntries(
             onOpenBackgroundControls = { topLevelBackStack.add(BackgroundControlsKey) },
             onOpenFreeze = { topLevelBackStack.add(FreezeKey) },
             onOpenProcesses = { topLevelBackStack.add(ProcessesKey) },
+            onOpenDiagnostics = { topLevelBackStack.add(DiagnosticsKey) },
             onOpenUsers = { topLevelBackStack.add(UsersKey) },
             onOpenTermux = { topLevelBackStack.add(TermuxKey) },
             onOpenActivityLog = { topLevelBackStack.add(ActivityLogKey) },
@@ -347,6 +350,12 @@ private fun EntryProviderScope<Any>.kilnNavEntries(
     }
     entry<ProcessesKey> {
         ProcessesRoute(
+            onBack = { topLevelBackStack.removeLast() },
+            onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
+        )
+    }
+    entry<DiagnosticsKey> {
+        DiagnosticsRoute(
             onBack = { topLevelBackStack.removeLast() },
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
         )

@@ -31,6 +31,12 @@ Keep reference checkouts **outside** this repository. Do not commit machine-loca
 - Kiln uses ARSCLib for in-app universal split merge (M35) and attributes APKEditor-style META-INF clearing / merge flow in `NOTICE`
 - Do **not** copy GPL AntiSplit-M or other GPL merge UIs
 
+## ADB Captain (diagnostics ideas)
+
+- Upstream: [eatenlamp/adbcaptain](https://github.com/eatenlamp/adbcaptain)
+- SPDX: **AGPL-3.0-or-later**
+- For Kiln: **read behaviour / command list only** (e.g. `dumpsys battery`, `dumpsys netstats`, `top -n 1`). Never copy parsers, UI, strings, or layouts into Kiln (Apache-2.0).
+
 ## Other public references
 
 - [APK Explorer & Editor](https://github.com/apk-editor/APK-Explorer-Editor)

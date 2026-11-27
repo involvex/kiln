@@ -360,5 +360,20 @@ class ShellAllowlistTest {
         )
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_MEMINFO, listOf("extra")))
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_CPUINFO, listOf("extra")))
+        assertEquals(
+            listOf("dumpsys", "battery"),
+            ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_BATTERY, emptyList()),
+        )
+        assertEquals(
+            listOf("dumpsys", "netstats", "--checkin"),
+            ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_NETSTATS, emptyList()),
+        )
+        assertEquals(
+            listOf("top", "-n", "1", "-m", "20"),
+            ShellAllowlist.buildArgv(ShellAllowlist.TOP_ONCE, emptyList()),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_BATTERY, listOf("extra")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_NETSTATS, listOf("x")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.TOP_ONCE, listOf("x")))
     }
 }
