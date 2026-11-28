@@ -4,11 +4,11 @@ Hobby ship loop for Cursor `/ship-roadmap`. Architecture and milestone tracker s
 
 ## Now
 
-- [ ] F-Droid refile (see [docs/STORE.md](./docs/STORE.md); age window / uniqueness)
+- [ ] Import first cleared debloat package rows into `debloat-db.json` (needs approved Apache-2.0/CC0/dual-licensed or Kiln-first-party source + NOTICE; **not** UAD-NG GPL-3.0)
 
 ## Later
 
-- [ ] Import first cleared debloat package rows into `debloat-db.json` (needs approved Apache-2.0/CC0/dual-licensed or Kiln-first-party source + NOTICE; **not** UAD-NG GPL-3.0)
+- [ ] Submit F-Droid fdroiddata MR on/after **2027-02-08** (kit: [docs/fdroid/](./docs/fdroid/); do not open early)
 - [ ] Share 0.2.14 device diagnostics (draft in SHARE.md)
 - [ ] Share M61 GitLab + Codeberg release sources (draft in SHARE.md)
 - [ ] Share M62 storage treemap (draft in SHARE.md)
@@ -18,9 +18,11 @@ Hobby ship loop for Cursor `/ship-roadmap`. Architecture and milestone tracker s
 - [ ] Share M66 WebDAV backup destination (draft in SHARE.md)
 - [ ] Share M67 ROOT `/data/data` backup (draft in SHARE.md)
 - [ ] Share M68 debloat license gate (draft in SHARE.md)
+- [ ] Share M69 F-Droid refile prep (draft in SHARE.md)
 
 ## Done
 
+- [x] **M69** F-Droid refile prep (`m69-fdroid-refile-prep`; recipe + MR draft; submit after 2027-02-08)
 - [x] **M68** Debloat data license gate (`m68-debloat-license-gate`; UAD-NG GPL-3.0 not cleared; `packages: []`)
 - [x] **M67** ROOT `/data/data` backup (`m67-root-data-backup`; Magisk opt-in + libsu; `user_de` deferred)
 - [x] **M66** WebDAV backup destination (`m66-webdav-backup`; not Cloudflare/R2)

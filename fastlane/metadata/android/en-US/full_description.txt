@@ -1,12 +1,16 @@
-Kiln (package id dev.involvex.kiln) unifies F-Droid and GitHub update sources, APK export and backup, storage cleanup, and optional debloat in one Apache-2.0 Android app. It is not related to the macOS “Kiln” Android emulator.
+Kiln (package id dev.involvex.kiln) unifies F-Droid and forge release sources, APK tools, storage cleanup, and backup in one Apache-2.0 Android app. It is not related to the macOS “Kiln” Android emulator.
 
 • List and export installed apps (.apk / .apks / .xapk)
-• Discover F-Droid catalogs and GitHub releases; sync repos; auto-match installed apps
-• Install updates with the system installer, or silently with Shizuku when you set that up
-• Storage analyzer, cache clear, and APK backup/restore (optional password encryption)
+• Discover F-Droid catalogs plus GitHub, GitLab, and Codeberg releases; sync repos; auto-match installed apps
+• Install updates with the system installer, or silently with Shizuku when you set that up (signature mismatches are never auto-installed)
+• APK inspect, split install, merge, and resign tools
+• Storage analyzer with trash and a treemap of large consumers
+• Backup / restore (.kilnbackup.zip): SAF folder or HTTPS WebDAV; optional AES-GCM; optional Shizuku Android/data+obb; optional Magisk /data/data
+• Device diagnostics (battery, network usage, CPU top, cpuinfo, thermals) when Shizuku is ready
 • Home widgets for update checks, cache trim, and process info
-• Optional debloat with snapshots; optional Termux RUN_COMMAND hooks (off by default)
-• With Shizuku: enable or disable one component, force-stop a process, and read the Android user list
+• Phone and tablet/foldable layouts (NavigationRail / list-detail)
+• Optional debloat with snapshots (catalog ratings only from license-cleared sources; unknown packages need expert mode)
+• Optional Termux RUN_COMMAND hooks (off by default)
 • No analytics or telemetry — installed-app lists stay on your device
 
-Privileged actions use Shizuku or Root when you set them up. Basic features work without them. Auto-install of updates is off until you turn it on, and signature mismatches are never installed automatically.
+Privileged actions use Shizuku or Magisk root when you opt in. Basic features work without them. Auto-install of updates is off until you turn it on.

@@ -2,11 +2,11 @@
 
 ## Audience
 
-Users who expected a bundled OEM debloat rating list in Kiln.
+Sideload users who prefer F-Droid client discovery but can use Obtainium today.
 
 ## Announcement
 
-Kiln’s debloat **catalog stays empty on purpose**: the commonly cited UAD-NG package list is **GPL-3.0**, which is not cleared for Apache-2.0 Kiln. Unknown packages still work via expert mode; ratings will only appear after a license-cleared curated source is approved. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or Obtainium → `https://github.com/involvex/kiln`.
+Kiln’s official F-Droid listing is **prepared but waiting** on the Inclusion Policy age window (first commit 2026-11-08 → submit ≈ **2027-02-08**). Until then: install from [GitHub Releases](https://github.com/involvex/kiln/releases) or add `https://github.com/involvex/kiln` in Obtainium. Refile kit lives in `docs/fdroid/`.
 
 ## Free channels (pick one)
 
@@ -17,3 +17,4 @@ Kiln’s debloat **catalog stays empty on purpose**: the commonly cited UAD-NG p
 
 - Paid ads, boosts, or new SaaS accounts
 - Cold-message strangers at scale
+- Open fdroiddata before ≈ 2027-02-08

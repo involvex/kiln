@@ -1,5 +1,7 @@
-# Draft for fdroiddata: metadata/dev.involvex.kiln.yml (+ metadata/dev.involvex.kiln/en-US/summary.txt).
-# Paste into a branch named dev.involvex.kiln. See docs/STORE.md.
+# Draft for fdroiddata: metadata/dev.involvex.kiln.yml
+# Do NOT open the fdroiddata MR before ≈ 2027-02-08 (Inclusion Policy Quality §6 — first commit 2026-11-08).
+# Paste into a public fork branch named `dev.involvex.kiln`. Fill the Default MR template from MR-DRAFT.md.
+# See docs/STORE.md.
 Categories:
   - System
 License: Apache-2.0
@@ -16,9 +18,10 @@ RepoType: git
 Repo: https://github.com/involvex/kiln.git
 
 Builds:
-  - versionName: 0.2.9
-    versionCode: 12
-    commit: 65d31698bf03f7f198939fcabe0ac506adfe7010
+  - versionName: 0.2.14
+    versionCode: 17
+    # Full commit SHA for tag v0.2.14 (template forbids tag/branch in commit:).
+    commit: 8e332b45d3766fec3647ab6699e9e69958b6f667
     gradle:
       - yes
     output: app/build/outputs/apk/release/app-release.apk
@@ -33,10 +36,13 @@ MaintainerNotes: |
   installer (this is a package manager). PACKAGE_USAGE_STATS is optional storage sizes
   and stays off until the user grants Usage Access. Auto-install of other apps is off
   by default and never installs a signature mismatch.
+  Optional com.termux.permission.RUN_COMMAND is unused until the user opens Termux hooks.
+  Substantial development used AI coding assistants (Cursor); declared honestly after
+  IzzyOnDroid AI-policy decline (repodata#948).
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[\d.]+$
 UpdateCheckData: 
   build-logic/convention/src/main/kotlin/dev/involvex/kiln/convention/KilnAndroid.kt|VERSION_CODE\s*=\s*(\d+)|.|versionName\s*=\s*"([^"]+)"
-CurrentVersion: 0.2.9
-CurrentVersionCode: 12
+CurrentVersion: 0.2.14
+CurrentVersionCode: 17
