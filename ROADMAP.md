@@ -4,11 +4,10 @@ Hobby ship loop for Cursor `/ship-roadmap`. Architecture and milestone tracker s
 
 ## Now
 
-- [ ] **M66** WebDAV backup destination (not Cloudflare/R2)
+- [ ] **M67** ROOT `/data/data` backup (needs RootExecutor + libsu first)
 
 ## Later
 
-- [ ] **M67** ROOT `/data/data` backup (needs RootExecutor + libsu first)
 - [ ] Import license-cleared debloat package rows into `debloat-db.json` (after SPDX + NOTICE; no invented ratings)
 - [ ] F-Droid refile ≈ 2026-02-08 ([docs/STORE.md](./docs/STORE.md))
 - [ ] Share 0.2.14 device diagnostics (draft in SHARE.md)
@@ -17,9 +16,11 @@ Hobby ship loop for Cursor `/ship-roadmap`. Architecture and milestone tracker s
 - [ ] Share M63 curated debloat catalog pipeline (draft in SHARE.md)
 - [ ] Share M64 diagnostics extras (draft in SHARE.md)
 - [ ] Share M65 tablet / foldable layouts (draft in SHARE.md)
+- [ ] Share M66 WebDAV backup destination (draft in SHARE.md)
 
 ## Done
 
+- [x] **M66** WebDAV backup destination (`m66-webdav-backup`; not Cloudflare/R2)
 - [x] **M65** Tablet/foldable: NavigationRail + list-detail (`m65-tablet-layouts`)
 - [x] **M64** Diagnostics extras: cpuinfo + thermals cards (`m64-diagnostics-extras`)
 - [x] **M63** Curated debloat ratings pipeline (`m63-curated-debloat-ratings`; packages still empty)

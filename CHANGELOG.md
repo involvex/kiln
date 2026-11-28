@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **M66** WebDAV backup destination (HTTPS + Basic auth; EncryptedSharedPreferences password; keep-N prune; not Cloudflare/R2)
 - **M65** Tablet / foldable: NavigationRail at medium+ width; Apps list-detail via Material Adaptive `ListDetailSceneStrategy` (phone bottom bar unchanged)
 - **M64** Device diagnostics extras: `dumpsys cpuinfo` + `dumpsys thermalservice` pretty cards (bounded dumps; no raw stdout; no `cmd battery`)
 - **M63** Curated debloat catalog pipeline (`DebloatDbParser` + tests + source/version UI); shipped `debloat-db.json` still has `packages: []` (no invented ratings)

@@ -33,12 +33,14 @@ import dev.involvex.kiln.core.model.StorageTreePreferences
 import dev.involvex.kiln.core.model.TermuxPreferences
 import dev.involvex.kiln.core.model.UpdateObservationStore
 import dev.involvex.kiln.core.model.WatchlistRepository
+import dev.involvex.kiln.core.model.WebDavSecretRepository
 import dev.involvex.kiln.core.model.WidgetPreferences
 import dev.involvex.kiln.core.model.WidgetUpdatePublisher
 import dev.involvex.kiln.feature.apps.data.DefaultInstalledAppsReader
 import dev.involvex.kiln.feature.apps.data.PackageInfoSource
 import dev.involvex.kiln.feature.apps.data.PackageManagerPackageInfoSource
 import dev.involvex.kiln.feature.backup.data.DataStoreBackupPreferences
+import dev.involvex.kiln.feature.backup.data.WebDavCredentialsStore
 import dev.involvex.kiln.feature.installer.DefaultInstallQueue
 import dev.involvex.kiln.feature.installer.rollback.DefaultApkDownloadJanitor
 import dev.involvex.kiln.feature.installer.rollback.FileApkRollbackCache
@@ -128,6 +130,10 @@ abstract class AppBindingsModule {
     @Binds
     @Singleton
     abstract fun bindBackupPreferences(impl: DataStoreBackupPreferences): BackupPreferences
+
+    @Binds
+    @Singleton
+    abstract fun bindWebDavSecretRepository(impl: WebDavCredentialsStore): WebDavSecretRepository
 
     @Binds
     @Singleton

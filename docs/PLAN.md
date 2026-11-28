@@ -175,7 +175,7 @@ Die UI fragt nie „ist Shizuku da?", sondern `capabilities: Set<Capability>` au
 | ROOT / Shizuku-Root | Volles Backup `/data/data` + `/data/user_de` + Berechtigungen; Restore mit korrektem Owner/SELinux-Kontext (`restorecon`)        |
 
 - Format: zip + `metadata.json` (Paket, Version, Signatur, Zeit, Tier); optional AES-GCM (Passwort/PBKDF2) → **M40**; ROOT-Daten später
-- Ziel: SAF-Ordner mit keep-N Rotation → **M40**; später WebDAV/Cloudflare R2 (S3-kompatibel)
+- Ziel: SAF-Ordner mit keep-N Rotation → **M40**; WebDAV (HTTPS) → **M66**; Cloudflare R2 (S3) weiterhin deferred
 - Restore-Reihenfolge: APK installieren → `force-stop` → Daten entpacken → Owner/Kontext setzen
 - Realistisch: Vollständige Datenbackups ohne Root sind **nicht** zuverlässig machbar. Die UI muss das klar kommunizieren. Referenz: Neo Backup, Swift Backup, AppManager
 
@@ -482,4 +482,5 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 47. **M63** Curated debloat ratings pipeline → Done (`m63-curated-debloat-ratings`; packages empty)
 48. **M64** Diagnostics extras → Done (`m64-diagnostics-extras`)
 49. **M65** Tablet/foldable layouts → Done (`m65-tablet-layouts`)
-50. **M66** WebDAV backup destination → Planned
+50. **M66** WebDAV backup destination → Done (`m66-webdav-backup`; not R2)
+51. **M67** ROOT `/data/data` backup → Planned
