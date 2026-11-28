@@ -1,5 +1,10 @@
 package dev.involvex.kiln.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
@@ -7,22 +12,33 @@ import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
+import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
+import androidx.compose.material3.adaptive.navigation3.LocalListDetailSceneScope
+import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import androidx.window.core.layout.WindowSizeClass
 import dev.involvex.kiln.R
 import dev.involvex.kiln.core.designsystem.scroll.LocalScrollToTopSignal
 import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopSignal
@@ -96,6 +112,14 @@ import dev.involvex.kiln.navigation.UsersKey
 
 private data class TopLevelDestination(val key: Any, val labelRes: Int, val icon: ImageVector)
 
+private fun kilnTopLevelDestinations(): List<TopLevelDestination> = listOf(
+    TopLevelDestination(AppsKey, R.string.nav_apps, Icons.Filled.Apps),
+    TopLevelDestination(SourcesKey, R.string.nav_sources, Icons.Filled.CloudDownload),
+    TopLevelDestination(ManageKey, R.string.nav_manage, Icons.Filled.Tune),
+    TopLevelDestination(SettingsKey, R.string.nav_settings, Icons.Filled.Settings),
+)
+
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun KilnApp(
     modifier: Modifier = Modifier,
@@ -104,15 +128,40 @@ fun KilnApp(
     updatesDeepLinkStore: UpdatesDeepLinkStore? = null,
     incomingApkInstallStore: IncomingApkInstallStore? = null,
 ) {
-    val destinations = listOf(
-        TopLevelDestination(AppsKey, R.string.nav_apps, Icons.Filled.Apps),
-        TopLevelDestination(SourcesKey, R.string.nav_sources, Icons.Filled.CloudDownload),
-        TopLevelDestination(ManageKey, R.string.nav_manage, Icons.Filled.Tune),
-        TopLevelDestination(SettingsKey, R.string.nav_settings, Icons.Filled.Settings),
-    )
+    val destinations = kilnTopLevelDestinations()
     val topLevelBackStack = remember { TopLevelBackStack<Any>(AppsKey) }
     val scrollToTop = remember { ScrollToTopSignal() }
+    val listDetailStrategy = rememberListDetailSceneStrategy<Any>()
+    val useRail = currentWindowAdaptiveInfoV2().windowSizeClass
+        .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
 
+    CollectKilnDeepLinks(
+        topLevelBackStack = topLevelBackStack,
+        manageDeepLinkStore = manageDeepLinkStore,
+        privilegeSetupDeepLinkStore = privilegeSetupDeepLinkStore,
+        updatesDeepLinkStore = updatesDeepLinkStore,
+    )
+
+    CompositionLocalProvider(LocalScrollToTopSignal provides scrollToTop) {
+        KilnAdaptiveShell(
+            modifier = modifier,
+            destinations = destinations,
+            topLevelBackStack = topLevelBackStack,
+            scrollToTop = scrollToTop,
+            useRail = useRail,
+            listDetailStrategy = listDetailStrategy,
+            incomingApkInstallStore = incomingApkInstallStore,
+        )
+    }
+}
+
+@Composable
+private fun CollectKilnDeepLinks(
+    topLevelBackStack: TopLevelBackStack<Any>,
+    manageDeepLinkStore: ManageDeepLinkStore?,
+    privilegeSetupDeepLinkStore: PrivilegeSetupDeepLinkStore?,
+    updatesDeepLinkStore: UpdatesDeepLinkStore?,
+) {
     if (manageDeepLinkStore != null) {
         LaunchedEffect(manageDeepLinkStore) {
             manageDeepLinkStore.pending.collect { pending ->
@@ -122,7 +171,6 @@ fun KilnApp(
             }
         }
     }
-
     if (privilegeSetupDeepLinkStore != null) {
         LaunchedEffect(privilegeSetupDeepLinkStore) {
             privilegeSetupDeepLinkStore.pending.collect { pending ->
@@ -132,7 +180,6 @@ fun KilnApp(
             }
         }
     }
-
     // Do not consume here — AppsViewModel applies the Updates filter and clears the flag.
     if (updatesDeepLinkStore != null) {
         LaunchedEffect(updatesDeepLinkStore) {
@@ -143,38 +190,57 @@ fun KilnApp(
             }
         }
     }
+}
 
-    CompositionLocalProvider(LocalScrollToTopSignal provides scrollToTop) {
-        Scaffold(
-            modifier = modifier,
-            bottomBar = {
-                NavigationBar {
-                    destinations.forEach { destination ->
-                        val selected = destination.key == topLevelBackStack.topLevelKey
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                val alreadyAtRoot = topLevelBackStack.addTopLevel(destination.key)
-                                if (alreadyAtRoot) {
-                                    scrollToTop.request()
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = destination.icon,
-                                    contentDescription = stringResource(destination.labelRes),
-                                )
-                            },
-                            label = { Text(text = stringResource(destination.labelRes)) },
-                        )
-                    }
-                }
-            },
-        ) { padding ->
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@Composable
+private fun KilnAdaptiveShell(
+    modifier: Modifier,
+    destinations: List<TopLevelDestination>,
+    topLevelBackStack: TopLevelBackStack<Any>,
+    scrollToTop: ScrollToTopSignal,
+    useRail: Boolean,
+    listDetailStrategy: ListDetailSceneStrategy<Any>,
+    incomingApkInstallStore: IncomingApkInstallStore?,
+) {
+    fun onDestinationClick(destination: TopLevelDestination) {
+        val alreadyAtRoot = topLevelBackStack.addTopLevel(destination.key)
+        if (alreadyAtRoot) {
+            scrollToTop.request()
+        }
+    }
+
+    Scaffold(
+        modifier = modifier,
+        bottomBar = {
+            if (!useRail) {
+                KilnBottomBar(
+                    destinations = destinations,
+                    selectedKey = topLevelBackStack.topLevelKey,
+                    onDestinationClick = ::onDestinationClick,
+                )
+            }
+        },
+    ) { padding ->
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+        ) {
+            if (useRail) {
+                KilnNavRail(
+                    destinations = destinations,
+                    selectedKey = topLevelBackStack.topLevelKey,
+                    onDestinationClick = ::onDestinationClick,
+                )
+            }
             NavDisplay(
                 backStack = topLevelBackStack.backStack,
                 onBack = { topLevelBackStack.removeLast() },
-                modifier = Modifier.padding(padding),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize(),
+                sceneStrategies = listOf(listDetailStrategy),
                 entryDecorators = listOf(
                     rememberSaveableStateHolderNavEntryDecorator(),
                     rememberViewModelStoreNavEntryDecorator(),
@@ -187,12 +253,80 @@ fun KilnApp(
     }
 }
 
+@Composable
+private fun KilnBottomBar(destinations: List<TopLevelDestination>, selectedKey: Any, onDestinationClick: (TopLevelDestination) -> Unit) {
+    NavigationBar {
+        destinations.forEach { destination ->
+            NavigationBarItem(
+                selected = destination.key == selectedKey,
+                onClick = { onDestinationClick(destination) },
+                icon = {
+                    Icon(
+                        imageVector = destination.icon,
+                        contentDescription = stringResource(destination.labelRes),
+                    )
+                },
+                label = { Text(text = stringResource(destination.labelRes)) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun KilnNavRail(destinations: List<TopLevelDestination>, selectedKey: Any, onDestinationClick: (TopLevelDestination) -> Unit) {
+    NavigationRail {
+        destinations.forEach { destination ->
+            NavigationRailItem(
+                selected = destination.key == selectedKey,
+                onClick = { onDestinationClick(destination) },
+                icon = {
+                    Icon(
+                        imageVector = destination.icon,
+                        contentDescription = stringResource(destination.labelRes),
+                    )
+                },
+                label = { Text(text = stringResource(destination.labelRes)) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun AppsDetailPlaceholder() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.apps_detail_placeholder_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = stringResource(R.string.apps_detail_placeholder_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Suppress("LongMethod")
 private fun EntryProviderScope<Any>.kilnNavEntries(
     topLevelBackStack: TopLevelBackStack<Any>,
     incomingApkInstallStore: IncomingApkInstallStore?,
 ) {
-    entry<AppsKey> {
+    entry<AppsKey>(
+        metadata = ListDetailSceneStrategy.listPane(
+            detailPlaceholder = { AppsDetailPlaceholder() },
+        ),
+    ) {
         AppsShellRoute(
             onOpenDetail = { packageName ->
                 topLevelBackStack.add(AppDetailKey(packageName))
@@ -202,18 +336,26 @@ private fun EntryProviderScope<Any>.kilnNavEntries(
             },
         )
     }
-    entry<AppDetailKey> { key ->
+    entry<AppDetailKey>(
+        metadata = ListDetailSceneStrategy.detailPane(),
+    ) { key ->
+        val showBack = LocalListDetailSceneScope.current == null
         AppDetailRoute(
             onOpenPrivilegeSetup = { topLevelBackStack.add(PrivilegeSetupKey) },
             packageName = key.packageName,
             onBack = { topLevelBackStack.removeLast() },
+            showBackNavigation = showBack,
         )
     }
-    entry<CatalogDetailKey> { key ->
+    entry<CatalogDetailKey>(
+        metadata = ListDetailSceneStrategy.detailPane(),
+    ) { key ->
+        val showBack = LocalListDetailSceneScope.current == null
         CatalogDetailRoute(
             packageName = key.packageName,
             repoId = key.repoId,
             onBack = { topLevelBackStack.removeLast() },
+            showBackNavigation = showBack,
         )
     }
     entry<SourcesKey> {

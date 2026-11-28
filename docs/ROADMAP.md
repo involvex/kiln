@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M64** Done on `m64-diagnostics-extras` (cpuinfo + thermals cards). Next: **M65** tablet/foldable layouts. Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: license-cleared debloat import, WebDAV backup, ROOT `/data/data`.
+**Current status:** **M65** Done on `m65-tablet-layouts` (NavigationRail + Apps list-detail). Next: **M66** WebDAV backup destination. Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: license-cleared debloat import, ROOT `/data/data`.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -79,6 +79,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M62** | Storage treemap | Done | [`prompts/M62-storage-treemap.md`](./prompts/M62-storage-treemap.md) · `m62-storage-treemap` | Squarified treemap of largest consumers; replaces size bars |
 | **M63** | Curated debloat ratings | Done | [`prompts/M63-curated-debloat-ratings.md`](./prompts/M63-curated-debloat-ratings.md) · `m63-curated-debloat-ratings` | Parser + tests + catalog meta UI; `packages: []` until license-cleared import |
 | **M64** | Diagnostics extras | Done | [`prompts/M64-diagnostics-extras.md`](./prompts/M64-diagnostics-extras.md) · `m64-diagnostics-extras` | `dumpsys cpuinfo` + `thermalservice` pretty cards; no raw dump; no `cmd battery` |
+| **M65** | Tablet / foldable layouts | Done | [`prompts/M65-tablet-layouts.md`](./prompts/M65-tablet-layouts.md) · `m65-tablet-layouts` | NavigationRail at medium+; Apps `ListDetailSceneStrategy`; phone bar unchanged |
 
 ---
 
@@ -103,7 +104,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | SAF backup rotation / data tiers / encryption | Done (M40 #69) | SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM; ROOT / cloud deferred |
 | APK tools 2 (inspect + compare) | Done | M29 (#47); M31 (#49); universal merge M35 (#56) |
 | Mirrors / proxy | Done | M30 #48 |
-| Freeze/hibernate, dual-user, tablet | Partial | M36 freeze Done (#58); M53–**M58** dual-user Done; **M59** honesty polish Done; tablet unscheduled |
+| Freeze/hibernate, dual-user, tablet | Done | M36 freeze (#58); M53–**M58** dual-user; **M59** polish; **M65** tablet/foldable rail + Apps list-detail |
 | Publishing / F-Droid + Izzy | Closed for now | Izzy [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948); F-Droid !58920 closed (3‑month rule). Ship via GitHub + Obtainium; F-Droid refile ≈ Feb 2026. Play skipped (US$25) |
 | HyperOS M1–M8 checklist sweep | Optional / low priority | Older acceptance lists; **M59** short checklist in prompt only — not a gate. Run ad hoc if something regresses |
 | Device diagnostics (battery / netstats / top) | Done (M60 #111) | Shizuku-only pretty cards; observe adbcaptain commands, no AGPL copy |
@@ -123,7 +124,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 
 | Feature | Now (main / 0.2.14) | Needs tier |
 | --- | --- | --- |
-| Navigation shell / theme | ✅ Nav3, bottom bar, design system | NONE |
+| Navigation shell / theme | ✅ Nav3, bottom bar (compact) / NavigationRail (medium+), Apps list-detail, design system | NONE |
 | List installed apps | ✅ Summary list, search, User/System/All, sort; update badges | NONE |
 | App detail | ✅ Version, installer, SHA-256, paths, permissions; **M43** activities + Start/pin; **M50/M51** services/receivers/providers with enable/disable (Shizuku + denylist; non-exported read-only); **M56** component toggle can target census user; rollback + Shizuku downgrade | NONE / SHIZUKU |
 | APK export (single / batch) | ✅ `.apk` / `.apks` STORED / `.xapk`; SAF + share + WorkManager batch | NONE |
@@ -163,7 +164,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Release / store prep | ✅ version `0.2.14` (code 17); fastlane + screenshots; [STORE.md](./STORE.md); Izzy + F-Droid closed; Obtainium | — |
 | App Discovery | ✅ Apps → Library\|Discover; home shelves + categories; catalog refresh; icons; detail; search; GitHub tab; install queue | NONE (+ network) |
 | GitHub browse (Discover) | ✅ F-Droid/GitHub tabs; owner/repo lookup; saved sources; install queue | NONE (+ network; PAT optional) |
-| Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage; **M42** `kilnHiltViewModel` Activity scope (Nav3 Hilt map miss) | NONE |
+| Navigation (4-tab) | ✅ Apps / Sources / Manage / Settings; Storage+Backup under Manage; **M65** rail + Apps list-detail on medium+; **M42** `kilnHiltViewModel` Activity scope | NONE |
 | Trending shelves | ✅ Category/keyword shelves (honest: no download charts) | NONE (+ catalog) |
 
 ---
@@ -372,9 +373,9 @@ flowchart LR
   M53 --> v027[v0.2.7]
 ```
 
-1. **M65** Tablet/foldable: NavigationRail + list-detail (PLAN §12 P3).
+1. **M66** WebDAV backup destination (not Cloudflare/R2).
 2. Store: GitHub + Obtainium; F-Droid refile only after ≈2026-02-08 ([STORE.md](./STORE.md)).
-3. Later: license-cleared debloat package import, WebDAV backup, ROOT `/data/data`.
+3. Later: license-cleared debloat package import, ROOT `/data/data`.
 
 ---
 

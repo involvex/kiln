@@ -2,11 +2,11 @@
 
 ## Audience
 
-People who sideload Kiln with Shizuku and want on-device health snapshots without a terminal.
+People who sideload Kiln on tablets or foldables and want the same tools without a cramped phone chrome.
 
 ## Announcement
 
-Kiln Device diagnostics (Settings → Tools) now also shows **CPU package usage** (`dumpsys cpuinfo`) and **thermals** (`dumpsys thermalservice`) as compact cards — still no raw dumps, no Root, and no battery-mutating commands. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or Obtainium → `https://github.com/involvex/kiln`.
+Kiln now adapts on wider screens: a **NavigationRail** instead of the bottom bar, and **Apps list + detail side by side** (no raw dumps, same four destinations). Phones keep the familiar bottom navigation. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or Obtainium → `https://github.com/involvex/kiln`.
 
 ## Free channels (pick one)
 
