@@ -38,6 +38,11 @@ class KilnUserService : IKilnUserService.Stub {
             // Full dumpsys netstats can be multi-MB; truncate in-process.
             ShellAllowlist.DUMPSYS_NETSTATS -> ShellRunner.runNetstatsSnapshot(argv)
 
+            // cpuinfo is heavy; always bound (do not use unbounded ShellRunner.run).
+            ShellAllowlist.DUMPSYS_CPUINFO -> ShellRunner.runCpuinfoSnapshot(argv)
+
+            ShellAllowlist.DUMPSYS_THERMALSERVICE -> ShellRunner.runThermalSnapshot(argv)
+
             ShellAllowlist.TOP_ONCE -> ShellRunner.runTopSnapshot(argv)
 
             else -> ShellRunner.run(argv)

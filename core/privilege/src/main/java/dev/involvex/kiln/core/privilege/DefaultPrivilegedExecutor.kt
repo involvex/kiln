@@ -18,6 +18,8 @@ import dev.involvex.kiln.core.model.AndroidUserInfo
 import dev.involvex.kiln.core.model.AndroidUserListParser
 import dev.involvex.kiln.core.model.BatteryDumpParser
 import dev.involvex.kiln.core.model.BatterySnapshot
+import dev.involvex.kiln.core.model.CpuinfoDumpParser
+import dev.involvex.kiln.core.model.CpuinfoSnapshot
 import dev.involvex.kiln.core.model.NetstatsDumpParser
 import dev.involvex.kiln.core.model.NetstatsSnapshot
 import dev.involvex.kiln.core.model.PrivilegeCapability
@@ -28,6 +30,8 @@ import dev.involvex.kiln.core.model.ProcessStat
 import dev.involvex.kiln.core.model.ProcessStatsParser
 import dev.involvex.kiln.core.model.SelfTestReport
 import dev.involvex.kiln.core.model.ShizukuSetupPhase
+import dev.involvex.kiln.core.model.ThermalDumpParser
+import dev.involvex.kiln.core.model.ThermalSnapshot
 import dev.involvex.kiln.core.model.TopDumpParser
 import dev.involvex.kiln.core.model.TopSnapshot
 import dev.involvex.kiln.core.privilege.shell.ShellAllowlist
@@ -671,6 +675,50 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
+    override suspend fun readCpuinfoDump(): Result<CpuinfoSnapshot> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.RUN_SHELL_DIAGNOSTIC !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:RUN_SHELL_DIAGNOSTIC")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.DUMPSYS_CPUINFO, emptyList())) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    val snap = CpuinfoDumpParser.parse(out.value)
+                    if (snap == null) {
+                        Result.failure("parse_failed:cpuinfo")
+                    } else {
+                        Result.success(snap)
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun readThermalDump(): Result<ThermalSnapshot> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.RUN_SHELL_DIAGNOSTIC !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:RUN_SHELL_DIAGNOSTIC")
+        }
+        when (val out = invokeAllowlisted(ShellAllowlist.DUMPSYS_THERMALSERVICE, emptyList())) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    Result.failure(out.value)
+                } else {
+                    val snap = ThermalDumpParser.parse(out.value)
+                    if (snap == null) {
+                        Result.failure("parse_failed:thermal")
+                    } else {
+                        Result.success(snap)
+                    }
+                }
+            }
+        }
+    }
+
     private fun resolveUidLabel(uid: Int): String {
         val pm = context.packageManager
         val packages = runCatching { pm.getPackagesForUid(uid) }.getOrNull().orEmpty()
@@ -789,6 +837,7 @@ class DefaultPrivilegedExecutor @Inject constructor(
             ShellAllowlist.DUMPSYS_CPUINFO,
             ShellAllowlist.DUMPSYS_BATTERY,
             ShellAllowlist.DUMPSYS_NETSTATS,
+            ShellAllowlist.DUMPSYS_THERMALSERVICE,
             ShellAllowlist.TOP_ONCE,
             -> null
 

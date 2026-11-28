@@ -42,9 +42,13 @@ class DiagnosticsViewModel @Inject constructor(private val privilegedExecutor: P
                         battery = null,
                         netstats = null,
                         top = null,
+                        cpuinfo = null,
+                        thermal = null,
                         batteryError = null,
                         netstatsError = null,
                         topError = null,
+                        cpuinfoError = null,
+                        thermalError = null,
                     )
                 }
                 return@launch
@@ -56,15 +60,21 @@ class DiagnosticsViewModel @Inject constructor(private val privilegedExecutor: P
                     batteryError = null,
                     netstatsError = null,
                     topError = null,
+                    cpuinfoError = null,
+                    thermalError = null,
                 )
             }
             coroutineScope {
                 val batteryDeferred = async { privilegedExecutor.readBatteryDump() }
                 val netDeferred = async { privilegedExecutor.readNetstatsDump() }
                 val topDeferred = async { privilegedExecutor.readTopDump() }
+                val cpuinfoDeferred = async { privilegedExecutor.readCpuinfoDump() }
+                val thermalDeferred = async { privilegedExecutor.readThermalDump() }
                 val battery = batteryDeferred.await()
                 val net = netDeferred.await()
                 val top = topDeferred.await()
+                val cpuinfo = cpuinfoDeferred.await()
+                val thermal = thermalDeferred.await()
                 _uiState.update { state ->
                     state.copy(
                         isLoading = false,
@@ -74,6 +84,10 @@ class DiagnosticsViewModel @Inject constructor(private val privilegedExecutor: P
                         netstatsError = (net as? Result.Failure)?.message?.shortError(),
                         top = (top as? Result.Success)?.value,
                         topError = (top as? Result.Failure)?.message?.shortError(),
+                        cpuinfo = (cpuinfo as? Result.Success)?.value,
+                        cpuinfoError = (cpuinfo as? Result.Failure)?.message?.shortError(),
+                        thermal = (thermal as? Result.Success)?.value,
+                        thermalError = (thermal as? Result.Failure)?.message?.shortError(),
                     )
                 }
             }

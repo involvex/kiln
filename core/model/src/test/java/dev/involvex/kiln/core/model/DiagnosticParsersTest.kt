@@ -161,4 +161,61 @@ class DiagnosticParsersTest {
         assertFalse(DiagnosticsGate.canRun(emptySet()))
         assertTrue(DiagnosticsGate.canRun(setOf(PrivilegeCapability.RUN_SHELL_DIAGNOSTIC)))
     }
+
+    @Test
+    fun `cpuinfo parses load and package rows`() {
+        val stdout = """
+            Load: 1.25 / 2.50 / 3.75
+            CPU usage from 10000ms to 0ms ago:
+              12% 1000/com.example.heavy: 10% user + 2% kernel
+               3.5% 99/com.example.light: 3% user + 0.5% kernel
+        """.trimIndent()
+        val snap = CpuinfoDumpParser.parse(stdout, limit = 8)
+        assertNotNull(snap)
+        assertEquals(1.25f, snap!!.load1)
+        assertEquals(2.5f, snap.load5)
+        assertEquals(3.75f, snap.load15)
+        assertEquals("com.example.heavy", snap.rows.first().packageName)
+        assertEquals(12f, snap.rows.first().cpuPercent)
+        assertEquals(3.5f, snap.rows[1].cpuPercent)
+    }
+
+    @Test
+    fun `cpuinfo null on ERR`() {
+        assertNull(CpuinfoDumpParser.parse("ERR:empty"))
+    }
+
+    @Test
+    fun `thermal parses HAL temps and skips sentinel`() {
+        val stdout = """
+            IsStatusOverride: false
+            Thermal Status: 2
+            Current temperatures from HAL:
+              Temperature{mValue=42.5, mType=3, mName=CPU, mStatus=0}
+              Temperature{mValue=-99.9, mType=1, mName=broken, mStatus=0}
+              Temperature{mValue=36.0, mType=2, mName=GPU, mStatus=0}
+            Cached temperatures:
+              Temperature{mValue=99.0, mType=3, mName=CPU, mStatus=0}
+        """.trimIndent()
+        val snap = ThermalDumpParser.parse(stdout)
+        assertNotNull(snap)
+        assertEquals(ThermalStatusLevel.MODERATE, snap!!.status)
+        assertEquals(2, snap.zones.size)
+        assertEquals("CPU", snap.zones.first().name)
+        assertEquals(42.5f, snap.zones.first().celsius)
+        assertFalse(snap.zones.any { it.name == "broken" })
+    }
+
+    @Test
+    fun `thermal falls back to cached when HAL missing`() {
+        val stdout = """
+            Thermal Status: 0
+            Cached temperatures:
+              Temperature{mValue=31.0, mType=0, mName=skin, mStatus=0}
+        """.trimIndent()
+        val snap = ThermalDumpParser.parse(stdout)
+        assertNotNull(snap)
+        assertEquals(ThermalStatusLevel.NONE, snap!!.status)
+        assertEquals("skin", snap.zones.single().name)
+    }
 }

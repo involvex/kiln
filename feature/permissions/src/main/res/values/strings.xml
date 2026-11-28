@@ -107,7 +107,7 @@
     <string name="users_row_stopped">Not running</string>
 
     <string name="diagnostics_title">Device diagnostics</string>
-    <string name="diagnostics_explain">Compact Shizuku snapshots: battery, network usage, and CPU top. No raw dumps, no Root.</string>
+    <string name="diagnostics_explain">Compact Shizuku snapshots: battery, network usage, CPU top, cpuinfo packages, and thermals. No raw dumps, no Root, no battery commands.</string>
     <string name="diagnostics_need_shizuku">Shizuku with shell diagnostics is required for this screen.</string>
     <string name="diagnostics_open_setup">Open Privilege setup</string>
     <string name="diagnostics_refresh">Refresh</string>
@@ -147,4 +147,19 @@
     <string name="diagnostics_cpu_summary">User %1$s%% · System %2$s%% · Idle %3$s%%</string>
     <string name="diagnostics_cpu_row_pct">%1$s%%</string>
     <string name="diagnostics_cpu_no_rows">No process rows in this snapshot.</string>
+    <string name="diagnostics_cpuinfo_title">CPU packages</string>
+    <string name="diagnostics_cpuinfo_load">Load %1$s / %2$s / %3$s</string>
+    <string name="diagnostics_cpuinfo_no_rows">No package CPU rows in this snapshot.</string>
+    <string name="diagnostics_thermal_title">Thermals</string>
+    <string name="diagnostics_thermal_status">Status: %1$s</string>
+    <string name="diagnostics_thermal_status_none">None</string>
+    <string name="diagnostics_thermal_status_light">Light</string>
+    <string name="diagnostics_thermal_status_moderate">Moderate</string>
+    <string name="diagnostics_thermal_status_severe">Severe</string>
+    <string name="diagnostics_thermal_status_critical">Critical</string>
+    <string name="diagnostics_thermal_status_emergency">Emergency</string>
+    <string name="diagnostics_thermal_status_shutdown">Shutdown</string>
+    <string name="diagnostics_thermal_status_unknown">Unknown</string>
+    <string name="diagnostics_thermal_zone_temp">%1$s °C</string>
+    <string name="diagnostics_thermal_no_zones">No temperature zones in this snapshot.</string>
 </resources>

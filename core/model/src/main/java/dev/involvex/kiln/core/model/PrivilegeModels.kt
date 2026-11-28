@@ -231,4 +231,14 @@ interface PrivilegedExecutor {
      * Compact `top -n 1` snapshot (M60). Requires [PrivilegeCapability.RUN_SHELL_DIAGNOSTIC].
      */
     suspend fun readTopDump(): Result<TopSnapshot>
+
+    /**
+     * Compact `dumpsys cpuinfo` snapshot (M64). Requires [PrivilegeCapability.RUN_SHELL_DIAGNOSTIC].
+     */
+    suspend fun readCpuinfoDump(): Result<CpuinfoSnapshot>
+
+    /**
+     * Compact `dumpsys thermalservice` snapshot (M64). Requires [PrivilegeCapability.RUN_SHELL_DIAGNOSTIC].
+     */
+    suspend fun readThermalDump(): Result<ThermalSnapshot>
 }

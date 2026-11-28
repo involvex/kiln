@@ -480,4 +480,5 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 45. **M61** GitLab + Codeberg release sources → Done (`m61-gitlab-codeberg`)
 46. **M62** Storage treemap → Done (`m62-storage-treemap`)
 47. **M63** Curated debloat ratings pipeline → Done (`m63-curated-debloat-ratings`; packages empty)
-48. **M64** Diagnostics extras → Planned
+48. **M64** Diagnostics extras → Done (`m64-diagnostics-extras`)
+49. **M65** Tablet/foldable layouts → Planned

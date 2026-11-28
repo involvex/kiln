@@ -372,8 +372,13 @@ class ShellAllowlistTest {
             listOf("top", "-n", "1", "-m", "20"),
             ShellAllowlist.buildArgv(ShellAllowlist.TOP_ONCE, emptyList()),
         )
+        assertEquals(
+            listOf("dumpsys", "thermalservice"),
+            ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_THERMALSERVICE, emptyList()),
+        )
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_BATTERY, listOf("extra")))
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_NETSTATS, listOf("x")))
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.TOP_ONCE, listOf("x")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_THERMALSERVICE, listOf("x")))
     }
 }
