@@ -2,11 +2,11 @@
 
 ## Audience
 
-Rooted Magisk users who already use Kiln backup and want private `/data/data` in the archive (not just APK / Android/data).
+Users who expected a bundled OEM debloat rating list in Kiln.
 
 ## Announcement
 
-Kiln Backup **ROOT** tier can now pack `/data/data` into `app_data.tar` when Magisk root is opted in (Privilege setup; default off) or Shizuku runs as uid 0. Restore path: install → force-stop → extract → `restorecon`. `/data/user_de` stays deferred. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or Obtainium → `https://github.com/involvex/kiln`.
+Kiln’s debloat **catalog stays empty on purpose**: the commonly cited UAD-NG package list is **GPL-3.0**, which is not cleared for Apache-2.0 Kiln. Unknown packages still work via expert mode; ratings will only appear after a license-cleared curated source is approved. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or Obtainium → `https://github.com/involvex/kiln`.
 
 ## Free channels (pick one)
 

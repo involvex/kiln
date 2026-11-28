@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **M68** Debloat data license gate: UAD-NG `uad_lists.json` recorded as GPL-3.0 and **not** imported; `debloat-db.json` stays `packages: []` (no invented ratings)
 - **M67** ROOT `/data/data` backup (opt-in Magisk `RootExecutor` + libsu; `app_data.tar` + restorecon; `/data/user_de` deferred)
 - **M66** WebDAV backup destination (HTTPS + Basic auth; EncryptedSharedPreferences password; keep-N prune; not Cloudflare/R2)
 - **M65** Tablet / foldable: NavigationRail at medium+ width; Apps list-detail via Material Adaptive `ListDetailSceneStrategy` (phone bottom bar unchanged)
