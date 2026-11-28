@@ -29,7 +29,10 @@ import dev.involvex.kiln.core.model.BatteryChargeStatus
 import dev.involvex.kiln.core.model.BatteryHealth
 import dev.involvex.kiln.core.model.BatteryPowerSource
 import dev.involvex.kiln.core.model.BatterySnapshot
+import dev.involvex.kiln.core.model.CpuinfoSnapshot
 import dev.involvex.kiln.core.model.NetstatsSnapshot
+import dev.involvex.kiln.core.model.ThermalSnapshot
+import dev.involvex.kiln.core.model.ThermalStatusLevel
 import dev.involvex.kiln.core.model.TopSnapshot
 import dev.involvex.kiln.feature.permissions.R
 import java.util.Locale
@@ -98,6 +101,8 @@ fun DiagnosticsScreen(
                 BatteryCard(state.battery, state.batteryError)
                 NetstatsCard(state.netstats, state.netstatsError)
                 TopCard(state.top, state.topError)
+                CpuinfoCard(state.cpuinfo, state.cpuinfoError)
+                ThermalCard(state.thermal, state.thermalError)
             }
         }
     }
@@ -334,6 +339,152 @@ private fun TopCard(top: TopSnapshot?, error: String?) {
 }
 
 @Composable
+private fun CpuinfoCard(cpuinfo: CpuinfoSnapshot?, error: String?) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.diagnostics_cpuinfo_title), style = MaterialTheme.typography.titleMedium)
+            when {
+                error != null -> {
+                    Text(
+                        stringResource(R.string.diagnostics_section_error, error),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+
+                cpuinfo == null -> {
+                    Text(
+                        stringResource(R.string.diagnostics_section_empty),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                else -> {
+                    if (cpuinfo.load1 != null || cpuinfo.load5 != null || cpuinfo.load15 != null) {
+                        Text(
+                            stringResource(
+                                R.string.diagnostics_cpuinfo_load,
+                                formatLoad(cpuinfo.load1),
+                                formatLoad(cpuinfo.load5),
+                                formatLoad(cpuinfo.load15),
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    if (cpuinfo.rows.isEmpty()) {
+                        Text(
+                            stringResource(R.string.diagnostics_cpuinfo_no_rows),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        cpuinfo.rows.forEach { row ->
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Text(
+                                    stringResource(
+                                        R.string.diagnostics_cpu_row_pct,
+                                        String.format(Locale.US, "%.1f", row.cpuPercent),
+                                    ),
+                                    style = MaterialTheme.typography.labelMedium,
+                                )
+                                Text(
+                                    row.packageName,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThermalCard(thermal: ThermalSnapshot?, error: String?) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.diagnostics_thermal_title), style = MaterialTheme.typography.titleMedium)
+            when {
+                error != null -> {
+                    Text(
+                        stringResource(R.string.diagnostics_section_error, error),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+
+                thermal == null -> {
+                    Text(
+                        stringResource(R.string.diagnostics_section_empty),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                else -> {
+                    Text(
+                        stringResource(R.string.diagnostics_thermal_status, thermalStatusLabel(thermal.status)),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    if (thermal.zones.isEmpty()) {
+                        Text(
+                            stringResource(R.string.diagnostics_thermal_no_zones),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        thermal.zones.forEach { zone ->
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                Text(
+                                    zone.name,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Text(
+                                    stringResource(
+                                        R.string.diagnostics_thermal_zone_temp,
+                                        String.format(Locale.US, "%.1f", zone.celsius),
+                                    ),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun thermalStatusLabel(status: ThermalStatusLevel): String = stringResource(
+    when (status) {
+        ThermalStatusLevel.NONE -> R.string.diagnostics_thermal_status_none
+        ThermalStatusLevel.LIGHT -> R.string.diagnostics_thermal_status_light
+        ThermalStatusLevel.MODERATE -> R.string.diagnostics_thermal_status_moderate
+        ThermalStatusLevel.SEVERE -> R.string.diagnostics_thermal_status_severe
+        ThermalStatusLevel.CRITICAL -> R.string.diagnostics_thermal_status_critical
+        ThermalStatusLevel.EMERGENCY -> R.string.diagnostics_thermal_status_emergency
+        ThermalStatusLevel.SHUTDOWN -> R.string.diagnostics_thermal_status_shutdown
+        ThermalStatusLevel.UNKNOWN -> R.string.diagnostics_thermal_status_unknown
+    },
+)
+
+@Composable
 private fun batteryStatusLabel(status: BatteryChargeStatus): String = stringResource(
     when (status) {
         BatteryChargeStatus.CHARGING -> R.string.diagnostics_battery_status_charging
@@ -369,6 +520,8 @@ private fun batteryHealthLabel(health: BatteryHealth): String = stringResource(
 )
 
 private fun formatPct(value: Float?): String = if (value == null) "—" else String.format(Locale.US, "%.0f", value)
+
+private fun formatLoad(value: Float?): String = if (value == null) "—" else String.format(Locale.US, "%.2f", value)
 
 private fun formatBytes(bytes: Long): String {
     val abs = abs(bytes.toDouble())

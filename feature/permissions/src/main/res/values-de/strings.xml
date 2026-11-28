@@ -107,7 +107,7 @@
     <string name="users_row_stopped">Gestoppt</string>
 
     <string name="diagnostics_title">Geräte-Diagnose</string>
-    <string name="diagnostics_explain">Kompakte Shizuku-Snapshots: Akku, Netzverbrauch und CPU-Top. Keine Roh-Dumps, kein Root.</string>
+    <string name="diagnostics_explain">Kompakte Shizuku-Snapshots: Akku, Netzverbrauch, CPU-Top, cpuinfo-Pakete und Temperaturen. Keine Roh-Dumps, kein Root, keine Battery-Befehle.</string>
     <string name="diagnostics_need_shizuku">Shizuku mit Shell-Diagnose ist für diesen Bildschirm nötig.</string>
     <string name="diagnostics_open_setup">Privilege-Einrichtung öffnen</string>
     <string name="diagnostics_refresh">Aktualisieren</string>
@@ -147,4 +147,19 @@
     <string name="diagnostics_cpu_summary">User %1$s%% · System %2$s%% · Idle %3$s%%</string>
     <string name="diagnostics_cpu_row_pct">%1$s%%</string>
     <string name="diagnostics_cpu_no_rows">Keine Prozesszeilen in diesem Snapshot.</string>
+    <string name="diagnostics_cpuinfo_title">CPU-Pakete</string>
+    <string name="diagnostics_cpuinfo_load">Load %1$s / %2$s / %3$s</string>
+    <string name="diagnostics_cpuinfo_no_rows">Keine Paket-CPU-Zeilen in diesem Snapshot.</string>
+    <string name="diagnostics_thermal_title">Temperaturen</string>
+    <string name="diagnostics_thermal_status">Status: %1$s</string>
+    <string name="diagnostics_thermal_status_none">Keine</string>
+    <string name="diagnostics_thermal_status_light">Leicht</string>
+    <string name="diagnostics_thermal_status_moderate">Mäßig</string>
+    <string name="diagnostics_thermal_status_severe">Schwer</string>
+    <string name="diagnostics_thermal_status_critical">Kritisch</string>
+    <string name="diagnostics_thermal_status_emergency">Notfall</string>
+    <string name="diagnostics_thermal_status_shutdown">Abschaltung</string>
+    <string name="diagnostics_thermal_status_unknown">Unbekannt</string>
+    <string name="diagnostics_thermal_zone_temp">%1$s °C</string>
+    <string name="diagnostics_thermal_no_zones">Keine Temperaturzonen in diesem Snapshot.</string>
 </resources>

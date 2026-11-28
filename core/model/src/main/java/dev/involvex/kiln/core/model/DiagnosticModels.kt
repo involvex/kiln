@@ -64,6 +64,33 @@ data class TopProcessRow(val pid: Int, val cpuPercent: Float, val name: String)
 /** Compact CPU / top snapshot. */
 data class TopSnapshot(val userPercent: Float?, val systemPercent: Float?, val idlePercent: Float?, val rows: List<TopProcessRow>)
 
+/** One package row from `dumpsys cpuinfo`. */
+data class CpuinfoPackageRow(val packageName: String, val cpuPercent: Float)
+
+/**
+ * Compact `dumpsys cpuinfo` snapshot (M64).
+ * [load1]/[load5]/[load15] are optional 1/5/15-minute load averages.
+ */
+data class CpuinfoSnapshot(val load1: Float?, val load5: Float?, val load15: Float?, val rows: List<CpuinfoPackageRow>)
+
+/** Skin / HAL thermal severity from `dumpsys thermalservice` Thermal Status. */
+enum class ThermalStatusLevel {
+    NONE,
+    LIGHT,
+    MODERATE,
+    SEVERE,
+    CRITICAL,
+    EMERGENCY,
+    SHUTDOWN,
+    UNKNOWN,
+}
+
+/** One temperature sensor from thermalservice. */
+data class ThermalZoneRow(val name: String, val celsius: Float, val type: Int?)
+
+/** Compact `dumpsys thermalservice` snapshot (M64). */
+data class ThermalSnapshot(val status: ThermalStatusLevel, val zones: List<ThermalZoneRow>)
+
 object DiagnosticsGate {
     fun canRun(capabilities: Set<PrivilegeCapability>): Boolean = PrivilegeCapability.RUN_SHELL_DIAGNOSTIC in capabilities
 }

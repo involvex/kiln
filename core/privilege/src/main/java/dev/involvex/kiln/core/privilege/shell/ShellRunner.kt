@@ -15,6 +15,8 @@ object ShellRunner {
     private const val DIAG_TIMEOUT_MS = 8_000L
     private const val BATTERY_MAX_LINES = 80
     private const val TOP_MAX_LINES = 80
+    private const val CPUINFO_MAX_LINES = 200
+    private const val THERMAL_MAX_LINES = 200
 
     // UID stats table (`mAppUidStatsMap`) is often past ~600 lines on HyperOS.
     private const val NETSTATS_MAX_LINES = 900
@@ -119,6 +121,14 @@ object ShellRunner {
     /** Bounded read for `top -n 1` (toybox may stall on some devices). */
     fun runTopSnapshot(argv: List<String>, timeoutMs: Long = DIAG_TIMEOUT_MS): String =
         runBoundedLines(argv, timeoutMs, TOP_MAX_LINES, maxBytes = 64 * 1024)
+
+    /** Bounded read for `dumpsys cpuinfo` (can be large; never hang forever). */
+    fun runCpuinfoSnapshot(argv: List<String>, timeoutMs: Long = DIAG_TIMEOUT_MS): String =
+        runBoundedLines(argv, timeoutMs, CPUINFO_MAX_LINES, maxBytes = 96 * 1024)
+
+    /** Bounded read for `dumpsys thermalservice`. */
+    fun runThermalSnapshot(argv: List<String>, timeoutMs: Long = DIAG_TIMEOUT_MS): String =
+        runBoundedLines(argv, timeoutMs, THERMAL_MAX_LINES, maxBytes = 64 * 1024)
 
     private fun runBoundedLines(argv: List<String>, timeoutMs: Long, maxLines: Int, maxBytes: Int): String {
         require(argv.isNotEmpty()) { "empty argv" }

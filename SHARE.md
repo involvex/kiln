@@ -2,11 +2,11 @@
 
 ## Audience
 
-People who sideload Kiln and care about honest debloat tooling (Shizuku), especially HyperOS users.
+People who sideload Kiln with Shizuku and want on-device health snapshots without a terminal.
 
 ## Announcement
 
-Kiln’s Debloat mode now surfaces the **curated ratings catalog metadata** (source, version, rated-package count). The shipped list is still empty on purpose — ratings are never invented; unknowns stay UNKNOWN and need expert mode. When a license-cleared source is approved, entries land in `debloat-db.json` via PR with NOTICE attribution. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or Obtainium → `https://github.com/involvex/kiln`.
+Kiln Device diagnostics (Settings → Tools) now also shows **CPU package usage** (`dumpsys cpuinfo`) and **thermals** (`dumpsys thermalservice`) as compact cards — still no raw dumps, no Root, and no battery-mutating commands. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or Obtainium → `https://github.com/involvex/kiln`.
 
 ## Free channels (pick one)
 

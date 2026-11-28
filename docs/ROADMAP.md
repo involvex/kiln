@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M63** Done on `m63-curated-debloat-ratings` (parser + empty curated catalog; no invented rows). Next: **M64** diagnostics extras. Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: license-cleared debloat import, tablet layouts, WebDAV backup, ROOT `/data/data`.
+**Current status:** **M64** Done on `m64-diagnostics-extras` (cpuinfo + thermals cards). Next: **M65** tablet/foldable layouts. Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: license-cleared debloat import, WebDAV backup, ROOT `/data/data`.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -78,6 +78,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M61** | GitLab + Codeberg sources | Done | [`prompts/M61-gitlab-codeberg.md`](./prompts/M61-gitlab-codeberg.md) · `m61-gitlab-codeberg` | Release sources for GitLab/Codeberg; same channel/APK heuristic as GitHub |
 | **M62** | Storage treemap | Done | [`prompts/M62-storage-treemap.md`](./prompts/M62-storage-treemap.md) · `m62-storage-treemap` | Squarified treemap of largest consumers; replaces size bars |
 | **M63** | Curated debloat ratings | Done | [`prompts/M63-curated-debloat-ratings.md`](./prompts/M63-curated-debloat-ratings.md) · `m63-curated-debloat-ratings` | Parser + tests + catalog meta UI; `packages: []` until license-cleared import |
+| **M64** | Diagnostics extras | Done | [`prompts/M64-diagnostics-extras.md`](./prompts/M64-diagnostics-extras.md) · `m64-diagnostics-extras` | `dumpsys cpuinfo` + `thermalservice` pretty cards; no raw dump; no `cmd battery` |
 
 ---
 
@@ -140,7 +141,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Activity log | ✅ Room-backed searchable log (install/backup/cache/maintenance/shell/…) | NONE |
 | Widgets / QS | ✅ M46: Updates (preview+Check); Cache (confirm/`CLEAR_CACHE`); Processes (mem/CPU+`FORCE_STOP`); QS Check now | NONE / SHIZUKU (`CLEAR_CACHE`, `RUN_SHELL_DIAGNOSTIC`, `FORCE_STOP`) |
 | In-app processes | ✅ **M52** Settings → Tools → Processes (same meminfo + force-stop gate as widget) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`, `FORCE_STOP`) |
-| Device diagnostics | ✅ **M60** Settings → Tools → Device diagnostics (battery / netstats / top cards; truncated dumps) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`) |
+| Device diagnostics | ✅ **M60** + **M64** Settings → Tools → Device diagnostics (battery / netstats / top / cpuinfo / thermals; truncated dumps; no `cmd battery`) | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`) |
 | Android user census | ✅ **M53** Settings → Tools → Android users (`pm list users` read-only); **M59** copy reflects best-effort dual-user targeting | NONE / SHIZUKU (`RUN_SHELL_DIAGNOSTIC`) |
 | Dual-user install/uninstall | ✅ **M55** optional `--user N` when census ≥2 + silent Shizuku; else unchanged | NONE / SHIZUKU (`SILENT_INSTALL` / `SILENT_UNINSTALL`) |
 | Dual-user component / freeze | ✅ **M56** optional `--user N` on component enable/disable + suspend/unsuspend when census ≥2 + DEBLOAT | NONE / SHIZUKU (`DEBLOAT`) |
@@ -371,9 +372,9 @@ flowchart LR
   M53 --> v027[v0.2.7]
 ```
 
-1. **M64** Diagnostics extras (`dumpsys cpuinfo` / thermals cards).
+1. **M65** Tablet/foldable: NavigationRail + list-detail (PLAN §12 P3).
 2. Store: GitHub + Obtainium; F-Droid refile only after ≈2026-02-08 ([STORE.md](./STORE.md)).
-3. Later: license-cleared debloat package import, tablet layouts, WebDAV backup, ROOT `/data/data`.
+3. Later: license-cleared debloat package import, WebDAV backup, ROOT `/data/data`.
 
 ---
 

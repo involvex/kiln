@@ -39,6 +39,7 @@ object ShellAllowlist {
     const val DUMPSYS_CPUINFO = "dumpsys_cpuinfo"
     const val DUMPSYS_BATTERY = "dumpsys_battery"
     const val DUMPSYS_NETSTATS = "dumpsys_netstats"
+    const val DUMPSYS_THERMALSERVICE = "dumpsys_thermalservice"
     const val TOP_ONCE = "top_once"
 
     private val PACKAGE_NAME = Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
@@ -290,6 +291,10 @@ object ShellAllowlist {
             // Full dump: HyperOS --checkin is wifi-bucket only; UID table lives in the full dump.
             // Output is truncated in ShellRunner (line/byte caps).
             if (args.isNotEmpty()) null else listOf("dumpsys", "netstats")
+        }
+
+        DUMPSYS_THERMALSERVICE -> {
+            if (args.isNotEmpty()) null else listOf("dumpsys", "thermalservice")
         }
 
         TOP_ONCE -> {
