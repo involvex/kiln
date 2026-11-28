@@ -483,4 +483,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 48. **M64** Diagnostics extras → Done (`m64-diagnostics-extras`)
 49. **M65** Tablet/foldable layouts → Done (`m65-tablet-layouts`)
 50. **M66** WebDAV backup destination → Done (`m66-webdav-backup`; not R2)
-51. **M67** ROOT `/data/data` backup → Planned
+51. **M67** ROOT `/data/data` backup → Done (`m67-root-data-backup`; CE only, `user_de` deferred)

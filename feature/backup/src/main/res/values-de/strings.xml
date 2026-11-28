@@ -5,11 +5,11 @@
     <string name="backup_tier_line">Aktive Stufe: %1$s</string>
     <string name="backup_tier_none">NONE (nur APK)</string>
     <string name="backup_tier_shizuku">SHIZUKU (APK + Android/data + OBB wenn vorhanden)</string>
-    <string name="backup_tier_root">ROOT (volles /data/data weiter aufgeschoben)</string>
-    <string name="backup_honesty_apk_only">Archive sind .kilnbackup.zip mit metadata.json. Optionale AES-GCM-Passwortverschlüsselung ist verfügbar. Privates /data/data gibt es ohne Root nicht.</string>
+    <string name="backup_tier_root">ROOT (APK + Android/data + OBB + /data/data wenn vorhanden)</string>
+    <string name="backup_honesty_apk_only">Archive sind .kilnbackup.zip mit metadata.json. Optionale AES-GCM-Passwortverschlüsselung ist verfügbar. Privates /data/data braucht Root (Magisk-Opt-in oder Shizuku-Root).</string>
     <string name="backup_honesty_none">Ohne Shizuku: nur APK-Archive. Wiederherstellung installiert alle APKs im Archiv (Base + Splits) per PackageInstaller (Systemdialog) oder still mit Shizuku.</string>
-    <string name="backup_honesty_shizuku">Shizuku ist bereit: Backups können Android/data und OBB des gewählten Pakets enthalten, wenn die Ordner existieren. Root-/data/data bleibt aufgeschoben.</string>
-    <string name="backup_honesty_root">Root-Capability erkannt, aber Kiln packt weiterhin kein /data/data. Shizuku Android/data + OBB gelten, wenn die Capability verfügbar ist.</string>
+    <string name="backup_honesty_shizuku">Shizuku ist bereit: Backups können Android/data und OBB des gewählten Pakets enthalten, wenn die Ordner existieren. Magisk-Root-Opt-in in der Privilege-Einrichtung für /data/data (user_de aufgeschoben).</string>
+    <string name="backup_honesty_root">Root ist verfügbar: Backups können /data/data des gewählten Pakets enthalten (nur CE; /data/user_de aufgeschoben). Android/data + OBB gelten weiter, wenn die Capability verfügbar ist. Restore: Install → Force-Stop → Entpacken → restorecon.</string>
     <string name="backup_dest_title">Backup-Ziel</string>
     <string name="backup_dest_saf">Lokaler Ordner (SAF)</string>
     <string name="backup_dest_webdav">WebDAV (HTTPS)</string>
@@ -51,9 +51,9 @@
     <string name="backup_app_meta">%1$s · %2$s %3$s</string>
     <string name="backup_has_splits">(inkl. Splits; Restore installiert alle APKs)</string>
     <string name="backup_msg_ok">Backup gespeichert für %1$s</string>
-    <string name="backup_msg_restore_queued">Wiederherstellung in der Warteschlange — Systemdialog ggf. bestätigen; Shared-Data wird mit Shizuku wiederhergestellt, wenn möglich</string>
+    <string name="backup_msg_restore_queued">Wiederherstellung in der Warteschlange — Systemdialog ggf. bestätigen; Shared-/App-Daten werden bei vorhandenen Capabilities wiederhergestellt</string>
     <string name="backup_restore_confirm_title">Aus Archiv wiederherstellen?</string>
-    <string name="backup_restore_confirm_body">Kiln entpackt alle APKs im Archiv (Base + Splits) und reiht eine Multi-Session-Installation ein. Enthält das Archiv Android/data oder OBB und Shizuku ist verfügbar, stellt Kiln diese Ordner wieder her, sobald das Paket vorhanden ist (Pfade des aktuellen Nutzers). Ein Systemdialog kann erscheinen.</string>
+    <string name="backup_restore_confirm_body">Kiln entpackt alle APKs im Archiv (Base + Splits) und reiht eine Multi-Session-Installation ein. Enthält das Archiv Android/data, OBB oder /data/data und die passende Privilege ist verfügbar, stellt Kiln diese nach der Installation wieder her (Force-Stop + restorecon für App-Daten). Ein Systemdialog kann erscheinen. Vorhandene App-Daten werden überschrieben.</string>
     <string name="backup_err_splits_incomplete">Archiv meldet Splits, enthält aber nur eine APK — Wiederherstellung abgebrochen, damit keine kaputte Installation gestartet wird.</string>
     <string name="backup_restore_confirm_action">Archiv wählen</string>
     <string name="backup_dual_user_restore_body">Dieses Gerät hat mehr als einen Android-Nutzer. Wähle, für welchen Nutzer die stille Restore-Installation gelten soll (best effort). Android/data und OBB nutzen weiterhin die Pfade des aktuellen Nutzers.</string>

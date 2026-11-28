@@ -58,7 +58,7 @@
     <string name="onboarding_link_no_saved_github">Noch keine GitHub-Quellen gespeichert. Unter Quellen hinzufügen oder owner/repo unten eingeben.</string>
 
     <string name="privilege_setup_title">Privilege-Einrichtung</string>
-    <string name="privilege_setup_intro">Privilegierte Aktionen (stille Installation, später Cache/Debloat) brauchen Shizuku oder ShizukuPlus. Ohne bleibt Kiln auf Tier NONE mit System-Dialogen.</string>
+    <string name="privilege_setup_intro">Privilegierte Aktionen (stille Installation, Cache, Debloat, volles Backup) brauchen Shizuku/ShizukuPlus und optional Magisk-Root. Ohne bleibt Kiln auf Tier NONE mit System-Dialogen.</string>
     <string name="privilege_phase_a">A · Nicht installiert</string>
     <string name="privilege_phase_b">B · Installiert, läuft nicht</string>
     <string name="privilege_phase_c">C · Läuft, keine Berechtigung</string>
@@ -84,4 +84,9 @@
     <string name="privilege_avail_yes">Verfügbar</string>
     <string name="privilege_avail_restricted">Eingeschränkt</string>
     <string name="privilege_avail_no">Nicht verfügbar</string>
+    <string name="privilege_root_opt_in_title">Magisk-Root (Opt-in)</string>
+    <string name="privilege_root_opt_in_body">Standardmäßig aus. Wenn aktiv, kann Kiln eine Magisk-Root-Shell für FULL_BACKUP anfordern (nur /data/data; user_de aufgeschoben). Shell-Befehle bleiben auf einer festen Allowlist.</string>
+    <string name="privilege_root_opt_in_toggle">Magisk-Root erlauben</string>
+    <string name="privilege_root_granted">Root-Shell gewährt — FULL_BACKUP nach Aktualisieren verfügbar</string>
+    <string name="privilege_root_pending">Root aktiviert — Magisk bestätigen, dann erneut prüfen</string>
 </resources>

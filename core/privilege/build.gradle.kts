@@ -18,6 +18,9 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
+    // Magisk root shell (opt-in RootExecutor). Prefer allowlisted argv via Shell.cmd.
+    implementation(libs.libsu.core)
+    implementation(libs.libsu.service)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.timber)
 }

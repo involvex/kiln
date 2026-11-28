@@ -14,6 +14,7 @@ data class BackupExtractResult(
     val allApkFiles: List<File>,
     val androidDataTar: File?,
     val androidObbTar: File?,
+    val appDataTar: File?,
 )
 
 object BackupArchiveReader {
@@ -31,6 +32,7 @@ object BackupArchiveReader {
                     allApkFiles = parsed.apkFiles,
                     androidDataTar = parsed.androidDataTar,
                     androidObbTar = parsed.androidObbTar,
+                    appDataTar = parsed.appDataTar,
                 ),
             )
         } catch (e: IOException) {
@@ -47,6 +49,7 @@ object BackupArchiveReader {
         val apkFiles: List<File>,
         val androidDataTar: File?,
         val androidObbTar: File?,
+        val appDataTar: File?,
     )
 
     private fun readEntries(input: InputStream, outputDir: File): Parsed {
@@ -54,6 +57,7 @@ object BackupArchiveReader {
         val apkFiles = ArrayList<File>()
         var androidDataTar: File? = null
         var androidObbTar: File? = null
+        var appDataTar: File? = null
         ZipInputStream(input).use { zip ->
             var entry = zip.nextEntry
             while (entry != null) {
@@ -75,6 +79,12 @@ object BackupArchiveReader {
                         androidObbTar = out
                     }
 
+                    name.equals(BackupMetadataCodec.APP_DATA_ENTRY, ignoreCase = true) -> {
+                        val out = File(outputDir, BackupMetadataCodec.APP_DATA_ENTRY)
+                        out.outputStream().use { zip.copyTo(it) }
+                        appDataTar = out
+                    }
+
                     name.endsWith(".apk", ignoreCase = true) -> {
                         val out = File(outputDir, name)
                         out.outputStream().use { zip.copyTo(it) }
@@ -85,7 +95,7 @@ object BackupArchiveReader {
                 entry = zip.nextEntry
             }
         }
-        return Parsed(metadata, apkFiles, androidDataTar, androidObbTar)
+        return Parsed(metadata, apkFiles, androidDataTar, androidObbTar, appDataTar)
     }
 
     private fun pickBaseApk(apkFiles: List<File>): File? = apkFiles.firstOrNull { it.name.equals("base.apk", ignoreCase = true) }

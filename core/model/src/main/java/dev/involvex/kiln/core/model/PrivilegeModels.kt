@@ -205,6 +205,26 @@ interface PrivilegedExecutor {
     suspend fun restoreAndroidSharedPackageDir(root: AndroidSharedRoot, packageName: String, srcTarAbsolutePath: String): Result<Unit>
 
     /**
+     * Tar `/data/data/<packageName>` into [destTarAbsolutePath] (Kiln external-cache staging only).
+     * Requires [PrivilegeCapability.FULL_BACKUP]. Missing dir → success with empty skip.
+     * Does not include `/data/user_de` (deferred).
+     */
+    suspend fun archiveAppDataDir(packageName: String, destTarAbsolutePath: String): Result<Boolean>
+
+    /**
+     * Extract app-data tar into `/data/data`, then `restorecon -R`. Requires [PrivilegeCapability.FULL_BACKUP].
+     */
+    suspend fun restoreAppDataDir(packageName: String, srcTarAbsolutePath: String): Result<Unit>
+
+    /**
+     * Magisk / libsu root opt-in (default off). Observing updates [PrivilegeStatus] after [setRootOptIn].
+     */
+    fun observeRootOptIn(): Flow<Boolean>
+
+    /** Enable/disable Magisk root path. Enabling may prompt Magisk for grant. */
+    suspend fun setRootOptIn(enabled: Boolean)
+
+    /**
      * `am force-stop <package>` — best-effort before data restore / process widget.
      * Requires [PrivilegeCapability.FORCE_STOP] or [PrivilegeCapability.ACCESS_ANDROID_DATA].
      */

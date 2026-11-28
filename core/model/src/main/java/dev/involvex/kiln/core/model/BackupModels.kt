@@ -36,6 +36,8 @@ data class BackupArchiveMetadata(
     val encrypted: Boolean = false,
     val androidDataEntry: String? = null,
     val androidObbEntry: String? = null,
+    /** Zip entry name for `/data/data` tar when [includesAppData] (M67). */
+    val appDataEntry: String? = null,
     /**
      * Intended Android user for restore install (M58 honesty note).
      * Null = unspecified / current-user default. Does not change Android/data paths.

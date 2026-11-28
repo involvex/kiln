@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,11 +14,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -30,6 +33,7 @@ import dev.involvex.kiln.core.designsystem.component.KilnScaffold
 import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.core.model.CapabilityAvailability
 import dev.involvex.kiln.core.model.PrivilegeCapability
+import dev.involvex.kiln.core.model.PrivilegeTier
 import dev.involvex.kiln.core.model.SelfTestReport
 import dev.involvex.kiln.core.model.ShizukuSetupPhase
 import dev.involvex.kiln.feature.onboarding.R
@@ -63,6 +67,7 @@ fun PrivilegeSetupRoute(onBack: () -> Unit, modifier: Modifier = Modifier) {
         onRunSelfTest = viewModel::runSelfTest,
         onCopyDiagnosis = viewModel::copyDiagnosis,
         onCopyAdb = viewModel::copyAdbCommand,
+        onRootOptInChange = viewModel::setRootOptIn,
         openManager = viewModel::openManagerApp,
         openDeveloperOptions = viewModel::openDeveloperOptions,
         openInstallPage = viewModel::shizukuInstallPage,
@@ -80,6 +85,7 @@ fun PrivilegeSetupScreen(
     onRunSelfTest: () -> Unit,
     onCopyDiagnosis: () -> Unit,
     onCopyAdb: () -> Unit,
+    onRootOptInChange: (Boolean) -> Unit,
     openManager: () -> Intent?,
     openDeveloperOptions: () -> Intent,
     openInstallPage: () -> Intent,
@@ -99,6 +105,12 @@ fun PrivilegeSetupScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             PrivilegeSetupHeader(state = state)
+            RootOptInSection(
+                rootOptIn = state.rootOptIn,
+                tier = state.status.tier,
+                hasFullBackup = state.hasFullBackup,
+                onRootOptInChange = onRootOptInChange,
+            )
             PrivilegePhaseActions(
                 state = state,
                 onRequestPermission = onRequestPermission,
@@ -117,6 +129,36 @@ fun PrivilegeSetupScreen(
                 Text(stringResource(R.string.onboarding_back))
             }
         }
+    }
+}
+
+@Composable
+private fun RootOptInSection(rootOptIn: Boolean, tier: PrivilegeTier, hasFullBackup: Boolean, onRootOptInChange: (Boolean) -> Unit) {
+    Text(
+        text = stringResource(R.string.privilege_root_opt_in_title),
+        style = MaterialTheme.typography.titleSmall,
+    )
+    Text(
+        text = stringResource(R.string.privilege_root_opt_in_body),
+        style = MaterialTheme.typography.bodySmall,
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = stringResource(R.string.privilege_root_opt_in_toggle),
+            modifier = Modifier.weight(1f),
+        )
+        Switch(checked = rootOptIn, onCheckedChange = onRootOptInChange)
+    }
+    if (rootOptIn) {
+        val statusText = when {
+            hasFullBackup || tier == PrivilegeTier.ROOT -> stringResource(R.string.privilege_root_granted)
+            else -> stringResource(R.string.privilege_root_pending)
+        }
+        Text(text = statusText, style = MaterialTheme.typography.bodySmall)
     }
 }
 

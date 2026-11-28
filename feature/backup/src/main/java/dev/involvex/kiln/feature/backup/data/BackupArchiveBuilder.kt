@@ -27,6 +27,8 @@ class BackupArchiveBuilder @Inject constructor(
 ) {
     fun canIncludeAndroidData(): Boolean = PrivilegeCapability.ACCESS_ANDROID_DATA in privilegedExecutor.currentStatus().capabilities
 
+    fun canIncludeAppData(): Boolean = PrivilegeCapability.FULL_BACKUP in privilegedExecutor.currentStatus().capabilities
+
     suspend fun build(
         packageName: String,
         password: CharArray?,
@@ -42,15 +44,29 @@ class BackupArchiveBuilder @Inject constructor(
             mkdirs()
         }
         return try {
-            val includeData = canIncludeAndroidData()
-            val shared = if (includeData) {
+            val includeShared = canIncludeAndroidData()
+            val includeAppData = canIncludeAppData()
+            val shared = if (includeShared) {
                 archiveSharedDirs(packageName, stage)
             } else {
                 SharedArchiveParts(null, null, included = false)
             }
+            val appDataTar = if (includeAppData) {
+                archiveAppData(packageName, File(stage, BackupMetadataCodec.APP_DATA_ENTRY))
+            } else {
+                null
+            }
             val encrypted = password != null && password.isNotEmpty()
-            val metadata = metadataFor(detail, shared, encrypted, includeData, targetUserId)
-            val zipBytes = writeZip(detail.apkFiles, metadata, shared)
+            val metadata = metadataFor(
+                detail = detail,
+                shared = shared,
+                appDataTar = appDataTar,
+                encrypted = encrypted,
+                includeShared = includeShared,
+                includeAppData = includeAppData && appDataTar != null,
+                targetUserId = targetUserId,
+            )
+            val zipBytes = writeZip(detail.apkFiles, metadata, shared, appDataTar)
             val payload = maybeEncrypt(zipBytes, password, encrypted)
             Result.success(payload to metadata)
         } catch (e: IOException) {
@@ -75,12 +91,18 @@ class BackupArchiveBuilder @Inject constructor(
     private fun metadataFor(
         detail: BackupPackageDetail,
         shared: SharedArchiveParts,
+        appDataTar: File?,
         encrypted: Boolean,
-        includeData: Boolean,
+        includeShared: Boolean,
+        includeAppData: Boolean,
         targetUserId: Int?,
     ): BackupArchiveMetadata {
-        val formatVersion = if (encrypted || shared.included) FORMAT_V2 else FORMAT_V1
-        val contentTier = if (includeData) BackupContentTier.SHIZUKU else BackupContentTier.NONE
+        val formatVersion = if (encrypted || shared.included || includeAppData) FORMAT_V2 else FORMAT_V1
+        val contentTier = when {
+            includeAppData -> BackupContentTier.ROOT
+            includeShared -> BackupContentTier.SHIZUKU
+            else -> BackupContentTier.NONE
+        }
         return BackupArchiveMetadata(
             formatVersion = formatVersion,
             packageName = detail.candidate.packageName,
@@ -90,18 +112,19 @@ class BackupArchiveBuilder @Inject constructor(
             signerSha256 = detail.signerSha256,
             tier = contentTier,
             createdAtEpochMs = System.currentTimeMillis(),
-            includesAppData = false,
+            includesAppData = includeAppData,
             includesAndroidData = shared.included,
             apkEntries = detail.apkFiles.map { it.name },
             hasSplits = detail.candidate.hasSplits,
             encrypted = encrypted,
             androidDataEntry = shared.dataEntryName,
             androidObbEntry = shared.obbEntryName,
+            appDataEntry = appDataTar?.let { BackupMetadataCodec.APP_DATA_ENTRY },
             targetUserId = targetUserId,
         )
     }
 
-    private fun writeZip(apkFiles: List<File>, metadata: BackupArchiveMetadata, shared: SharedArchiveParts): ByteArray =
+    private fun writeZip(apkFiles: List<File>, metadata: BackupArchiveMetadata, shared: SharedArchiveParts, appDataTar: File?): ByteArray =
         ByteArrayOutputStream().use { out ->
             BackupArchiveWriter.write(
                 apkFiles = apkFiles,
@@ -109,6 +132,7 @@ class BackupArchiveBuilder @Inject constructor(
                 output = out,
                 androidDataTar = shared.dataTar,
                 androidObbTar = shared.obbTar,
+                appDataTar = appDataTar,
             )
             out.toByteArray()
         }
@@ -135,6 +159,17 @@ class BackupArchiveBuilder @Inject constructor(
     ) {
         is Result.Failure -> {
             Timber.w("android shared archive %s: %s", root, result.message)
+            null
+        }
+
+        is Result.Success -> if (result.value && dest.isFile && dest.length() > 0) dest else null
+    }
+
+    private suspend fun archiveAppData(packageName: String, dest: File): File? = when (
+        val result = privilegedExecutor.archiveAppDataDir(packageName, dest.absolutePath)
+    ) {
+        is Result.Failure -> {
+            Timber.w("app data archive: %s", result.message)
             null
         }
 

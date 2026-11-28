@@ -2,11 +2,11 @@
 
 ## Audience
 
-People who already back up Kiln archives to a folder and want the same zip on Nextcloud / Synology / generic HTTPS WebDAV.
+Rooted Magisk users who already use Kiln backup and want private `/data/data` in the archive (not just APK / Android/data).
 
 ## Announcement
 
-Kiln Backup can now target **WebDAV over HTTPS**: save URL + user, store the password encrypted on-device, test with PROPFIND, then backup/restore the same `.kilnbackup.zip` archives (keep-N rotation included). Local SAF folders still work. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or Obtainium → `https://github.com/involvex/kiln`.
+Kiln Backup **ROOT** tier can now pack `/data/data` into `app_data.tar` when Magisk root is opted in (Privilege setup; default off) or Shizuku runs as uid 0. Restore path: install → force-stop → extract → `restorecon`. `/data/user_de` stays deferred. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or Obtainium → `https://github.com/involvex/kiln`.
 
 ## Free channels (pick one)
 
