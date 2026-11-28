@@ -429,7 +429,7 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 - **P2 — Aktivitätsprotokoll**: Lokales, durchsuchbares Log. → **M24** (Done #39; M23 nur Maintenance-Protokoll)
 - **P2 — Geräte-Diagnose (Shizuku)**: Kompakte Cards aus `dumpsys battery` / `dumpsys netstats` / `top -n 1` (kein Raw-Dump, kein Root). → **M60** (Done #111)
 - **P2 — GitLab / Codeberg Releases**: Quellen wie GitHub (owner/repo, Kanäle, APK-Heuristik). → **M61** (Done)
-- **P3 — Tablet-/Foldable-Layouts** (Adaptive Layouts, Navigation Rail).
+- **P3 — Tablet-/Foldable-Layouts** (Adaptive Layouts, Navigation Rail). → **shipped M65** (`m65-tablet-layouts`).
 
 ### Empfohlene Reihenfolge (aktuell)
 
@@ -481,4 +481,5 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 46. **M62** Storage treemap → Done (`m62-storage-treemap`)
 47. **M63** Curated debloat ratings pipeline → Done (`m63-curated-debloat-ratings`; packages empty)
 48. **M64** Diagnostics extras → Done (`m64-diagnostics-extras`)
-49. **M65** Tablet/foldable layouts → Planned
+49. **M65** Tablet/foldable layouts → Done (`m65-tablet-layouts`)
+50. **M66** WebDAV backup destination → Planned

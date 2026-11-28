@@ -61,7 +61,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun AppDetailRoute(packageName: String, onBack: () -> Unit, onOpenPrivilegeSetup: () -> Unit = {}, modifier: Modifier = Modifier) {
+fun AppDetailRoute(
+    packageName: String,
+    onBack: () -> Unit,
+    onOpenPrivilegeSetup: () -> Unit = {},
+    showBackNavigation: Boolean = true,
+    modifier: Modifier = Modifier,
+) {
     val viewModel = kilnHiltViewModel<AppDetailViewModel>()
     LaunchedEffect(packageName) {
         viewModel.load(packageName)
@@ -75,6 +81,7 @@ fun AppDetailRoute(packageName: String, onBack: () -> Unit, onOpenPrivilegeSetup
         showMessage = viewModel::showMessage,
         onActivitiesQueryChange = viewModel::setActivitiesQuery,
         onOpenPrivilegeSetup = onOpenPrivilegeSetup,
+        showBackNavigation = showBackNavigation,
         modifier = modifier,
     )
 }
@@ -90,6 +97,7 @@ fun AppDetailScreen(
     showMessage: (String) -> Unit,
     onActivitiesQueryChange: (String) -> Unit,
     onOpenPrivilegeSetup: () -> Unit = {},
+    showBackNavigation: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -177,11 +185,13 @@ fun AppDetailScreen(
                     Text(state.detail?.label ?: stringResource(R.string.feature_apps_detail_title))
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.feature_apps_back),
-                        )
+                    if (showBackNavigation) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.feature_apps_back),
+                            )
+                        }
                     }
                 },
             )

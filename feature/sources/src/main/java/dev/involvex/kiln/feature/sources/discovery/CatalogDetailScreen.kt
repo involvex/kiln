@@ -56,7 +56,13 @@ import dev.involvex.kiln.core.designsystem.kilnHiltViewModel
 import dev.involvex.kiln.feature.sources.R
 
 @Composable
-fun CatalogDetailRoute(packageName: String, repoId: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun CatalogDetailRoute(
+    packageName: String,
+    repoId: String,
+    onBack: () -> Unit,
+    showBackNavigation: Boolean = true,
+    modifier: Modifier = Modifier,
+) {
     val viewModel = kilnHiltViewModel<CatalogDetailViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showInstallSheet by remember { mutableStateOf(false) }
@@ -69,6 +75,7 @@ fun CatalogDetailRoute(packageName: String, repoId: String, onBack: () -> Unit, 
         onInstall = { showInstallSheet = true },
         onToggleWatch = viewModel::toggleWatch,
         onClearMessage = viewModel::clearMessage,
+        showBackNavigation = showBackNavigation,
         modifier = modifier,
     )
     val row = state.row
@@ -94,6 +101,7 @@ fun CatalogDetailScreen(
     onInstall: () -> Unit,
     onToggleWatch: () -> Unit,
     onClearMessage: () -> Unit,
+    showBackNavigation: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -103,11 +111,13 @@ fun CatalogDetailScreen(
         title = stringResource(R.string.catalog_detail_title),
         modifier = modifier,
         navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.discovery_back),
-                )
+            if (showBackNavigation) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.discovery_back),
+                    )
+                }
             }
         },
         actions = {

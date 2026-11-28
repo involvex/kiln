@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **M65** Tablet / foldable: NavigationRail at medium+ width; Apps list-detail via Material Adaptive `ListDetailSceneStrategy` (phone bottom bar unchanged)
 - **M64** Device diagnostics extras: `dumpsys cpuinfo` + `dumpsys thermalservice` pretty cards (bounded dumps; no raw stdout; no `cmd battery`)
 - **M63** Curated debloat catalog pipeline (`DebloatDbParser` + tests + source/version UI); shipped `debloat-db.json` still has `packages: []` (no invented ratings)
 - **M62** Storage squarified treemap of largest consumers (apps + scanned leftovers/orphans/large files); replaces size bars
