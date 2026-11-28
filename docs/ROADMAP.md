@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M68** Done on `m68-debloat-license-gate` (UAD-NG GPL-3.0 not cleared; `debloat-db.json` stays empty). Next: F-Droid refile ([STORE.md](./STORE.md)); later: first cleared debloat rows (non-GPL source). Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age / uniqueness / template).
+**Current status:** **M69** Done on `m69-fdroid-refile-prep` (fdroiddata kit ready; **submit on/after 2027-02-08**). Next Now: cleared debloat import (needs non-GPL source). Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age / uniqueness / template).
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -79,6 +79,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M62** | Storage treemap | Done | [`prompts/M62-storage-treemap.md`](./prompts/M62-storage-treemap.md) · `m62-storage-treemap` | Squarified treemap of largest consumers; replaces size bars |
 | **M63** | Curated debloat ratings | Done | [`prompts/M63-curated-debloat-ratings.md`](./prompts/M63-curated-debloat-ratings.md) · `m63-curated-debloat-ratings` | Parser + tests + catalog meta UI; `packages: []` |
 | **M68** | Debloat data license gate | Done | [`prompts/M68-debloat-license-gate.md`](./prompts/M68-debloat-license-gate.md) · `m68-debloat-license-gate` | UAD-NG GPL-3.0 not cleared; `packages: []`; import waits on non-GPL source |
+| **M69** | F-Droid refile prep | Done | [`prompts/M69-fdroid-refile-prep.md`](./prompts/M69-fdroid-refile-prep.md) · `m69-fdroid-refile-prep` | Recipe + MR draft; age window ≈2027-02-08 |
 | **M64** | Diagnostics extras | Done | [`prompts/M64-diagnostics-extras.md`](./prompts/M64-diagnostics-extras.md) · `m64-diagnostics-extras` | `dumpsys cpuinfo` + `thermalservice` pretty cards; no raw dump; no `cmd battery` |
 | **M65** | Tablet / foldable layouts | Done | [`prompts/M65-tablet-layouts.md`](./prompts/M65-tablet-layouts.md) · `m65-tablet-layouts` | NavigationRail at medium+; Apps `ListDetailSceneStrategy`; phone bar unchanged |
 | **M66** | WebDAV backup destination | Done | [`prompts/M66-webdav-backup.md`](./prompts/M66-webdav-backup.md) · `m66-webdav-backup` | HTTPS WebDAV PUT/list/GET + keep-N; password in EncryptedSharedPreferences; not R2 |
@@ -375,9 +376,9 @@ flowchart LR
   M53 --> v027[v0.2.7]
 ```
 
-1. F-Droid refile ([STORE.md](./STORE.md)).
-2. Later: first cleared debloat package rows (not UAD-NG GPL-3.0).
-3. Done recently: **M68** license gate; **M67** ROOT `/data/data`.
+1. Cleared debloat package rows (not UAD-NG GPL-3.0) when a source is approved.
+2. Submit F-Droid fdroiddata MR on/after **2027-02-08** ([STORE.md](./STORE.md), [fdroid/](./fdroid/)).
+3. Done recently: **M69** F-Droid prep; **M68** license gate; **M67** ROOT `/data/data`.
 
 ---
 

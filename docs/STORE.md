@@ -8,10 +8,10 @@ Kiln stays off Google Play. A Play Console account costs a one-time US$25 fee, a
 
 | Channel | Status | Notes |
 | --- | --- | --- |
-| GitHub Releases | Active | Upload-signed APK via `KILN_*` secrets, e.g. `https://github.com/involvex/kiln/releases/download/v0.2.9/kiln-0.2.9.apk` |
+| GitHub Releases | Active | Upload-signed APK via `KILN_*` secrets, e.g. `https://github.com/involvex/kiln/releases/download/v0.2.14/kiln-0.2.14.apk` |
 | Obtainium | Active | No request; point at the GitHub repo |
 | IzzyOnDroid | Closed | Declined under [AI policy](https://izzyondroid.org/docs/general/AppInclusionPolicy/) ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)). Do not refile with a lower assistance level. |
-| F-Droid main repo | Closed until ≥3 months | [fdroiddata!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed by `linsui`: MR template not used; app &lt; 3 months old ([Inclusion Policy](https://f-droid.org/docs/Inclusion_Policy/) Quality §6); “no unique features.” Earliest sensible refile ≈ **2026-02-08** (3 months after first commit 2026-11-08). |
+| F-Droid main repo | Wait until ≈ **2027-02-08** | [fdroiddata!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed by `linsui`: MR template not used; app &lt; 3 months old ([Inclusion Policy](https://f-droid.org/docs/Inclusion_Policy/) Quality §6); “no unique features.” First commit **2026-11-08** → earliest refile ≈ **2027-02-08**. Prep kit: [`docs/fdroid/`](./fdroid/). |
 | Self-hosted F-Droid repo | Deferred | Free to host; not worth the ops cost while Obtainium covers updates. See below. |
 | Google Play | Skipped | US$25 + policy overhead |
 
@@ -24,7 +24,7 @@ Kiln stays off Google Play. A Play Console account costs a one-time US$25 fee, a
 - Privacy policy: `https://involvex.github.io/kiln/PRIVACY.md`
 - Auto-install of updates is off until the user turns it on. Signature mismatches are never installed automatically
 - Release builds set `dependenciesInfo.includeInApk/includeInBundle = false` (no Google dependency-metadata blob)
-- Draft recipe kept for a later refile: [fdroid/dev.involvex.kiln.yml](./fdroid/dev.involvex.kiln.yml)
+- F-Droid refile kit (M69): [fdroid/dev.involvex.kiln.yml](./fdroid/dev.involvex.kiln.yml) + [fdroid/MR-DRAFT.md](./fdroid/MR-DRAFT.md)
 
 ## Why the sensitive permissions are there
 
@@ -40,25 +40,23 @@ Kiln stays off Google Play. A Play Console account costs a one-time US$25 fee, a
 
 See [repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948). Inclusion was declined because declared AI assistance was above their threshold. They still ran Cronos on `v0.2.7` and pointed us at F-Droid.
 
-## F-Droid main repo (closed for now)
+## F-Droid main repo
 
 Closed MR: [fdroiddata!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920#note_4310272049).
 
 Do **not** reopen until:
 
-1. **≥3 months** of active development (first commit 2026-11-08 → refile window opens ≈ **2026-02-08**), **or** a clear “proven users” exception with evidence.
-2. The official **Default** MR template is filled (Abstract + Checklist), including a uniqueness pitch.
-3. Recipe uses a **full commit SHA** in `commit:` (template forbids tag/branch there).
+1. **≥3 months** of public history (first commit **2026-11-08** → window opens ≈ **2027-02-08**), **or** a clear “proven users” exception with evidence.
+2. The official **Default** MR template is filled (Abstract + Checklist), including a uniqueness pitch — use [fdroid/MR-DRAFT.md](./fdroid/MR-DRAFT.md).
+3. Recipe uses a **full commit SHA** in `commit:` (template forbids tag/branch there) — refresh [fdroid/dev.involvex.kiln.yml](./fdroid/dev.involvex.kiln.yml) to the latest tag before opening.
 
-### Uniqueness pitch (draft for next MR)
+### Uniqueness pitch (for the MR Abstract)
 
-Use something like this in the template’s “why / unique functions” section — adjust with real changelog evidence by then:
+> Kiln is an Apache-2.0 **device package workstation**, not another GitHub APK follower. In one app it combines: multi-repo F-Droid index clients + GitHub/GitLab/Codeberg Releases, signature-aware updates (never auto-install on mismatch), APK inspect/merge/resign/split install, storage cleanup with trash + treemap, backup/restore (SAF + HTTPS WebDAV; optional Shizuku Android/data; optional Magisk `/data/data`), optional Shizuku diagnostics / component control, and optional Termux `RUN_COMMAND`. Closest F-Droid peers cover slices of this (Obtainium ≈ update follow; F-Droid client ≈ one repo type; App Manager ≈ privileged inspect) but not this FLOSS all-in-one without Play Services or analytics.
 
-> Kiln is an Apache-2.0 **device package workstation**, not another GitHub APK follower. In one app it combines: multi-repo F-Droid index clients + GitHub Releases/channels, signature-aware updates (never auto-install on mismatch), APK inspect/merge/resign/split install, storage cleanup with trash, backup/restore, optional Shizuku component control / processes, and optional Termux `RUN_COMMAND`. Closest F-Droid peers cover slices of this (Obtainium ≈ update follow; F-Droid client ≈ one repo type; App Manager ≈ privileged inspect) but not this FLOSS all-in-one without Play Services or analytics.
+Optional first step: open an [RFP](https://gitlab.com/fdroid/rfp/-/issues) before the fdroiddata MR. Soft appeal (`team@f-droid.org`) is only worth it with users + uniqueness evidence — not to waive the age rule.
 
-Optional first step next time: open an [RFP](https://gitlab.com/fdroid/rfp/-/issues) before the fdroiddata MR. Soft appeal (`team@f-droid.org`) is only worth it with users + uniqueness evidence — not to waive the age rule.
-
-Recipe / CI notes from !58920 (reuse later): Summary lives in `metadata/<id>/en-US/summary.txt`; `AutoUpdateMode: Version`; `UpdateCheckData` points at `KilnAndroid.kt`; auto-update fields after `MaintainerNotes`.
+Recipe / CI notes from !58920 (reuse): Summary/description come from upstream Fastlane (do not duplicate in the MR); `AutoUpdateMode: Version`; `UpdateCheckData` points at `KilnAndroid.kt`; auto-update fields after `MaintainerNotes`.
 
 ## Self-hosted F-Droid repo (deferred)
 

@@ -485,3 +485,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 50. **M66** WebDAV backup destination → Done (`m66-webdav-backup`; not R2)
 51. **M67** ROOT `/data/data` backup → Done (`m67-root-data-backup`; CE only, `user_de` deferred)
 52. **M68** Debloat data license gate → Done (`m68-debloat-license-gate`; UAD-NG GPL-3.0 not cleared)
+53. **M69** F-Droid refile prep → Done (`m69-fdroid-refile-prep`; submit after ≈2027-02-08)

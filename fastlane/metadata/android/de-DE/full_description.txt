@@ -1,12 +1,16 @@
-Kiln (Paket-ID dev.involvex.kiln) vereint F-Droid- und GitHub-Updatequellen, APK-Export und Backup, Speicherbereinigung und optionalen Debloat in einer Apache-2.0-Android-App. Nicht verwandt mit dem macOS-„Kiln“-Android-Emulator.
+Kiln (Paket-ID dev.involvex.kiln) vereint F-Droid- und Forge-Releasequellen, APK-Werkzeuge, Speicherbereinigung und Backup in einer Apache-2.0-Android-App. Nicht verwandt mit dem macOS-„Kiln“-Android-Emulator.
 
 • Installierte Apps listen und exportieren (.apk / .apks / .xapk)
-• F-Droid-Kataloge und GitHub-Releases entdecken; Repos synchronisieren; Auto-Match
-• Updates über den System-Installer, oder still mit Shizuku, sobald eingerichtet
-• Speicheranalyse, Cache leeren, APK-Backup/Restore (optionale Passwortverschlüsselung)
+• F-Droid-Kataloge sowie GitHub-, GitLab- und Codeberg-Releases entdecken; Repos synchronisieren; Auto-Match
+• Updates über den System-Installer, oder still mit Shizuku, sobald eingerichtet (Signatur-Abweichungen nie automatisch)
+• APK prüfen, Splits installieren, mergen und neu signieren
+• Speicheranalyse mit Papierkorb und Treemap der größten Verbraucher
+• Backup / Restore (.kilnbackup.zip): SAF-Ordner oder HTTPS-WebDAV; optional AES-GCM; optional Shizuku Android/data+obb; optional Magisk /data/data
+• Geräte-Diagnose (Akku, Netz, CPU-Top, cpuinfo, Thermal) mit Shizuku
 • Startbildschirm-Widgets für Update-Check, Cache leeren und Prozessinfo
-• Optionaler Debloat mit Snapshot; optionale Termux-RUN_COMMAND-Hooks (Standard: aus)
-• Mit Shizuku: eine Komponente an/aus, Prozess beenden, Android-Benutzerliste nur lesen
+• Telefon- und Tablet-/Foldable-Layouts (NavigationRail / List-Detail)
+• Optionaler Debloat mit Snapshot (Ratings nur aus lizenzgeklärten Quellen; unbekannte Pakete brauchen Expertenmodus)
+• Optionale Termux-RUN_COMMAND-Hooks (Standard: aus)
 • Keine Telemetrie — die App-Liste bleibt auf dem Gerät
 
-Privilegierte Aktionen laufen über Shizuku oder Root, sobald eingerichtet. Basisfunktionen brauchen das nicht. Automatisches Installieren von Updates ist aus, bis es eingeschaltet wird, und Signatur-Abweichungen werden nie automatisch installiert.
+Privilegierte Aktionen laufen über Shizuku oder Magisk-Root, sobald eingerichtet/opt-in. Basisfunktionen brauchen das nicht. Automatisches Installieren von Updates ist aus, bis es eingeschaltet wird.
