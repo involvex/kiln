@@ -178,6 +178,16 @@ private fun DebloatToolbar(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.debloat_intro), style = MaterialTheme.typography.bodySmall)
         Text(
+            text = stringResource(
+                R.string.debloat_catalog_meta,
+                state.catalogSource ?: stringResource(R.string.debloat_catalog_source_unknown),
+                state.catalogVersion,
+                state.catalogPackageCount,
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
             text = if (state.snapshotAtEpochMs == null) {
                 stringResource(R.string.debloat_no_snapshot)
             } else {

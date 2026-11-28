@@ -19,6 +19,7 @@ import dev.involvex.kiln.core.model.DebloatSnapshotPackage
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
 import dev.involvex.kiln.feature.debloat.catalog.DebloatCatalog
+import dev.involvex.kiln.feature.debloat.catalog.DebloatDbDocument
 import dev.involvex.kiln.feature.debloat.denylist.DebloatDenylistResolver
 import dev.involvex.kiln.feature.debloat.snapshot.DebloatSnapshotStore
 import javax.inject.Inject
@@ -37,6 +38,8 @@ class DebloatRepository @Inject constructor(
     private val activityLog: ActivityLogRecorder,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) {
+    fun catalogDocument(): DebloatDbDocument = catalog.document()
+
     suspend fun loadRows(): List<DebloatAppRow> = withContext(ioDispatcher) {
         val pm = context.packageManager
         val denylist = denylistResolver.resolve()

@@ -8,7 +8,7 @@ Kiln ist eine Android-App (reines Kotlin + Jetpack Compose), die Package-Manager
 - **Roadmap / Status:** [`ROADMAP.md`](./ROADMAP.md) (ship loop) · [`docs/ROADMAP.md`](./docs/ROADMAP.md) (Capability-Matrix, Meilenstein-Status)
 - **Prompts pro Meilenstein:** [`docs/prompts/`](./docs/prompts/) (`M0-setup.md`, `M1-installed-apps.md`, …)
 - **Referenzen:** [`docs/reference.md`](./docs/reference.md) — Ideen lesen, GPL-Code nicht kopieren
-- **Current work:** [`ROADMAP.md`](./ROADMAP.md) — **M63** curated debloat ratings (after M62)
+- **Current work:** [`ROADMAP.md`](./ROADMAP.md) — **M64** diagnostics extras (after M63)
 
 ## Arbeitsweise
 
