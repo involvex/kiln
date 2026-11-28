@@ -37,11 +37,12 @@ Keep reference checkouts **outside** this repository. Do not commit machine-loca
 - SPDX: **AGPL-3.0-or-later**
 - For Kiln: **read behaviour / command list only** (e.g. `dumpsys battery`, `dumpsys netstats`, `top -n 1`, `dumpsys cpuinfo`, `dumpsys thermalservice`). Never copy parsers, UI, strings, or layouts into Kiln (Apache-2.0). Never use `cmd battery`.
 
-## Universal Android Debloater NG (candidate curated list)
+## Universal Android Debloater NG (debloat list — not cleared)
 
-- Upstream: [0x192/universal-android-debloater-next-generation](https://github.com/0x192/universal-android-debloater-next-generation) (and community list forks)
-- SPDX: **check current LICENSE before any import** — not cleared for Kiln yet
-- For Kiln: candidate **data source only** after license + attribution review; map ratings into `debloat-db.json` via PR; add `NOTICE`. Never invent package ratings; never copy GPL UI/strings.
+- Upstream: [Universal-Debloater-Alliance/universal-android-debloater-next-generation](https://github.com/Universal-Debloater-Alliance/universal-android-debloater-next-generation) (lists: `resources/assets/uad_lists.json`)
+- SPDX (repo LICENSE, verified 2026-11-28): **GPL-3.0** (GNU GPL v3). The package catalogue is treated as the same copyleft data; other apps that ship it (e.g. OpenADB) also label it GPL-3.0.
+- **Kiln decision (M68):** **not cleared** for bundling into Apache-2.0 Kiln. Do **not** import `uad_lists.json` into `debloat-db.json`. Do not invent substitute OEM ratings. Behaviour observation only.
+- Cleared import later requires an approved **Apache-2.0 / CC0 / explicitly dual-licensed / Kiln-first-party curated** source, SPDX in this file, attribution in root `NOTICE`, then a PR that maps ratings 1:1 (no AI-invented rows).
 
 ## Other public references
 

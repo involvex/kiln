@@ -1,6 +1,6 @@
 {
   "version": 1,
   "source": "kiln-empty",
-  "notes": "M63: curated catalog schema is live; packages stay empty until a license-cleared source is approved (see docs/reference.md). Do not invent ratings. Unknown installed packages use UNKNOWN and require expert mode.",
+  "notes": "M68: UAD-NG uad_lists.json is GPL-3.0 — not cleared for Apache-2.0 Kiln (docs/reference.md). packages stay empty until an approved Apache-2.0/CC0/dual-licensed or Kiln-first-party curated source lands with NOTICE. Do not invent ratings. Unknown installed packages use UNKNOWN and require expert mode.",
   "packages": []
 }

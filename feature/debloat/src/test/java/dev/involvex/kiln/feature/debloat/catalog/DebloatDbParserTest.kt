@@ -62,18 +62,19 @@ class DebloatDbParserTest {
 
     @Test
     fun shipped_asset_shape_parses_empty() {
-        // Mirrors feature/debloat assets — keep packages empty until a license-cleared source lands.
+        // Mirrors feature/debloat assets — keep packages empty (UAD-NG GPL-3.0 not cleared).
         val doc = DebloatDbParser.parse(
             """
             {
               "version": 1,
               "source": "kiln-empty",
-              "notes": "No package ratings are invented. Entries must come from a license-cleared curated source.",
+              "notes": "M68: UAD-NG uad_lists.json is GPL-3.0 — not cleared for Apache-2.0 Kiln (docs/reference.md). packages stay empty until an approved Apache-2.0/CC0/dual-licensed or Kiln-first-party curated source lands with NOTICE. Do not invent ratings. Unknown installed packages use UNKNOWN and require expert mode.",
               "packages": []
             }
             """.trimIndent(),
         )
         assertEquals("kiln-empty", doc.source)
         assertTrue(doc.entries.isEmpty())
+        assertEquals(0, doc.packageCount)
     }
 }

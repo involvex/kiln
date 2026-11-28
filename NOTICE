@@ -19,3 +19,9 @@ https://github.com/topjohnwu/libsu
 Copyright 2018 John Wu (@topjohnwu)
 Licensed under the Apache License, Version 2.0
 -------------------------------------------------------------------------------
+Debloat catalog
+No third-party package rating list is bundled. Universal Android Debloater NG
+(uad_lists.json) is GPL-3.0 and is not imported into Kiln (see docs/reference.md).
+Shipped feature/debloat/src/main/assets/debloat-db.json has packages: [] until a
+license-cleared source is approved and attributed here.
+-------------------------------------------------------------------------------

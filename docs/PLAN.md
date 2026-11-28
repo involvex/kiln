@@ -275,7 +275,7 @@ Je nach Android-Version/ROM lehnt das System manche Pakete ab (`SecurityExceptio
 }
 ```
 
-- Bewertungen **nicht erfinden**: Cursor/AI darf Ratings nicht aus dem Gedächtnis generieren. Startdatenbank klein halten und aus einer geprüften Quelle ableiten, z. B. Universal Android Debloater Next Generation (**Lizenz vorher prüfen**, Attribution einhalten). Unbekannte Pakete = Rating „UNBEKANNT", keine Aktion ohne Expertenmodus.
+- Bewertungen **nicht erfinden**: Cursor/AI darf Ratings nicht aus dem Gedächtnis generieren. Startdatenbank klein halten und aus einer geprüften Quelle ableiten. **M68:** UAD-NG `uad_lists.json` ist **GPL-3.0** und für Kiln **nicht freigegeben** (`docs/reference.md`); `packages: []` bis eine Apache-2.0/CC0/dual-licensed oder Kiln-first-party Quelle mit `NOTICE` kommt. Unbekannte Pakete = Rating „UNBEKANNT", keine Aktion ohne Expertenmodus.
 - Filter: Vendor, Kategorie, Rating, „aktuell aktiv/deaktiviert/entfernt", Suche.
 
 **Sicherheitsnetze (Pflicht, ohne diese nicht ausliefern)**
@@ -484,3 +484,4 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 49. **M65** Tablet/foldable layouts → Done (`m65-tablet-layouts`)
 50. **M66** WebDAV backup destination → Done (`m66-webdav-backup`; not R2)
 51. **M67** ROOT `/data/data` backup → Done (`m67-root-data-backup`; CE only, `user_de` deferred)
+52. **M68** Debloat data license gate → Done (`m68-debloat-license-gate`; UAD-NG GPL-3.0 not cleared)
