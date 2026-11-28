@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M61** Done on `m61-gitlab-codeberg` (after **M60** / `v0.2.14`). Next: **M62** storage treemap. Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: curated debloat DB, tablet layouts, WebDAV backup, ROOT `/data/data`.
+**Current status:** **M62** Done on `m62-storage-treemap` (after **M61**). Next: **M63** curated debloat ratings. Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: diagnostics extras, tablet layouts, WebDAV backup, ROOT `/data/data`.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -76,6 +76,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M59** | HyperOS phone polish | Done | [`prompts/M59-hyperos-polish.md`](./prompts/M59-hyperos-polish.md) · `m59-hyperos-polish` | Dual-user honesty copy (no stale “user 0 only”); docs sync; optional short HyperOS checklist (not a gate) |
 | **M60** | Device diagnostics | Done | [`prompts/M60-device-diagnostics.md`](./prompts/M60-device-diagnostics.md) · [#111](https://github.com/involvex/kiln/pull/111) | Shizuku pretty cards: battery / netstats / top; no Root; no raw dumps |
 | **M61** | GitLab + Codeberg sources | Done | [`prompts/M61-gitlab-codeberg.md`](./prompts/M61-gitlab-codeberg.md) · `m61-gitlab-codeberg` | Release sources for GitLab/Codeberg; same channel/APK heuristic as GitHub |
+| **M62** | Storage treemap | Done | [`prompts/M62-storage-treemap.md`](./prompts/M62-storage-treemap.md) · `m62-storage-treemap` | Squarified treemap of largest consumers; replaces size bars |
 
 ---
 
@@ -148,7 +149,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | Background controls | ✅ HyperOS Autostart + battery Unrestricted/Optimized/Restricted | SHIZUKU (`MANAGE_APP_OPS`) |
 | Privilege / Shizuku setup | ✅ Settings → A→D assistant; UserService self-test; capability matrix | NONE → SHIZUKU |
 | Installer | ✅ PackageInstaller (NONE) or silent `pm install -r` when `SILENT_INSTALL`; Settings prefers Default vs Shizuku; ✅ M39 multi-session + `install-multiple` for `.apks`/`.xapk`/`.apkm` (SAF + Share/VIEW) | NONE / SHIZUKU |
-| Storage / cleaner | ✅ Size bars; APK leftovers; **M48** large files (≥50MB) + same-size/hash duplicates; `.kiln-trash` undo/purge (14d maintenance prune); orphan Android/data+obb; cache clear | NONE / SHIZUKU (`CLEAR_CACHE`, `ACCESS_ANDROID_DATA`) |
+| Storage / cleaner | ✅ **M62** squarified treemap of largest consumers (apps + scanned leftovers/orphans/large files); APK leftovers; **M48** large files (≥50MB) + same-size/hash duplicates; `.kiln-trash` undo/purge (14d maintenance prune); orphan Android/data+obb; cache clear | NONE / SHIZUKU (`CLEAR_CACHE`, `ACCESS_ANDROID_DATA`) |
 | APK tools (inspect / compare / resign / merge) | ✅ M29 inspect+compare; ✅ M31 resign + split export; ✅ M35 universal merge (#56) | NONE |
 | Freeze / hibernate | ✅ M36 (#58) — `pm suspend`/`unsuspend`; Settings list (separate from Debloat); **M56** optional census user | ≥ SHIZUKU (`DEBLOAT`) |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege; **M57** optional census user on batch confirm (ratings UNKNOWN until curated DB) | ≥ SHIZUKU |
@@ -369,9 +370,9 @@ flowchart LR
   M53 --> v027[v0.2.7]
 ```
 
-1. **M62** Storage treemap of largest consumers (PLAN §4.5).
+1. **M63** Curated debloat ratings (license-cleared source only).
 2. Store: GitHub + Obtainium; F-Droid refile only after ≈2026-02-08 ([STORE.md](./STORE.md)).
-3. Later backlog when wanted: curated debloat DB, tablet layouts, WebDAV backup, ROOT `/data/data`.
+3. Later backlog when wanted: diagnostics extras, tablet layouts, WebDAV backup, ROOT `/data/data`.
 
 ---
 

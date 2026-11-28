@@ -6,7 +6,8 @@ import dev.involvex.kiln.core.model.DuplicateFileGroup
 import dev.involvex.kiln.core.model.KilnTrashEntry
 import dev.involvex.kiln.core.model.OrphanStorageDir
 import dev.involvex.kiln.core.model.SafTreeFile
-import dev.involvex.kiln.core.model.StoragePhase2Filter
+import dev.involvex.kiln.core.model.StorageTreemapLeaf
+import dev.involvex.kiln.core.model.StorageTreemapLeaves
 
 enum class StoragePermissionState {
     UNKNOWN,
@@ -74,8 +75,22 @@ data class StorageUiState(
 
     val totalBytes: Long get() = totalAppBytes + totalDataBytes + totalCacheBytes
 
-    val sizeBarApps: List<AppStorageStats>
-        get() = StoragePhase2Filter.topAppsBySize(filteredApps)
+    val leftoversBytes: Long get() = leftovers.sumOf { it.sizeBytes }
+
+    val orphansBytes: Long get() = orphans.sumOf { it.sizeBytes }
+
+    val largeFilesBytes: Long get() = largeFiles.sumOf { it.sizeBytes }
+
+    fun treemapLeaves(leftoversLabel: String, orphansLabel: String, largeFilesLabel: String): List<StorageTreemapLeaf> =
+        StorageTreemapLeaves.from(
+            apps = filteredApps,
+            leftoversBytes = leftoversBytes,
+            orphansBytes = orphansBytes,
+            largeFilesBytes = largeFilesBytes,
+            leftoversLabel = leftoversLabel,
+            orphansLabel = orphansLabel,
+            largeFilesLabel = largeFilesLabel,
+        )
 
     fun orphanKey(orphan: OrphanStorageDir): String = "${orphan.root.pathKey}:${orphan.packageName}"
 }

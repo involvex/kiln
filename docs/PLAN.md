@@ -478,4 +478,5 @@ Priorität: **P1** = nach M6 sinnvoll, **P2** = nach M10, **P3** = nur bei Bedar
 43. Cut **0.2.13** (versionCode 16)
 44. **M60** Device diagnostics (Shizuku pretty battery / netstats / top; no Root) → **Done (#111)** / `0.2.14`
 45. **M61** GitLab + Codeberg release sources → Done (`m61-gitlab-codeberg`)
-46. **M62** Storage treemap → Planned
+46. **M62** Storage treemap → Done (`m62-storage-treemap`)
+47. **M63** Curated debloat ratings → Planned

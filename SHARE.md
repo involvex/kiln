@@ -2,11 +2,11 @@
 
 ## Audience
 
-People who sideload Kiln from GitHub Releases or track it with Obtainium, especially if they also use GitLab.com or Codeberg apps.
+People who sideload Kiln from GitHub Releases or track it with Obtainium and care about on-device storage cleanup.
 
 ## Announcement
 
-Kiln can now track **GitLab.com** and **Codeberg** release APKs the same way as GitHub: look up a forge URL under Apps → Discover → Releases, or share a repo link into Sources. Optional forge tokens live under Settings → Updates (encrypted; never exported). Nightly / Actions stays GitHub-only. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or point Obtainium at `https://github.com/involvex/kiln`.
+Kiln’s Manage → Storage screen now shows a **treemap of the largest storage consumers**: top apps by measured size, plus scanned APK leftovers, orphans, and large files when you’ve run those scans. Areas are proportional; tap an app tile for App info. No new permissions. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or point Obtainium at `https://github.com/involvex/kiln`.
 
 ## Free channels (pick one)
 
