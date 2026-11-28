@@ -21,8 +21,12 @@ import kotlinx.coroutines.withContext
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.Response
 import timber.log.Timber
+
+/** Raw HTTPS response for non-GET verbs (WebDAV PROPFIND/PUT/MKCOL/DELETE). */
+data class KilnHttpResponse(val code: Int, val body: ByteArray)
 
 @Singleton
 class KilnHttpClient @Inject constructor(private val proxyPreferences: NetworkProxyPreferences) {
@@ -60,6 +64,33 @@ class KilnHttpClient @Inject constructor(private val proxyPreferences: NetworkPr
             is Result.Success -> Result.success(bytes.value.toString(Charsets.UTF_8))
             is Result.Failure -> bytes
         }
+
+    /**
+     * Executes an HTTPS request with an arbitrary method. Does not treat non-2xx as failure —
+     * callers map status codes (WebDAV 401/404/207). Still enforces HTTPS-only.
+     */
+    suspend fun execute(
+        method: String,
+        url: String,
+        headers: Map<String, String> = emptyMap(),
+        body: RequestBody? = null,
+        failFast: Boolean = false,
+    ): Result<KilnHttpResponse> = withContext(Dispatchers.IO) {
+        try {
+            requireHttps(url)
+            val builder = Request.Builder().url(url).method(method, body)
+            headers.forEach { (key, value) -> builder.header(key, value) }
+            client(failFast).newCall(builder.build()).execute().use { response ->
+                val bytes = response.body?.bytes() ?: ByteArray(0)
+                Result.success(KilnHttpResponse(response.code, bytes))
+            }
+        } catch (error: IOException) {
+            Timber.w(error, "HTTP %s failed", method)
+            Result.failure(error.message ?: "network_error", error)
+        } catch (error: IllegalArgumentException) {
+            Result.failure(error.message ?: "invalid_url", error)
+        }
+    }
 
     /**
      * Downloads [url] into [target], appending when the file already has bytes and the server

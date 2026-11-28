@@ -16,6 +16,8 @@ import dev.involvex.kiln.core.model.BackupAppCandidate
 import dev.involvex.kiln.core.model.BackupArchiveMetadata
 import dev.involvex.kiln.core.model.BackupContentTier
 import dev.involvex.kiln.core.model.BackupPreferences
+import dev.involvex.kiln.core.model.BackupRotation
+import dev.involvex.kiln.core.model.BackupTreeEntry
 import dev.involvex.kiln.core.model.InstallQueue
 import dev.involvex.kiln.core.model.LocalInstallRequest
 import dev.involvex.kiln.core.model.PrivilegeCapability
@@ -24,6 +26,7 @@ import dev.involvex.kiln.feature.backup.archive.BackupArchiveReader
 import dev.involvex.kiln.feature.backup.archive.BackupExtractResult
 import dev.involvex.kiln.feature.backup.archive.BackupMetadataCodec
 import dev.involvex.kiln.feature.backup.archive.BackupRestoreApks
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -36,6 +39,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 @Singleton
+@Suppress("TooManyFunctions") // SAF + WebDAV backup/restore + shared data restore paths.
 class BackupRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val packageLoader: BackupPackageLoader,
@@ -44,6 +48,7 @@ class BackupRepository @Inject constructor(
     private val backupPreferences: BackupPreferences,
     private val treeStore: BackupTreeStore,
     private val archiveBuilder: BackupArchiveBuilder,
+    private val webDavClient: WebDavClient,
     private val activityLog: ActivityLogRecorder,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) {
@@ -113,6 +118,73 @@ class BackupRepository @Inject constructor(
         }
     }
 
+    suspend fun testWebDav(): Result<Unit> = webDavClient.testConnection()
+
+    suspend fun backupToWebDav(
+        packageName: String,
+        password: CharArray? = null,
+        targetUserId: Int? = null,
+        currentUserId: Int = 0,
+    ): Result<BackupArchiveMetadata> = withContext(ioDispatcher) {
+        val prefs = backupPreferences.current()
+        val detail = packageLoader.loadDetail(packageName)
+            ?: return@withContext Result.failure("package_not_found")
+        val fileName = suggestedFileName(packageName, detail.candidate.versionName)
+        when (val built = archiveBuilder.build(packageName, password, targetUserId)) {
+            is Result.Failure -> built
+
+            is Result.Success -> {
+                val (bytes, metadata) = built.value
+                when (val put = webDavClient.putArchive(packageName, fileName, bytes)) {
+                    is Result.Failure -> {
+                        logBackupFail(packageName, put.message)
+                        put
+                    }
+
+                    is Result.Success -> {
+                        pruneWebDavArchives(packageName, prefs.keepN)
+                        activityLog.record(
+                            ActivityLogEvents.create(
+                                type = ActivityLogType.BACKUP,
+                                action = "backup_succeeded",
+                                success = true,
+                                packageName = metadata.packageName,
+                                versionName = metadata.versionName,
+                                versionCode = metadata.versionCode,
+                                detailKey = buildUserDetailKey(
+                                    metadata.targetUserId,
+                                    currentUserId,
+                                    failureDetail = "webdav",
+                                ),
+                            ),
+                        )
+                        Result.success(metadata)
+                    }
+                }
+            }
+        }
+    }
+
+    suspend fun listWebDavArchives(packageName: String): Result<List<BackupTreeEntry>> = webDavClient.listArchives(packageName)
+
+    suspend fun restoreFromWebDav(
+        href: String,
+        password: CharArray? = null,
+        targetUserId: Int? = null,
+        currentUserId: Int = 0,
+    ): Result<String> = withContext(ioDispatcher) {
+        when (val downloaded = webDavClient.downloadArchive(href)) {
+            is Result.Failure -> downloaded
+
+            is Result.Success -> restoreFromBytes(
+                bytes = downloaded.value,
+                password = password,
+                targetUserId = targetUserId,
+                currentUserId = currentUserId,
+            )
+        }
+    }
+
     suspend fun restoreFromUri(
         uri: Uri,
         contentResolver: ContentResolver,
@@ -148,6 +220,73 @@ class BackupRepository @Inject constructor(
         val ver = versionName?.replace(Regex("[^A-Za-z0-9._-]"), "_") ?: "backup"
         val stamp = System.currentTimeMillis()
         return "${packageName}_${ver}_$stamp.kilnbackup.zip"
+    }
+
+    private suspend fun pruneWebDavArchives(packageName: String, keepN: Int) {
+        when (val listed = webDavClient.listArchives(packageName)) {
+            is Result.Failure -> Timber.w("WebDAV prune list failed: %s", listed.message)
+
+            is Result.Success -> {
+                BackupRotation.selectForDeletion(listed.value, keepN).forEach { entry ->
+                    when (val deleted = webDavClient.deleteHref(entry.uriString)) {
+                        is Result.Failure -> Timber.w("WebDAV prune delete failed: %s", deleted.message)
+                        is Result.Success -> Unit
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun restoreFromBytes(bytes: ByteArray, password: CharArray?, targetUserId: Int?, currentUserId: Int): Result<String> {
+        when (val opened = openZipBytes(bytes, password)) {
+            is Result.Failure -> return opened
+
+            is Result.Success -> {
+                val outDir = File(context.cacheDir, "backup_restore").apply {
+                    deleteRecursively()
+                    mkdirs()
+                }
+                return when (val extracted = opened.value.use { BackupArchiveReader.extract(it, outDir) }) {
+                    is Result.Failure -> {
+                        logRestoreFail(extracted.message)
+                        extracted
+                    }
+
+                    is Result.Success -> enqueueRestore(
+                        extracted = extracted.value,
+                        targetUserId = targetUserId,
+                        currentUserId = currentUserId,
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun openZipBytes(bytes: ByteArray, password: CharArray?): Result<InputStream> {
+        val peek = bytes.copyOf(minOf(bytes.size, PEEK_HEADER_BYTES))
+        val needsPassword = BackupCrypto.looksEncrypted(peek)
+        if (needsPassword && (password == null || password.isEmpty())) {
+            logRestoreFail("password_required")
+            return Result.failure("password_required")
+        }
+        val input = ByteArrayInputStream(bytes)
+        return try {
+            val stream = if (needsPassword) {
+                BackupCrypto.decryptToStream(input, checkNotNull(password))
+            } else {
+                input
+            }
+            Result.success(stream)
+        } catch (e: GeneralSecurityException) {
+            logRestoreFail("decrypt_failed")
+            Result.failure("decrypt_failed", e)
+        } catch (e: IllegalArgumentException) {
+            logRestoreFail("decrypt_failed")
+            Result.failure("decrypt_failed", e)
+        } catch (e: IOException) {
+            logRestoreFail("decrypt_failed")
+            Result.failure("decrypt_failed", e)
+        }
     }
 
     private suspend fun openZipStream(uri: Uri, contentResolver: ContentResolver, password: CharArray?): Result<InputStream> {

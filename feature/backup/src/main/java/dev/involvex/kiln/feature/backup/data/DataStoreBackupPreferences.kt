@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.involvex.kiln.core.model.BackupDestinationKind
 import dev.involvex.kiln.core.model.BackupPreferences
 import dev.involvex.kiln.core.model.BackupPrefs
 import javax.inject.Inject
@@ -42,13 +43,39 @@ class DataStoreBackupPreferences @Inject constructor(@ApplicationContext context
         store.edit { it[KEY_KEEP_N] = BackupPrefs.clampKeepN(keepN) }
     }
 
+    override suspend fun setDestinationKind(kind: BackupDestinationKind) {
+        store.edit { it[KEY_DEST_KIND] = kind.name }
+    }
+
+    override suspend fun setWebDavBaseUrl(url: String) {
+        store.edit { it[KEY_WEBDAV_URL] = url.trim() }
+    }
+
+    override suspend fun setWebDavUsername(username: String) {
+        store.edit { it[KEY_WEBDAV_USER] = username.trim() }
+    }
+
+    override suspend fun setWebDavRemotePath(path: String) {
+        store.edit { it[KEY_WEBDAV_PATH] = path.trim() }
+    }
+
     private fun Preferences.toPrefs() = BackupPrefs(
         treeUri = this[KEY_TREE_URI],
         keepN = BackupPrefs.clampKeepN(this[KEY_KEEP_N] ?: BackupPrefs.DEFAULT_KEEP_N),
+        destinationKind = runCatching {
+            BackupDestinationKind.valueOf(this[KEY_DEST_KIND] ?: BackupDestinationKind.SAF.name)
+        }.getOrDefault(BackupDestinationKind.SAF),
+        webdavBaseUrl = this[KEY_WEBDAV_URL].orEmpty(),
+        webdavUsername = this[KEY_WEBDAV_USER].orEmpty(),
+        webdavRemotePath = this[KEY_WEBDAV_PATH]?.ifBlank { null } ?: BackupPrefs.DEFAULT_WEBDAV_PATH,
     )
 
     private companion object {
         val KEY_TREE_URI = stringPreferencesKey("tree_uri")
         val KEY_KEEP_N = intPreferencesKey("keep_n")
+        val KEY_DEST_KIND = stringPreferencesKey("destination_kind")
+        val KEY_WEBDAV_URL = stringPreferencesKey("webdav_base_url")
+        val KEY_WEBDAV_USER = stringPreferencesKey("webdav_username")
+        val KEY_WEBDAV_PATH = stringPreferencesKey("webdav_remote_path")
     }
 }

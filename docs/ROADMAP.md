@@ -2,7 +2,7 @@
 
 Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./PLAN.md). Agent rules: [`../AGENTS.md`](../AGENTS.md).
 
-**Current status:** **M65** Done on `m65-tablet-layouts` (NavigationRail + Apps list-detail). Next: **M66** WebDAV backup destination. Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: license-cleared debloat import, ROOT `/data/data`.
+**Current status:** **M66** Done on `m66-webdav-backup` (HTTPS WebDAV destination; not R2). Next: **M67** ROOT `/data/data` backup. Store: GitHub Releases + Obtainium. IzzyOnDroid declined ([repodata#948](https://codeberg.org/IzzyOnDroid/repodata/issues/948)); F-Droid [!58920](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/58920) closed (age &lt; 3 months / uniqueness / template) — refile ≈ Feb 2026. Later: license-cleared debloat import.
 
 **License:** Apache-2.0 · **Package:** `dev.involvex.kiln`
 
@@ -80,6 +80,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | **M63** | Curated debloat ratings | Done | [`prompts/M63-curated-debloat-ratings.md`](./prompts/M63-curated-debloat-ratings.md) · `m63-curated-debloat-ratings` | Parser + tests + catalog meta UI; `packages: []` until license-cleared import |
 | **M64** | Diagnostics extras | Done | [`prompts/M64-diagnostics-extras.md`](./prompts/M64-diagnostics-extras.md) · `m64-diagnostics-extras` | `dumpsys cpuinfo` + `thermalservice` pretty cards; no raw dump; no `cmd battery` |
 | **M65** | Tablet / foldable layouts | Done | [`prompts/M65-tablet-layouts.md`](./prompts/M65-tablet-layouts.md) · `m65-tablet-layouts` | NavigationRail at medium+; Apps `ListDetailSceneStrategy`; phone bar unchanged |
+| **M66** | WebDAV backup destination | Done | [`prompts/M66-webdav-backup.md`](./prompts/M66-webdav-backup.md) · `m66-webdav-backup` | HTTPS WebDAV PUT/list/GET + keep-N; password in EncryptedSharedPreferences; not R2 |
 
 ---
 
@@ -101,7 +102,7 @@ Living milestone tracker. Architecture and feature specs stay in [`PLAN.md`](./P
 | Widgets / QS | Done (M26); rework Done (M46 #81) | M26 #40; M46: three Glance widgets |
 | Permission audit | Done | M27 #41 |
 | Storage phase 2 | Done | M28 #44 |
-| SAF backup rotation / data tiers / encryption | Done (M40 #69) | SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM; ROOT / cloud deferred |
+| SAF backup rotation / data tiers / encryption | Done (M40 #69) | SAF tree + keep-N + Shizuku Android/data+obb + optional AES-GCM; **M66** WebDAV; ROOT deferred |
 | APK tools 2 (inspect + compare) | Done | M29 (#47); M31 (#49); universal merge M35 (#56) |
 | Mirrors / proxy | Done | M30 #48 |
 | Freeze/hibernate, dual-user, tablet | Done | M36 freeze (#58); M53–**M58** dual-user; **M59** polish; **M65** tablet/foldable rail + Apps list-detail |
@@ -156,7 +157,7 @@ Update after each milestone. Tier = active `PrivilegedExecutor`.
 | APK tools (inspect / compare / resign / merge) | ✅ M29 inspect+compare; ✅ M31 resign + split export; ✅ M35 universal merge (#56) | NONE |
 | Freeze / hibernate | ✅ M36 (#58) — `pm suspend`/`unsuspend`; Settings list (separate from Debloat); **M56** optional census user | ≥ SHIZUKU (`DEBLOAT`) |
 | Debloat | ✅ Settings entry; denylist; snapshot; disable/enable/user-uninstall via privilege; **M57** optional census user; **M63** curated catalog pipeline (`debloat-db.json` still empty; UNKNOWN + expert mode) | ≥ SHIZUKU |
-| Backup (APK) | ✅ `.kilnbackup.zip`; **M40** SAF tree + keep-N; Shizuku Android/data+obb when capable; optional AES-GCM; **M49** restore installs all split APKs; **M58** optional restore `--user N` + backup user tag; ROOT `/data/data` deferred | NONE (APK) / SHIZUKU (`ACCESS_ANDROID_DATA`, `SILENT_INSTALL` for dual-user) |
+| Backup (APK) | ✅ `.kilnbackup.zip`; **M40** SAF tree + keep-N; **M66** HTTPS WebDAV; Shizuku Android/data+obb when capable; optional AES-GCM; **M49** restore installs all split APKs; **M58** optional restore `--user N` + backup user tag; ROOT `/data/data` deferred | NONE (APK) / SHIZUKU (`ACCESS_ANDROID_DATA`, `SILENT_INSTALL` for dual-user) |
 | Background auto-update | ✅ Settings hub → Updates; 12h / daily / weekly PeriodicWork; notify-only default; optional auto-enqueue for signatureMatches; global + per-app cooldown; APK rollback keep-N (1–5); ignored-updates overview; GitHub PAT under Updates | NONE (+ network; silent install/downgrade if SHIZUKU) |
 | Repo priority | ✅ Sources ↑↓ reorder; `ensureKnownRepos` preserves user priority; Auto-match / update conflict tie-break | NONE |
 | Termux RUN_COMMAND | ✅ feature flag, RequestPermission UX, configurable packageId, echo smoke test + PendingIntent; **M17: package detection** (`TermuxPackageDetector` finds renamed forks e.g. `com.involvex.termux_app`, verifies the `RunCommandService`), App Info shortcut for forks that declare their own `RUN_COMMAND` permission | NONE (Termux + permission + allow-external-apps) |
@@ -373,9 +374,9 @@ flowchart LR
   M53 --> v027[v0.2.7]
 ```
 
-1. **M66** WebDAV backup destination (not Cloudflare/R2).
+1. **M67** ROOT `/data/data` backup (RootExecutor + libsu).
 2. Store: GitHub + Obtainium; F-Droid refile only after ≈2026-02-08 ([STORE.md](./STORE.md)).
-3. Later: license-cleared debloat package import, ROOT `/data/data`.
+3. Later: license-cleared debloat package import.
 
 ---
 

@@ -43,11 +43,24 @@ data class BackupArchiveMetadata(
     val targetUserId: Int? = null,
 )
 
-data class BackupPrefs(val treeUri: String? = null, val keepN: Int = DEFAULT_KEEP_N) {
+enum class BackupDestinationKind {
+    SAF,
+    WEBDAV,
+}
+
+data class BackupPrefs(
+    val treeUri: String? = null,
+    val keepN: Int = DEFAULT_KEEP_N,
+    val destinationKind: BackupDestinationKind = BackupDestinationKind.SAF,
+    val webdavBaseUrl: String = "",
+    val webdavUsername: String = "",
+    val webdavRemotePath: String = DEFAULT_WEBDAV_PATH,
+) {
     companion object {
         const val DEFAULT_KEEP_N = 3
         const val MIN_KEEP_N = 1
         const val MAX_KEEP_N = 10
+        const val DEFAULT_WEBDAV_PATH = "/kiln-backups"
 
         fun clampKeepN(value: Int): Int = value.coerceIn(MIN_KEEP_N, MAX_KEEP_N)
     }
@@ -62,6 +75,25 @@ interface BackupPreferences {
     suspend fun setTreeUri(uri: String?)
 
     suspend fun setKeepN(keepN: Int)
+
+    suspend fun setDestinationKind(kind: BackupDestinationKind)
+
+    suspend fun setWebDavBaseUrl(url: String)
+
+    suspend fun setWebDavUsername(username: String)
+
+    suspend fun setWebDavRemotePath(path: String)
+}
+
+/** Encrypted WebDAV password (EncryptedSharedPreferences; never DataStore). */
+interface WebDavSecretRepository {
+    fun isPasswordSet(): Boolean
+
+    fun savePassword(password: String)
+
+    fun clearPassword()
+
+    fun getPassword(): String?
 }
 
 /** Named archive under a package folder in the SAF tree (for rotation). */

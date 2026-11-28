@@ -3,7 +3,9 @@ package dev.involvex.kiln.feature.backup
 import dev.involvex.kiln.core.model.AndroidUserInfo
 import dev.involvex.kiln.core.model.BackupAppCandidate
 import dev.involvex.kiln.core.model.BackupContentTier
+import dev.involvex.kiln.core.model.BackupDestinationKind
 import dev.involvex.kiln.core.model.BackupPrefs
+import dev.involvex.kiln.core.model.BackupTreeEntry
 
 data class BackupUiState(
     val tier: BackupContentTier = BackupContentTier.NONE,
@@ -25,6 +27,13 @@ data class BackupUiState(
     val passwordPrompt: BackupPasswordPrompt? = null,
     val encryptEnabled: Boolean = false,
     val passwordDraft: String = "",
+    val webdavPasswordSet: Boolean = false,
+    val webdavUrlDraft: String = "",
+    val webdavUserDraft: String = "",
+    val webdavPathDraft: String = BackupPrefs.DEFAULT_WEBDAV_PATH,
+    val webdavPasswordDraft: String = "",
+    val remoteArchives: List<BackupTreeEntry> = emptyList(),
+    val showRemotePicker: Boolean = false,
 ) {
     val filteredApps: List<BackupAppCandidate>
         get() {
@@ -40,6 +49,14 @@ data class BackupUiState(
         get() = apps.find { it.packageName == selectedPackage }
 
     val hasTree: Boolean get() = !prefs.treeUri.isNullOrBlank()
+
+    val usesWebDav: Boolean get() = prefs.destinationKind == BackupDestinationKind.WEBDAV
+
+    val webDavReady: Boolean
+        get() = usesWebDav &&
+            webdavUrlDraft.startsWith("https://", ignoreCase = true) &&
+            webdavUserDraft.isNotBlank() &&
+            (webdavPasswordSet || webdavPasswordDraft.isNotEmpty())
 }
 
 enum class BackupPasswordPrompt {

@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions") // Backup hub UI: SAF + WebDAV destination, dialogs, rows.
+
 package dev.involvex.kiln.feature.backup
 
 import android.net.Uri
@@ -43,7 +45,9 @@ import dev.involvex.kiln.core.designsystem.scroll.ScrollToTopEffect
 import dev.involvex.kiln.core.model.AndroidUserInfo
 import dev.involvex.kiln.core.model.BackupAppCandidate
 import dev.involvex.kiln.core.model.BackupContentTier
+import dev.involvex.kiln.core.model.BackupDestinationKind
 import dev.involvex.kiln.core.model.BackupPrefs
+import dev.involvex.kiln.core.model.BackupTreeEntry
 import kotlin.math.roundToInt
 
 @Composable
@@ -105,6 +109,16 @@ fun BackupRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true) {
         onPasswordDraftChange = viewModel::setPasswordDraft,
         onConfirmPassword = { viewModel.confirmPasswordPrompt(context.contentResolver) },
         onDismissPassword = viewModel::dismissPasswordPrompt,
+        onDestinationKind = viewModel::setDestinationKind,
+        onWebDavUrl = viewModel::setWebDavUrlDraft,
+        onWebDavUser = viewModel::setWebDavUserDraft,
+        onWebDavPath = viewModel::setWebDavPathDraft,
+        onWebDavPassword = viewModel::setWebDavPasswordDraft,
+        onSaveWebDav = viewModel::saveWebDavConfig,
+        onClearWebDavPassword = viewModel::clearWebDavPassword,
+        onTestWebDav = viewModel::testWebDav,
+        onSelectRemoteArchive = viewModel::selectRemoteArchive,
+        onDismissRemotePicker = viewModel::dismissRemotePicker,
         showTopBar = showTopBar,
         modifier = modifier,
     )
@@ -130,6 +144,16 @@ fun BackupScreen(
     onPasswordDraftChange: (String) -> Unit,
     onConfirmPassword: () -> Unit,
     onDismissPassword: () -> Unit,
+    onDestinationKind: (BackupDestinationKind) -> Unit,
+    onWebDavUrl: (String) -> Unit,
+    onWebDavUser: (String) -> Unit,
+    onWebDavPath: (String) -> Unit,
+    onWebDavPassword: (String) -> Unit,
+    onSaveWebDav: () -> Unit,
+    onClearWebDavPassword: () -> Unit,
+    onTestWebDav: () -> Unit,
+    onSelectRemoteArchive: (String) -> Unit,
+    onDismissRemotePicker: () -> Unit,
     modifier: Modifier = Modifier,
     showTopBar: Boolean = true,
 ) {
@@ -163,10 +187,28 @@ fun BackupScreen(
                 onClearTree = onClearTree,
                 onKeepNChange = onKeepNChange,
                 onEncryptChange = onEncryptChange,
+                onDestinationKind = onDestinationKind,
+                onWebDavUrl = onWebDavUrl,
+                onWebDavUser = onWebDavUser,
+                onWebDavPath = onWebDavPath,
+                onWebDavPassword = onWebDavPassword,
+                onSaveWebDav = onSaveWebDav,
+                onClearWebDavPassword = onClearWebDavPassword,
+                onTestWebDav = onTestWebDav,
             )
         }
     }
 
+    if (state.showRemotePicker) {
+        RemoteArchivePickerDialog(
+            archives = state.remoteArchives,
+            users = state.confirmUsers,
+            selectedUserId = state.selectedUserId,
+            onSelectUser = onSelectConfirmUser,
+            onSelectArchive = onSelectRemoteArchive,
+            onDismiss = onDismissRemotePicker,
+        )
+    }
     if (state.pendingRestore) {
         RestoreConfirmDialog(
             users = state.confirmUsers,
@@ -353,14 +395,30 @@ private fun LazyListScope.backupListItems(
     onClearTree: () -> Unit,
     onKeepNChange: (Int) -> Unit,
     onEncryptChange: (Boolean) -> Unit,
+    onDestinationKind: (BackupDestinationKind) -> Unit,
+    onWebDavUrl: (String) -> Unit,
+    onWebDavUser: (String) -> Unit,
+    onWebDavPath: (String) -> Unit,
+    onWebDavPassword: (String) -> Unit,
+    onSaveWebDav: () -> Unit,
+    onClearWebDavPassword: () -> Unit,
+    onTestWebDav: () -> Unit,
 ) {
     item { BackupHonestyBanner(tier = state.tier) }
     item {
-        BackupTreeSection(
+        BackupDestinationSection(
             state = state,
+            onDestinationKind = onDestinationKind,
             onPickTree = onPickTree,
             onClearTree = onClearTree,
             onKeepNChange = onKeepNChange,
+            onWebDavUrl = onWebDavUrl,
+            onWebDavUser = onWebDavUser,
+            onWebDavPath = onWebDavPath,
+            onWebDavPassword = onWebDavPassword,
+            onSaveWebDav = onSaveWebDav,
+            onClearWebDavPassword = onClearWebDavPassword,
+            onTestWebDav = onTestWebDav,
         )
     }
     item {
@@ -405,7 +463,82 @@ private fun LazyListScope.backupListItems(
 }
 
 @Composable
-private fun BackupTreeSection(state: BackupUiState, onPickTree: () -> Unit, onClearTree: () -> Unit, onKeepNChange: (Int) -> Unit) {
+private fun BackupDestinationSection(
+    state: BackupUiState,
+    onDestinationKind: (BackupDestinationKind) -> Unit,
+    onPickTree: () -> Unit,
+    onClearTree: () -> Unit,
+    onKeepNChange: (Int) -> Unit,
+    onWebDavUrl: (String) -> Unit,
+    onWebDavUser: (String) -> Unit,
+    onWebDavPath: (String) -> Unit,
+    onWebDavPassword: (String) -> Unit,
+    onSaveWebDav: () -> Unit,
+    onClearWebDavPassword: () -> Unit,
+    onTestWebDav: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.backup_dest_title), style = MaterialTheme.typography.titleSmall)
+        DestinationKindRow(
+            selected = BackupDestinationKind.SAF,
+            current = state.prefs.destinationKind,
+            label = stringResource(R.string.backup_dest_saf),
+            onSelect = onDestinationKind,
+        )
+        DestinationKindRow(
+            selected = BackupDestinationKind.WEBDAV,
+            current = state.prefs.destinationKind,
+            label = stringResource(R.string.backup_dest_webdav),
+            onSelect = onDestinationKind,
+        )
+        if (state.prefs.destinationKind == BackupDestinationKind.SAF) {
+            BackupTreeSection(
+                state = state,
+                onPickTree = onPickTree,
+                onClearTree = onClearTree,
+            )
+        } else {
+            BackupWebDavSection(
+                state = state,
+                onWebDavUrl = onWebDavUrl,
+                onWebDavUser = onWebDavUser,
+                onWebDavPath = onWebDavPath,
+                onWebDavPassword = onWebDavPassword,
+                onSaveWebDav = onSaveWebDav,
+                onClearWebDavPassword = onClearWebDavPassword,
+                onTestWebDav = onTestWebDav,
+            )
+        }
+        Text(stringResource(R.string.backup_keep_n_label, state.prefs.keepN))
+        Slider(
+            value = state.prefs.keepN.toFloat(),
+            onValueChange = { onKeepNChange(it.roundToInt()) },
+            valueRange = BackupPrefs.MIN_KEEP_N.toFloat()..BackupPrefs.MAX_KEEP_N.toFloat(),
+            steps = BackupPrefs.MAX_KEEP_N - BackupPrefs.MIN_KEEP_N - 1,
+        )
+    }
+}
+
+@Composable
+private fun DestinationKindRow(
+    selected: BackupDestinationKind,
+    current: BackupDestinationKind,
+    label: String,
+    onSelect: (BackupDestinationKind) -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect(selected) },
+    ) {
+        RadioButton(selected = current == selected, onClick = { onSelect(selected) })
+        Text(label)
+    }
+}
+
+@Composable
+private fun BackupTreeSection(state: BackupUiState, onPickTree: () -> Unit, onClearTree: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.backup_tree_title), style = MaterialTheme.typography.titleSmall)
         Text(
@@ -424,14 +557,124 @@ private fun BackupTreeSection(state: BackupUiState, onPickTree: () -> Unit, onCl
                 }
             }
         }
-        Text(stringResource(R.string.backup_keep_n_label, state.prefs.keepN))
-        Slider(
-            value = state.prefs.keepN.toFloat(),
-            onValueChange = { onKeepNChange(it.roundToInt()) },
-            valueRange = BackupPrefs.MIN_KEEP_N.toFloat()..BackupPrefs.MAX_KEEP_N.toFloat(),
-            steps = BackupPrefs.MAX_KEEP_N - BackupPrefs.MIN_KEEP_N - 1,
-        )
     }
+}
+
+@Composable
+private fun BackupWebDavSection(
+    state: BackupUiState,
+    onWebDavUrl: (String) -> Unit,
+    onWebDavUser: (String) -> Unit,
+    onWebDavPath: (String) -> Unit,
+    onWebDavPassword: (String) -> Unit,
+    onSaveWebDav: () -> Unit,
+    onClearWebDavPassword: () -> Unit,
+    onTestWebDav: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.backup_webdav_hint), style = MaterialTheme.typography.bodySmall)
+        OutlinedTextField(
+            value = state.webdavUrlDraft,
+            onValueChange = onWebDavUrl,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text(stringResource(R.string.backup_webdav_url)) },
+        )
+        OutlinedTextField(
+            value = state.webdavUserDraft,
+            onValueChange = onWebDavUser,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text(stringResource(R.string.backup_webdav_user)) },
+        )
+        OutlinedTextField(
+            value = state.webdavPathDraft,
+            onValueChange = onWebDavPath,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text(stringResource(R.string.backup_webdav_path)) },
+        )
+        OutlinedTextField(
+            value = state.webdavPasswordDraft,
+            onValueChange = onWebDavPassword,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            label = {
+                Text(
+                    if (state.webdavPasswordSet) {
+                        stringResource(R.string.backup_webdav_password_set)
+                    } else {
+                        stringResource(R.string.backup_webdav_password)
+                    },
+                )
+            },
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = onSaveWebDav) {
+                Text(stringResource(R.string.backup_webdav_save))
+            }
+            OutlinedButton(onClick = onTestWebDav, enabled = !state.busy) {
+                Text(stringResource(R.string.backup_webdav_test))
+            }
+        }
+        if (state.webdavPasswordSet) {
+            TextButton(onClick = onClearWebDavPassword) {
+                Text(stringResource(R.string.backup_webdav_clear_password))
+            }
+        }
+    }
+}
+
+@Composable
+private fun RemoteArchivePickerDialog(
+    archives: List<BackupTreeEntry>,
+    users: List<AndroidUserInfo>,
+    selectedUserId: Int,
+    onSelectUser: (Int) -> Unit,
+    onSelectArchive: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.backup_webdav_pick_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (users.isNotEmpty()) {
+                    Text(stringResource(R.string.backup_dual_user_restore_body))
+                    users.forEach { user ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelectUser(user.id) },
+                        ) {
+                            RadioButton(
+                                selected = user.id == selectedUserId,
+                                onClick = { onSelectUser(user.id) },
+                            )
+                            Text(stringResource(R.string.backup_dual_user_option, user.name, user.id))
+                        }
+                    }
+                }
+                if (archives.isEmpty()) {
+                    Text(stringResource(R.string.backup_webdav_empty))
+                } else {
+                    archives.forEach { entry ->
+                        TextButton(onClick = { onSelectArchive(entry.uriString) }) {
+                            Text(entry.displayName)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.backup_cancel))
+            }
+        },
+    )
 }
 
 @Composable
@@ -518,7 +761,10 @@ private fun userMessage(raw: String): String {
 }
 
 @Composable
-private fun errorMessage(raw: String): String? = when (raw) {
+private fun errorMessage(raw: String): String? = archiveErrorMessage(raw) ?: webDavErrorMessage(raw)
+
+@Composable
+private fun archiveErrorMessage(raw: String): String? = when (raw) {
     "package_not_found" -> stringResource(R.string.backup_err_package_not_found)
     "apk_unreadable", "apk_missing" -> stringResource(R.string.backup_err_apk)
     "splits_incomplete" -> stringResource(R.string.backup_err_splits_incomplete)
@@ -528,5 +774,30 @@ private fun errorMessage(raw: String): String? = when (raw) {
     "tree_create_failed" -> stringResource(R.string.backup_err_tree_create)
     "password_required" -> stringResource(R.string.backup_err_password)
     "decrypt_failed" -> stringResource(R.string.backup_err_decrypt)
+    else -> null
+}
+
+@Composable
+private fun webDavErrorMessage(raw: String): String? = when {
+    raw == "webdav_https_only" || raw == "Only HTTPS is allowed" || raw == "webdav_invalid_url" ->
+        stringResource(R.string.backup_err_webdav_https)
+
+    raw == "webdav_unauthorized" -> stringResource(R.string.backup_err_webdav_unauthorized)
+
+    raw == "webdav_not_found" -> stringResource(R.string.backup_err_webdav_not_found)
+
+    raw == "webdav_method_not_allowed" -> stringResource(R.string.backup_err_webdav_method)
+
+    raw == "webdav_select_package" -> stringResource(R.string.backup_err_webdav_select_package)
+
+    raw == "webdav_ok" -> stringResource(R.string.backup_webdav_test_ok)
+
+    raw == "webdav_saved" -> stringResource(R.string.backup_webdav_saved)
+
+    raw == "webdav_password_cleared" -> stringResource(R.string.backup_webdav_password_cleared)
+
+    raw.startsWith("webdav_http_") ->
+        stringResource(R.string.backup_err_webdav_http, raw.removePrefix("webdav_http_"))
+
     else -> null
 }

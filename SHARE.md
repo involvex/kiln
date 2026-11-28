@@ -2,11 +2,11 @@
 
 ## Audience
 
-People who sideload Kiln on tablets or foldables and want the same tools without a cramped phone chrome.
+People who already back up Kiln archives to a folder and want the same zip on Nextcloud / Synology / generic HTTPS WebDAV.
 
 ## Announcement
 
-Kiln now adapts on wider screens: a **NavigationRail** instead of the bottom bar, and **Apps list + detail side by side** (no raw dumps, same four destinations). Phones keep the familiar bottom navigation. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or Obtainium → `https://github.com/involvex/kiln`.
+Kiln Backup can now target **WebDAV over HTTPS**: save URL + user, store the password encrypted on-device, test with PROPFIND, then backup/restore the same `.kilnbackup.zip` archives (keep-N rotation included). Local SAF folders still work. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or Obtainium → `https://github.com/involvex/kiln`.
 
 ## Free channels (pick one)
 
