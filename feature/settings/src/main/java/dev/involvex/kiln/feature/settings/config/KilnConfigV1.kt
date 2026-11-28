@@ -37,6 +37,8 @@ data class KilnConfigManagedAppV1(
     val githubOwnerRepo: String? = null,
     val githubAssetRegex: String? = null,
     val githubChannel: String = "STABLE",
+    /** GITHUB / GITLAB / CODEBERG; default GITHUB for older configs. */
+    val releaseForge: String = "GITHUB",
     val watchOnly: Boolean = false,
     /** Null = use global cooldown. */
     val updateCooldownDays: Int? = null,

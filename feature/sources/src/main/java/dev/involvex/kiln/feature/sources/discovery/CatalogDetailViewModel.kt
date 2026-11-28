@@ -55,7 +55,17 @@ class CatalogDetailViewModel @Inject constructor(
         loadFdroid = repository::loadFdroidInstallOptions,
         installFdroid = repository::installFdroidVariant,
         loadGithub = repository::loadGithubInstallOptions,
-        installGithub = repository::installGithubVariant,
+        installGithub = { packageName, ownerRepo, tagName, downloadUrl, sizeBytes, releaseNotes, forge ->
+            repository.installGithubVariant(
+                packageName = packageName,
+                ownerRepo = ownerRepo,
+                tagName = tagName,
+                downloadUrl = downloadUrl,
+                sizeBytes = sizeBytes,
+                releaseNotes = releaseNotes,
+                forge = forge,
+            )
+        },
     )
 
     fun reportInstallResult(message: String, isError: Boolean) {

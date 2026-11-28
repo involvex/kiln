@@ -35,6 +35,12 @@
     <string name="settings_github_pat_clear">Clear token</string>
     <string name="settings_github_pat_saved">GitHub token saved</string>
     <string name="settings_github_pat_cleared">GitHub token cleared</string>
+    <string name="settings_gitlab_pat_section">GitLab.com token</string>
+    <string name="settings_gitlab_pat_explain">Optional personal access token for GitLab.com Releases (private repos / higher rate limits). Stored encrypted. Never exported in Kiln config.</string>
+    <string name="settings_codeberg_pat_section">Codeberg token</string>
+    <string name="settings_codeberg_pat_explain">Optional access token for Codeberg Releases (private repos / higher rate limits). Stored encrypted. Never exported in Kiln config.</string>
+    <string name="settings_forge_pat_saved">Token saved</string>
+    <string name="settings_forge_pat_cleared">Token cleared</string>
     <string name="settings_privilege_setup">Privilege / Shizuku setup</string>
     <string name="settings_debloat">Debloat</string>
     <string name="settings_permission_audit">Permission audit</string>

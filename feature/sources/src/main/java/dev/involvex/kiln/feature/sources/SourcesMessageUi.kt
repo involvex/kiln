@@ -82,6 +82,18 @@ private fun formatMiscPrefixedMessage(code: String): String? = when {
     code.startsWith("github_exists:") ->
         stringResource(R.string.sources_msg_github_exists, code.removePrefix("github_exists:"))
 
+    code.startsWith("gitlab_added:") ->
+        stringResource(R.string.sources_msg_gitlab_added, code.removePrefix("gitlab_added:"))
+
+    code.startsWith("gitlab_exists:") ->
+        stringResource(R.string.sources_msg_gitlab_exists, code.removePrefix("gitlab_exists:"))
+
+    code.startsWith("codeberg_added:") ->
+        stringResource(R.string.sources_msg_codeberg_added, code.removePrefix("codeberg_added:"))
+
+    code.startsWith("codeberg_exists:") ->
+        stringResource(R.string.sources_msg_codeberg_exists, code.removePrefix("codeberg_exists:"))
+
     code.startsWith("obtainium:") ->
         stringResource(R.string.sources_msg_obtainium_imported, code.substringAfter(':'))
 

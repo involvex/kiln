@@ -4,11 +4,10 @@ Hobby ship loop for Cursor `/ship-roadmap`. Architecture and milestone tracker s
 
 ## Now
 
-- [ ] **M61** GitLab + Codeberg release sources (owner/repo; same channel/APK heuristic as GitHub) — [`docs/prompts/M61-gitlab-codeberg.md`](./docs/prompts/M61-gitlab-codeberg.md)
+- [ ] **M62** Storage treemap of largest consumers (PLAN §4.5 leftover)
 
 ## Later
 
-- [ ] **M62** Storage treemap of largest consumers (PLAN §4.5 leftover)
 - [ ] **M63** Curated debloat ratings (license-cleared source only; no invented ratings; `debloat-db.json` still empty)
 - [ ] **M64** Diagnostics extras: `dumpsys cpuinfo` / thermals cards (no raw dump; no `cmd battery`)
 - [ ] **M65** Tablet/foldable: NavigationRail + list-detail (PLAN §12 P3)
@@ -16,8 +15,10 @@ Hobby ship loop for Cursor `/ship-roadmap`. Architecture and milestone tracker s
 - [ ] **M67** ROOT `/data/data` backup (needs RootExecutor + libsu first)
 - [ ] F-Droid refile ≈ 2026-02-08 ([docs/STORE.md](./docs/STORE.md))
 - [ ] Share 0.2.14 device diagnostics (draft in SHARE.md)
+- [ ] Share M61 GitLab + Codeberg release sources (draft in SHARE.md)
 
 ## Done
 
+- [x] **M61** GitLab + Codeberg release sources (`m61-gitlab-codeberg`)
 - [x] **M60** Device diagnostics docs closeout (mark Done after #111 / 0.2.14; seed this ROADMAP)
 - [x] **M60** Device diagnostics implementation ([#111](https://github.com/involvex/kiln/pull/111), `0.2.14`)

@@ -136,6 +136,7 @@ class DefaultKilnConfigRepository @Inject constructor(
                     githubOwnerRepo = app.githubOwnerRepo,
                     githubAssetRegex = app.githubAssetRegex,
                     githubChannel = app.githubChannel,
+                    releaseForge = app.releaseForge,
                     watchOnly = app.watchOnly,
                     updateCooldownDays = app.updateCooldownDays,
                 )
@@ -264,6 +265,7 @@ class DefaultKilnConfigRepository @Inject constructor(
             githubOwnerRepo = githubOwnerRepo?.trim()?.takeIf { it.isNotEmpty() },
             githubAssetRegex = githubAssetRegex?.trim()?.takeIf { it.isNotEmpty() },
             githubChannel = githubChannel.ifBlank { "STABLE" },
+            releaseForge = releaseForge.ifBlank { "GITHUB" },
             watchOnly = watchOnly,
             updateCooldownDays = updateCooldownDays?.coerceIn(0, MAX_PER_APP_COOLDOWN_DAYS),
         )

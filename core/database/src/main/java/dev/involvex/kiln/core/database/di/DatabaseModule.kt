@@ -13,6 +13,7 @@ import dev.involvex.kiln.core.database.InstallJobDao
 import dev.involvex.kiln.core.database.KilnDatabase
 import dev.involvex.kiln.core.database.MIGRATION_10_11
 import dev.involvex.kiln.core.database.MIGRATION_11_12
+import dev.involvex.kiln.core.database.MIGRATION_12_13
 import dev.involvex.kiln.core.database.ManagedAppDao
 import dev.involvex.kiln.core.database.RepoDao
 import dev.involvex.kiln.core.database.ensureKnownRepos
@@ -28,7 +29,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): KilnDatabase {
         val db = Room.databaseBuilder(context, KilnDatabase::class.java, "kiln.db")
-            .addMigrations(MIGRATION_10_11, MIGRATION_11_12)
+            .addMigrations(MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
             .fallbackToDestructiveMigration(true)
             .build()
         CoroutineScope(Dispatchers.IO).launch {

@@ -3,6 +3,9 @@ package dev.involvex.kiln.feature.sources.obtainium
 import dev.involvex.kiln.core.common.Result
 import dev.involvex.kiln.core.model.ManagedApp
 import dev.involvex.kiln.core.model.MatchConfidence
+import dev.involvex.kiln.core.model.ReleaseForge
+import dev.involvex.kiln.core.model.sourceId
+import dev.involvex.kiln.feature.sources.forge.ForgeUrlParse
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -88,13 +91,15 @@ object ObtainiumImport {
         val additional = parseAdditionalSettings(obj["additionalSettings"])
         val url = obj["url"]?.jsonPrimitive?.contentOrNull
             ?: additional?.get("url")?.jsonPrimitive?.contentOrNull
-        val ownerRepo = url?.let { githubOwnerRepoFromUrl(it) }
+        val forgeRef = url?.let { ForgeUrlParse.parseUrl(it) }
+        val ownerRepo = forgeRef?.ownerRepo
+        val forge = forgeRef?.forge ?: ReleaseForge.GITHUB
         val assetRegex = additional?.get("apkFilterRegEx")?.jsonPrimitive?.contentOrNull
             ?.takeIf { it.isNotBlank() }
             ?: ".*\\.apk$"
         val includePre = additional?.get("includePrereleases")?.jsonPrimitive?.contentOrNull
             ?.equals("true", ignoreCase = true) == true
-        val sourceId = if (ownerRepo != null) "github:$ownerRepo" else "manual"
+        val sourceId = if (ownerRepo != null) forge.sourceId(ownerRepo) else "manual"
         return ManagedApp(
             packageName = packageName,
             sourceId = sourceId,
@@ -108,6 +113,7 @@ object ObtainiumImport {
             } else {
                 dev.involvex.kiln.core.model.GitHubReleaseChannel.STABLE
             },
+            releaseForge = forge,
         )
     }
 
@@ -127,9 +133,8 @@ object ObtainiumImport {
     }
 
     fun githubOwnerRepoFromUrl(url: String): String? {
-        val regex = Regex("""github\.com[/:]([^/]+)/([^/.\s?#]+)""")
-        val match = regex.find(url) ?: return null
-        return "${match.groupValues[1]}/${match.groupValues[2].removeSuffix(".git")}"
+        val ref = ForgeUrlParse.parseUrl(url) ?: return null
+        return if (ref.forge == ReleaseForge.GITHUB) ref.ownerRepo else null
     }
 
     private val META_KEYS = setOf(

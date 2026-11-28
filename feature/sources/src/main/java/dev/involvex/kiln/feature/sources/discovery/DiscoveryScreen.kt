@@ -82,6 +82,7 @@ fun DiscoveryRoute(
                 ownerRepo = row.ownerRepo,
                 packageName = row.packageName,
                 displayName = row.displayName,
+                forge = row.forge,
             )
         },
         onClearMessage = viewModel::clearMessage,
@@ -583,7 +584,11 @@ private fun GithubAppCard(row: DiscoveryGithubRow, onInstall: () -> Unit, onLook
 }
 
 @Composable
-internal fun formatDiscoveryMessage(code: String): String = when {
+internal fun formatDiscoveryMessage(code: String): String =
+    formatDiscoveryPrefixedMessage(code) ?: formatDiscoveryExactMessage(code) ?: code
+
+@Composable
+private fun formatDiscoveryPrefixedMessage(code: String): String? = when {
     code.startsWith("catalog_ok:") ->
         stringResource(R.string.discovery_msg_catalog_ok, code.substringAfter(':'))
 
@@ -593,23 +598,36 @@ internal fun formatDiscoveryMessage(code: String): String = when {
     code.startsWith("github_lookup_ok:") ->
         stringResource(R.string.discovery_msg_github_lookup_ok, code.substringAfter(':'))
 
-    code == "no_fdroid_repos" -> stringResource(R.string.discovery_msg_no_repos)
+    else -> null
+}
 
-    code == "repo_missing" -> stringResource(R.string.discovery_msg_repo_missing)
+@Composable
+private fun formatDiscoveryExactMessage(code: String): String? {
+    val resId = when (code) {
+        "no_fdroid_repos" -> R.string.discovery_msg_no_repos
 
-    code == "release_missing" -> stringResource(R.string.discovery_msg_release_missing)
+        "repo_missing" -> R.string.discovery_msg_repo_missing
 
-    code == "apk_url_invalid" -> stringResource(R.string.discovery_msg_apk_url)
+        "release_missing" -> R.string.discovery_msg_release_missing
 
-    code == "github_query_invalid" -> stringResource(R.string.discovery_msg_github_query_invalid)
+        "apk_url_invalid" -> R.string.discovery_msg_apk_url
 
-    code == "github_release_missing" -> stringResource(R.string.discovery_msg_github_release_missing)
+        "github_query_invalid" -> R.string.discovery_msg_github_query_invalid
 
-    code == "no_matching_github_asset" -> stringResource(R.string.discovery_msg_github_no_apk)
+        "github_release_missing" -> R.string.discovery_msg_github_release_missing
 
-    code == "github_nightly_use_library" -> stringResource(R.string.discovery_msg_github_nightly_library)
+        "no_matching_github_asset",
+        "no_matching_gitlab_asset",
+        "no_matching_codeberg_asset",
+        -> R.string.discovery_msg_github_no_apk
 
-    code == "index_oom" -> stringResource(R.string.sources_msg_index_oom)
+        "github_nightly_use_library" -> R.string.discovery_msg_github_nightly_library
 
-    else -> code
+        "forge_nightly_unsupported" -> R.string.discovery_msg_forge_nightly_unsupported
+
+        "index_oom" -> R.string.sources_msg_index_oom
+
+        else -> return null
+    }
+    return stringResource(resId)
 }

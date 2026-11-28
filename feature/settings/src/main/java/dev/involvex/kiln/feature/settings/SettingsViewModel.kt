@@ -18,6 +18,7 @@ import dev.involvex.kiln.core.model.BackgroundUpdatePreferences
 import dev.involvex.kiln.core.model.BackgroundUpdateScheduler
 import dev.involvex.kiln.core.model.DebugLogController
 import dev.involvex.kiln.core.model.DevPreferences
+import dev.involvex.kiln.core.model.ForgeTokenRepository
 import dev.involvex.kiln.core.model.GitHubTokenRepository
 import dev.involvex.kiln.core.model.InstallerPreferences
 import dev.involvex.kiln.core.model.KilnConfigFilenames
@@ -33,6 +34,7 @@ import dev.involvex.kiln.core.model.NetworkProxyType
 import dev.involvex.kiln.core.model.PreferredInstaller
 import dev.involvex.kiln.core.model.PrivilegeCapability
 import dev.involvex.kiln.core.model.PrivilegedExecutor
+import dev.involvex.kiln.core.model.ReleaseForge
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import javax.inject.Inject
@@ -63,6 +65,7 @@ class SettingsViewModel @Inject constructor(
     private val maintenanceScheduler: MaintenanceScheduler,
     private val kilnConfigRepository: KilnConfigRepository,
     private val gitHubTokenRepository: GitHubTokenRepository,
+    private val forgeTokenRepository: ForgeTokenRepository,
     private val apkRollbackCache: ApkRollbackCache,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -75,6 +78,8 @@ class SettingsViewModel @Inject constructor(
                 appVersionName = readVersionName(),
                 appVersionCode = readVersionCode(),
                 githubTokenSet = gitHubTokenRepository.isTokenSet(),
+                gitlabTokenSet = forgeTokenRepository.isTokenSet(ReleaseForge.GITLAB),
+                codebergTokenSet = forgeTokenRepository.isTokenSet(ReleaseForge.CODEBERG),
             )
         }
         viewModelScope.launch {
@@ -242,6 +247,58 @@ class SettingsViewModel @Inject constructor(
                 githubTokenInput = "",
                 githubTokenSet = false,
                 configMessage = "github_token_cleared",
+            )
+        }
+    }
+
+    fun onGitlabTokenInputChange(value: String) {
+        _uiState.update { it.copy(gitlabTokenInput = value) }
+    }
+
+    fun saveGitlabToken() {
+        forgeTokenRepository.saveToken(ReleaseForge.GITLAB, _uiState.value.gitlabTokenInput)
+        _uiState.update {
+            it.copy(
+                gitlabTokenInput = "",
+                gitlabTokenSet = forgeTokenRepository.isTokenSet(ReleaseForge.GITLAB),
+                configMessage = "gitlab_token_saved",
+            )
+        }
+    }
+
+    fun clearGitlabToken() {
+        forgeTokenRepository.clearToken(ReleaseForge.GITLAB)
+        _uiState.update {
+            it.copy(
+                gitlabTokenInput = "",
+                gitlabTokenSet = false,
+                configMessage = "gitlab_token_cleared",
+            )
+        }
+    }
+
+    fun onCodebergTokenInputChange(value: String) {
+        _uiState.update { it.copy(codebergTokenInput = value) }
+    }
+
+    fun saveCodebergToken() {
+        forgeTokenRepository.saveToken(ReleaseForge.CODEBERG, _uiState.value.codebergTokenInput)
+        _uiState.update {
+            it.copy(
+                codebergTokenInput = "",
+                codebergTokenSet = forgeTokenRepository.isTokenSet(ReleaseForge.CODEBERG),
+                configMessage = "codeberg_token_saved",
+            )
+        }
+    }
+
+    fun clearCodebergToken() {
+        forgeTokenRepository.clearToken(ReleaseForge.CODEBERG)
+        _uiState.update {
+            it.copy(
+                codebergTokenInput = "",
+                codebergTokenSet = false,
+                configMessage = "codeberg_token_cleared",
             )
         }
     }

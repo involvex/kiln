@@ -14,6 +14,7 @@ import dev.involvex.kiln.core.model.InstalledAppSummary
 import dev.involvex.kiln.core.model.LocalInstallRequest
 import dev.involvex.kiln.core.model.ManagedSourceLink
 import dev.involvex.kiln.core.model.MatchConfidence
+import dev.involvex.kiln.core.model.ReleaseForge
 import dev.involvex.kiln.core.model.RepoConfig
 import dev.involvex.kiln.core.model.UpdateCheckResult
 import dev.involvex.kiln.feature.apps.data.InstalledAppsRepository
@@ -308,6 +309,7 @@ class AppsViewModelTest {
             githubAssetRegex: String?,
             pinned: Boolean,
             githubChannel: GitHubReleaseChannel?,
+            releaseForge: ReleaseForge,
         ): Result<Unit> = Result.success(Unit)
 
         override suspend fun unlinkManagedPackage(packageName: String): Result<Unit> = Result.success(Unit)

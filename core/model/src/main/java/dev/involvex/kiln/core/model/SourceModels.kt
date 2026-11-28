@@ -14,7 +14,34 @@ enum class SourceKind {
     GITHUB,
 }
 
-/** Update channel for a GitHub-managed app (Releases vs Actions artifacts). */
+/**
+ * Host for release-based managed apps (GitHub / GitLab.com / Codeberg).
+ * Path stays in [ManagedApp.githubOwnerRepo]; host is this enum (persisted as name).
+ */
+enum class ReleaseForge {
+    GITHUB,
+    GITLAB,
+    CODEBERG,
+}
+
+fun parseReleaseForge(raw: String?): ReleaseForge = runCatching { ReleaseForge.valueOf(raw?.trim().orEmpty()) }
+    .getOrDefault(ReleaseForge.GITHUB)
+
+fun ReleaseForge.sourceIdPrefix(): String = when (this) {
+    ReleaseForge.GITHUB -> "github"
+    ReleaseForge.GITLAB -> "gitlab"
+    ReleaseForge.CODEBERG -> "codeberg"
+}
+
+fun ReleaseForge.sourceId(ownerRepo: String): String = "${sourceIdPrefix()}:$ownerRepo"
+
+fun ReleaseForge.displayLabel(): String = when (this) {
+    ReleaseForge.GITHUB -> "GitHub"
+    ReleaseForge.GITLAB -> "GitLab"
+    ReleaseForge.CODEBERG -> "Codeberg"
+}
+
+/** Update channel for a release-managed app (Releases vs GitHub Actions artifacts). */
 enum class GitHubReleaseChannel {
     STABLE,
     PRE_RELEASE,
@@ -69,6 +96,8 @@ data class ManagedApp(
     val githubOwnerRepo: String? = null,
     val githubAssetRegex: String? = null,
     val githubChannel: GitHubReleaseChannel = GitHubReleaseChannel.STABLE,
+    /** Forge for [githubOwnerRepo]; ignored when owner/repo is null. */
+    val releaseForge: ReleaseForge = ReleaseForge.GITHUB,
     /** True when the user watches an uninstalled catalog/GitHub app for new versions. */
     val watchOnly: Boolean = false,
     /** Null = use global Settings cooldown for auto-install. */
@@ -136,6 +165,7 @@ data class ManagedSourceLink(
     val pinned: Boolean,
     val githubOwnerRepo: String? = null,
     val githubChannel: GitHubReleaseChannel = GitHubReleaseChannel.STABLE,
+    val releaseForge: ReleaseForge = ReleaseForge.GITHUB,
 )
 
 /**
@@ -195,7 +225,7 @@ interface AppUpdateRepository {
     suspend fun cooldownOverrides(): Map<String, Int?>
 
     /**
-     * Manually bind an installed package to an update source (F-Droid repo id or `github:owner/repo`).
+     * Manually bind an installed package to an update source (F-Droid repo id or `github|gitlab|codeberg:owner/repo`).
      * Sets [pinned] so later auto-match / priority does not silently override the choice.
      * When [githubOwnerRepo] is set, probes that repo before returning (not only the local index).
      */
@@ -207,6 +237,7 @@ interface AppUpdateRepository {
         githubAssetRegex: String? = null,
         pinned: Boolean = true,
         githubChannel: GitHubReleaseChannel? = null,
+        releaseForge: ReleaseForge = ReleaseForge.GITHUB,
     ): Result<Unit>
 
     /**

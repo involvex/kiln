@@ -1,5 +1,7 @@
 package dev.involvex.kiln.feature.sources.discovery
 
+import dev.involvex.kiln.core.model.ReleaseForge
+
 enum class DiscoverySourceTab {
     FDROID,
     GITHUB,
@@ -15,6 +17,7 @@ data class DiscoveryGithubRow(
     val downloadUrl: String?,
     val saved: Boolean,
     val releaseNotes: String? = null,
+    val forge: ReleaseForge = ReleaseForge.GITHUB,
 )
 
 data class DiscoveryUiState(

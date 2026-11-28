@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.involvex.kiln.core.common.Result
+import dev.involvex.kiln.feature.sources.forge.ForgeRef
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -110,7 +111,8 @@ class DiscoveryViewModel @Inject constructor(
     }
 
     fun lookupSavedGithub(row: DiscoveryGithubRow) {
-        _uiState.update { it.copy(githubQuery = row.ownerRepo) }
+        val query = ForgeRef(row.forge, row.ownerRepo).asLookupQuery()
+        _uiState.update { it.copy(githubQuery = query) }
         lookupGithub()
     }
 
@@ -118,7 +120,17 @@ class DiscoveryViewModel @Inject constructor(
         loadFdroid = repository::loadFdroidInstallOptions,
         installFdroid = repository::installFdroidVariant,
         loadGithub = repository::loadGithubInstallOptions,
-        installGithub = repository::installGithubVariant,
+        installGithub = { packageName, ownerRepo, tagName, downloadUrl, sizeBytes, releaseNotes, forge ->
+            repository.installGithubVariant(
+                packageName = packageName,
+                ownerRepo = ownerRepo,
+                tagName = tagName,
+                downloadUrl = downloadUrl,
+                sizeBytes = sizeBytes,
+                releaseNotes = releaseNotes,
+                forge = forge,
+            )
+        },
     )
 
     fun reportInstallResult(message: String, isError: Boolean) {
@@ -148,7 +160,7 @@ class DiscoveryViewModel @Inject constructor(
             val ready = if (row.downloadUrl != null) {
                 Result.success(row)
             } else {
-                repository.lookupGithub(row.ownerRepo)
+                repository.lookupGithub(ForgeRef(row.forge, row.ownerRepo).asLookupQuery())
             }
             when (ready) {
                 is Result.Failure -> {

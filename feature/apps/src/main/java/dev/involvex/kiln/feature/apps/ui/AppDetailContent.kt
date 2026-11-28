@@ -52,6 +52,7 @@ import dev.involvex.kiln.core.model.InstallJobStatus
 import dev.involvex.kiln.core.model.InstalledAppDetail
 import dev.involvex.kiln.core.model.ManagedSourceLink
 import dev.involvex.kiln.core.model.MatchConfidence
+import dev.involvex.kiln.core.model.ReleaseForge
 import dev.involvex.kiln.core.model.RollbackApkEntry
 import dev.involvex.kiln.feature.apps.R
 import dev.involvex.kiln.feature.apps.data.PlayStoreLinks
@@ -626,6 +627,7 @@ private fun ManagedSourceLinked(
             selected = managedLink.githubChannel,
             onGitHubChannelChange = onGitHubChannelChange,
             hasGitHubToken = hasGitHubToken,
+            allowNightly = managedLink.releaseForge == ReleaseForge.GITHUB,
         )
     }
 }
@@ -635,6 +637,7 @@ private fun ManagedGitHubChannelRow(
     selected: GitHubReleaseChannel,
     onGitHubChannelChange: (GitHubReleaseChannel) -> Unit,
     hasGitHubToken: Boolean,
+    allowNightly: Boolean,
 ) {
     Text(
         stringResource(R.string.feature_apps_github_channel_label),
@@ -644,7 +647,12 @@ private fun ManagedGitHubChannelRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        GitHubReleaseChannel.entries.forEach { channel ->
+        val channels = if (allowNightly) {
+            GitHubReleaseChannel.entries
+        } else {
+            listOf(GitHubReleaseChannel.STABLE, GitHubReleaseChannel.PRE_RELEASE)
+        }
+        channels.forEach { channel ->
             FilterChip(
                 selected = selected == channel,
                 onClick = { onGitHubChannelChange(channel) },
@@ -662,7 +670,7 @@ private fun ManagedGitHubChannelRow(
             )
         }
     }
-    if (selected == GitHubReleaseChannel.NIGHTLY && !hasGitHubToken) {
+    if (selected == GitHubReleaseChannel.NIGHTLY && allowNightly && !hasGitHubToken) {
         Text(
             stringResource(R.string.feature_apps_github_channel_nightly_needs_pat),
             style = MaterialTheme.typography.bodySmall,
