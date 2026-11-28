@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **M63** Curated debloat catalog pipeline (`DebloatDbParser` + tests + source/version UI); shipped `debloat-db.json` still has `packages: []` (no invented ratings)
 - **M62** Storage squarified treemap of largest consumers (apps + scanned leftovers/orphans/large files); replaces size bars
 - **M61** GitLab.com + Codeberg release sources (Discover Releases tab + Sources share); optional forge tokens under Settings → Updates; Nightly stays GitHub-only
 

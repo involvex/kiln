@@ -42,11 +42,15 @@ class DebloatViewModel @Inject constructor(private val repository: DebloatReposi
             _uiState.update { it.copy(isLoading = true, message = null) }
             val rows = repository.loadRows()
             val snapshot = repository.currentSnapshot()
+            val catalog = repository.catalogDocument()
             _uiState.update {
                 it.copy(
                     isLoading = false,
                     rows = rows,
                     snapshotAtEpochMs = snapshot?.createdAtEpochMs,
+                    catalogSource = catalog.source,
+                    catalogVersion = catalog.version,
+                    catalogPackageCount = catalog.packageCount,
                     selected = it.selected.intersect(rows.map { row -> row.packageName }.toSet()),
                 )
             }

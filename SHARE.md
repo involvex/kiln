@@ -2,11 +2,11 @@
 
 ## Audience
 
-People who sideload Kiln from GitHub Releases or track it with Obtainium and care about on-device storage cleanup.
+People who sideload Kiln and care about honest debloat tooling (Shizuku), especially HyperOS users.
 
 ## Announcement
 
-Kiln’s Manage → Storage screen now shows a **treemap of the largest storage consumers**: top apps by measured size, plus scanned APK leftovers, orphans, and large files when you’ve run those scans. Areas are proportional; tap an app tile for App info. No new permissions. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or point Obtainium at `https://github.com/involvex/kiln`.
+Kiln’s Debloat mode now surfaces the **curated ratings catalog metadata** (source, version, rated-package count). The shipped list is still empty on purpose — ratings are never invented; unknowns stay UNKNOWN and need expert mode. When a license-cleared source is approved, entries land in `debloat-db.json` via PR with NOTICE attribution. Install from [GitHub Releases](https://github.com/involvex/kiln/releases) or Obtainium → `https://github.com/involvex/kiln`.
 
 ## Free channels (pick one)
 

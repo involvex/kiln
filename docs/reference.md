@@ -37,6 +37,12 @@ Keep reference checkouts **outside** this repository. Do not commit machine-loca
 - SPDX: **AGPL-3.0-or-later**
 - For Kiln: **read behaviour / command list only** (e.g. `dumpsys battery`, `dumpsys netstats`, `top -n 1`). Never copy parsers, UI, strings, or layouts into Kiln (Apache-2.0).
 
+## Universal Android Debloater NG (candidate curated list)
+
+- Upstream: [0x192/universal-android-debloater-next-generation](https://github.com/0x192/universal-android-debloater-next-generation) (and community list forks)
+- SPDX: **check current LICENSE before any import** — not cleared for Kiln yet
+- For Kiln: candidate **data source only** after license + attribution review; map ratings into `debloat-db.json` via PR; add `NOTICE`. Never invent package ratings; never copy GPL UI/strings.
+
 ## Other public references
 
 - [APK Explorer & Editor](https://github.com/apk-editor/APK-Explorer-Editor)

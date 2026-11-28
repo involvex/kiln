@@ -2,6 +2,8 @@
 <resources>
     <string name="debloat_title">Debloat</string>
     <string name="debloat_intro">Default action is disable (reversible). Ratings are not invented — empty catalog means UNKNOWN; enable expert mode to act. Snapshot is saved before the first change.</string>
+    <string name="debloat_catalog_meta">Curated catalog: %1$s · v%2$d · %3$d rated packages</string>
+    <string name="debloat_catalog_source_unknown">unavailable</string>
     <string name="debloat_need_shizuku_title">Shizuku required</string>
     <string name="debloat_need_shizuku_body">Debloat needs the DEBLOAT capability (Shizuku shell). You can still open Privilege setup. Read-only catalog browsing without actions is limited until curated ratings land.</string>
     <string name="debloat_open_privilege">Open Privilege setup</string>

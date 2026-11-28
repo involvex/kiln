@@ -2,6 +2,8 @@
 <resources>
     <string name="debloat_title">Debloat</string>
     <string name="debloat_intro">Standard ist Deaktivieren (umkehrbar). Ratings werden nicht erfunden — leerer Katalog = UNBEKANNT; Expertenmodus nötig. Snapshot vor der ersten Änderung.</string>
+    <string name="debloat_catalog_meta">Kuratierter Katalog: %1$s · v%2$d · %3$d bewertete Pakete</string>
+    <string name="debloat_catalog_source_unknown">nicht verfügbar</string>
     <string name="debloat_need_shizuku_title">Shizuku nötig</string>
     <string name="debloat_need_shizuku_body">Debloat braucht die Capability DEBLOAT (Shizuku-Shell). Privilege-Einrichtung öffnen. Ohne kuratierte Ratings sind Aktionen nur im Expertenmodus möglich.</string>
     <string name="debloat_open_privilege">Privilege-Einrichtung</string>
