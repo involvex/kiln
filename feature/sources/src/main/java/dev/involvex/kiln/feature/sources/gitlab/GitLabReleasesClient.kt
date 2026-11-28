@@ -13,7 +13,6 @@ import dev.involvex.kiln.feature.sources.github.GitHubReleaseMatch
 import dev.involvex.kiln.feature.sources.github.GitHubReleasePick
 import dev.involvex.kiln.feature.sources.github.GitHubReleasePicker
 import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.serialization.SerialName
@@ -81,7 +80,8 @@ class GitLabReleasesClient @Inject constructor(private val http: KilnHttpClient,
     }
 
     suspend fun listReleases(ownerRepo: String, perPage: Int = 20): Result<List<GitHubReleaseDto>> {
-        val encoded = URLEncoder.encode(ownerRepo, StandardCharsets.UTF_8)
+        // String charset overload: Charset overload needs API 33 (minSdk 26).
+        val encoded = URLEncoder.encode(ownerRepo, "UTF-8")
         val url = "https://gitlab.com/api/v4/projects/$encoded/releases?per_page=$perPage"
         val headers = buildMap {
             put("Accept", "application/json")
