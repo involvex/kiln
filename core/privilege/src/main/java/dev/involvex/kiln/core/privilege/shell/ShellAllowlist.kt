@@ -34,6 +34,18 @@ object ShellAllowlist {
     const val RM_ANDROID_PKG = "rm_android_pkg"
     const val TAR_ANDROID_PKG_OUT = "tar_android_pkg_out"
     const val TAR_ANDROID_PKG_IN = "tar_android_pkg_in"
+
+    /** Tar `/data/data/<pkg>` → staging (ROOT / FULL_BACKUP only). */
+    const val TAR_APP_DATA_OUT = "tar_app_data_out"
+
+    /** Extract staging tar into `/data/data` (ROOT / FULL_BACKUP only). */
+    const val TAR_APP_DATA_IN = "tar_app_data_in"
+
+    /** `restorecon -R /data/data/<pkg>` after restore. */
+    const val RESTORECON_APP_DATA = "restorecon_app_data"
+
+    /** Existence probe: `ls -d /data/data/<pkg>`. */
+    const val LS_APP_DATA = "ls_app_data"
     const val AM_FORCE_STOP = "am_force_stop"
     const val DUMPSYS_MEMINFO = "dumpsys_meminfo"
     const val DUMPSYS_CPUINFO = "dumpsys_cpuinfo"
@@ -269,6 +281,37 @@ object ShellAllowlist {
             listOf("tar", "-xf", srcTar, "-C", root.absolutePath)
         }
 
+        TAR_APP_DATA_OUT -> {
+            if (args.size != 2) return null
+            val packageName = args[0]
+            val destTar = args[1]
+            val dataRoot = appDataRootPath()
+            if (!isSafePackageName(packageName) || !isSafeStagingTarPath(destTar)) return null
+            // tar -cf dest -C /data/data packageName
+            listOf("tar", "-cf", destTar, "-C", dataRoot, packageName)
+        }
+
+        TAR_APP_DATA_IN -> {
+            if (args.size != 2) return null
+            val packageName = args[0]
+            val srcTar = args[1]
+            val dataRoot = appDataRootPath()
+            if (!isSafePackageName(packageName) || !isSafeStagingTarPath(srcTar)) return null
+            listOf("tar", "-xf", srcTar, "-C", dataRoot)
+        }
+
+        RESTORECON_APP_DATA -> {
+            val packageName = args.singleOrNull() ?: return null
+            val path = appDataPackagePath(packageName) ?: return null
+            listOf("restorecon", "-R", path)
+        }
+
+        LS_APP_DATA -> {
+            val packageName = args.singleOrNull() ?: return null
+            val path = appDataPackagePath(packageName) ?: return null
+            listOf("ls", "-d", path)
+        }
+
         AM_FORCE_STOP -> {
             val packageName = args.singleOrNull() ?: return null
             if (!isSafePackageName(packageName)) return null
@@ -311,6 +354,14 @@ object ShellAllowlist {
         val root = resolveRoot(pathKey) ?: return null
         if (packageName == null || !isSafePackageName(packageName)) return null
         return "${root.absolutePath}/$packageName"
+    }
+
+    /** Fixed CE app-data root (user 0). `user_de` deferred. */
+    fun appDataRootPath(): String = APP_DATA_ROOT
+
+    fun appDataPackagePath(packageName: String?): String? {
+        if (packageName == null || !isSafePackageName(packageName)) return null
+        return "$APP_DATA_ROOT/$packageName"
     }
 
     fun isSafePackageName(value: String): Boolean = value.length in 3..255 && PACKAGE_NAME.matches(value)
@@ -358,6 +409,8 @@ object ShellAllowlist {
 
     /** Cap split count so argv stays bounded for UserService. */
     private const val MAX_INSTALL_MULTIPLE = 64
+
+    private const val APP_DATA_ROOT = "/data/data"
 
     /**
      * Builds `pm enable|disable --user N package/class` from validated tokens.

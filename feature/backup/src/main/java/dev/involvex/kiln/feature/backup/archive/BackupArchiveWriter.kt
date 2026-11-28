@@ -8,7 +8,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 /**
- * Writes a Kiln backup zip: STORED APK entries + optional android_*.tar + [BackupMetadataCodec.FILE_NAME].
+ * Writes a Kiln backup zip: STORED APK entries + optional android_*.tar / app_data.tar + [BackupMetadataCodec.FILE_NAME].
  * Pure JVM — unit-tested with temp files.
  */
 object BackupArchiveWriter {
@@ -18,6 +18,7 @@ object BackupArchiveWriter {
         output: OutputStream,
         androidDataTar: File? = null,
         androidObbTar: File? = null,
+        appDataTar: File? = null,
     ) {
         require(apkFiles.isNotEmpty()) { "at least one APK required" }
         val metaBytes = BackupMetadataCodec.encode(metadata)
@@ -32,6 +33,9 @@ object BackupArchiveWriter {
             }
             androidObbTar?.takeIf { it.isFile && it.length() > 0L }?.let {
                 putStoredFile(zip, BackupMetadataCodec.ANDROID_OBB_ENTRY, it)
+            }
+            appDataTar?.takeIf { it.isFile && it.length() > 0L }?.let {
+                putStoredFile(zip, BackupMetadataCodec.APP_DATA_ENTRY, it)
             }
             putStoredBytes(zip, BackupMetadataCodec.FILE_NAME, metaBytes)
         }

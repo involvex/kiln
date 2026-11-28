@@ -26,6 +26,9 @@ class CapabilityMatrixTest {
     fun root_uid_enables_full_backup() {
         val matrix = CapabilityMatrix.fromUid(CapabilityMatrix.ROOT_UID, PrivilegeTier.SHIZUKU)
         assertEquals(CapabilityAvailability.AVAILABLE, matrix[PrivilegeCapability.FULL_BACKUP])
+        val rootTier = CapabilityMatrix.fromUid(CapabilityMatrix.ROOT_UID, PrivilegeTier.ROOT)
+        assertEquals(CapabilityAvailability.AVAILABLE, rootTier[PrivilegeCapability.FULL_BACKUP])
+        assertTrue(PrivilegeCapability.FULL_BACKUP in CapabilityMatrix.capabilities(0, PrivilegeTier.ROOT))
     }
 
     @Test

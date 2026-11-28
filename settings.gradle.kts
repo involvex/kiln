@@ -18,6 +18,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // libsu (RootExecutor / M67) — Apache-2.0, published via JitPack.
+        maven(url = "https://jitpack.io")
     }
 }
 

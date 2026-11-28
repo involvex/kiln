@@ -33,7 +33,18 @@ class PrivilegeSetupViewModel @Inject constructor(
                 _uiState.update { it.copy(status = status) }
             }
         }
+        viewModelScope.launch {
+            executor.observeRootOptIn().collect { enabled ->
+                _uiState.update { it.copy(rootOptIn = enabled) }
+            }
+        }
         refresh()
+    }
+
+    fun setRootOptIn(enabled: Boolean) {
+        viewModelScope.launch {
+            executor.setRootOptIn(enabled)
+        }
     }
 
     fun refresh() {

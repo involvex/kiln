@@ -38,6 +38,8 @@ jdom2 = "2.0.6.1"
 commonsLang3 = "3.18.0"
 httpclient = "4.5.14"
 shizuku = "13.1.5"
+# topjohnwu/libsu — Magisk RootExecutor (M67). Apache-2.0 via JitPack.
+libsu = "6.0.0"
 glance = "1.2.0"
 # REAndroid ARSCLib — binary resource / APK merge (M35). Apache-2.0.
 reandroidArsclib = "1.4.0"
@@ -107,6 +109,8 @@ timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "tim
 
 shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuku" }
 shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version.ref = "shizuku" }
+libsu-core = { group = "com.github.topjohnwu.libsu", name = "core", version.ref = "libsu" }
+libsu-service = { group = "com.github.topjohnwu.libsu", name = "service", version.ref = "libsu" }
 
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junitJupiter" }
 junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junitJupiter" }

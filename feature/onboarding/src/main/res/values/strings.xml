@@ -58,7 +58,7 @@
     <string name="onboarding_link_no_saved_github">No GitHub sources saved yet. Add one under Sources or type owner/repo below.</string>
 
     <string name="privilege_setup_title">Privilege setup</string>
-    <string name="privilege_setup_intro">Privileged actions (silent install, later cache clean / debloat) need Shizuku or ShizukuPlus. Without it, Kiln stays on Tier NONE with system dialogs.</string>
+    <string name="privilege_setup_intro">Privileged actions (silent install, cache clean, debloat, full backup) need Shizuku/ShizukuPlus and optionally Magisk root. Without them, Kiln stays on Tier NONE with system dialogs.</string>
     <string name="privilege_phase_a">A · Not installed</string>
     <string name="privilege_phase_b">B · Installed, not running</string>
     <string name="privilege_phase_c">C · Running, no permission</string>
@@ -84,4 +84,9 @@
     <string name="privilege_avail_yes">Available</string>
     <string name="privilege_avail_restricted">Restricted</string>
     <string name="privilege_avail_no">Unavailable</string>
+    <string name="privilege_root_opt_in_title">Magisk root (opt-in)</string>
+    <string name="privilege_root_opt_in_body">Off by default. When enabled, Kiln may request a Magisk root shell for FULL_BACKUP (/data/data only; user_de deferred). Shell commands stay on a fixed allowlist.</string>
+    <string name="privilege_root_opt_in_toggle">Allow Magisk root</string>
+    <string name="privilege_root_granted">Root shell granted — FULL_BACKUP available after refresh</string>
+    <string name="privilege_root_pending">Root opted in — grant Magisk when prompted, then re-check</string>
 </resources>

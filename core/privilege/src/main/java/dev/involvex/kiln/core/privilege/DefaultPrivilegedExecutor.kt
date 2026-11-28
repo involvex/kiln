@@ -28,12 +28,14 @@ import dev.involvex.kiln.core.model.PrivilegeTier
 import dev.involvex.kiln.core.model.PrivilegedExecutor
 import dev.involvex.kiln.core.model.ProcessStat
 import dev.involvex.kiln.core.model.ProcessStatsParser
+import dev.involvex.kiln.core.model.RootPreferences
 import dev.involvex.kiln.core.model.SelfTestReport
 import dev.involvex.kiln.core.model.ShizukuSetupPhase
 import dev.involvex.kiln.core.model.ThermalDumpParser
 import dev.involvex.kiln.core.model.ThermalSnapshot
 import dev.involvex.kiln.core.model.TopDumpParser
 import dev.involvex.kiln.core.model.TopSnapshot
+import dev.involvex.kiln.core.privilege.root.RootExecutor
 import dev.involvex.kiln.core.privilege.shell.ShellAllowlist
 import dev.involvex.kiln.core.privilege.shizuku.KilnUserService
 import javax.inject.Inject
@@ -51,9 +53,8 @@ import rikka.shizuku.Shizuku
 import timber.log.Timber
 
 /**
- * Active privilege coordinator: Shizuku when ready, otherwise Tier NONE.
+ * Active privilege coordinator: Shizuku when ready, Magisk RootExecutor when opted in, else Tier NONE.
  * ShizukuPlus is detected for setup UX; API differences deferred (same Shizuku binder API).
- * RootExecutor deferred (opt-in + libsu) — not activated in M4.
  */
 @Singleton
 @Suppress("TooManyFunctions") // Mirrors PrivilegedExecutor surface across milestones.
@@ -61,6 +62,8 @@ class DefaultPrivilegedExecutor @Inject constructor(
     @ApplicationContext private val context: Context,
     private val managerDetector: ShizukuManagerDetector,
     private val activityLog: ActivityLogRecorder,
+    private val rootPreferences: RootPreferences,
+    private val rootExecutor: RootExecutor,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : PrivilegedExecutor {
     private val statusFlow = MutableStateFlow(buildStatus(selfTest = null))
@@ -113,7 +116,9 @@ class DefaultPrivilegedExecutor @Inject constructor(
     }
 
     override suspend fun runSelfTest(): Result<SelfTestReport> = withContext(ioDispatcher) {
-        if (!hasPermission()) {
+        val canShizuku = hasPermission()
+        val canRoot = rootPreferences.isEnabled() && rootExecutor.ensureRoot()
+        if (!canShizuku && !canRoot) {
             return@withContext Result.failure("permission_required")
         }
         when (val out = invokeAllowlisted(ShellAllowlist.ID, emptyList())) {
@@ -122,6 +127,11 @@ class DefaultPrivilegedExecutor @Inject constructor(
             is Result.Success -> {
                 val parsed = parseIdOutput(out.value)
                 val manager = managerDetector.detect()
+                val tier = if (parsed.uid == CapabilityMatrix.ROOT_UID) {
+                    PrivilegeTier.ROOT
+                } else {
+                    PrivilegeTier.SHIZUKU
+                }
                 val report = SelfTestReport(
                     uid = parsed.uid,
                     selinuxContext = parsed.context,
@@ -130,12 +140,22 @@ class DefaultPrivilegedExecutor @Inject constructor(
                     managerPackage = manager?.packageName,
                     managerVersionName = manager?.versionName,
                     rawOutput = out.value,
-                    matrix = CapabilityMatrix.fromUid(parsed.uid, PrivilegeTier.SHIZUKU),
+                    matrix = CapabilityMatrix.fromUid(parsed.uid, tier),
                 )
                 publishStatus(report)
                 Result.success(report)
             }
         }
+    }
+
+    override fun observeRootOptIn(): Flow<Boolean> = rootPreferences.observeEnabled()
+
+    override suspend fun setRootOptIn(enabled: Boolean) {
+        rootPreferences.setEnabled(enabled)
+        if (enabled) {
+            rootExecutor.ensureRoot()
+        }
+        publishStatus()
     }
 
     override suspend fun installApk(apkAbsolutePath: String, allowDowngrade: Boolean, targetUserId: Int): Result<Unit> =
@@ -554,6 +574,80 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
     }
 
+    override suspend fun archiveAppDataDir(packageName: String, destTarAbsolutePath: String): Result<Boolean> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.FULL_BACKUP !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:FULL_BACKUP")
+        }
+        if (!ShellAllowlist.isSafePackageName(packageName)) {
+            return@withContext Result.failure("invalid_package")
+        }
+        if (!ShellAllowlist.isSafeStagingTarPath(destTarAbsolutePath)) {
+            return@withContext Result.failure("invalid_staging_path")
+        }
+        when (val probe = invokeAllowlisted(ShellAllowlist.LS_APP_DATA, listOf(packageName))) {
+            is Result.Failure -> probe
+
+            is Result.Success -> {
+                if (probe.value.startsWith("ERR:")) {
+                    return@withContext Result.success(false)
+                }
+                when (
+                    val out = invokeAllowlisted(
+                        ShellAllowlist.TAR_APP_DATA_OUT,
+                        listOf(packageName, destTarAbsolutePath),
+                    )
+                ) {
+                    is Result.Failure -> out
+
+                    is Result.Success -> {
+                        if (out.value.startsWith("ERR:")) {
+                            Result.failure(out.value)
+                        } else {
+                            Result.success(true)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun restoreAppDataDir(packageName: String, srcTarAbsolutePath: String): Result<Unit> = withContext(ioDispatcher) {
+        if (PrivilegeCapability.FULL_BACKUP !in currentStatus().capabilities) {
+            return@withContext Result.failure("capability_missing:FULL_BACKUP")
+        }
+        if (!ShellAllowlist.isSafePackageName(packageName)) {
+            return@withContext Result.failure("invalid_package")
+        }
+        if (!ShellAllowlist.isSafeStagingTarPath(srcTarAbsolutePath)) {
+            return@withContext Result.failure("invalid_staging_path")
+        }
+        when (
+            val out = invokeAllowlisted(
+                ShellAllowlist.TAR_APP_DATA_IN,
+                listOf(packageName, srcTarAbsolutePath),
+            )
+        ) {
+            is Result.Failure -> out
+
+            is Result.Success -> {
+                if (out.value.startsWith("ERR:")) {
+                    return@withContext Result.failure(out.value)
+                }
+                when (val restorecon = invokeAllowlisted(ShellAllowlist.RESTORECON_APP_DATA, listOf(packageName))) {
+                    is Result.Failure -> restorecon
+
+                    is Result.Success -> {
+                        if (restorecon.value.startsWith("ERR:")) {
+                            // Best-effort SELinux fix — surface but still prefer success of extract.
+                            Timber.w("restorecon failed: %s", restorecon.value)
+                        }
+                        Result.success(Unit)
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun forceStopPackage(packageName: String): Result<Unit> = withContext(ioDispatcher) {
         val caps = currentStatus().capabilities
         if (PrivilegeCapability.FORCE_STOP !in caps && PrivilegeCapability.ACCESS_ANDROID_DATA !in caps) {
@@ -799,26 +893,49 @@ class DefaultPrivilegedExecutor @Inject constructor(
         }
 
     private suspend fun invokeAllowlisted(commandId: String, args: List<String>): Result<String> {
-        val service = ensureUserService()
-            ?: return Result.failure("user_service_unavailable").also {
-                recordShell(commandId, args, success = false, detailKey = "user_service_unavailable")
+        if (hasPermission()) {
+            val service = ensureUserService()
+            if (service != null) {
+                return try {
+                    val raw = service.runAllowlisted(commandId, args.toTypedArray())
+                    val value = raw ?: "ERR:null"
+                    val ok = !value.startsWith("ERR:")
+                    recordShell(
+                        commandId = commandId,
+                        args = args,
+                        success = ok,
+                        detailKey = if (ok) null else "shell_error",
+                    )
+                    Result.success(value)
+                } catch (e: RemoteException) {
+                    Timber.w(e, "UserService remote failure")
+                    userService = null
+                    recordShell(commandId, args, success = false, detailKey = "remote")
+                    Result.failure("remote:${e.message}", e)
+                }
             }
-        return try {
-            val raw = service.runAllowlisted(commandId, args.toTypedArray())
-            val value = raw ?: "ERR:null"
-            val ok = !value.startsWith("ERR:")
-            recordShell(
-                commandId = commandId,
-                args = args,
-                success = ok,
-                detailKey = if (ok) null else "shell_error",
-            )
-            Result.success(value)
-        } catch (e: RemoteException) {
-            Timber.w(e, "UserService remote failure")
-            userService = null
-            recordShell(commandId, args, success = false, detailKey = "remote")
-            Result.failure("remote:${e.message}", e)
+        }
+        if (rootPreferences.isEnabled()) {
+            when (val rootOut = rootExecutor.runAllowlisted(commandId, args)) {
+                is Result.Failure -> {
+                    recordShell(commandId, args, success = false, detailKey = rootOut.message)
+                    return rootOut
+                }
+
+                is Result.Success -> {
+                    val ok = !rootOut.value.startsWith("ERR:")
+                    recordShell(
+                        commandId = commandId,
+                        args = args,
+                        success = ok,
+                        detailKey = if (ok) null else "shell_error",
+                    )
+                    return rootOut
+                }
+            }
+        }
+        return Result.failure("user_service_unavailable").also {
+            recordShell(commandId, args, success = false, detailKey = "user_service_unavailable")
         }
     }
 
@@ -845,6 +962,12 @@ class DefaultPrivilegedExecutor @Inject constructor(
             ShellAllowlist.RM_ANDROID_PKG,
             ShellAllowlist.DEVICEIDLE_WHITELIST,
             -> args.getOrNull(1)?.takeIf { ShellAllowlist.isSafePackageName(it) }
+
+            ShellAllowlist.TAR_APP_DATA_OUT,
+            ShellAllowlist.TAR_APP_DATA_IN,
+            ShellAllowlist.RESTORECON_APP_DATA,
+            ShellAllowlist.LS_APP_DATA,
+            -> args.firstOrNull()?.takeIf { ShellAllowlist.isSafePackageName(it) }
 
             else -> args.firstOrNull()?.takeIf { ShellAllowlist.isSafePackageName(it) }
         }
@@ -921,12 +1044,24 @@ class DefaultPrivilegedExecutor @Inject constructor(
             !permissionGranted -> ShizukuSetupPhase.NO_PERMISSION
             else -> ShizukuSetupPhase.READY
         }
-        val tier = if (phase == ShizukuSetupPhase.READY) PrivilegeTier.SHIZUKU else PrivilegeTier.NONE
-        // Optimistic shell capabilities until self-test reports the real UID (usually 2000).
+        val magiskRoot = rootPreferences.isEnabled() && rootExecutor.isGrantedCached()
+        val selfTestRoot = selfTest?.uid == CapabilityMatrix.ROOT_UID
+        val tier = when {
+            magiskRoot || selfTestRoot -> PrivilegeTier.ROOT
+            phase == ShizukuSetupPhase.READY -> PrivilegeTier.SHIZUKU
+            else -> PrivilegeTier.NONE
+        }
+        // Magisk opt-in with grant → full root matrix. Else Shizuku optimistic/shell UID.
         val capabilities = when {
-            phase != ShizukuSetupPhase.READY -> emptySet()
-            selfTest != null -> CapabilityMatrix.capabilities(selfTest.uid, PrivilegeTier.SHIZUKU)
-            else -> CapabilityMatrix.capabilities(CapabilityMatrix.SHELL_UID, PrivilegeTier.SHIZUKU)
+            magiskRoot -> CapabilityMatrix.capabilities(CapabilityMatrix.ROOT_UID, PrivilegeTier.ROOT)
+
+            phase == ShizukuSetupPhase.READY && selfTest != null ->
+                CapabilityMatrix.capabilities(selfTest.uid, if (selfTestRoot) PrivilegeTier.ROOT else PrivilegeTier.SHIZUKU)
+
+            phase == ShizukuSetupPhase.READY ->
+                CapabilityMatrix.capabilities(CapabilityMatrix.SHELL_UID, PrivilegeTier.SHIZUKU)
+
+            else -> emptySet()
         }
         return PrivilegeStatus(
             phase = phase,

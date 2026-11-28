@@ -5,7 +5,9 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.involvex.kiln.core.model.PrivilegedExecutor
+import dev.involvex.kiln.core.model.RootPreferences
 import dev.involvex.kiln.core.privilege.DefaultPrivilegedExecutor
+import dev.involvex.kiln.core.privilege.root.SharedRootPreferences
 import javax.inject.Singleton
 
 @Module
@@ -14,4 +16,8 @@ abstract class PrivilegeModule {
     @Binds
     @Singleton
     abstract fun bindPrivilegedExecutor(impl: DefaultPrivilegedExecutor): PrivilegedExecutor
+
+    @Binds
+    @Singleton
+    abstract fun bindRootPreferences(impl: SharedRootPreferences): RootPreferences
 }

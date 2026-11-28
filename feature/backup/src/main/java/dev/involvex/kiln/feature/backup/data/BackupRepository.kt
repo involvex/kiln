@@ -63,6 +63,8 @@ class BackupRepository @Inject constructor(
 
     fun canIncludeAndroidData(): Boolean = archiveBuilder.canIncludeAndroidData()
 
+    fun canIncludeAppData(): Boolean = archiveBuilder.canIncludeAppData()
+
     suspend fun listCandidates(): List<BackupAppCandidate> = packageLoader.listUserApps()
 
     suspend fun backupToUri(
@@ -374,6 +376,12 @@ class BackupRepository @Inject constructor(
                         obbTar = extracted.androidObbTar,
                     )
                 }
+                if (meta.includesAppData && canIncludeAppData()) {
+                    restoreAppDataAfterInstall(
+                        packageName = meta.packageName,
+                        appDataTar = extracted.appDataTar,
+                    )
+                }
                 activityLog.record(
                     ActivityLogEvents.create(
                         type = ActivityLogType.RESTORE,
@@ -462,6 +470,27 @@ class BackupRepository @Inject constructor(
             Timber.w(e, "shared data restore incomplete for %s", packageName)
         } catch (e: SecurityException) {
             Timber.w(e, "shared data restore incomplete for %s", packageName)
+        } finally {
+            stage.deleteRecursively()
+        }
+    }
+
+    private suspend fun restoreAppDataAfterInstall(packageName: String, appDataTar: File?) {
+        val src = appDataTar?.takeIf { it.isFile } ?: return
+        val stage = archiveBuilder.stagingDir().apply { mkdirs() }
+        try {
+            waitUntilInstalled(packageName, timeoutMs = INSTALL_WAIT_TIMEOUT_MS)
+            privilegedExecutor.forceStopPackage(packageName)
+            val staged = File(stage, BackupMetadataCodec.APP_DATA_ENTRY)
+            src.copyTo(staged, overwrite = true)
+            when (val restored = privilegedExecutor.restoreAppDataDir(packageName, staged.absolutePath)) {
+                is Result.Failure -> Timber.w("app data restore incomplete for %s: %s", packageName, restored.message)
+                is Result.Success -> Unit
+            }
+        } catch (e: IOException) {
+            Timber.w(e, "app data restore incomplete for %s", packageName)
+        } catch (e: SecurityException) {
+            Timber.w(e, "app data restore incomplete for %s", packageName)
         } finally {
             stage.deleteRecursively()
         }

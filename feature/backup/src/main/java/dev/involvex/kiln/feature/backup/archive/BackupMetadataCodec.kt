@@ -9,6 +9,7 @@ object BackupMetadataCodec {
     const val FILE_NAME = "metadata.json"
     const val ANDROID_DATA_ENTRY = "android_data.tar"
     const val ANDROID_OBB_ENTRY = "android_obb.tar"
+    const val APP_DATA_ENTRY = "app_data.tar"
     private val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
@@ -38,6 +39,7 @@ object BackupMetadataCodec {
         val encrypted: Boolean = false,
         val androidDataEntry: String? = null,
         val androidObbEntry: String? = null,
+        val appDataEntry: String? = null,
         val targetUserId: Int? = null,
     ) {
         fun toModel(): BackupArchiveMetadata = BackupArchiveMetadata(
@@ -56,6 +58,7 @@ object BackupMetadataCodec {
             encrypted = encrypted,
             androidDataEntry = androidDataEntry,
             androidObbEntry = androidObbEntry,
+            appDataEntry = appDataEntry,
             targetUserId = targetUserId,
         )
 
@@ -76,6 +79,7 @@ object BackupMetadataCodec {
                 encrypted = metadata.encrypted,
                 androidDataEntry = metadata.androidDataEntry,
                 androidObbEntry = metadata.androidObbEntry,
+                appDataEntry = metadata.appDataEntry,
                 targetUserId = metadata.targetUserId,
             )
         }

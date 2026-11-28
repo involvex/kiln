@@ -74,4 +74,34 @@ class BackupArchiveRoundTripTest {
         assertEquals(extracted.baseApk.absolutePath, paths.first())
         assertEquals(2, paths.size)
     }
+
+    @Test
+    fun zip_round_trip_preserves_app_data_tar() {
+        val apk = File(temp, "base.apk").apply { writeBytes(byteArrayOf(0x50, 0x4B, 0x03, 0x04)) }
+        val appData = File(temp, "app_data.tar").apply { writeBytes(byteArrayOf(1, 2, 3, 4, 5)) }
+        val metadata = BackupArchiveMetadata(
+            packageName = "com.example.root",
+            label = "RootApp",
+            versionName = "1.0",
+            versionCode = 1,
+            signerSha256 = listOf("EE:FF"),
+            tier = BackupContentTier.ROOT,
+            createdAtEpochMs = 99L,
+            includesAppData = true,
+            includesAndroidData = false,
+            apkEntries = listOf("base.apk"),
+            hasSplits = false,
+            appDataEntry = BackupMetadataCodec.APP_DATA_ENTRY,
+        )
+        val bytes = ByteArrayOutputStream().use { out ->
+            BackupArchiveWriter.write(listOf(apk), metadata, out, appDataTar = appData)
+            out.toByteArray()
+        }
+        val extractDir = File(temp, "app-data-out").apply { mkdirs() }
+        val extracted = BackupArchiveReader.extract(ByteArrayInputStream(bytes), extractDir).getOrNull()!!
+        assertTrue(extracted.metadata.includesAppData)
+        assertEquals(BackupMetadataCodec.APP_DATA_ENTRY, extracted.metadata.appDataEntry)
+        assertTrue(extracted.appDataTar!!.isFile)
+        assertEquals(appData.length(), extracted.appDataTar!!.length())
+    }
 }

@@ -15,6 +15,7 @@ data class PrivilegeSetupUiState(
         selfTest = null,
         binderAlive = false,
     ),
+    val rootOptIn: Boolean = false,
     val isRunningSelfTest: Boolean = false,
     val message: String? = null,
     val diagnosisText: String? = null,
@@ -22,4 +23,5 @@ data class PrivilegeSetupUiState(
 ) {
     val phase: ShizukuSetupPhase get() = status.phase
     val capabilities: Set<PrivilegeCapability> get() = status.capabilities
+    val hasFullBackup: Boolean get() = PrivilegeCapability.FULL_BACKUP in status.capabilities
 }

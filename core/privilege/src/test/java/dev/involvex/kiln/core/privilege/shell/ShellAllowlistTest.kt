@@ -351,6 +351,24 @@ class ShellAllowlistTest {
         )
         assertNull(ShellAllowlist.buildArgv(ShellAllowlist.AM_FORCE_STOP, listOf("bad;pkg")))
         assertEquals(
+            listOf("tar", "-cf", tar, "-C", "/data/data", pkg),
+            ShellAllowlist.buildArgv(ShellAllowlist.TAR_APP_DATA_OUT, listOf(pkg, tar)),
+        )
+        assertEquals(
+            listOf("tar", "-xf", tar, "-C", "/data/data"),
+            ShellAllowlist.buildArgv(ShellAllowlist.TAR_APP_DATA_IN, listOf(pkg, tar)),
+        )
+        assertEquals(
+            listOf("restorecon", "-R", "/data/data/$pkg"),
+            ShellAllowlist.buildArgv(ShellAllowlist.RESTORECON_APP_DATA, listOf(pkg)),
+        )
+        assertEquals(
+            listOf("ls", "-d", "/data/data/$pkg"),
+            ShellAllowlist.buildArgv(ShellAllowlist.LS_APP_DATA, listOf(pkg)),
+        )
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.TAR_APP_DATA_OUT, listOf(pkg, "/tmp/evil.tar")))
+        assertNull(ShellAllowlist.buildArgv(ShellAllowlist.RESTORECON_APP_DATA, listOf("../evil")))
+        assertEquals(
             listOf("dumpsys", "meminfo"),
             ShellAllowlist.buildArgv(ShellAllowlist.DUMPSYS_MEMINFO, emptyList()),
         )
