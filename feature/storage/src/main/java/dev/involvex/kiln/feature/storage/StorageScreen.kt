@@ -6,10 +6,10 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -24,6 +24,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -33,11 +34,24 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -50,6 +64,10 @@ import dev.involvex.kiln.core.model.ApkLeftover
 import dev.involvex.kiln.core.model.AppStorageStats
 import dev.involvex.kiln.core.model.DuplicateFileGroup
 import dev.involvex.kiln.core.model.OrphanStorageDir
+import dev.involvex.kiln.core.model.StorageTreemapKind
+import dev.involvex.kiln.core.model.StorageTreemapLayout
+import dev.involvex.kiln.core.model.StorageTreemapLeaf
+import dev.involvex.kiln.core.model.StorageTreemapRect
 
 @Composable
 fun StorageRoute(modifier: Modifier = Modifier, showTopBar: Boolean = true, onOpenPrivilegeSetup: () -> Unit = {}) {
@@ -352,7 +370,16 @@ private fun StorageContent(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item { StorageTotals(state = state) }
-        item { SizeBars(apps = state.sizeBarApps) }
+        item {
+            StorageTreemap(
+                leaves = state.treemapLeaves(
+                    leftoversLabel = stringResource(R.string.storage_treemap_leftovers),
+                    orphansLabel = stringResource(R.string.storage_treemap_orphans),
+                    largeFilesLabel = stringResource(R.string.storage_treemap_large_files),
+                ),
+                onOpenAppDetails = onOpenAppDetails,
+            )
+        }
         item { StorageToolbar(state, onRefresh, onIncludeSystem, onClearAll, onQueryChange) }
         item {
             LeftoversSection(
@@ -437,42 +464,118 @@ private fun resultFmt(resId: Int, payload: String): String {
     )
 }
 
-private const val MIN_BAR_FRACTION = 0.02f
+private const val TREEMAP_GAP_PX = 1.5f
+private const val TREEMAP_MIN_LABEL_WIDTH = 48f
+private const val TREEMAP_MIN_LABEL_HEIGHT = 28f
+private const val TREEMAP_LABEL_PAD_PX = 4f
+private const val TREEMAP_LABEL_MARGIN_PX = 8f
 
 @Composable
-private fun SizeBars(apps: List<AppStorageStats>) {
-    if (apps.isEmpty()) return
-    val max = apps.maxOf { it.totalBytes }.coerceAtLeast(1L)
+private fun StorageTreemap(leaves: List<StorageTreemapLeaf>, onOpenAppDetails: (String) -> Unit) {
+    if (leaves.isEmpty()) return
+    val colors = MaterialTheme.colorScheme
+    val title = stringResource(R.string.storage_treemap_title)
+    val hint = stringResource(R.string.storage_treemap_hint)
+    val a11ySummary = leaves.take(6).joinToString { leaf ->
+        "${leaf.label} ${ByteSizeFormatter.format(leaf.bytes)}"
+    }
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(text = title, style = MaterialTheme.typography.titleSmall)
         Text(
-            text = stringResource(R.string.storage_size_bars_title),
-            style = MaterialTheme.typography.titleSmall,
+            text = hint,
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.onSurfaceVariant,
         )
-        apps.forEach { app ->
-            val fraction = (app.totalBytes.toFloat() / max.toFloat()).coerceIn(MIN_BAR_FRACTION, 1f)
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = "${app.label} · ${ByteSizeFormatter.format(app.totalBytes)}",
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                Row(Modifier.fillMaxWidth().height(10.dp)) {
-                    Box(
-                        Modifier
-                            .weight(fraction)
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.primary),
-                    )
-                    if (fraction < 1f) {
-                        Box(
-                            Modifier
-                                .weight(1f - fraction)
-                                .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.surfaceVariant),
-                        )
-                    }
+        StorageTreemapCanvas(
+            leaves = leaves,
+            contentDescription = "$title. $a11ySummary",
+            onOpenAppDetails = onOpenAppDetails,
+        )
+    }
+}
+
+@Composable
+private fun StorageTreemapCanvas(leaves: List<StorageTreemapLeaf>, contentDescription: String, onOpenAppDetails: (String) -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val palette = remember(colors) { treemapFillColors(colors) }
+    val onPalette = remember(colors) { treemapOnColors(colors) }
+    val textMeasurer = rememberTextMeasurer()
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .semantics { this.contentDescription = contentDescription }
+            .pointerInput(leaves) {
+                detectTapGestures { offset ->
+                    treemapAppPackageAt(leaves, size.width.toFloat(), size.height.toFloat(), offset.x, offset.y)
+                        ?.let(onOpenAppDetails)
                 }
-            }
+            },
+    ) {
+        val rects = StorageTreemapLayout.layout(leaves, size.width, size.height)
+        rects.forEachIndexed { index, rect ->
+            drawTreemapCell(
+                rect = rect,
+                fill = palette[index % palette.size],
+                onFill = onPalette[index % onPalette.size],
+                textMeasurer = textMeasurer,
+            )
         }
+    }
+}
+
+private fun treemapFillColors(colors: ColorScheme) = listOf(
+    colors.primary,
+    colors.tertiary,
+    colors.secondary,
+    colors.primaryContainer,
+    colors.tertiaryContainer,
+    colors.secondaryContainer,
+    colors.errorContainer,
+    colors.surfaceVariant,
+)
+
+private fun treemapOnColors(colors: ColorScheme) = listOf(
+    colors.onPrimary,
+    colors.onTertiary,
+    colors.onSecondary,
+    colors.onPrimaryContainer,
+    colors.onTertiaryContainer,
+    colors.onSecondaryContainer,
+    colors.onErrorContainer,
+    colors.onSurfaceVariant,
+)
+
+private fun treemapAppPackageAt(leaves: List<StorageTreemapLeaf>, width: Float, height: Float, x: Float, y: Float): String? {
+    val hit = StorageTreemapLayout.layout(leaves, width, height).firstOrNull { rect ->
+        x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
+    } ?: return null
+    if (hit.leaf.kind != StorageTreemapKind.APP) return null
+    val pkg = hit.leaf.id.removePrefix("app:")
+    return pkg.takeIf { it.isNotEmpty() }
+}
+
+private fun DrawScope.drawTreemapCell(rect: StorageTreemapRect, fill: Color, onFill: Color, textMeasurer: TextMeasurer) {
+    val inset = TREEMAP_GAP_PX / 2f
+    val w = (rect.width - TREEMAP_GAP_PX).coerceAtLeast(0f)
+    val h = (rect.height - TREEMAP_GAP_PX).coerceAtLeast(0f)
+    drawRect(
+        color = fill,
+        topLeft = Offset(rect.x + inset, rect.y + inset),
+        size = Size(w, h),
+    )
+    if (w < TREEMAP_MIN_LABEL_WIDTH || h < TREEMAP_MIN_LABEL_HEIGHT) return
+    val label = "${rect.leaf.label}\n${ByteSizeFormatter.format(rect.leaf.bytes)}"
+    val layout = textMeasurer.measure(
+        text = label,
+        style = TextStyle(color = onFill, fontSize = 11.sp),
+        maxLines = 2,
+    )
+    if (layout.size.width <= w - TREEMAP_LABEL_MARGIN_PX && layout.size.height <= h - TREEMAP_LABEL_MARGIN_PX) {
+        drawText(
+            textLayoutResult = layout,
+            topLeft = Offset(rect.x + inset + TREEMAP_LABEL_PAD_PX, rect.y + inset + TREEMAP_LABEL_PAD_PX),
+        )
     }
 }
 

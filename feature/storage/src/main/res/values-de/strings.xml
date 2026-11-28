@@ -23,6 +23,11 @@
     <string name="storage_confirm_action">Weiter</string>
     <string name="storage_cancel">Abbrechen</string>
     <string name="storage_size_bars_title">Größte Apps</string>
+    <string name="storage_treemap_title">Größte Verbraucher</string>
+    <string name="storage_treemap_hint">Flächen entsprechen der gemessenen Größe. Gescannte Reste, Verwaiste und große Dateien erscheinen, wenn vorhanden. Tippe eine App-Kachel für App-Info.</string>
+    <string name="storage_treemap_leftovers">Gescannte APK-Reste</string>
+    <string name="storage_treemap_orphans">Gescannte Verwaiste</string>
+    <string name="storage_treemap_large_files">Gescannte große Dateien</string>
     <string name="storage_leftovers_title">APK-Reste</string>
     <string name="storage_leftovers_hint">Wähle einen Downloads- (oder anderen) Ordner für .apk / .apks / .xapk, große Dateien und Duplikate. Soft-Delete legt Dateien in .kiln-trash in diesem Ordner ab.</string>
     <string name="storage_leftovers_pick">Ordner wählen</string>

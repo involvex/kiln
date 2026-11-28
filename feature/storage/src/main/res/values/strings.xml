@@ -23,6 +23,11 @@
     <string name="storage_confirm_action">Continue</string>
     <string name="storage_cancel">Cancel</string>
     <string name="storage_size_bars_title">Largest apps</string>
+    <string name="storage_treemap_title">Largest consumers</string>
+    <string name="storage_treemap_hint">Areas are proportional to measured size. Scanned leftovers, orphans, and large files appear when available. Tap an app tile for App info.</string>
+    <string name="storage_treemap_leftovers">Scanned APK leftovers</string>
+    <string name="storage_treemap_orphans">Scanned orphans</string>
+    <string name="storage_treemap_large_files">Scanned large files</string>
     <string name="storage_leftovers_title">APK leftovers</string>
     <string name="storage_leftovers_hint">Pick a Downloads (or other) folder to find .apk / .apks / .xapk files, large files, and duplicates. Soft-delete moves into .kiln-trash in that folder.</string>
     <string name="storage_leftovers_pick">Pick folder</string>
